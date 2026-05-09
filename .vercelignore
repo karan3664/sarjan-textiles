@@ -5,9 +5,8 @@ out
 .env.local
 .env.*.local
 .DS_Store
+Archive.zip
 data/local-db.json
 data/cms-db.json
-Archive.zip
-supabase-migration-core.generated.sql
 supabase/.temp/
-.vercel
+supabase-migration-core.generated.sql
