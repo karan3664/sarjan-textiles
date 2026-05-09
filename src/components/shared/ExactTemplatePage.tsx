@@ -269,7 +269,21 @@ function rewriteHtml(html: string, kind: TemplateKind) {
   ];
   let productIndex = 0;
 
+  const adminHomeMenu = `
+                                <li class="menu-item">
+                                    <a href="/admin/home" class="menu-item-button">
+                                        <div class="icon">
+                                            <i class="icon-edit"></i>
+                                        </div>
+                                        <div class="text text-title">Home Page CMS</div>
+                                    </a>
+                                </li>`;
+
   return applyCommonData(html)
+    .replace(
+      kind === "admin" ? /(<div class="text text-title">Dashboard<\/div>\s*<\/a>\s*<\/li>)/ : /$^/,
+      `$1${adminHomeMenu}`,
+    )
     .replaceAll("images/logo/logo.svg", logo)
     .replaceAll("images/logo/logo-white.svg", logo)
     .replaceAll("images/logo/favicon.png", favicon)

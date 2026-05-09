@@ -178,6 +178,12 @@ function ServiceIconBox() {
 export async function HomeDynamic() {
   const cms = await getCmsSnapshot();
   const home = cms.home;
+  const homeContent = home as typeof home & {
+    topPicksTitle?: string;
+    topPicksDescription?: string;
+    testimonialsTitle?: string;
+    testimonialsDescription?: string;
+  };
   const products = cms.products;
   const blogs = cms.blogs;
   const featured = products[0];
@@ -226,8 +232,8 @@ export async function HomeDynamic() {
       <section className="flat-spacing" id="catalog">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
-            <h3 className="heading">Today's Top Picks</h3>
-            <p className="subheading text-secondary">Fresh Sarjan textile products from admin-managed data.</p>
+            <h3 className="heading">{homeContent.topPicksTitle ?? "Today's Top Picks"}</h3>
+            <p className="subheading text-secondary">{homeContent.topPicksDescription ?? "Fresh Sarjan textile products from admin-managed data."}</p>
           </div>
           <div dir="ltr" className="swiper tf-sw-latest" data-preview="4" data-tablet="3" data-mobile="2" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-md="1" data-pagination-lg="1">
             <div className="swiper-wrapper">
@@ -279,8 +285,8 @@ export async function HomeDynamic() {
       <section className="flat-spacing">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
-            <h3 className="heading">Customer Say!</h3>
-            <p className="subheading">Our customers adore our products, and we constantly aim to delight them.</p>
+            <h3 className="heading">{homeContent.testimonialsTitle ?? "Customer Say!"}</h3>
+            <p className="subheading">{homeContent.testimonialsDescription ?? "Our customers adore our products, and we constantly aim to delight them."}</p>
           </div>
           <div dir="ltr" className="swiper tf-sw-testimonial wow fadeInUp" data-wow-delay="0.1s" data-preview="2" data-tablet="1.3" data-mobile="1" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-md="1" data-pagination-lg="1">
             <div className="swiper-wrapper">
