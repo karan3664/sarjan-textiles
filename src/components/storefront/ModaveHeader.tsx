@@ -42,7 +42,7 @@ export function ModaveHeader() {
               <div className="wrapper-header-left d-flex align-items-center gap-20" />
             </div>
             <div className="col-md-4 col-3 d-xl-none">
-              <a href="#mobileMenu" className="mobile-menu" data-bs-toggle="offcanvas" aria-controls="mobileMenu">
+              <a href="#mobileMenu" className="mobile-menu" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Open menu">
                 <i className="icon icon-categories" />
               </a>
             </div>
@@ -116,6 +116,47 @@ export function ModaveHeader() {
                 ))}
               </ul>
             </nav>
+          </div>
+        </div>
+      </div>
+      <div className="offcanvas offcanvas-start canvas-mb" id="mobileMenu" tabIndex={-1} aria-labelledby="mobileMenuLabel">
+        <div className="mb-canvas-content">
+          <button type="button" className="icon-close-popup" data-bs-dismiss="offcanvas" aria-label="Close menu">
+            <i className="icon icon-close" />
+          </button>
+          <div className="mb-body">
+            <div>
+              <form className="form-search" action="/products">
+                <input type="text" name="q" placeholder="Search products, fabric, SKU" />
+                <button type="submit" aria-label="Search"><i className="icon-search" /></button>
+              </form>
+              <ul className="nav-ul-mb" id="mobileMenuLabel">
+                {navigation.map((item) => (
+                  <li className={`nav-mb-item${isActive(item.href) ? " active" : ""}`} key={item.href}>
+                    <a href={item.href} className="mb-menu-link" data-bs-dismiss="offcanvas">
+                      <span>{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mb-other-content">
+              <div className="group-icon">
+                <a href={client ? "/profile" : "/login"} className="site-nav-icon" data-bs-dismiss="offcanvas">
+                  <i className="icon icon-user" />
+                  <span>{client ? "Account" : "Login"}</span>
+                </a>
+                <a href="/wishlist" className="site-nav-icon" data-bs-dismiss="offcanvas">
+                  <i className="icon icon-heart" />
+                  <span>Wishlist</span>
+                </a>
+              </div>
+              <div className="text-need">Need help?</div>
+              <ul className="mb-info">
+                <li><i className="icon icon-mail" /><a href={`mailto:${siteSettings.email}`}>{siteSettings.email}</a></li>
+                <li><i className="icon icon-phone" /><a href={`tel:${siteSettings.phone.replace(/\s/g, "")}`}>{siteSettings.phone}</a></li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

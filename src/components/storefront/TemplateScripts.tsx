@@ -68,6 +68,19 @@ export function TemplateScripts() {
           });
         `}
       </Script>
+      <Script id="sarjan-bootstrap-target-guard" strategy="afterInteractive">
+        {`
+          document.addEventListener("click", function (event) {
+            var trigger = event.target && event.target.closest ? event.target.closest("[data-bs-toggle='modal'], [data-bs-toggle='offcanvas']") : null;
+            if (!trigger) return;
+            var selector = trigger.getAttribute("data-bs-target") || trigger.getAttribute("href") || "";
+            if (!selector || selector.charAt(0) !== "#") return;
+            if (document.querySelector(selector)) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }, true);
+        `}
+      </Script>
       <Script id="sarjan-hard-route-links" strategy="afterInteractive">
         {`
           document.addEventListener("click", function (event) {
