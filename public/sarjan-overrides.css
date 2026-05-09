@@ -1,0 +1,128 @@
+/* Compatibility layer for dynamic React sections that reuse Modave classes. */
+
+#header.header-default {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+#header .box-navigation,
+#header .box-nav-ul {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#header .box-nav-ul {
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#header .box-nav-ul .menu-item {
+  padding: 22px 0;
+}
+
+#header .logo-header img {
+  width: 144px;
+  max-height: 52px;
+  object-fit: contain;
+}
+
+.tf-slideshow.slider-center .wrap-slider {
+  min-height: calc(100vh - 64px);
+  background-position: center;
+  background-size: cover;
+}
+
+.tf-slideshow .content-slider {
+  max-width: 920px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.tf-slideshow .heading {
+  text-wrap: balance;
+}
+
+.collection-position-2 .img-style img,
+.blog-article-item .article-thumb img,
+.card-product .product-img img {
+  width: 100%;
+  object-fit: cover;
+}
+
+.collection-position-2 .img-style img {
+  aspect-ratio: 4 / 5;
+}
+
+.card-product .product-img img {
+  aspect-ratio: 4 / 5;
+}
+
+.tf-sw-latest .swiper-wrapper,
+.tf-sw-collection .swiper-wrapper {
+  align-items: stretch;
+}
+
+.tf-icon-box {
+  min-height: 96px;
+}
+
+footer .footer-logo img,
+footer .footer-infor .footer-logo img {
+  width: 190px;
+  max-height: 150px;
+  object-fit: contain;
+}
+
+footer .footer-wrap {
+  border-top: 1px solid #eee;
+}
+
+.modal-search .modal-content {
+  padding: 32px;
+}
+
+.tf-page-cart-main {
+  display: grid;
+  gap: 18px;
+}
+
+.tf-cart-item {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 120px 120px 120px;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.tf-cart-item_product {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.tf-cart-item_product img {
+  width: 96px;
+  height: 126px;
+  object-fit: cover;
+}
+
+.tf-page-cart-sidebar .cart-box {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fff;
+}
+
+@media (max-width: 991px) {
+  #header .wrapper-header {
+    min-height: 72px;
+  }
+
+  .tf-cart-item {
+    grid-template-columns: 1fr;
+  }
+}

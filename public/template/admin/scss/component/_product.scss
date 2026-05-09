@@ -1,0 +1,169 @@
+.tf-grid-card {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 30px;
+}
+
+.card-product {
+    &:hover {
+        .list-product-btn {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    }
+    .card-product-wrapper {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        z-index: 1;
+        margin-bottom: 16px;
+        img {
+            display: block;
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition-duration: 700ms;
+        }
+    }
+    .product-img {
+        @include d-flex();
+        width: 100%;
+        height: 100%;
+        position: relative;
+        align-items: stretch;
+    }
+    .on-sale-wrap {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        @include d-flex();
+        gap: 8px;
+        .on-sale-item {
+            @include flex(center,center);
+            padding: 2px 12px;
+            border-radius: 99px;
+            background-color: var(--primary);
+            &.sale {
+                color: var(--White);
+            }
+        }
+    }
+    .wishlist-wrap {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        @include d-flex();
+        align-items: center;
+        flex-direction: column;
+        gap: 8px;
+        .like-icon {
+            @include flex(center,center);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--White);
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            @include transition3();
+            svg path {
+                fill: transparent;
+                stroke: var(--secondary);
+                @include transition3();
+            }
+        }
+        .liked-icon {
+            @include flex(center,center);
+            width: 32px;
+            height: 32px;
+            font-size: 20px;
+            color: var(--success);
+            border-radius: 50%;
+            background-color: var(--White);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-40px);
+            @include transition3();
+        }
+        &.liked {
+            .like-icon {
+                background-color: var(--primary);
+                svg path {
+                    fill: var(--White);
+                    stroke: var(--White);
+                }
+            }
+            .liked-icon {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0px);
+            }
+        }
+    }
+    .list-product-btn {
+        position: absolute;
+        bottom: 12px;
+        left: 11px;
+        right: 11px;
+        padding: 20px;
+        border-radius: 20px;
+        background-color: var(--White);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(12px);
+        @include transition3();
+        .btn-add-tocart {
+            @include flex(center,center);
+            padding: 11px;
+            border-radius: 99px;
+            border: 1px solid var(--main);
+            background-color: var(--main);
+            color: var(--White);
+            width: 100%;
+            &:hover {
+                background-color: var(--White);
+                color: var(--main)
+            }
+        }
+    }
+    .size-box {
+        @include flex(center,center);
+        gap: 8px;
+        margin-bottom: 16px;
+        .size-item {
+            @include flex(center,center);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            color: var(--secondary);
+            flex-shrink: 0;
+            cursor: pointer;
+            @include transition3();
+            &:hover {
+                color: var(--main);
+                border-color: var(--main);
+            }
+        }
+    }
+    .name-product {
+        margin-bottom: 4px;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
+        overflow: hidden;
+    }
+    .price-wrap {
+        @include flex(center,start);
+        flex-wrap: wrap;
+        gap: 8px;
+        .sale {
+            @include flex(center,center);
+            padding: 2px 10px;
+            border-radius: 99px;
+            background-color: var(--primary);
+        }
+    }
+}

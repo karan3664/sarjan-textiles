@@ -1,0 +1,43 @@
+.sw-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    &.type-circle {
+        .swiper-pagination-bullet {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            background-color: transparent;
+            border: 1px solid transparent;
+            opacity: 1;
+            &::after {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
+                content: '';
+                width: 8px;
+                height: 8px;
+                background-color:  transparent;
+                border-radius: 50%;
+                border: 1px solid var(--main);
+                opacity: 1;
+            }
+            &.swiper-pagination-bullet-active {
+                border: 1px solid var(--main);
+                &::after {
+                    background-color: var(--main);
+                }
+            }
+        }
+    }
+}
+
+.swiper-box-shadow {
+    .swiper-wrapper {
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top: -10px;
+        margin-bottom: -10px;
+    }
+}

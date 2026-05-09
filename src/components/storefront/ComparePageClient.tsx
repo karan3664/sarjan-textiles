@@ -1,0 +1,100 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { Product } from "@/data/mock";
+import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { readCompare } from "@/lib/compare-client";
+import { PageTitle } from "./ModaveSections";
+
+function money(value: number) {
+  return `₹${value.toLocaleString("en-IN")}`;
+}
+
+function StarRow() {
+  return <div className="list-star">{Array.from({ length: 5 }).map((_, index) => <span className="icon icon-star" key={index} />)}</div>;
+}
+
+export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) {
+  const [slugs, setSlugs] = useState<string[]>(initialIds.split(",").map((item) => item.trim()).filter(Boolean));
+  const [products, setProducts] = useState<Product[]>([]);
+  const slugKey = useMemo(() => slugs.join(","), [slugs]);
+
+  useEffect(() => {
+    if (!slugs.length) setSlugs(readCompare());
+  }, [slugs.length]);
+
+  useEffect(() => {
+    if (!slugKey) {
+      setProducts([]);
+      return;
+    }
+    fetch(`/api/catalog/products?ids=${encodeURIComponent(slugKey)}&limit=8`)
+      .then((res) => res.json())
+      .then((data) => {
+        const bySlug = new Map<Product["slug"], Product>((data.items ?? []).map((product: Product) => [product.slug, product]));
+        setProducts(slugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Product[]);
+      })
+      .catch(() => setProducts([]));
+  }, [slugKey, slugs]);
+
+  const rows = [
+    ["Rating", (product: Product) => <><StarRow /><span>({product.sold.toLocaleString("en-IN")})</span></>],
+    ["Price", (product: Product) => <span className="price">{money(product.price)}</span>],
+    ["Type", (product: Product) => <span className="type">{product.category}</span>],
+    ["Brand", () => <span className="brand">Sarjan Textiles</span>],
+    ["Size", (product: Product) => <span className="size">{(product.sizes.length ? product.sizes : FULL_SIZE_RUN).join(", ")}</span>],
+    ["Color", (product: Product) => <div className="list-compare-color justify-content-center">{product.colors.slice(0, 5).map((color, index) => <span className={`item ${index === 0 ? "active" : ""}`} style={{ background: color.toLowerCase() }} key={color} />)}</div>],
+    ["Material", (product: Product) => <span className="size">{product.fabric}</span>],
+    ["MOQ", (product: Product) => <span>{product.moq} pcs</span>],
+    ["Stock", (product: Product) => <span>{product.stock > 0 ? `${product.stock} available` : "Sold out"}</span>],
+  ] as const;
+
+  return (
+    <>
+      <PageTitle title="Compare Products" crumbs={["Homepage", "Compare Products"]} />
+      <section className="flat-spacing">
+        <div className="container">
+          {products.length ? (
+            <div className="tf-compare-table">
+              <div className="tf-compare-row tf-compare-grid">
+                <div className="tf-compare-col d-md-block d-none" />
+                {products.map((product) => (
+                  <div className="tf-compare-col" key={product.slug}>
+                    <div className="tf-compare-item">
+                      <Link className="tf-compare-image" href={`/products/${product.slug}`}><img className="lazyload" data-src={product.images[0]} src={product.images[0]} alt={product.name} /></Link>
+                      <div className="tf-compare-content">
+                        <Link className="link text-title text-line-clamp-1" href={`/products/${product.slug}`}>{product.name}</Link>
+                        <p className="desc text-caption-1">{product.category}, {product.fabric}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {rows.map(([label, render]) => (
+                <div className="tf-compare-row" key={label}>
+                  <div className="tf-compare-col tf-compare-field d-md-block d-none"><h6>{label}</h6></div>
+                  {products.map((product) => <div className="tf-compare-col tf-compare-field text-center" key={`${product.slug}-${label}`}>{render(product)}</div>)}
+                </div>
+              ))}
+              <div className="tf-compare-row">
+                <div className="tf-compare-col tf-compare-field d-md-block d-none"><h6>Add To Cart</h6></div>
+                {products.map((product) => (
+                  <div className="tf-compare-col tf-compare-field tf-compare-viewcart text-center" key={`${product.slug}-cart`}>
+                    <a href="#shoppingCart" data-bs-toggle="modal" className="btn-view-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}>Add To Cart</a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-5">
+              <h5>No products selected</h5>
+              <p className="text-secondary mt_8">Choose compare icon from product cards.</p>
+              <Link href="/products" className="tf-btn btn-fill radius-4 mt_24"><span className="text">Browse Products</span></Link>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}

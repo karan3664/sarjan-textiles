@@ -1,0 +1,41 @@
+.tf-button {
+    @include flex(center,center);
+    width: max-content;
+    color: var(--White);
+    background-color: var(--main);
+    padding: 11px 20px;
+    gap: 6px;
+    border-radius: 8px;
+    @include transition3();
+ 
+    &:hover {
+        background-color: var(--primary) !important;
+        color: var(--White);
+    }
+
+    &.btn-primary {
+        background-color: var(--primary) !important;
+        color: var(--White);
+        &:hover {
+            background-color: var(--main) !important;
+        }
+    }
+    
+    &.type1 {
+        padding: 16px 40px;
+    }
+}
+
+.tf-btn-small {
+    @include flex(center,center);
+    font-size: 24px;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    &:hover {
+        background-color: var(--main);
+        border-color: var(--main);
+        color: var(--White);
+    }
+}
