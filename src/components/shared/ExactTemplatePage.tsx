@@ -36,6 +36,20 @@ const scriptMap: Record<TemplateKind, string[]> = {
   ],
 };
 
+const styleMap: Record<TemplateKind, string[]> = {
+  storefront: [],
+  admin: [
+    "css/animate.min.css",
+    "css/animation.css",
+    "css/bootstrap.css",
+    "css/bootstrap-select.min.css",
+    "css/swiper-bundle.min.css",
+    "css/styles.css",
+    "font/fonts.css",
+    "icon/icomoon/style.css",
+  ],
+};
+
 function extractBody(html: string) {
   const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? html;
   return body.replace(/<script[\s\S]*?<\/script>/gi, "");
@@ -259,12 +273,13 @@ function rewriteHtml(html: string, kind: TemplateKind) {
     .replaceAll("images/logo/logo.svg", logo)
     .replaceAll("images/logo/logo-white.svg", logo)
     .replaceAll("images/logo/favicon.png", favicon)
-    .replace(/images\/products\/[^"')\s]+/g, () => {
+    .replace(/images\/(?:products|product)\/[^"')\s]+/g, () => {
       const image = sarjanProducts[productIndex % sarjanProducts.length];
       productIndex += 1;
       return image;
     })
     .replace(/images\/(slider|banner|collections)\/[^"')\s]+/g, banner)
+    .replace(/(^|["'(=:\s])images\/(country|avatar|item|categories|payment|shop|logo)\//g, `$1${base}/images/$2/`)
     .replaceAll('src="images/', `src="${base}/images/`)
     .replaceAll("src='images/", `src='${base}/images/`)
     .replaceAll('data-src="images/', `data-src="${base}/images/`)
@@ -283,7 +298,12 @@ function rewriteHtml(html: string, kind: TemplateKind) {
     .replaceAll('href="register.html"', 'href="/register"')
     .replaceAll('href="wish-list.html"', 'href="/wishlist"')
     .replaceAll('href="shopping-cart.html"', 'href="/cart"')
-    .replaceAll('href="checkout.html"', 'href="/checkout"');
+    .replaceAll('href="checkout.html"', 'href="/checkout"')
+    .replace(kind === "admin" ? /href="([a-z0-9-]+)\.html"/g : /$^/, (_match, page) => {
+      if (page === "index") return 'href="/admin"';
+      return `href="/admin/${page}"`;
+    })
+    .replace(kind === "admin" ? /href="\.\.\/index\.html"/g : /$^/, 'href="/"');
 }
 
 export function ExactTemplatePage({ file, kind = "storefront" }: { file: string; kind?: TemplateKind }) {
@@ -294,6 +314,9 @@ export function ExactTemplatePage({ file, kind = "storefront" }: { file: string;
 
   return (
     <>
+      {styleMap[kind].map((style) => (
+        <link key={`${kind}-${style}`} rel="stylesheet" href={`/${kind === "storefront" ? "template/storefront" : "template/admin"}/${style}`} />
+      ))}
       <div dangerouslySetInnerHTML={{ __html: html }} />
       {scriptMap[kind].map((script) => (
         <Script key={`${kind}-${script}`} src={`${scriptBase}/${script}`} strategy="afterInteractive" />
