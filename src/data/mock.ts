@@ -15,6 +15,8 @@ export type Product = {
   images: string[];
   description: string;
   care: string;
+  variants?: Array<{ sku: string; color: string; size: string; price: number; stock: number }>;
+  pricingRules?: Array<{ minQty: number; price: number }>;
   isFeatured?: boolean;
 };
 
@@ -32,6 +34,8 @@ export const siteSettings = {
   ordersEmail: "orders@sarjantextiles.com",
   phone: "+91 98765 43210",
   address: "Surat, Gujarat, India",
+  openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
+  openTimeSunday: "Sunday: By appointment",
   creditTermDays: 90,
   footerNote: "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
   seo: {
@@ -242,6 +246,11 @@ export const home = {
     primaryCta: { label: "Explore Catalog", href: "#catalog" },
     secondaryCta: { label: "Register as Client", href: "/register" },
     image: asset("banner-textiles-studio.png"),
+    images: [
+      asset("banner-textiles-studio.png"),
+      asset("shirt-ajrak-black-studio.png"),
+      asset("kurta-blue-floral-studio.png"),
+    ],
   },
   highlights: [
     { value: "90", label: "Day credit cycle" },
@@ -271,7 +280,7 @@ export const home = {
       product: "Ajrak Black Printed Shirt",
       price: "₹680",
       image: asset("shirt-ajrak-black-studio.png"),
-      avatar: "/template/storefront/images/avatar/user-4.jpg",
+      avatar: "/sarjan-assets/sarjan-favicon-192.png",
     },
     {
       author: "Nayra Boutique",
@@ -279,7 +288,7 @@ export const home = {
       product: "Blue Floral Kurta",
       price: "₹820",
       image: asset("kurta-blue-floral-studio.png"),
-      avatar: "/template/storefront/images/avatar/user-5.jpg",
+      avatar: "/sarjan-assets/sarjan-favicon-192.png",
     },
   ],
   galleryTitle: "Shop Instagram",
@@ -324,6 +333,10 @@ export const pages = {
     body:
       "Sarjan Textiles supplies printed shirts, kurtas, and fabric-led collections to wholesale and retail partners. The platform is designed to make ordering, approval, dispatch, and credit tracking simple for both clients and the admin team.",
     image: asset("sarjan-logo-full.png"),
+    history: "Sarjan Textiles grew from a textile-first business focused on reliable printed collections for wholesale and retail partners.",
+    mission: "Make B2B textile ordering transparent, organized, and easy to operate from catalog to credit collection.",
+    vision: "Build an ERP-ready textile business platform with strong catalog, dispatch, inventory, and client workflows.",
+    infrastructure: "Admin-managed CMS, product catalog, inventory controls, dispatch tracking, credit ledger, and future integrations.",
   },
   contact: {
     title: "Connect with Sarjan Textiles",
@@ -368,10 +381,120 @@ export const cart = {
 };
 
 export const dashboard = {
-  metrics: [
-    { label: "Monthly Orders", value: "42" },
-    { label: "Outstanding", value: "₹92,420" },
-    { label: "Pending Clients", value: "7" },
-    { label: "Ready Dispatch", value: "11" },
+  summary: [
+    { label: "Total Orders", value: "128", icon: "icon-clipboard-text", note: "42 this month" },
+    { label: "Total Clients", value: "34", icon: "icon-users", note: "7 pending approval" },
+    { label: "Outstanding Payments", value: "₹9.24L", icon: "icon-hand-coins", note: "90-day cheque cycle" },
+    { label: "Ready Dispatch", value: "11", icon: "icon-send", note: "Packed / ready" },
+  ],
+  groups: [
+    {
+      title: "Orders",
+      icon: "icon-clipboard-text",
+      items: [
+        { label: "Total Orders", value: "128" },
+        { label: "Pending Orders", value: "18" },
+        { label: "Approved Orders", value: "74" },
+        { label: "Dispatch Pending", value: "11" },
+        { label: "Completed Orders", value: "25" },
+      ],
+    },
+    {
+      title: "Clients",
+      icon: "icon-users",
+      items: [
+        { label: "Total Clients", value: "34" },
+        { label: "Active Clients", value: "27" },
+        { label: "Pending Approval Clients", value: "7" },
+      ],
+    },
+    {
+      title: "Inventory",
+      icon: "icon-package",
+      items: [
+        { label: "Low Stock", value: "9" },
+        { label: "Out of Stock", value: "3" },
+        { label: "Reserved Stock", value: "418 pcs" },
+      ],
+    },
+    {
+      title: "Finance",
+      icon: "icon-dollar",
+      items: [
+        { label: "Outstanding Payments", value: "₹9.24L" },
+        { label: "Overdue Payments", value: "₹1.38L" },
+        { label: "Monthly Revenue", value: "₹14.8L" },
+      ],
+    },
+    {
+      title: "Website",
+      icon: "icon-storefront",
+      items: [
+        { label: "Total Visitors", value: "8,420" },
+        { label: "Inquiry Count", value: "63" },
+        { label: "Contact Requests", value: "21" },
+      ],
+    },
+  ],
+  charts: {
+    monthlyOrders: [
+      { label: "Jan", value: 22 },
+      { label: "Feb", value: 28 },
+      { label: "Mar", value: 34 },
+      { label: "Apr", value: 39 },
+      { label: "May", value: 42 },
+    ],
+    productDemand: [
+      { label: "Printed Shirts", value: 86 },
+      { label: "Kurtas", value: 72 },
+      { label: "Festive Prints", value: 58 },
+      { label: "Ajrak Range", value: 46 },
+    ],
+    clientActivity: [
+      { label: "Aarav Ethnic Studio", value: 31 },
+      { label: "Nayra Boutique", value: 24 },
+      { label: "Vastra Retail Co.", value: 18 },
+      { label: "Kavya Retail", value: 14 },
+    ],
+    dispatchTrend: [
+      { label: "Packed", value: 16 },
+      { label: "Ready", value: 11 },
+      { label: "Dispatched", value: 22 },
+      { label: "Delivered", value: 25 },
+    ],
+  },
+  recentOrders: [
+    {
+      id: "ORD-2026-001",
+      client: "Aarav Ethnic Studio",
+      date: "2026-05-08",
+      total: "₹48,960",
+      paymentStatus: "Pending",
+      dispatchStatus: "In Production",
+      approvalStatus: "Approved",
+    },
+    {
+      id: "ORD-2026-002",
+      client: "Nayra Boutique",
+      date: "2026-05-07",
+      total: "₹34,100",
+      paymentStatus: "Pending",
+      dispatchStatus: "Ready for Dispatch",
+      approvalStatus: "Approved",
+    },
+    {
+      id: "ORD-2026-003",
+      client: "Vastra Retail Co.",
+      date: "2026-05-06",
+      total: "₹62,400",
+      paymentStatus: "Not Started",
+      dispatchStatus: "Pending",
+      approvalStatus: "Pending",
+    },
+  ],
+  alerts: [
+    { label: "Ajrak Black Printed Shirt", detail: "Low stock: 42 pcs available, 72 reserved" },
+    { label: "Teal Star Grid Kurta", detail: "Out of stock in XL / XXL" },
+    { label: "Cheque collection", detail: "5 invoices due within next 7 days" },
   ],
 };

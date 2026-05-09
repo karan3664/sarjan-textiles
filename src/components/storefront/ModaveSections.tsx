@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Fragment } from "react";
-import { blogs, home, pages, products, siteSettings } from "@/data/mock";
+import { blogs, home, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { getCmsSnapshot } from "@/lib/cms-store";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
+import { HomeHeroRotator } from "./HomeHeroRotator";
+import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
 import { ProductSortSelect } from "./ProductSortSelect";
 import { WishlistPageClient } from "./WishlistPageClient";
@@ -175,6 +177,12 @@ function ServiceIconBox() {
   );
 }
 
+const defaultTestimonialAvatar = "/sarjan-assets/sarjan-favicon-192.png";
+
+function testimonialAvatar(avatar?: string) {
+  return avatar && !avatar.includes("/template/storefront/images/avatar/") ? avatar : defaultTestimonialAvatar;
+}
+
 export async function HomeDynamic() {
   const cms = await getCmsSnapshot();
   const home = cms.home;
@@ -183,31 +191,18 @@ export async function HomeDynamic() {
     topPicksDescription?: string;
     testimonialsTitle?: string;
     testimonialsDescription?: string;
+    hero: typeof home.hero & { images?: string[] };
   };
+  const heroImages = (Array.isArray(homeContent.hero.images) && homeContent.hero.images.length ? homeContent.hero.images : [home.hero.image]).filter(Boolean);
   const products = cms.products;
   const blogs = cms.blogs;
+  const approvedTestimonials = cms.testimonials.filter((testimonial) => testimonial.status === "approved");
   const featured = products[0];
   const galleryProducts = products.slice(0, 5);
 
   return (
     <>
-      <div className="tf-slideshow slider-center slider-parallax">
-        <div className="wrap-slider" style={{ backgroundImage: `url(${home.hero.image})` }}>
-          <div className="box-content">
-            <div className="container">
-              <div className="content-slider">
-                <div className="box-title-slider">
-                  <div className="heading text-white title-display wow fadeInUp" data-wow-delay="0s">{home.hero.title}</div>
-                  <p className="body-text-1 subheading text-white wow fadeInUp" data-wow-delay=".1s">{home.hero.description}</p>
-                </div>
-                <div className="box-btn-slider wow fadeInUp" data-wow-delay=".2s">
-                  <Link href={home.hero.primaryCta.href} className="tf-btn btn-fill btn-white"><span className="text">{home.hero.primaryCta.label}</span><i className="icon icon-arrowUpRight" /></Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <HomeHeroRotator images={heroImages} title={home.hero.title} description={home.hero.description} cta={home.hero.primaryCta} />
 
       <section className="space-30 sarjan-category-strip">
         <div dir="ltr" className="swiper tf-sw-collection" data-preview="3" data-tablet="2" data-mobile="1" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-md="1" data-pagination-lg="1">
@@ -282,43 +277,45 @@ export async function HomeDynamic() {
 
       <ServiceIconBox />
 
-      <section className="flat-spacing">
-        <div className="container">
-          <div className="heading-section text-center wow fadeInUp">
-            <h3 className="heading">{homeContent.testimonialsTitle ?? "Customer Say!"}</h3>
-            <p className="subheading">{homeContent.testimonialsDescription ?? "Our customers adore our products, and we constantly aim to delight them."}</p>
-          </div>
-          <div dir="ltr" className="swiper tf-sw-testimonial wow fadeInUp" data-wow-delay="0.1s" data-preview="2" data-tablet="1.3" data-mobile="1" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-md="1" data-pagination-lg="1">
-            <div className="swiper-wrapper">
-              {home.testimonials.map((testimonial) => (
-                <div className="swiper-slide" key={testimonial.author}>
-                  <div className="testimonial-item hover-img">
-                    <div className="img-style">
-                      <img data-src={testimonial.image} src={testimonial.image} alt={testimonial.product} />
-                      <a href="#quickView" data-bs-toggle="modal" className="box-icon hover-tooltip center"><span className="icon icon-eye" /><span className="tooltip">Quick View</span></a>
-                    </div>
-                    <div className="content">
-                      <div className="content-top">
-                        <div className="list-star-default">{Array.from({ length: 5 }).map((_, index) => <i className="icon icon-star" key={index} />)}</div>
-                        <p className="text-secondary">&quot;{testimonial.quote}&quot;</p>
-                        <div className="box-author"><div className="text-title author">{testimonial.author}</div><span className="icon icon-sealCheck text-success" /></div>
+      {approvedTestimonials.length > 0 && (
+        <section className="flat-spacing">
+          <div className="container">
+            <div className="heading-section text-center wow fadeInUp">
+              <h3 className="heading">{homeContent.testimonialsTitle ?? "Customer Say!"}</h3>
+              <p className="subheading">{homeContent.testimonialsDescription ?? "Our customers adore our products, and we constantly aim to delight them."}</p>
+            </div>
+            <div dir="ltr" className="swiper tf-sw-testimonial wow fadeInUp" data-wow-delay="0.1s" data-preview="2" data-tablet="1.3" data-mobile="1" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-md="1" data-pagination-lg="1">
+              <div className="swiper-wrapper">
+                {approvedTestimonials.map((testimonial) => (
+                  <div className="swiper-slide" key={testimonial.id}>
+                    <div className="testimonial-item hover-img">
+                      <div className="img-style">
+                        <img data-src={testimonial.image} src={testimonial.image} alt={testimonial.product} />
+                        <a href="#quickView" data-bs-toggle="modal" className="box-icon hover-tooltip center"><span className="icon icon-eye" /><span className="tooltip">Quick View</span></a>
                       </div>
-                      <div className="box-avt">
-                        <div className="avatar avt-60 round"><img src={testimonial.avatar} alt={testimonial.author} /></div>
-                        <div className="box-price">
-                          <p className="text-title text-line-clamp-1">{testimonial.product}</p>
-                          <div className="text-button price">{testimonial.price}</div>
+                      <div className="content">
+                        <div className="content-top">
+                          <div className="list-star-default">{Array.from({ length: 5 }).map((_, index) => <i className="icon icon-star" key={index} />)}</div>
+                          <p className="text-secondary">&quot;{testimonial.quote}&quot;</p>
+                          <div className="box-author"><div className="text-title author">{testimonial.author}</div><span className="icon icon-sealCheck text-success" /></div>
+                        </div>
+                        <div className="box-avt">
+                          <div className="avatar avt-60 round"><img src={testimonialAvatar(testimonial.avatar)} alt={testimonial.author} /></div>
+                          <div className="box-price">
+                            <p className="text-title text-line-clamp-1">{testimonial.product}</p>
+                            <div className="text-button price">{testimonial.price}</div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="sw-pagination-testimonial sw-dots type-circle d-flex justify-content-center" />
             </div>
-            <div className="sw-pagination-testimonial sw-dots type-circle d-flex justify-content-center" />
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="flat-spacing pt-0">
         <div className="container">
@@ -596,7 +593,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                       <div className="right">
                         <div className="letter-1 text-btn-uppercase mb_12">{product.name}</div>
                         <p className="mb_12 text-secondary">{product.description}</p>
-                        <p className="text-secondary">{product.fabric}. {product.care}</p>
+                        <p className="text-secondary">{product.care ? `${product.fabric}. ${product.care}` : product.fabric}</p>
                       </div>
                       <div className="left">
                         <div className="letter-1 text-btn-uppercase mb_12">Composition, origin and care guidelines</div>
@@ -604,7 +601,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                           <li className="font-2">Fabric: {product.fabric}</li>
                           <li className="font-2">Designed in Surat, Gujarat</li>
                           <li className="font-2">MOQ: {product.moq} pieces</li>
-                          <li className="font-2">Care: {product.care}</li>
+                          {product.care ? <li className="font-2">Care: {product.care}</li> : null}
                         </ul>
                       </div>
                     </div>
@@ -827,6 +824,26 @@ export async function BlogListDynamic() {
       </div>
     </>
   );
+}
+
+type BlogBlock = {
+  id?: string;
+  type: "text" | "image";
+  value: string;
+};
+
+const blogBlockPrefix = "__SARJAN_BLOG_BLOCKS__";
+
+function parseBlogBlocks(content: string): BlogBlock[] {
+  if (content.startsWith(blogBlockPrefix)) {
+    try {
+      const blocks = JSON.parse(content.slice(blogBlockPrefix.length)) as BlogBlock[];
+      if (Array.isArray(blocks)) return blocks.filter((block) => block.value);
+    } catch {
+      return [{ type: "text", value: content }];
+    }
+  }
+  return [{ type: "text", value: content }];
 }
 
 export function PageTitle({ title, crumbs }: { title: string; crumbs: string[] }) {
@@ -1114,6 +1131,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
   const otherBlogs = blogs.filter((item) => item.slug !== blog.slug);
   const previous = otherBlogs[0] ?? blog;
   const next = otherBlogs[1] ?? otherBlogs[0] ?? blog;
+  const blogBlocks = parseBlogBlocks(blog.content);
 
   return (
     <>
@@ -1138,12 +1156,22 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
           </div>
           <div className="content">
             <p className="body-text-1 mb_12">{blog.excerpt}</p>
-            <p className="body-text-1">{blog.content}</p>
+            {blogBlocks.map((block, index) => (
+              block.type === "image" ? (
+                <div className="sarjan-blog-detail-block-image" key={`${block.type}-${index}`}>
+                  <img src={block.value} alt={`${blog.title} content ${index + 1}`} />
+                </div>
+              ) : (
+                <p className="body-text-1 mb_16" key={`${block.type}-${index}`}>{block.value}</p>
+              )
+            ))}
           </div>
-          <div className="group-image d-flex gap-20">
-            <div><img src={blog.image} alt={blog.title} /></div>
-            <div><img src={products[0].images[0]} alt={products[0].name} /></div>
-          </div>
+          {blogBlocks.some((block) => block.type === "image") ? null : (
+            <div className="group-image d-flex gap-20">
+              <div><img src={blog.image} alt={blog.title} /></div>
+              <div><img src={products[0].images[0]} alt={products[0].name} /></div>
+            </div>
+          )}
           <div className="content">
             <h3 className="fw-5 mb_16">How Sarjan manages B2B textile workflows</h3>
             <p className="body-text-1 mb_16">Every CMS article is admin managed. Title, image, date, excerpt, content, SEO fields, and publish status are designed to come from the blog table once Supabase is connected.</p>
@@ -1239,9 +1267,12 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
   );
 }
 
-export function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
-  const page = pages[type];
+export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
+  const cms = await getCmsSnapshot();
+  const page = cms.pages[type];
+  const settings = cms.siteSettings;
   const isContact = type === "contact";
+  const about = page as typeof page & { history?: string; mission?: string; vision?: string; infrastructure?: string };
 
   return (
     <>
@@ -1263,21 +1294,21 @@ export function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                   <h4>Information</h4>
                   <div className="mb_20">
                     <div className="text-title mb_8">Phone:</div>
-                    <p className="text-secondary">{siteSettings.phone}</p>
+                    <p className="text-secondary">{settings.phone}</p>
                   </div>
                   <div className="mb_20">
                     <div className="text-title mb_8">Email:</div>
-                    <p className="text-secondary">{siteSettings.salesEmail}</p>
-                    <p className="text-secondary">{siteSettings.ordersEmail}</p>
+                    <p className="text-secondary">{settings.salesEmail}</p>
+                    <p className="text-secondary">{settings.ordersEmail}</p>
                   </div>
                   <div className="mb_20">
                     <div className="text-title mb_8">Address:</div>
-                    <p className="text-secondary">{siteSettings.address}</p>
+                    <p className="text-secondary">{settings.address}</p>
                   </div>
                   <div>
                     <div className="text-title mb_8">Open Time:</div>
-                    <p className="mb_4 open-time"><span className="text-secondary">Mon - Sat:</span> 10:00am - 7:00pm IST</p>
-                    <p className="open-time"><span className="text-secondary">Sunday:</span> By appointment</p>
+                    <p className="mb_4 open-time text-secondary">{settings.openTimeWeekday}</p>
+                    <p className="open-time text-secondary">{settings.openTimeSunday}</p>
                   </div>
                 </div>
               </div>
@@ -1289,23 +1320,7 @@ export function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                 <h3 className="heading">Get In Touch</h3>
                 <p className="subheading">Share your buying requirement, category interest, and preferred quantity.</p>
               </div>
-              <form className="form-leave-comment">
-                <div className="wrap">
-                  <div className="cols">
-                    <fieldset><input type="text" placeholder="Company Name*" name="companyName" required /></fieldset>
-                    <fieldset><input type="text" placeholder="Contact Person*" name="contactPerson" required /></fieldset>
-                  </div>
-                  <div className="cols">
-                    <fieldset><input type="email" placeholder="Email Address*" name="email" required /></fieldset>
-                    <fieldset><input type="tel" placeholder="Phone Number*" name="phone" required /></fieldset>
-                  </div>
-                  <fieldset><input type="text" placeholder="Buying category / MOQ requirement" name="requirement" /></fieldset>
-                  <fieldset><textarea name="message" rows={4} placeholder="Your Message*" required /></fieldset>
-                </div>
-                <div className="button-submit send-wrap">
-                  <button className="tf-btn btn-fill" type="button"><span className="text text-button">Submit Inquiry</span></button>
-                </div>
-              </form>
+              <ContactInquiryForm />
             </div>
           </section>
         </>
@@ -1320,13 +1335,13 @@ export function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                     <h3 className="title wow fadeInUp">{page.title}</h3>
                     <div className="widget-tabs style-3">
                       <ul className="widget-menu-tab wow fadeInUp">
-                        {["Introduction", "Our Vision", "What Sets Us Apart", "Our Commitment"].map((tab, index) => <li className={`item-title${index === 0 ? " active" : ""}`} key={tab}><span className="inner text-button">{tab}</span></li>)}
+                        {["Introduction", "History", "Mission", "Infrastructure"].map((tab, index) => <li className={`item-title${index === 0 ? " active" : ""}`} key={tab}><span className="inner text-button">{tab}</span></li>)}
                       </ul>
                       <div className="widget-content-tab wow fadeInUp">
                         <div className="widget-content-inner active"><p>{page.body}</p></div>
-                        <div className="widget-content-inner"><p>Build a clean B2B ordering system for wholesale buyers with reliable catalog, dispatch, inventory, and credit visibility.</p></div>
-                        <div className="widget-content-inner"><p>Every product, banner, page, and blog entry is designed to come from admin-managed data rather than hardcoded frontend text.</p></div>
-                        <div className="widget-content-inner"><p>ERP-ready and AI-ready architecture keeps the system prepared for Tally sync, recommendations, and smart reorder flows.</p></div>
+                        <div className="widget-content-inner"><p>{about.history || "Sarjan Textiles history is managed from admin CMS."}</p></div>
+                        <div className="widget-content-inner"><p>{about.mission || "Build a clean B2B ordering system for wholesale buyers with reliable catalog, dispatch, inventory, and credit visibility."}</p></div>
+                        <div className="widget-content-inner"><p>{about.infrastructure || about.vision || "ERP-ready and AI-ready architecture keeps the system prepared for future integrations."}</p></div>
                       </div>
                     </div>
                     <Link href="/contact" className="tf-btn btn-fill wow fadeInUp"><span className="text text-button">Contact Team</span></Link>

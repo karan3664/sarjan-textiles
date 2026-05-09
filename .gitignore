@@ -7,3 +7,5 @@ out
 .DS_Store
 data/local-db.json
 data/cms-db.json
+Archive.zip
+supabase-migration-core.generated.sql

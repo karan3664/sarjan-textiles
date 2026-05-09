@@ -1,4 +1,5 @@
 import { createClient, publicClient } from "@/lib/local-db";
+import { createClientToken } from "@/lib/client-token";
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
     }
 
     const client = await createClient(body);
-    return Response.json({ client: publicClient(client), token: client.id });
+    return Response.json({ client: publicClient(client), token: createClientToken({ clientId: client.id, email: client.email }) });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Register failed" }, { status: 400 });
   }

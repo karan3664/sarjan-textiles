@@ -92,7 +92,10 @@ export function CheckoutPageClient() {
 
     const res = await fetch("/api/orders", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("sarjan-client-token") ?? ""}`,
+      },
       body: JSON.stringify({
         clientId: client.id,
         clientEmail: client.email,

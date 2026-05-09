@@ -12,6 +12,8 @@ export const siteSettings = {
   ordersEmail: "orders@sarjantextiles.com",
   phone: "+91 98765 43210",
   address: "Surat, Gujarat, India",
+  openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
+  openTimeSunday: "Sunday: By appointment",
   creditTermDays: 90,
   footerNote: "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
   seo: {

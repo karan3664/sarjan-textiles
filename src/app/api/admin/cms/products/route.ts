@@ -1,7 +1,8 @@
-import { deleteCmsProduct, upsertCmsProduct } from "@/lib/cms-store";
+import { deleteCmsProduct, upsertCmsProduct, upsertCmsProducts } from "@/lib/cms-store";
 
 export async function POST(request: Request) {
   const product = await request.json();
+  if (Array.isArray(product.products)) return Response.json(await upsertCmsProducts(product.products));
   return Response.json(await upsertCmsProduct(product));
 }
 

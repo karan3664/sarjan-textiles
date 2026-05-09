@@ -1,3 +1,4 @@
+import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { createOrder, readLocalDb } from "@/lib/local-db";
 
 export async function GET(request: Request) {
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     if (!body.clientId || !body.items?.length) return Response.json({ error: "Client and items required" }, { status: 400 });
+    const session = verifyClientToken(bearerToken(request));
+    if (!session || session.clientId !== body.clientId) return Response.json({ error: "Valid client token required" }, { status: 401 });
     const order = await createOrder(body);
     return Response.json({ order });
   } catch (error) {

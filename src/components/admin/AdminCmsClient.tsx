@@ -298,6 +298,8 @@ export function AdminCmsClient() {
           <fieldset><div className="body-title mb-10">Orders Email</div><input value={cms.siteSettings.ordersEmail} onChange={(event) => setSettings("ordersEmail", event.target.value)} /></fieldset>
           <fieldset><div className="body-title mb-10">Phone</div><input value={cms.siteSettings.phone} onChange={(event) => setSettings("phone", event.target.value)} /></fieldset>
           <fieldset><div className="body-title mb-10">Address</div><input value={cms.siteSettings.address} onChange={(event) => setSettings("address", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Open Time Weekday</div><input value={cms.siteSettings.openTimeWeekday} onChange={(event) => setSettings("openTimeWeekday", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Open Time Sunday</div><input value={cms.siteSettings.openTimeSunday} onChange={(event) => setSettings("openTimeSunday", event.target.value)} /></fieldset>
           <fieldset><div className="body-title mb-10">Credit Days</div><input type="number" value={cms.siteSettings.creditTermDays} onChange={(event) => setSettings("creditTermDays", Number(event.target.value))} /></fieldset>
         </div>
         <div className={`body-text mt-20 ${saveState === "error" ? "text-danger" : ""}`}>

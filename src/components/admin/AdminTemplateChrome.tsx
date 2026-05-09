@@ -38,19 +38,22 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-function Sidebar({ active }: { active: "dashboard" | "home" }) {
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "home" | "testimonials" | "products" | "blogs" | "about" | "inquiries";
+
+function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
     <div className="section-menu-left">
       <div className="menu-backdrop" />
       <div className="box-logo">
-        <Link href="/admin" id="site-logo-inner">
+        <Link href="/admin" id="site-logo-inner" className="sarjan-admin-sidebar-logo">
           <img
             id="logo_header"
             alt="Sarjan Textiles"
-            src="/sarjan-assets/sarjan-logo-full.png"
-            data-light="/sarjan-assets/sarjan-logo-full.png"
-            data-dark="/sarjan-assets/sarjan-logo-full.png"
+            src="/sarjan-assets/sarjan-logo-icon.png"
+            data-light="/sarjan-assets/sarjan-logo-icon.png"
+            data-dark="/sarjan-assets/sarjan-logo-icon.png"
           />
+          <span>Sarjan Textiles</span>
         </Link>
         <div className="button-show-hide">
           <i className="icon-chevron-left" />
@@ -60,13 +63,22 @@ function Sidebar({ active }: { active: "dashboard" | "home" }) {
         <div className="center">
           <ul>
             <MenuItem href="/admin" icon="icon-house" label="Dashboard" active={active === "dashboard"} />
-            <MenuItem href="/admin/home" icon="icon-edit" label="Home Page CMS" active={active === "home"} />
-            <MenuItem href="/admin/products-list" icon="icon-package" label="Products" />
+            <MenuItem href="/admin/customers" icon="icon-users" label="Client Management" active={active === "customers"} />
+            <MenuItem href="/admin/products-list" icon="icon-package" label="Products" active={active === "products"} />
             <MenuItem href="/admin/categories" icon="icon-folders" label="Categories" />
-            <MenuItem href="/admin/orders-list" icon="icon-dollar" label="Orders" />
-            <MenuItem href="/admin/user-list" icon="icon-users" label="Clients" />
+            <MenuItem href="/admin/products-low" icon="icon-basket" label="Inventory" />
+            <MenuItem href="/admin/orders" icon="icon-dollar" label="Orders" active={active === "orders"} />
+            <MenuItem href="/admin/dispatch" icon="icon-send" label="Dispatch" active={active === "dispatch"} />
+            <MenuItem href="/admin/payments" icon="icon-hand-coins" label="Payments & Credit" active={active === "payments"} />
+            <MenuItem href="/admin/home" icon="icon-edit" label="CMS / Home Page" active={active === "home"} />
+            <MenuItem href="/admin/about" icon="icon-edit" label="About Us" active={active === "about"} />
+            <MenuItem href="/admin/contact-inquiries" icon="icon-message" label="Contact Inquiries" active={active === "inquiries"} />
+            <MenuItem href="/admin/blogs-list" icon="icon-edit" label="Blogs" active={active === "blogs"} />
+            <MenuItem href="/admin/testimonials" icon="icon-message" label="Testimonials" active={active === "testimonials"} />
+            <MenuItem href="/admin/tags" icon="icon-chart-bar" label="SEO" />
+            <MenuItem href="/admin/notice" icon="icon-bell" label="Notifications" />
             <MenuItem href="/admin/reports" icon="icon-chart-bar" label="Reports" />
-            <MenuItem href="/admin/reviews" icon="icon-star-fill" label="Reviews" />
+            <MenuItem href="/admin/change-password" icon="icon-users" label="Roles & Permissions" />
             <MenuItem href="/" icon="icon-sign-out" label="Front Store" />
           </ul>
         </div>
@@ -85,10 +97,10 @@ function Header() {
           </div>
           <form className="form-search flex-grow">
             <fieldset className="name">
-              <input type="text" placeholder="Search CMS, products, orders" className="show-search style-1" name="name" />
+              <input type="text" placeholder="Enter your e-mail" className="show-search style-1" name="name" tabIndex={2} value="" aria-required="true" required readOnly />
             </fieldset>
             <div className="button-submit">
-              <button type="button">
+              <button className="" type="submit">
                 <i className="icon-search" />
               </button>
             </div>
@@ -161,7 +173,7 @@ export function AdminTemplateChrome({
   title,
   children,
 }: {
-  active: "dashboard" | "home";
+  active: AdminActiveSection;
   title: string;
   children: ReactNode;
 }) {
