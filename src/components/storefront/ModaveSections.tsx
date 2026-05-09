@@ -4,6 +4,7 @@ import { blogs, home, pages, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { getCmsSnapshot } from "@/lib/cms-store";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
@@ -174,7 +175,11 @@ function ServiceIconBox() {
   );
 }
 
-export function HomeDynamic() {
+export async function HomeDynamic() {
+  const cms = await getCmsSnapshot();
+  const home = cms.home;
+  const products = cms.products;
+  const blogs = cms.blogs;
   const featured = products[0];
   const galleryProducts = products.slice(0, 5);
 
@@ -768,7 +773,8 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
   );
 }
 
-export function BlogListDynamic() {
+export async function BlogListDynamic() {
+  const { blogs } = await getCmsSnapshot();
   return (
     <>
       <PageTitle title="Blog Grid" crumbs={["Homepage", "Blog", "Blog Grid"]} />
@@ -916,7 +922,7 @@ function ProductListCard({ product }: { product: Product }) {
   );
 }
 
-export function ProductsListingDynamic({ page = 1, sort = "best-selling", q }: { page?: number; sort?: string; q?: string }) {
+export async function ProductsListingDynamic({ page = 1, sort = "best-selling", q }: { page?: number; sort?: string; q?: string }) {
   const perPage = 24;
   const sortValue = ["best-selling", "a-z", "z-a", "price-low-high", "price-high-low"].includes(sort ?? "") ? sort ?? "best-selling" : "best-selling";
   const sortLabels: Record<string, string> = {
@@ -926,12 +932,13 @@ export function ProductsListingDynamic({ page = 1, sort = "best-selling", q }: {
     "price-low-high": "Price, low to high",
     "price-high-low": "Price, high to low",
   };
-  const catalog = getCatalogProducts({ page, limit: perPage, sort: sortValue, q });
+  const catalog = await getCatalogProducts({ page, limit: perPage, sort: sortValue, q });
   const totalPages = catalog.totalPages;
   const currentPage = catalog.page;
   const start = (currentPage - 1) * perPage;
   const visibleProducts = catalog.items;
-  const filterMaxPrice = Math.ceil(Math.max(...products.map((product) => product.price)) / 100) * 100;
+  const cms = await getCmsSnapshot();
+  const filterMaxPrice = Math.ceil(Math.max(...cms.products.map((product) => product.price)) / 100) * 100;
   const layoutDots = [
     { className: "tf-view-layout-switch sw-layout-list list-layout", value: "list", width: 20, circles: [[3, 6], [3, 14]], rects: [[7.5, 3.5], [7.5, 11.5]] },
     { className: "tf-view-layout-switch sw-layout-2", value: "tf-col-2", width: 20, circles: [[6, 6], [14, 6], [6, 14], [14, 14]] },
@@ -1095,7 +1102,8 @@ export function WishlistDynamic({ page = 1 }: { page?: number }) {
   );
 }
 
-export function BlogDetailDynamic({ slug }: { slug: string }) {
+export async function BlogDetailDynamic({ slug }: { slug: string }) {
+  const { blogs, products } = await getCmsSnapshot();
   const blog = blogs.find((item) => item.slug === slug) ?? blogs[0];
   const otherBlogs = blogs.filter((item) => item.slug !== blog.slug);
   const previous = otherBlogs[0] ?? blog;

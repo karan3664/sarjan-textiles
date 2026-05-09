@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { PageTitle } from "./ModaveSections";
+import { PageTitle } from "./PageTitle";
 
 type Client = {
   id: string;

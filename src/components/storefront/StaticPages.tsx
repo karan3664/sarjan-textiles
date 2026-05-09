@@ -3,11 +3,11 @@ import { products } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { ModaveProductCard } from "./ModaveProductCard";
-import { PageTitle } from "./ModaveSections";
+import { PageTitle } from "./PageTitle";
 import { FeedbackForm } from "./FeedbackForm";
 
-export function SearchResultPage({ q = "", page = 1 }: { q?: string; page?: number }) {
-  const data = getCatalogProducts({ q, page, limit: 24 });
+export async function SearchResultPage({ q = "", page = 1 }: { q?: string; page?: number }) {
+  const data = await getCatalogProducts({ q, page, limit: 24 });
 
   return (
     <>

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
-import { PageTitle } from "./ModaveSections";
+import { PageTitle } from "./PageTitle";
 
 function money(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;

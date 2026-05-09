@@ -1,17 +1,18 @@
 import { ProductDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { ProductSoldOutPage } from "@/components/storefront/StaticPages";
-import { products } from "@/data/mock";
-import { getProductBySlug } from "@/lib/mock-api";
+import { getCmsProductBySlug } from "@/lib/cms-store";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
-  return products.slice(0, 20).map((product) => ({ slug: product.slug }));
+  return [];
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getCmsProductBySlug(slug);
 
   if (!product) {
     notFound();

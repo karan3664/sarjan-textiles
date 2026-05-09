@@ -6,3 +6,4 @@ out
 .env.*.local
 .DS_Store
 data/local-db.json
+data/cms-db.json
