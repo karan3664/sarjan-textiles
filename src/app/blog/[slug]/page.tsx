@@ -1,7 +1,7 @@
 import { BlogDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export function generateStaticParams() { return []; }
 

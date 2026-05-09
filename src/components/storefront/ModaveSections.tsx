@@ -4,7 +4,7 @@ import { blogs, home, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import { getCmsSnapshot } from "@/lib/cms-store";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { HomeHeroRotator } from "./HomeHeroRotator";
@@ -184,7 +184,7 @@ function testimonialAvatar(avatar?: string) {
 }
 
 export async function HomeDynamic() {
-  const cms = await getCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   const home = cms.home;
   const homeContent = home as typeof home & {
     topPicksTitle?: string;
@@ -777,7 +777,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
 }
 
 export async function BlogListDynamic() {
-  const { blogs } = await getCmsSnapshot();
+  const { blogs } = await getCachedCmsSnapshot();
   return (
     <>
       <PageTitle title="Blog Grid" crumbs={["Homepage", "Blog", "Blog Grid"]} />
@@ -960,7 +960,7 @@ export async function ProductsListingDynamic({ page = 1, sort = "best-selling", 
   const currentPage = catalog.page;
   const start = (currentPage - 1) * perPage;
   const visibleProducts = catalog.items;
-  const cms = await getCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   const filterMaxPrice = Math.ceil(Math.max(...cms.products.map((product) => product.price)) / 100) * 100;
   const layoutDots = [
     { className: "tf-view-layout-switch sw-layout-list list-layout", value: "list", width: 20, circles: [[3, 6], [3, 14]], rects: [[7.5, 3.5], [7.5, 11.5]] },
@@ -1126,7 +1126,7 @@ export function WishlistDynamic({ page = 1 }: { page?: number }) {
 }
 
 export async function BlogDetailDynamic({ slug }: { slug: string }) {
-  const { blogs, products } = await getCmsSnapshot();
+  const { blogs, products } = await getCachedCmsSnapshot();
   const blog = blogs.find((item) => item.slug === slug) ?? blogs[0];
   const otherBlogs = blogs.filter((item) => item.slug !== blog.slug);
   const previous = otherBlogs[0] ?? blog;
@@ -1268,7 +1268,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
 }
 
 export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
-  const cms = await getCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   const page = cms.pages[type];
   const settings = cms.siteSettings;
   const isContact = type === "contact";

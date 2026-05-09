@@ -2886,7 +2886,7 @@ footer .footer-newsletter .subscribe-content input {
   justify-content: center;
   padding: 48px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(250, 226, 211, 0.95), rgba(244, 244, 244, 0.95)), url("/sarjan-assets/banner-textiles-studio.png") center/cover;
+  background: linear-gradient(135deg, rgba(250, 226, 211, 0.95), rgba(244, 244, 244, 0.95)), url("/sarjan-assets/banner-textiles-studio.webp") center/cover;
 }
 
 .tracking-wrap .form-login input.sarjan-tracking-input {

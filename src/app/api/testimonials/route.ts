@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     quote: body.quote,
     product: body.product ?? "Sarjan Textiles",
     price: body.price ?? "",
-    image: body.image ?? "/sarjan-assets/banner-textiles-studio.png",
+    image: body.image ?? "/sarjan-assets/banner-textiles-studio.webp",
     avatar: body.avatar ?? defaultAvatar,
     status: "pending",
     submittedAt: new Date().toISOString(),

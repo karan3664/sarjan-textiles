@@ -14,7 +14,7 @@ export function HomeHeroRotator({
   description: string;
   cta: { label: string; href: string };
 }) {
-  const safeImages = images.length ? images : ["/sarjan-assets/banner-textiles-studio.png"];
+  const safeImages = images.length ? images : ["/sarjan-assets/banner-textiles-studio.webp"];
   const [active, setActive] = useState(0);
 
   useEffect(() => {

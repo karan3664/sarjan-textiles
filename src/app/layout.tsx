@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description: siteSettings.seo.description,
     url: `https://${siteSettings.domain}`,
     siteName: siteSettings.brandName,
-    images: ["/sarjan-assets/banner-textiles-studio.png"],
+    images: ["/sarjan-assets/banner-textiles-studio.webp"],
   },
 };
 

@@ -102,7 +102,7 @@ function supabaseAdmin() {
 
 async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), 2000);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {

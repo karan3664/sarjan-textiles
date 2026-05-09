@@ -1,4 +1,4 @@
-import { getCmsSnapshot } from "@/lib/cms-store";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import type { Product } from "@/data/mock";
 
 export type CatalogSort = "best-selling" | "a-z" | "z-a" | "price-low-high" | "price-high-low";
@@ -18,7 +18,7 @@ export function sortProductList(products: Product[], sort: string | null | undef
 }
 
 export async function getCatalogProducts({ page = 1, limit = 24, sort = "best-selling", ids, q }: { page?: number; limit?: number; sort?: string; ids?: string[]; q?: string }) {
-  const { products } = await getCmsSnapshot();
+  const { products } = await getCachedCmsSnapshot();
   const query = q?.trim().toLowerCase();
   const source = ids?.length ? products.filter((product) => ids.includes(product.slug)) : sortProductList(products, sort);
   const filtered = query

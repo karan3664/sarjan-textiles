@@ -8,11 +8,7 @@ const baseScripts = [
   "bootstrap.min.js",
   "swiper-bundle.min.js",
   "carousel.js",
-  "bootstrap-select.min.js",
   "lazysize.min.js",
-  "count-down.js",
-  "wow.min.js",
-  "multiple-modal.js",
   "main.js",
 ];
 

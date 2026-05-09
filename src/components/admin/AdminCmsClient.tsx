@@ -20,7 +20,7 @@ const emptyProduct: Product = {
   sold: 0,
   colors: ["Black"],
   sizes: ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
-  images: ["/sarjan-assets/shirt-ajrak-black-studio.png"],
+  images: ["/sarjan-assets/shirt-ajrak-black-studio.webp"],
   description: "",
   care: "",
   isFeatured: false,
@@ -30,7 +30,7 @@ const emptyBlog: CmsBlog = {
   slug: "new-blog",
   title: "New Blog",
   date: new Date().toISOString().slice(0, 10),
-  image: "/sarjan-assets/banner-textiles-studio.png",
+  image: "/sarjan-assets/banner-textiles-studio.webp",
   excerpt: "",
   content: "",
 };

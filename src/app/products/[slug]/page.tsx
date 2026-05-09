@@ -4,7 +4,7 @@ import { ProductSoldOutPage } from "@/components/storefront/StaticPages";
 import { getCmsProductBySlug } from "@/lib/cms-store";
 import { notFound } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export function generateStaticParams() {
   return [];

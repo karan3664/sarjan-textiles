@@ -17,7 +17,7 @@ export function FeedbackForm() {
           price: form.get("price"),
           quote: form.get("message"),
           avatar: "/sarjan-assets/sarjan-favicon-192.png",
-          image: form.get("image") || "/sarjan-assets/banner-textiles-studio.png",
+          image: form.get("image") || "/sarjan-assets/banner-textiles-studio.webp",
         }
       : {
           companyName: form.get("companyName"),

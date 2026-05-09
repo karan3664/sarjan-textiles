@@ -76,7 +76,7 @@ function blogFromForm(form: BlogForm, blocks: BlogBlock[]): CmsBlog {
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
     excerpt: form.excerpt.trim(),
-    image: form.image || "/sarjan-assets/banner-textiles-studio.png",
+    image: form.image || "/sarjan-assets/banner-textiles-studio.webp",
     date: form.date,
     content: contentFromBlocks(blocks),
   };

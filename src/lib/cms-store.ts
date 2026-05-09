@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import {
   blogs as defaultBlogs,
@@ -32,6 +33,26 @@ export type CmsSnapshot = {
 
 const cmsPath = path.join(process.cwd(), "data", "cms-db.json");
 
+function optimizedMediaPath(value: string) {
+  if (!/\.(png|jpe?g)$/i.test(value)) return value;
+  if (value.startsWith("/sarjan-assets/")) {
+    const file = value.split("/").pop() ?? "";
+    if (file.startsWith("sarjan-logo") || file.startsWith("sarjan-favicon") || file.includes("Logo Final")) return value;
+    return value.replace(/\.(png|jpe?g)$/i, ".webp");
+  }
+  if (value.startsWith("/uploads/cms/")) return value.replace(/\.(png|jpe?g)$/i, ".webp");
+  return value;
+}
+
+function optimizeMedia<T>(value: T): T {
+  if (typeof value === "string") return optimizedMediaPath(value) as T;
+  if (Array.isArray(value)) return value.map((item) => optimizeMedia(item)) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, optimizeMedia(item)])) as T;
+  }
+  return value;
+}
+
 function supabaseAdmin() {
   if (process.env.SUPABASE_ENABLED !== "true") return null;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,7 +66,7 @@ function supabaseAdmin() {
 
 async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), 2000);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {
@@ -69,7 +90,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
 };
 
 function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
-  return {
+  return optimizeMedia({
     siteSettings: { ...defaultCmsSnapshot.siteSettings, ...(input.siteSettings ?? {}) },
     home: { ...defaultCmsSnapshot.home, ...(input.home ?? {}) },
     products: Array.isArray(input.products) && input.products.length ? input.products : defaultCmsSnapshot.products,
@@ -77,10 +98,10 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     testimonials: Array.isArray(input.testimonials) && input.testimonials.length ? input.testimonials : defaultCmsSnapshot.testimonials,
     pages: { ...defaultCmsSnapshot.pages, ...(input.pages ?? {}) },
     updatedAt: input.updatedAt ?? new Date().toISOString(),
-  };
+  });
 }
 
-export async function getCmsSnapshot(): Promise<CmsSnapshot> {
+async function readCmsSnapshot(): Promise<CmsSnapshot> {
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
@@ -99,6 +120,15 @@ export async function getCmsSnapshot(): Promise<CmsSnapshot> {
   }
 }
 
+export async function getCmsSnapshot(): Promise<CmsSnapshot> {
+  return readCmsSnapshot();
+}
+
+export const getCachedCmsSnapshot = unstable_cache(readCmsSnapshot, ["cms-snapshot"], {
+  revalidate: 300,
+  tags: ["cms-snapshot"],
+});
+
 export async function saveCmsSnapshot(input: Partial<CmsSnapshot>): Promise<CmsSnapshot> {
   const current = await getCmsSnapshot();
   const next = normalizeSnapshot({ ...current, ...input, updatedAt: new Date().toISOString() });
@@ -107,6 +137,7 @@ export async function saveCmsSnapshot(input: Partial<CmsSnapshot>): Promise<CmsS
     try {
       const { error } = await supabase.from("cms_snapshots").upsert({ id: 1, data: next, updated_at: next.updatedAt }, { onConflict: "id" });
       if (error) throw new Error(error.message);
+      revalidateTag("cms-snapshot");
       return next;
     } catch {
       // Fall through to JSON fallback.
@@ -114,6 +145,7 @@ export async function saveCmsSnapshot(input: Partial<CmsSnapshot>): Promise<CmsS
   }
   await mkdir(path.dirname(cmsPath), { recursive: true });
   await writeFile(cmsPath, JSON.stringify(next, null, 2));
+  revalidateTag("cms-snapshot");
   return next;
 }
 

@@ -256,16 +256,16 @@ function rewriteHtml(html: string, kind: TemplateKind) {
   const base = kind === "storefront" ? "/template/storefront" : "/template/admin";
   const logo = "/sarjan-assets/sarjan-logo-full.png";
   const favicon = "/sarjan-assets/sarjan-favicon-192.png";
-  const banner = "/sarjan-assets/banner-textiles-studio.png";
+  const banner = "/sarjan-assets/banner-textiles-studio.webp";
   const sarjanProducts = [
-    "/sarjan-assets/shirt-ajrak-black-studio.png",
-    "/sarjan-assets/shirt-mustard-block-studio.png",
-    "/sarjan-assets/shirt-blue-block-studio.png",
-    "/sarjan-assets/shirt-ivory-red-blue-studio.png",
-    "/sarjan-assets/kurta-blue-floral-studio.png",
-    "/sarjan-assets/kurta-teal-diamond-studio.png",
-    "/sarjan-assets/kurta-red-medallion-studio.png",
-    "/sarjan-assets/kurta-beige-diamond-studio.png",
+    "/sarjan-assets/shirt-ajrak-black-studio.webp",
+    "/sarjan-assets/shirt-mustard-block-studio.webp",
+    "/sarjan-assets/shirt-blue-block-studio.webp",
+    "/sarjan-assets/shirt-ivory-red-blue-studio.webp",
+    "/sarjan-assets/kurta-blue-floral-studio.webp",
+    "/sarjan-assets/kurta-teal-diamond-studio.webp",
+    "/sarjan-assets/kurta-red-medallion-studio.webp",
+    "/sarjan-assets/kurta-beige-diamond-studio.webp",
   ];
   let productIndex = 0;
 

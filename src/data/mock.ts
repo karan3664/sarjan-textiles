@@ -20,7 +20,10 @@ export type Product = {
   isFeatured?: boolean;
 };
 
-const asset = (file: string) => `/sarjan-assets/${file}`;
+const asset = (file: string) => {
+  const keepOriginal = file.startsWith("sarjan-logo") || file.startsWith("sarjan-favicon") || file.includes("Logo Final");
+  return `/sarjan-assets/${keepOriginal ? file : file.replace(/\.(png|jpg|jpeg)$/i, ".webp")}`;
+};
 
 export const siteSettings = {
   domain: "sarjantextiles.com",
