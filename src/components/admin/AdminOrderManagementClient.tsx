@@ -55,6 +55,24 @@ function downloadCsv(filename: string, rows: Array<Record<string, string | numbe
   URL.revokeObjectURL(url);
 }
 
+async function downloadXlsx(filename: string, rows: Array<Record<string, string | number | undefined>>) {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+  XLSX.writeFile(workbook, filename);
+}
+
+function printPdf(title: string, rows: Array<Record<string, string | number | undefined>>) {
+  const headers = Object.keys(rows[0] ?? { empty: "" });
+  const table = `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${headers.map((header) => `<td>${String(row[header] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const popup = window.open("", "_blank", "width=1200,height=800");
+  if (!popup) return;
+  popup.document.write(`<html><head><title>${title}</title><style>body{font-family:Arial;padding:24px;color:#181818}h1{font-size:22px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#f5f5f5}</style></head><body><h1>${title}</h1>${table}</body></html>`);
+  popup.document.close();
+  popup.print();
+}
+
 export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrders: AdminOrder[]; mode: Mode }) {
   const [orders, setOrders] = useState(initialOrders);
   const [query, setQuery] = useState("");
@@ -87,6 +105,38 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
   const setDraft = (id: string, patch: Record<string, any>) => {
     setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? {}), ...patch } }));
   };
+
+  const orderRows = () => visibleOrders.map((order) => ({
+    id: order.id,
+    client: order.clientName,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    dispatchDate: order.dispatchDate,
+    lrNumber: order.lrNumber,
+    total: order.subtotal,
+    outstanding: order.outstandingAmount,
+  }));
+
+  const dispatchRows = () => dispatchLogs.map((log) => ({
+    date: formatDate(log.createdAt),
+    order: log.orderId,
+    client: log.clientName,
+    status: log.status,
+    lrNumber: log.lrNumber,
+    note: log.note,
+  }));
+
+  const paymentRows = () => agingRows.map((order) => ({
+    order: order.id,
+    client: order.clientName,
+    dueDate: formatDate(order.creditDueOn),
+    aging: order.bucket,
+    invoice: order.subtotal,
+    paid: order.paidAmount ?? 0,
+    outstanding: order.outstandingAmount ?? 0,
+    cheque: order.chequeNumber,
+    deposit: order.depositStatus,
+  }));
 
   const save = async () => {
     if (!draft) return;
@@ -143,18 +193,11 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               <fieldset className="name"><input className="show-search" placeholder="Search orders" value={query} onChange={(event) => setQuery(event.target.value)} /></fieldset>
               <div className="button-submit"><button type="submit"><i className="icon-search-1 link" /></button></div>
             </form>
-            <button type="button" className="tf-button" onClick={() => downloadCsv(`${mode}-orders.csv`, visibleOrders.map((order) => ({
-              id: order.id,
-              client: order.clientName,
-              status: order.status,
-              paymentStatus: order.paymentStatus,
-              dispatchDate: order.dispatchDate,
-              lrNumber: order.lrNumber,
-              total: order.subtotal,
-              outstanding: order.outstandingAmount,
-            })))}>
-              Export CSV
-            </button>
+            <div className="d-flex gap8 flex-wrap">
+              <button type="button" className="tf-button" onClick={() => downloadCsv(`${mode}-orders.csv`, orderRows())}>CSV</button>
+              <button type="button" className="tf-button" onClick={() => downloadXlsx(`${mode}-orders.xlsx`, orderRows())}>Excel</button>
+              <button type="button" className="tf-button" onClick={() => printPdf(`${mode} Orders`, orderRows())}>PDF</button>
+            </div>
           </div>
           <div className="sarjan-order-list">
             {visibleOrders.map((order) => (
@@ -253,14 +296,9 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               <div className="body-text text-secondary">LR, courier, vehicle, tracking notes, and full status timeline.</div>
             </div>
             <div className="d-flex gap10 flex-wrap">
-              <button type="button" className="tf-button" onClick={() => downloadCsv("dispatch-logs.csv", dispatchLogs.map((log) => ({
-                date: formatDate(log.createdAt),
-                order: log.orderId,
-                client: log.clientName,
-                status: log.status,
-                lrNumber: log.lrNumber,
-                note: log.note,
-              })))}>Export CSV</button>
+              <button type="button" className="tf-button" onClick={() => downloadCsv("dispatch-logs.csv", dispatchRows())}>CSV</button>
+              <button type="button" className="tf-button" onClick={() => downloadXlsx("dispatch-logs.xlsx", dispatchRows())}>Excel</button>
+              <button type="button" className="tf-button" onClick={() => printPdf("Dispatch Logs", dispatchRows())}>PDF</button>
               <div className="box-status text-button type-delivery">{dispatchLogs.length} Logs</div>
             </div>
           </div>
@@ -301,17 +339,9 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
                 <div className="body-text text-secondary">90-day cheque workflow, pending dues, overdue buckets, partial payments, and deposit status.</div>
               </div>
               <div className="d-flex gap10 flex-wrap">
-                <button type="button" className="tf-button" onClick={() => downloadCsv("payment-aging-report.csv", agingRows.map((order) => ({
-                  order: order.id,
-                  client: order.clientName,
-                  dueDate: formatDate(order.creditDueOn),
-                  aging: order.bucket,
-                  invoice: order.subtotal,
-                  paid: order.paidAmount ?? 0,
-                  outstanding: order.outstandingAmount ?? 0,
-                  cheque: order.chequeNumber,
-                  deposit: order.depositStatus,
-                })))}>Export CSV</button>
+                <button type="button" className="tf-button" onClick={() => downloadCsv("payment-aging-report.csv", paymentRows())}>CSV</button>
+                <button type="button" className="tf-button" onClick={() => downloadXlsx("payment-aging-report.xlsx", paymentRows())}>Excel</button>
+                <button type="button" className="tf-button" onClick={() => printPdf("Payment Aging Report", paymentRows())}>PDF</button>
                 <div className="box-status text-button type-delivery">{agingRows.length} Orders</div>
               </div>
             </div>

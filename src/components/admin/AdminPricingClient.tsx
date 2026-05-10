@@ -19,6 +19,15 @@ export function AdminPricingClient({
   const [editing, setEditing] = useState<ClientPricingRule | null>(null);
   const [message, setMessage] = useState("");
   const productOptions = useMemo(() => products.slice(0, 250), [products]);
+  const pricingHistory = useMemo(() => rules.flatMap((rule) => (rule.history ?? []).map((item) => ({ ...item, rule }))).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()), [rules]);
+
+  const ruleStatus = (rule: ClientPricingRule) => {
+    const now = new Date();
+    if (!rule.active) return { label: "Hidden", className: "type-pending" };
+    if (rule.validFrom && new Date(rule.validFrom) > now) return { label: "Scheduled", className: "type-delivery" };
+    if (rule.validTo && new Date(rule.validTo) < now) return { label: "Expired", className: "type-inactive" };
+    return { label: "Active", className: "type-completed" };
+  };
 
   const saveRule = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -131,7 +140,7 @@ export function AdminPricingClient({
                     <div>{product?.name ?? rule.productSlug}</div>
                     <div>{rule.customPrice ? `₹${rule.customPrice}` : `${rule.discountPercentage ?? 0}% discount`}</div>
                     <div>{rule.validFrom || "Now"} - {rule.validTo || "Open"}</div>
-                    <div><span className={`box-status text-button ${rule.active ? "type-delivery" : "type-pending"}`}>{rule.active ? "Active" : "Hidden"}</span></div>
+                    <div><span className={`box-status text-button ${ruleStatus(rule).className}`}>{ruleStatus(rule).label}</span></div>
                     <div className="list-icon-function">
                       <button type="button" className="item edit" onClick={() => setEditing(rule)}><i className="icon-edit-3" /></button>
                       <button type="button" className="item trash" onClick={() => deleteRule(rule.id)}><i className="icon-trash-2" /></button>
@@ -141,6 +150,38 @@ export function AdminPricingClient({
               );
             })}
           </ul>
+        </div>
+      </div>
+
+      <div className="wg-box mt-30">
+        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
+          <div>
+            <h5>Temporary Pricing History</h5>
+            <div className="body-text text-secondary">Every client price update stores date validity, note, actor, and previous pricing timeline.</div>
+          </div>
+          <div className="box-status text-button type-delivery">{pricingHistory.length} Logs</div>
+        </div>
+        <div className="wg-table table-product-list">
+          <table>
+            <thead><tr><th className="text-title">Updated</th><th className="text-title">Client</th><th className="text-title">Product</th><th className="text-title">Price</th><th className="text-title">Validity</th><th className="text-title">Actor / Note</th></tr></thead>
+            <tbody>
+              {pricingHistory.slice(0, 100).map((item, index) => {
+                const client = clients.find((entry) => entry.id === item.rule.clientId);
+                const product = products.find((entry) => entry.slug === item.rule.productSlug);
+                return (
+                  <tr className="tf-table-item item-row" key={`${item.rule.id}-${item.updatedAt}-${index}`}>
+                    <td>{new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.updatedAt))}</td>
+                    <td>{client?.companyName ?? item.rule.clientId}</td>
+                    <td>{product?.name ?? item.rule.productSlug}</td>
+                    <td>{item.customPrice ? `₹${item.customPrice}` : `${item.discountPercentage ?? 0}% discount`}</td>
+                    <td>{item.validFrom || "Now"} - {item.validTo || "Open"}</td>
+                    <td><div>{item.actor || "Admin"}</div><div className="text-caption-1 text-secondary">{item.note || "-"}</div></td>
+                  </tr>
+                );
+              })}
+              {!pricingHistory.length ? <tr><td colSpan={6}><div className="sarjan-empty-state">No pricing history yet.</div></td></tr> : null}
+            </tbody>
+          </table>
         </div>
       </div>
     </>

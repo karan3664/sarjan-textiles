@@ -29,6 +29,36 @@ function downloadCsv(rows: AuditLog[]) {
   URL.revokeObjectURL(url);
 }
 
+function rowsFromLogs(logs: AuditLog[]) {
+  return logs.map((log) => ({
+    date: log.createdAt,
+    actor: log.actor,
+    role: log.role ?? "",
+    action: log.action,
+    entity: log.entity,
+    entityId: log.entityId ?? "",
+    note: log.note ?? "",
+  }));
+}
+
+async function downloadXlsx(logs: AuditLog[]) {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rowsFromLogs(logs)), "Audit Logs");
+  XLSX.writeFile(workbook, "admin-audit-logs.xlsx");
+}
+
+function printPdf(logs: AuditLog[]) {
+  const rows = rowsFromLogs(logs);
+  const headers = Object.keys(rows[0] ?? { empty: "" });
+  const table = `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${headers.map((header) => `<td>${String(row[header as keyof typeof row] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const popup = window.open("", "_blank", "width=1200,height=800");
+  if (!popup) return;
+  popup.document.write(`<html><head><title>Admin Audit Logs</title><style>body{font-family:Arial;padding:24px;color:#181818}h1{font-size:22px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#f5f5f5}</style></head><body><h1>Admin Audit Logs</h1>${table}</body></html>`);
+  popup.document.close();
+  popup.print();
+}
+
 export function AdminAuditLogsClient({ logs }: { logs: AuditLog[] }) {
   return (
     <div className="wg-box sarjan-report-box">
@@ -38,7 +68,9 @@ export function AdminAuditLogsClient({ logs }: { logs: AuditLog[] }) {
           <div className="body-text text-secondary">Admin action history for orders, clients, products, inventory, and CMS changes.</div>
         </div>
         <div className="d-flex gap10 flex-wrap">
-          <button type="button" className="tf-button" onClick={() => downloadCsv(logs)}>Export CSV</button>
+          <button type="button" className="tf-button" onClick={() => downloadCsv(logs)}>CSV</button>
+          <button type="button" className="tf-button" onClick={() => downloadXlsx(logs)}>Excel</button>
+          <button type="button" className="tf-button" onClick={() => printPdf(logs)}>PDF</button>
           <div className="box-status text-button type-delivery">{logs.length} Logs</div>
         </div>
       </div>

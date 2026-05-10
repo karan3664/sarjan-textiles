@@ -59,6 +59,14 @@ export function AdminCustomSectionsEditor({
     onChange(next);
   };
 
+  const reorderSections = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= sections.length || to >= sections.length) return;
+    const next = [...sections];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
+  };
+
   const duplicateSection = (index: number) => {
     const source = sections[index];
     const copy: CmsCustomSection = {
@@ -104,6 +112,15 @@ export function AdminCustomSectionsEditor({
     updateSection(sectionIndex, { blocks: (section.blocks ?? []).filter((_, index) => index !== blockIndex) });
   };
 
+  const reorderBlocks = (sectionIndex: number, from: number, to: number) => {
+    const section = sections[sectionIndex];
+    const blocks = [...(section.blocks ?? [])];
+    if (from === to || from < 0 || to < 0 || from >= blocks.length || to >= blocks.length) return;
+    const [item] = blocks.splice(from, 1);
+    blocks.splice(to, 0, item);
+    updateSection(sectionIndex, { blocks });
+  };
+
   const uploadBlockImage = async (sectionIndex: number, blockIndex: number, file: File) => {
     const key = `custom-${sectionIndex}-${blockIndex}`;
     setUploadState((current) => ({ ...current, [key]: "uploading" }));
@@ -134,10 +151,17 @@ export function AdminCustomSectionsEditor({
 
       <div className="d-grid gap-3">
         {sections.map((section, index) => (
-          <div className="sarjan-section-builder-card" key={section.id}>
+          <div
+            className="sarjan-section-builder-card"
+            key={section.id}
+            draggable
+            onDragStart={(event) => event.dataTransfer.setData("text/section-index", String(index))}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => reorderSections(Number(event.dataTransfer.getData("text/section-index")), index)}
+          >
             <div className="sarjan-section-builder-row">
               <div className="d-flex align-items-center gap10">
-                <span className="box-status text-button type-delivery">{index + 1}</span>
+                <span className="box-status text-button type-delivery sarjan-drag-handle">Drag {index + 1}</span>
                 <div>
                   <h6>{section.title || "Custom Section"}</h6>
                   <div className="text-caption-1 text-secondary">{section.enabled === false ? "Hidden" : "Visible"}</div>
@@ -180,10 +204,21 @@ export function AdminCustomSectionsEditor({
                 {(section.blocks ?? []).map((block, blockIndex) => {
                   const uploadKey = `custom-${index}-${blockIndex}`;
                   return (
-                    <div className="sarjan-custom-block-card" key={block.id}>
+                    <div
+                      className="sarjan-custom-block-card"
+                      key={block.id}
+                      draggable
+                      onDragStart={(event) => event.dataTransfer.setData("text/block-index", String(blockIndex))}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => reorderBlocks(index, Number(event.dataTransfer.getData("text/block-index")), blockIndex)}
+                    >
                       <div className="flex justify-between gap10 items-center mb-16">
-                        <span className="box-status text-button type-delivery">{block.type}</span>
-                        <button type="button" className="tf-button" onClick={() => removeBlock(index, blockIndex)}>Remove</button>
+                        <span className="box-status text-button type-delivery sarjan-drag-handle">Drag {block.type}</span>
+                        <div className="d-flex gap8 flex-wrap">
+                          <button type="button" className="tf-button" onClick={() => reorderBlocks(index, blockIndex, blockIndex - 1)} disabled={blockIndex === 0}>Up</button>
+                          <button type="button" className="tf-button" onClick={() => reorderBlocks(index, blockIndex, blockIndex + 1)} disabled={blockIndex === (section.blocks ?? []).length - 1}>Down</button>
+                          <button type="button" className="tf-button" onClick={() => removeBlock(index, blockIndex)}>Remove</button>
+                        </div>
                       </div>
 
                       {block.type === "text" ? (

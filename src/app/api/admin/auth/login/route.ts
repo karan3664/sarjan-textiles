@@ -1,8 +1,8 @@
 import { configuredAdmins, createAdminToken } from "@/lib/admin-token";
-import { hashPassword } from "@/lib/local-db";
+import { verifyPassword } from "@/lib/local-db";
 
 function passwordMatches(admin: ReturnType<typeof configuredAdmins>[number], password: string) {
-  if (admin.passwordHash) return hashPassword(password) === admin.passwordHash;
+  if (admin.passwordHash) return verifyPassword(password, admin.passwordHash);
   return admin.password === password;
 }
 

@@ -25,6 +25,12 @@ type ProductForm = {
   isFeatured: boolean;
 };
 
+type VariantOverride = {
+  sku?: string;
+  price?: string;
+  stock?: string;
+};
+
 const masterFabrics = ["Cotton cambric", "Cotton flex", "Rayon cotton blend", "Cotton slub", "Cotton rayon", "Fine cotton", "Linen cotton", "Viscose", "Modal cotton"];
 const commonCareInstructions = ["Gentle wash separately", "Dry in shade", "Do not bleach", "Iron inside out", "Use mild detergent", "Wash dark colors separately", "Hand wash recommended"];
 const commonColors = ["Black", "Indigo", "Ivory", "Mustard", "Maroon", "Blue", "Peach", "Teal", "Red", "Brown", "Beige", "White", "Green"];
@@ -65,7 +71,7 @@ function splitList(value: string) {
     .filter(Boolean);
 }
 
-function productFromForm(form: ProductForm, index = 0): Product {
+function productFromForm(form: ProductForm, index = 0, variantOverrides: Record<string, VariantOverride> = {}): Product {
   const name = form.name.trim();
   const sku = form.sku.trim();
   const slug = slugify(name || sku || `product-${Date.now()}`);
@@ -88,13 +94,17 @@ function productFromForm(form: ProductForm, index = 0): Product {
     images: form.images.length ? form.images : ["/sarjan-assets/sarjan-logo-icon.png"],
     description: form.description.trim(),
     care: form.care.trim(),
-    variants: splitList(form.colors).flatMap((color) => splitList(form.sizes).map((size) => ({
-      sku: `${sku}-${color.slice(0, 3).toUpperCase()}-${size}`.replace(/\s+/g, ""),
+    variants: splitList(form.colors).flatMap((color) => splitList(form.sizes).map((size) => {
+      const key = `${color}__${size}`;
+      const override = variantOverrides[key] ?? {};
+      return {
+      sku: (override.sku || `${sku}-${color.slice(0, 3).toUpperCase()}-${size}`).replace(/\s+/g, ""),
       color,
       size,
-      price: Number(form.price) || 0,
-      stock: Number(form.variantStock) || Math.floor((Number(form.stock) || 0) / Math.max(1, splitList(form.colors).length * splitList(form.sizes).length)),
-    }))),
+      price: Number(override.price) || Number(form.price) || 0,
+      stock: Number(override.stock) || Number(form.variantStock) || Math.floor((Number(form.stock) || 0) / Math.max(1, splitList(form.colors).length * splitList(form.sizes).length)),
+    };
+    })),
     pricingRules: form.pricingRules
       .split("\n")
       .map((line) => line.split(",").map((item) => item.trim()))
@@ -144,6 +154,7 @@ function validProduct(product: Product) {
 export function AdminProductCreateClient({ initialProducts, editProduct }: { initialProducts: Product[]; editProduct?: Product }) {
   const isEdit = Boolean(editProduct);
   const [form, setForm] = useState<ProductForm>(() => formFromProduct(editProduct));
+  const [variantOverrides, setVariantOverrides] = useState<Record<string, VariantOverride>>(() => Object.fromEntries((editProduct?.variants ?? []).map((variant) => [`${variant.color}__${variant.size}`, { sku: variant.sku, price: String(variant.price), stock: String(variant.stock) }])));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [bulkUploading, setBulkUploading] = useState(false);
@@ -157,16 +168,25 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
   const selectedCare = splitList(form.care);
   const selectedColors = splitList(form.colors);
   const selectedSizes = splitList(form.sizes);
-  const variantPreview = useMemo(() => selectedColors.flatMap((color) => selectedSizes.map((size) => ({
-    color,
-    size,
-    sku: `${form.sku || "SKU"}-${color.slice(0, 3).toUpperCase()}-${size}`.replace(/\s+/g, ""),
-    stock: Number(form.variantStock) || Math.floor((Number(form.stock) || 0) / Math.max(1, selectedColors.length * selectedSizes.length)),
-    price: Number(form.price) || 0,
-  }))), [form.price, form.sku, form.stock, form.variantStock, selectedColors, selectedSizes]);
+  const variantPreview = useMemo(() => selectedColors.flatMap((color) => selectedSizes.map((size) => {
+    const key = `${color}__${size}`;
+    const override = variantOverrides[key] ?? {};
+    return {
+      key,
+      color,
+      size,
+      sku: (override.sku || `${form.sku || "SKU"}-${color.slice(0, 3).toUpperCase()}-${size}`).replace(/\s+/g, ""),
+      stock: Number(override.stock) || Number(form.variantStock) || Math.floor((Number(form.stock) || 0) / Math.max(1, selectedColors.length * selectedSizes.length)),
+      price: Number(override.price) || Number(form.price) || 0,
+    };
+  })), [form.price, form.sku, form.stock, form.variantStock, selectedColors, selectedSizes, variantOverrides]);
 
   const update = (key: keyof ProductForm, value: ProductForm[keyof ProductForm]) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const updateVariantOverride = (key: string, patch: VariantOverride) => {
+    setVariantOverrides((current) => ({ ...current, [key]: { ...(current[key] ?? {}), ...patch } }));
   };
 
   const toggleListValue = (key: "care" | "colors" | "sizes", value: string) => {
@@ -202,7 +222,7 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
 
   const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const product = mergeProductIdentity(productFromForm(form), editProduct);
+    const product = mergeProductIdentity(productFromForm(form, 0, variantOverrides), editProduct);
     if (!validProduct(product)) {
       setMessage("Name and SKU required.");
       return;
@@ -540,7 +560,7 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
                   <div className="flex justify-between gap12 items-center mb-16">
                     <div>
                       <h6 className="mb-4">Variant Matrix Preview</h6>
-                      <p className="text-secondary">{variantPreview.length} color-size variants will be saved for frontend filters and stock planning.</p>
+                      <p className="text-secondary">{variantPreview.length} color-size variants can be edited individually for SKU, price, and stock.</p>
                     </div>
                     <span className="box-status text-button type-delivery">{selectedColors.length} colors / {selectedSizes.length} sizes</span>
                   </div>
@@ -548,13 +568,13 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
                     <table>
                       <thead><tr><th>Color</th><th>Size</th><th>SKU</th><th>Price</th><th>Stock</th></tr></thead>
                       <tbody>
-                        {variantPreview.slice(0, 12).map((variant) => (
+                        {variantPreview.map((variant) => (
                           <tr key={`${variant.color}-${variant.size}`}>
                             <td>{variant.color}</td>
                             <td>{variant.size}</td>
-                            <td>{variant.sku}</td>
-                            <td>₹{variant.price.toLocaleString("en-IN")}</td>
-                            <td>{variant.stock}</td>
+                            <td><input value={variant.sku} onChange={(event) => updateVariantOverride(variant.key, { sku: event.target.value })} /></td>
+                            <td><input type="number" value={variant.price} onChange={(event) => updateVariantOverride(variant.key, { price: event.target.value })} /></td>
+                            <td><input type="number" value={variant.stock} onChange={(event) => updateVariantOverride(variant.key, { stock: event.target.value })} /></td>
                           </tr>
                         ))}
                       </tbody>

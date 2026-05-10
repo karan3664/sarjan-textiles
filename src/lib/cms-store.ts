@@ -32,6 +32,16 @@ export type ClientPricingRule = {
   active: boolean;
   note?: string;
   updatedAt: string;
+  history?: Array<{
+    customPrice?: number;
+    discountPercentage?: number;
+    validFrom?: string;
+    validTo?: string;
+    active: boolean;
+    note?: string;
+    updatedAt: string;
+    actor?: string;
+  }>;
 };
 
 export type InventoryMovement = {

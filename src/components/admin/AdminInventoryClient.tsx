@@ -42,6 +42,23 @@ function downloadCsv(filename: string, rows: Array<Record<string, string | numbe
   URL.revokeObjectURL(url);
 }
 
+async function downloadXlsx(filename: string, rows: Array<Record<string, string | number | undefined>>) {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), "Inventory");
+  XLSX.writeFile(workbook, filename);
+}
+
+function printPdf(title: string, rows: Array<Record<string, string | number | undefined>>) {
+  const headers = Object.keys(rows[0] ?? { empty: "" });
+  const table = `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${headers.map((header) => `<td>${String(row[header] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const popup = window.open("", "_blank", "width=1200,height=800");
+  if (!popup) return;
+  popup.document.write(`<html><head><title>${title}</title><style>body{font-family:Arial;padding:24px;color:#181818}h1{font-size:22px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#f5f5f5}</style></head><body><h1>${title}</h1>${table}</body></html>`);
+  popup.document.close();
+  popup.print();
+}
+
 export function AdminInventoryClient({ initialProducts, initialLogs }: { initialProducts: Product[]; initialLogs: InventoryMovement[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [logs, setLogs] = useState(initialLogs);
@@ -60,6 +77,18 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
   }, [products, query]);
 
   const selected = products.find((product) => product.slug === selectedSlug) ?? filtered[0] ?? products[0];
+  const ledgerRows = () => logs.map((log) => ({
+    date: formatDate(log.createdAt),
+    product: log.productName,
+    sku: log.sku,
+    operation: operationLabels[log.operation],
+    quantity: log.quantity,
+    beforeStock: log.beforeStock,
+    afterStock: log.afterStock,
+    reference: log.reference,
+    note: log.note,
+    actor: log.actor,
+  }));
 
   const totals = useMemo(() => {
     return {
@@ -213,18 +242,9 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
             <div className="body-text text-secondary">Stock in, stock out, manual adjustment, transfer, return, and damage logs.</div>
           </div>
           <div className="d-flex gap10 flex-wrap">
-            <button type="button" className="tf-button" onClick={() => downloadCsv("inventory-ledger.csv", logs.map((log) => ({
-              date: formatDate(log.createdAt),
-              product: log.productName,
-              sku: log.sku,
-              operation: operationLabels[log.operation],
-              quantity: log.quantity,
-              beforeStock: log.beforeStock,
-              afterStock: log.afterStock,
-              reference: log.reference,
-              note: log.note,
-              actor: log.actor,
-            })))}>Export CSV</button>
+            <button type="button" className="tf-button" onClick={() => downloadCsv("inventory-ledger.csv", ledgerRows())}>CSV</button>
+            <button type="button" className="tf-button" onClick={() => downloadXlsx("inventory-ledger.xlsx", ledgerRows())}>Excel</button>
+            <button type="button" className="tf-button" onClick={() => printPdf("Inventory Ledger", ledgerRows())}>PDF</button>
             <div className="box-status text-button type-delivery">{logs.length} Logs</div>
           </div>
         </div>

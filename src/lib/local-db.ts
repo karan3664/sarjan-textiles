@@ -2,6 +2,7 @@ import { randomUUID, createHash } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 export type LocalClient = {
   id: string;
@@ -179,7 +180,17 @@ function orderRow(order: Partial<LocalOrder>) {
 }
 
 export function hashPassword(password: string) {
+  return bcrypt.hashSync(password, 12);
+}
+
+function legacyShaPassword(password: string) {
   return createHash("sha256").update(password).digest("hex");
+}
+
+export function verifyPassword(password: string, hash: string) {
+  if (!hash) return false;
+  if (hash.startsWith("$2")) return bcrypt.compareSync(password, hash);
+  return hash === legacyShaPassword(password);
 }
 
 export function publicClient(client: LocalClient) {
@@ -285,7 +296,7 @@ export async function createClient(input: { email: string; password: string; com
 
 export async function loginClient(email: string, password: string) {
   const db = await readLocalDb();
-  const client = db.clients.find((item) => item.email === email.trim().toLowerCase() && item.passwordHash === hashPassword(password));
+  const client = db.clients.find((item) => item.email === email.trim().toLowerCase() && verifyPassword(password, item.passwordHash));
   if (!client) throw new Error("Invalid email or password");
   return client;
 }
@@ -354,7 +365,7 @@ export async function updateClientPassword(id: string, currentPassword: string, 
   const db = await readLocalDb();
   const client = db.clients.find((item) => item.id === id);
   if (!client) throw new Error("Client not found");
-  if (client.passwordHash !== hashPassword(currentPassword)) throw new Error("Current password is incorrect");
+  if (!verifyPassword(currentPassword, client.passwordHash)) throw new Error("Current password is incorrect");
   client.passwordHash = hashPassword(newPassword);
   await writeLocalDb(db);
   return client;
