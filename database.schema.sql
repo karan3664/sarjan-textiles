@@ -124,6 +124,15 @@ create table if not exists app_backups (
   created_at timestamptz not null default now()
 );
 
+create table if not exists analytics_events (
+  id uuid primary key default gen_random_uuid(),
+  visitor_id text not null,
+  path text not null,
+  referrer text,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_orders_client_id on orders(client_id);
 create index if not exists idx_orders_status on orders(status);
 create index if not exists idx_feedbacks_status on feedbacks(status);
@@ -132,3 +141,6 @@ create index if not exists idx_client_discounts_client on client_discounts(clien
 create index if not exists idx_product_special_prices_product on product_special_prices(product_slug);
 create index if not exists idx_app_backups_created_at on app_backups(created_at desc);
 create index if not exists idx_app_backups_source on app_backups(source);
+create index if not exists idx_analytics_events_created_at on analytics_events(created_at desc);
+create index if not exists idx_analytics_events_visitor_id on analytics_events(visitor_id);
+create index if not exists idx_analytics_events_path on analytics_events(path);

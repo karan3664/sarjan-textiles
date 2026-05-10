@@ -1,5 +1,6 @@
 import { getCmsSnapshot } from "@/lib/cms-store";
 import { readLocalDb } from "@/lib/local-db";
+import { getWebsiteAnalytics } from "@/lib/analytics-store";
 
 function money(value: number) {
   return `₹${Math.round(value).toLocaleString("en-IN")}`;
@@ -30,7 +31,7 @@ function isDispatchPending(status: string) {
 }
 
 export async function getAdminDashboardData() {
-  const [cms, db] = await Promise.all([getCmsSnapshot(), readLocalDb()]);
+  const [cms, db, analytics] = await Promise.all([getCmsSnapshot(), readLocalDb(), getWebsiteAnalytics()]);
   const products = cms.products;
   const orders = db.orders;
   const clients = db.clients;
@@ -130,7 +131,8 @@ export async function getAdminDashboardData() {
         title: "Website",
         icon: "icon-chart-bar",
         items: [
-          { label: "Total Visitors", value: "Analytics not connected" },
+          { label: "Total Visitors", value: analytics.totalVisitors.toLocaleString("en-IN") },
+          { label: "Page Views", value: analytics.pageViews.toLocaleString("en-IN") },
           { label: "Inquiry Count", value: feedbacks.length },
           { label: "Contact Requests", value: feedbacks.filter((item) => item.status !== "replied").length },
         ],

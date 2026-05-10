@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { siteSettings } from "@/data/mock";
+import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
 import { pageMetadata } from "@/lib/seo";
 
 const googleAnalyticsId = "G-L5JB54GCZ8";
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             gtag('config', '${googleAnalyticsId}');
           `}
         </Script>
+        <AnalyticsTracker />
         {children}
       </body>
     </html>
