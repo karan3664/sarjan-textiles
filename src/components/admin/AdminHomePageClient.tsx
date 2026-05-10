@@ -37,7 +37,7 @@ type Service = HomeDraft["services"][number];
 
 function defaultSections(): HomeSectionControl[] {
   return sectionOptions.map((item) => ({
-    id: `${item.type}-${Math.random().toString(36).slice(2, 8)}`,
+    id: item.type,
     type: item.type,
     title: item.title,
     enabled: true,
@@ -205,14 +205,18 @@ export function AdminHomePageClient({ initialHome }: { initialHome: CmsHome }) {
     try {
       const res = await fetch("/api/admin/cms", {
         method: "PUT",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ home }),
       });
-      if (!res.ok) throw new Error("Home save failed");
       const data = await res.json();
-      setHome(data.home);
+      if (!res.ok) throw new Error(data.error ?? "Home save failed");
+      if (!data.home) throw new Error("CMS response missing home data");
+      setHome({ ...data.home, sections: data.home.sections?.length ? data.home.sections : defaultSections() });
       setSaveState("saved");
-    } catch {
+      setTimeout(() => setSaveState("idle"), 2500);
+    } catch (error) {
+      console.error(error);
       setSaveState("error");
     }
   };

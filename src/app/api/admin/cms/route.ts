@@ -5,6 +5,13 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const body = await request.json();
-  return Response.json(await saveCmsSnapshot(body));
+  try {
+    const body = await request.json();
+    return Response.json(await saveCmsSnapshot(body));
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "CMS save failed" },
+      { status: 400 },
+    );
+  }
 }
