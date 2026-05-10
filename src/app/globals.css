@@ -2894,6 +2894,45 @@ footer .footer-newsletter .subscribe-content input {
   object-fit: contain;
 }
 
+.sarjan-products-page .wrapper-control-shop {
+  padding-bottom: 26px;
+}
+
+.sarjan-products-page .sarjan-products-grid {
+  row-gap: 48px;
+}
+
+.sarjan-products-page .card-product {
+  padding-bottom: 8px;
+}
+
+.sarjan-products-page .card-product .card-product-info {
+  padding-top: 16px;
+  gap: 6px;
+}
+
+.sarjan-products-page .card-product .card-product-info .title {
+  min-height: 24px;
+}
+
+.sarjan-products-page .card-product .card-product-info .price {
+  margin-top: 2px;
+}
+
+.sarjan-products-page .wg-pagination {
+  width: 100%;
+  margin-top: 56px !important;
+  padding-top: 6px;
+  align-items: center;
+  clear: both;
+}
+
+.sarjan-products-page .wg-pagination .pagination-item {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+}
+
 .form-search-result,
 .form-order-tracking {
   display: flex;

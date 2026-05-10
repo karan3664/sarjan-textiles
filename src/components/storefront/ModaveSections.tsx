@@ -1087,7 +1087,7 @@ export async function ProductsListingDynamic({ page = 1, sort = "best-selling", 
   return (
     <>
       <PageTitle title="Products" crumbs={["Homepage", "Products"]} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-products-page">
         <div className="container">
           <div className="tf-shop-control">
             <div className="tf-control-filter">
@@ -1121,7 +1121,7 @@ export async function ProductsListingDynamic({ page = 1, sort = "best-selling", 
             <div className="tf-list-layout wrapper-shop" id="listLayout">
               {visibleProducts.map((product) => <ProductListCard product={product} key={`list-${product.id}`} />)}
             </div>
-            <div className="tf-grid-layout wrapper-shop tf-col-4" id="gridLayout">
+            <div className="tf-grid-layout wrapper-shop tf-col-4 sarjan-products-grid" id="gridLayout">
               {visibleProducts.map((product, index) => (
                 <ModaveProductCard product={product} delay={`${index / 10}s`} className="grid" key={`grid-${product.id}`} />
               ))}
