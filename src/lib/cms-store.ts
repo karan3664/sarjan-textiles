@@ -96,7 +96,7 @@ function supabaseAdmin() {
 
 async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {
@@ -173,8 +173,11 @@ export async function saveCmsSnapshot(input: Partial<CmsSnapshot>): Promise<CmsS
       if (error) throw new Error(error.message);
       revalidateTag("cms-snapshot");
       return next;
-    } catch {
-      // Fall through to JSON fallback.
+    } catch (error) {
+      if (process.env.VERCEL) {
+        throw new Error(error instanceof Error ? `Supabase CMS save failed: ${error.message}` : "Supabase CMS save failed");
+      }
+      // Fall through to JSON fallback for local development only.
     }
   }
   await mkdir(path.dirname(cmsPath), { recursive: true });
