@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { siteSettings } from "@/data/mock";
 import { pageMetadata } from "@/lib/seo";
+
+const googleAnalyticsId = "G-L5JB54GCZ8";
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -37,6 +40,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="stylesheet" href="/template/storefront/css/styles.css" />
       </head>
       <body className="preload-wrapper">
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`} strategy="afterInteractive" />
+        <Script id="sarjan-google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${googleAnalyticsId}');
+          `}
+        </Script>
         {children}
       </body>
     </html>
