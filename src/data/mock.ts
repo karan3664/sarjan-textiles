@@ -10,6 +10,8 @@ export type Product = {
   stock: number;
   reserved: number;
   sold: number;
+  returned?: number;
+  damaged?: number;
   colors: string[];
   sizes: string[];
   images: string[];

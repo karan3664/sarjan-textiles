@@ -1234,6 +1234,111 @@ footer .footer-newsletter .subscribe-content input {
   border-top: 1px solid var(--line);
 }
 
+.sarjan-inventory-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(360px, 0.7fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.sarjan-inventory-table table,
+.sarjan-report-box table {
+  min-width: 920px;
+}
+
+.sarjan-inventory-table tr {
+  cursor: pointer;
+}
+
+.sarjan-selected-row {
+  background: rgba(160, 31, 49, 0.04) !important;
+}
+
+.sarjan-inventory-ops,
+.sarjan-admin-mini-ledger,
+.sarjan-payment-ledger-card {
+  display: grid;
+  gap: 16px;
+}
+
+.sarjan-inventory-ops fieldset,
+.sarjan-inventory-ops select,
+.sarjan-inventory-ops input,
+.sarjan-inventory-ops textarea {
+  width: 100%;
+}
+
+.sarjan-inventory-ops select,
+.sarjan-inventory-ops input,
+.sarjan-inventory-ops textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--White);
+}
+
+.sarjan-inventory-ops textarea {
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.sarjan-inventory-history,
+.sarjan-report-box {
+  margin-top: 24px;
+}
+
+.sarjan-admin-mini-ledger {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.sarjan-ledger-line {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.sarjan-ledger-line p {
+  margin: 3px 0 0;
+  color: var(--text-2);
+}
+
+.sarjan-payment-ledger-card {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.sarjan-payment-ledger-card span,
+.sarjan-aging-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.sarjan-aging-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.sarjan-aging-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--White);
+  box-shadow: 0 12px 28px rgba(24, 24, 24, 0.05);
+}
+
 .sarjan-blog-main-upload .upload-img {
   min-height: 360px;
   aspect-ratio: 16 / 10;
@@ -2395,6 +2500,17 @@ footer .footer-newsletter .subscribe-content input {
     grid-template-columns: 1fr;
   }
 
+  .sarjan-order-admin-layout,
+  .sarjan-inventory-grid,
+  .sarjan-payment-ledger-card,
+  .sarjan-aging-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-ledger-line {
+    grid-template-columns: 1fr;
+  }
+
   .sarjan-products-pagination {
     align-items: flex-start;
     flex-direction: column;
@@ -2455,6 +2571,15 @@ footer .footer-newsletter .subscribe-content input {
 
 @media (min-width: 768px) and (max-width: 1199px) {
   .sarjan-home-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sarjan-order-admin-layout,
+  .sarjan-inventory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-aging-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

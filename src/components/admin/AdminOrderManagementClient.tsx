@@ -19,6 +19,23 @@ function formatDate(value?: string) {
   return new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
 }
 
+function daysBetween(value?: string) {
+  if (!value) return 0;
+  const diff = Date.now() - new Date(value).getTime();
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function agingBucket(order: AdminOrder) {
+  const outstanding = order.outstandingAmount ?? 0;
+  if (outstanding <= 0) return "Paid";
+  const overdueDays = daysBetween(order.creditDueOn);
+  if (overdueDays > 90) return "90+ Days";
+  if (overdueDays > 60) return "61-90 Days";
+  if (overdueDays > 30) return "31-60 Days";
+  if (overdueDays > 0) return "1-30 Days";
+  return "Not Due";
+}
+
 function statusClass(value?: string) {
   if (value === "Delivered" || value === "Dispatched" || value === "Approved" || value === "Paid" || value === "Cleared") return "type-completed";
   if (value === "Rejected" || value === "Bounced" || value === "Overdue") return "type-inactive";
@@ -47,6 +64,12 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
 
   const selected = visibleOrders.find((order) => order.id === selectedId) ?? visibleOrders[0];
   const draft = selected ? ({ ...selected, ...(drafts[selected.id] ?? {}) } as OrderDraft) : null;
+  const dispatchLogs = useMemo(() => orders.flatMap((order) => (order.dispatchHistory ?? []).map((log) => ({ ...log, orderId: order.id, clientName: order.clientName, lrNumber: order.lrNumber }))).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [orders]);
+  const agingRows = useMemo(() => orders.filter((order) => order.status !== "Rejected").map((order) => ({ ...order, bucket: agingBucket(order), overdueDays: daysBetween(order.creditDueOn) })).sort((a, b) => (b.outstandingAmount ?? 0) - (a.outstandingAmount ?? 0)), [orders]);
+  const agingTotals = useMemo(() => agingRows.reduce<Record<string, number>>((acc, order) => {
+    acc[order.bucket] = (acc[order.bucket] ?? 0) + (order.outstandingAmount ?? 0);
+    return acc;
+  }, {}), [agingRows]);
 
   const setDraft = (id: string, patch: Record<string, any>) => {
     setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? {}), ...patch } }));
@@ -76,12 +99,22 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
   return (
     <>
       <div className="sarjan-home-kpi-grid sarjan-products-kpi-grid">
-        {[
+        {(mode === "payments" ? [
+          ["Outstanding", formatInr(orders.reduce((sum, order) => sum + order.outstandingAmount, 0)), "icon-hand-coins"],
+          ["Overdue", formatInr(agingRows.filter((order) => order.bucket !== "Not Due" && order.bucket !== "Paid").reduce((sum, order) => sum + order.outstandingAmount, 0)), "icon-timer"],
+          ["Partial", orders.filter((order) => order.paymentStatus === "Partial").length, "icon-chart-bar"],
+          ["Cheque Pending", orders.filter((order) => order.depositStatus !== "Cleared" && order.outstandingAmount > 0).length, "icon-clipboard-text"],
+        ] : mode === "dispatch" ? [
+          ["Packed", orders.filter((order) => order.status === "Packed").length, "icon-package"],
+          ["Ready", orders.filter((order) => order.status === "Ready for Dispatch").length, "icon-send"],
+          ["Dispatched", orders.filter((order) => order.status === "Dispatched").length, "icon-truck"],
+          ["Delivered", orders.filter((order) => order.status === "Delivered").length, "icon-sealCheck"],
+        ] : [
           ["Total Orders", orders.length, "icon-clipboard-text"],
           ["Pending Approval", orders.filter((order) => order.status === "Pending approval").length, "icon-timer"],
           ["Dispatch Pending", orders.filter((order) => ["Approved", "In Production", "Packed", "Ready for Dispatch"].includes(order.status)).length, "icon-send"],
           ["Outstanding", formatInr(orders.reduce((sum, order) => sum + order.outstandingAmount, 0)), "icon-hand-coins"],
-        ].map(([label, value, icon]) => (
+        ]).map(([label, value, icon]) => (
           <div className="sarjan-home-kpi-card" key={label}>
             <div className="sarjan-home-kpi-icon"><i className={String(icon)} /></div>
             <div><div className="body-text text-secondary">{label}</div><h5>{value}</h5></div>
@@ -137,6 +170,15 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
                   </div>
                   <fieldset><div className="body-title mb-10">Transport / Courier Details</div><input value={draft.transportDetails ?? draft.courierDetails ?? ""} onChange={(event) => setDraft(draft.id, { transportDetails: event.target.value, courierDetails: event.target.value })} /></fieldset>
                   <fieldset><div className="body-title mb-10">Tracking Notes</div><textarea rows={4} value={draft.trackingNotes ?? ""} onChange={(event) => setDraft(draft.id, { trackingNotes: event.target.value })} /></fieldset>
+                  <div className="sarjan-admin-mini-ledger">
+                    <h6>Dispatch History</h6>
+                    {(draft.dispatchHistory ?? []).slice().reverse().map((log: any, index: number) => (
+                      <div className="sarjan-ledger-line" key={`${log.createdAt}-${index}`}>
+                        <span className={`box-status text-button ${statusClass(log.status)}`}>{log.status}</span>
+                        <div><strong>{formatDate(log.createdAt)}</strong><p>{log.note || "Status updated."}</p></div>
+                      </div>
+                    ))}
+                  </div>
                 </>
               ) : null}
 
@@ -151,6 +193,12 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
                     <fieldset><div className="body-title mb-10">Payment Received At</div><input type="date" value={draft.paymentReceivedAt ?? ""} onChange={(event) => setDraft(draft.id, { paymentReceivedAt: event.target.value })} /></fieldset>
                   </div>
                   <fieldset><div className="body-title mb-10">Bank Details</div><textarea rows={3} value={draft.bankDetails ?? ""} onChange={(event) => setDraft(draft.id, { bankDetails: event.target.value })} /></fieldset>
+                  <div className="sarjan-payment-ledger-card">
+                    <div><span>Invoice Value</span><strong>{formatInr(draft.subtotal)}</strong></div>
+                    <div><span>Paid</span><strong>{formatInr(draft.paidAmount ?? 0)}</strong></div>
+                    <div><span>Outstanding</span><strong>{formatInr(draft.outstandingAmount ?? Math.max(0, draft.subtotal - (draft.paidAmount ?? 0)))}</strong></div>
+                    <div><span>Aging</span><strong>{agingBucket(draft)}</strong></div>
+                  </div>
                 </>
               ) : null}
 
@@ -171,6 +219,77 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
           ) : <div className="sarjan-empty-state">Select order.</div>}
         </div>
       </div>
+
+      {mode === "dispatch" ? (
+        <div className="wg-box sarjan-report-box">
+          <div className="flex flex-wrap justify-between gap14 items-center mb-20">
+            <div>
+              <h5>Dispatch Logs</h5>
+              <div className="body-text text-secondary">LR, courier, vehicle, tracking notes, and full status timeline.</div>
+            </div>
+            <div className="box-status text-button type-delivery">{dispatchLogs.length} Logs</div>
+          </div>
+          <div className="wg-table table-product-list">
+            <table>
+              <thead><tr><th className="text-title">Date</th><th className="text-title">Order</th><th className="text-title">Client</th><th className="text-title">Status</th><th className="text-title">LR</th><th className="text-title">Note</th></tr></thead>
+              <tbody>
+                {dispatchLogs.map((log, index) => (
+                  <tr className="tf-table-item item-row" key={`${log.orderId}-${log.createdAt}-${index}`}>
+                    <td>{formatDate(log.createdAt)}</td>
+                    <td>{log.orderId}</td>
+                    <td>{log.clientName}</td>
+                    <td><span className={`box-status text-button ${statusClass(log.status)}`}>{log.status}</span></td>
+                    <td>{log.lrNumber || "-"}</td>
+                    <td>{log.note || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      {mode === "payments" ? (
+        <>
+          <div className="sarjan-aging-grid">
+            {["Not Due", "1-30 Days", "31-60 Days", "61-90 Days", "90+ Days"].map((bucket) => (
+              <div className="sarjan-aging-card" key={bucket}>
+                <span>{bucket}</span>
+                <strong>{formatInr(agingTotals[bucket] ?? 0)}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="wg-box sarjan-report-box">
+            <div className="flex flex-wrap justify-between gap14 items-center mb-20">
+              <div>
+                <h5>Payment Ledger Aging Report</h5>
+                <div className="body-text text-secondary">90-day cheque workflow, pending dues, overdue buckets, partial payments, and deposit status.</div>
+              </div>
+              <div className="box-status text-button type-delivery">{agingRows.length} Orders</div>
+            </div>
+            <div className="wg-table table-product-list">
+              <table>
+                <thead><tr><th className="text-title">Order</th><th className="text-title">Client</th><th className="text-title">Due Date</th><th className="text-title">Aging</th><th className="text-title">Invoice</th><th className="text-title">Paid</th><th className="text-title">Outstanding</th><th className="text-title">Cheque</th><th className="text-title">Deposit</th></tr></thead>
+                <tbody>
+                  {agingRows.map((order) => (
+                    <tr className="tf-table-item item-row" key={order.id}>
+                      <td>{order.id}</td>
+                      <td>{order.clientName}</td>
+                      <td>{formatDate(order.creditDueOn)}</td>
+                      <td><span className={`box-status text-button ${order.bucket === "Paid" || order.bucket === "Not Due" ? "type-completed" : "type-inactive"}`}>{order.bucket}</span></td>
+                      <td>{formatInr(order.subtotal)}</td>
+                      <td>{formatInr(order.paidAmount ?? 0)}</td>
+                      <td>{formatInr(order.outstandingAmount ?? 0)}</td>
+                      <td>{order.chequeNumber || "-"}</td>
+                      <td><span className={`box-status text-button ${statusClass(order.depositStatus)}`}>{order.depositStatus ?? "Not deposited"}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      ) : null}
     </>
   );
 }

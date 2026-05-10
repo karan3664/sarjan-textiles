@@ -21,6 +21,21 @@ export type CmsTestimonial = (typeof defaultHome.testimonials)[number] & {
   submittedAt: string;
 };
 
+export type InventoryMovement = {
+  id: string;
+  productSlug: string;
+  productName: string;
+  sku: string;
+  operation: "add" | "reduce" | "adjust" | "transfer" | "return" | "damage";
+  quantity: number;
+  beforeStock: number;
+  afterStock: number;
+  reference?: string;
+  note?: string;
+  createdAt: string;
+  actor?: string;
+};
+
 export type CmsSnapshot = {
   siteSettings: CmsSiteSettings;
   home: CmsHome;
@@ -28,6 +43,7 @@ export type CmsSnapshot = {
   blogs: CmsBlog[];
   testimonials: CmsTestimonial[];
   pages: CmsPages;
+  inventoryLogs: InventoryMovement[];
   updatedAt: string;
 };
 
@@ -86,6 +102,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
     submittedAt: new Date(0).toISOString(),
   })),
   pages: defaultPages,
+  inventoryLogs: [],
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -97,6 +114,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     blogs: Array.isArray(input.blogs) && input.blogs.length ? input.blogs : defaultCmsSnapshot.blogs,
     testimonials: Array.isArray(input.testimonials) && input.testimonials.length ? input.testimonials : defaultCmsSnapshot.testimonials,
     pages: { ...defaultCmsSnapshot.pages, ...(input.pages ?? {}) },
+    inventoryLogs: Array.isArray(input.inventoryLogs) ? input.inventoryLogs : defaultCmsSnapshot.inventoryLogs,
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   });
 }
