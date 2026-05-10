@@ -180,7 +180,7 @@ export function AdminProductFiltersClient({ initialFilters, products }: { initia
           {filters.map((filter, index) => (
             <div className="sarjan-filter-builder-card" key={filter.id}>
               <div className="sarjan-filter-builder-head">
-                <label className="tf-cart-checkbox">
+                <label className="tf-cart-checkbox sarjan-filter-switch">
                   <input type="checkbox" className="tf-check" checked={filter.enabled} onChange={(event) => updateFilter(index, { enabled: event.target.checked })} />
                   <span>{filter.enabled ? "Visible" : "Hidden"}</span>
                 </label>
@@ -238,7 +238,7 @@ export function AdminProductFiltersClient({ initialFilters, products }: { initia
                       <div className="sarjan-filter-value-row" key={option.id}>
                         <input value={option.label} onChange={(event) => updateOption(index, optionIndex, { label: event.target.value })} />
                         <code>{option.value}</code>
-                        <label className="tf-cart-checkbox">
+                        <label className="tf-cart-checkbox sarjan-filter-switch">
                           <input type="checkbox" className="tf-check" checked={option.enabled} onChange={(event) => updateOption(index, optionIndex, { enabled: event.target.checked })} />
                           <span>Show</span>
                         </label>
