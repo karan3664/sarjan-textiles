@@ -27,7 +27,7 @@ export function Footer() {
           <div className="col-lg-4">
             <h6 className="fw-bold mb-3">B2B Workflow</h6>
             <p className="sarjan-muted mb-0">
-              Client registration, admin approval, MOQ order placement, dispatch tracking, and {siteSettings.creditTermDays}-day manual cheque collection.
+              Client registration, admin approval, MOQ order placement, and dispatch tracking.
             </p>
           </div>
         </div>

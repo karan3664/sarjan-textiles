@@ -81,19 +81,7 @@ function ProductFeature({ product }: { product: Product }) {
                   <div className="tf-product-info-name">
                     <div className="text text-btn-uppercase">{product.category}</div>
                     <h3 className="name">{product.name}</h3>
-                    <div className="tf-product-info-rate">
-                      <div className="list-star-default">
-                        {Array.from({ length: 5 }).map((_, index) => <i className="icon icon-star" key={index} />)}
-                      </div>
-                      <div className="text text-caption-1">(1.234 reviews)</div>
-                    </div>
-                    <div className="tf-product-info-sold">
-                      <div className="tf-product-pre-order text-btn-uppercase">Best seller</div>
-                      <div className="d-flex gap-4 align-items-center">
-                        <i className="icon icon-lightning" />
-                        <div className="text text-caption-1 text-secondary text-line-clamp-1">MOQ {product.moq}. Stock {product.stock}. Admin approved orders.</div>
-                      </div>
-                    </div>
+                    <div className="text-caption-1 text-secondary">MOQ {product.moq}. Stock {product.stock}.</div>
                   </div>
                   <div className="tf-product-info-price">
                     <h4 className="price-on-sale" data-base-price={setPrice}><PriceGate amount={setPrice} suffix=" / set" /></h4>
@@ -556,28 +544,12 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                       <div className="tf-product-info-name">
                         <div className="text text-btn-uppercase">{product.category}</div>
                         <h3 className="name">{product.name}</h3>
-                        <div className="sub">
-                          <div className="tf-product-info-rate">
-                            <div className="list-star">
-                              {Array.from({ length: 5 }).map((_, index) => <i className="icon icon-star" key={index} />)}
-                            </div>
-                            <div className="text text-caption-1">(134 reviews)</div>
-                          </div>
-                          <div className="tf-product-info-sold">
-                            <i className="icon icon-lightning" />
-                            <div className="text text-caption-1">{product.sold} sold in last 32 hours</div>
-                          </div>
-                        </div>
                       </div>
                       <div className="tf-product-info-desc">
                         <div className="tf-product-info-price">
                           <h5 className="price-on-sale font-2" data-base-price={setPrice}><PriceGate amount={setPrice} suffix=" / set" /></h5>
                         </div>
                         <p>{product.description}</p>
-                        <div className="tf-product-info-liveview">
-                          <i className="icon icon-eye" />
-                          <p className="text-caption-1"><span className="liveview-count">28</span> people are viewing this right now</p>
-                        </div>
                       </div>
                     </div>
                     <div className="tf-product-info-choose-option">
@@ -631,29 +603,12 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                         </div>
                         <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 text-btn-uppercase" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}>Buy it now</a>
                       </div>
-                      <div className="tf-product-info-help">
-                        <div className="tf-product-info-extra-link">
-                          <a href="#delivery_return" data-bs-toggle="modal" className="tf-product-extra-icon"><div className="icon"><i className="icon-shipping" /></div><p className="text-caption-1">Delivery & Return</p></a>
-                          <a href="#ask_question" data-bs-toggle="modal" className="tf-product-extra-icon"><div className="icon"><i className="icon-question" /></div><p className="text-caption-1">Ask A Question</p></a>
-                          <a href="#share_social" data-bs-toggle="modal" className="tf-product-extra-icon"><div className="icon"><i className="icon-share" /></div><p className="text-caption-1">Share</p></a>
-                        </div>
-                        <div className="tf-product-info-time"><div className="icon"><i className="icon-timer" /></div><p className="text-caption-1">Estimated Dispatch:&nbsp;&nbsp;<span>3-6 days</span> after admin approval</p></div>
-                        <div className="tf-product-info-return"><div className="icon"><i className="icon-arrowClockwise" /></div><p className="text-caption-1">Manual cheque collection after <span>{siteSettings.creditTermDays} days</span>. Duties and freight confirmed by sales team.</p></div>
-                      </div>
                       <ul className="tf-product-info-sku">
                         <li><p className="text-caption-1">SKU:</p><p className="text-caption-1 text-1">{product.sku}</p></li>
                         <li><p className="text-caption-1">Vendor:</p><p className="text-caption-1 text-1">{siteSettings.brandName}</p></li>
                         <li><p className="text-caption-1">Available:</p><p className="text-caption-1 text-1">In stock: {product.stock}</p></li>
                         <li><p className="text-caption-1">Categories:</p><p className="text-caption-1"><a href="#" className="text-1 link">{product.category}</a>, <a href="#" className="text-1 link">{product.fabric}</a></p></li>
                       </ul>
-                      <div className="tf-product-info-guranteed">
-                        <div className="text-title">B2B workflow:</div>
-                        <div className="tf-payment">
-                          <span className="badge bg-light text-dark">Admin approval</span>
-                          <span className="badge bg-light text-dark">MOQ {product.moq}</span>
-                          <span className="badge bg-light text-dark">{siteSettings.creditTermDays}-day credit</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -701,8 +656,6 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
               <div className="widget-tabs style-1">
                 <ul className="widget-menu-tab">
                   <li className="item-title active"><span className="inner">Description</span></li>
-                  <li className="item-title"><span className="inner">Customer Reviews</span></li>
-                  <li className="item-title"><span className="inner">Shipping & Returns</span></li>
                   <li className="item-title"><span className="inner">Return Policies</span></li>
                 </ul>
                 <div className="widget-content-tab">
@@ -725,81 +678,12 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                     </div>
                   </div>
                   <div className="widget-content-inner">
-                    <div className="tab-reviews write-cancel-review-wrap">
-                      <div className="tab-reviews-heading">
-                        <div className="top">
-                          <div className="text-center">
-                            <div className="number title-display">4.9</div>
-                            <div className="list-star"><i className="icon icon-star" /><i className="icon icon-star" /><i className="icon icon-star" /><i className="icon icon-star" /><i className="icon icon-star" /></div>
-                            <p>(134 Ratings)</p>
-                          </div>
-                          <div className="rating-score">
-                            {[90, 60, 0, 0, 0].map((width, index) => <div className="item" key={index}><div className="number-1 text-caption-1">{5 - index}</div><i className="icon icon-star" /><div className="line-bg"><div style={{ width: `${width}%` }} /></div><div className="number-2 text-caption-1">{index === 0 ? 88 : index === 1 ? 46 : 0}</div></div>)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="btn-style-4 text-btn-uppercase letter-1 btn-comment-review btn-cancel-review">Cancel Review</div>
-                          <div className="btn-style-4 text-btn-uppercase letter-1 btn-comment-review btn-write-review">Write a review</div>
-                        </div>
-                      </div>
-                      <div className="reply-comment style-1 cancel-review-wrap">
-                        <div className="d-flex mb_24 gap-20 align-items-center justify-content-between flex-wrap">
-                          <h4>02 Comments</h4>
-                          <div className="text-caption-1 text-secondary">Admin approved buyer feedback</div>
-                        </div>
-                        {[["Aaradhya Textiles", "Premium print quality and reliable set-wise sizing for retail orders."], ["Surat Wholesale Buyer", "Dispatch approval and MOQ workflow is clear for repeat ordering."]].map(([name, text]) => (
-                          <div className="reply-comment-item" key={name}>
-                            <div className="user"><div className="image"><img src="/template/storefront/images/avatar/user-account.jpg" alt={name} /></div><div><h6><a href="#" className="link">{name}</a></h6><div className="day text-secondary">Verified B2B client</div></div></div>
-                            <p>{text}</p>
-                            <div className="list-star"><i className="icon icon-star" /><i className="icon icon-star" /><i className="icon icon-star" /><i className="icon icon-star" /><i className="icon icon-star" /></div>
-                          </div>
-                        ))}
-                      </div>
-                      <form className="form-write-review write-review-wrap">
-                        <div className="heading">
-                          <h4>Write a review:</h4>
-                          <div className="list-rating-check">
-                            {[5, 4, 3, 2, 1].map((star) => (
-                              <Fragment key={star}>
-                                <input type="radio" id={`star${star}`} name="rate" value={star} />
-                                <label htmlFor={`star${star}`} title={`${star} stars`} />
-                              </Fragment>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="mb_32">
-                          <div className="mb_8">Review Title</div>
-                          <fieldset className="mb_20"><input type="text" placeholder="Give your review a title" name="reviewTitle" required /></fieldset>
-                          <div className="mb_8">Review</div>
-                          <fieldset className="d-flex mb_20"><textarea rows={4} placeholder="Write your comment here" required /></fieldset>
-                          <div className="cols mb_20">
-                            <fieldset><input type="text" placeholder="You Name (Public)" name="reviewName" required /></fieldset>
-                            <fieldset><input type="email" placeholder="Your email (private)" name="reviewEmail" required /></fieldset>
-                          </div>
-                          <div className="d-flex align-items-center check-save">
-                            <input type="checkbox" name="availability" className="tf-check" id="check-review-save" />
-                            <label className="text-secondary text-caption-1" htmlFor="check-review-save">Save my name, email, and website in this browser for the next time I comment.</label>
-                          </div>
-                        </div>
-                        <div className="button-submit">
-                          <button className="text-btn-uppercase" type="button">Submit Reviews</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                  <div className="widget-content-inner">
-                    <div className="tab-shipping">
-                      <div className="w-100"><div className="text-btn-uppercase mb_12">Dispatch workflow</div><p className="mb_12">Order goes through pending approval, production, packed, ready for dispatch, dispatched, and delivered stages.</p></div>
-                      <div className="w-100"><div className="text-btn-uppercase mb_12">Credit terms</div><p>{siteSettings.creditTermDays}-day manual cheque collection after approved dispatch cycle.</p></div>
-                    </div>
-                  </div>
-                  <div className="widget-content-inner">
                     <div className="tab-policies">
                       <div className="text-btn-uppercase mb_12">Return Policies</div>
                       <p className="mb_12 text-secondary">Returns are reviewed manually by the Sarjan admin team based on order condition, dispatch status, and client account history.</p>
                       <ul className="list-text type-number">
                         <li className="text-secondary font-2">Raise a return request with order ID.</li>
-                        <li className="text-secondary font-2">Admin reviews sold, returned, and reserved inventory impact.</li>
+                        <li className="text-secondary font-2">Admin reviews inventory impact before confirming replacement.</li>
                         <li className="text-secondary font-2">Credit note or replacement is handled offline.</li>
                       </ul>
                     </div>
@@ -1318,11 +1202,11 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
           <div className="content">
             <h3 className="fw-5 mb_16">How Sarjan manages B2B textile workflows</h3>
             <p className="body-text-1 mb_16">Every CMS article is admin managed. Title, image, date, excerpt, content, SEO fields, and publish status are designed to come from the blog table once Supabase is connected.</p>
-            <p className="body-text-1 mb_16">The same flow connects product planning, MOQ checks, order approvals, dispatch stages, and 90-day cheque collection into one buyer journey.</p>
+            <p className="body-text-1 mb_16">The same flow connects product planning, MOQ checks, order approvals, and dispatch stages into one buyer journey.</p>
             <ul className="list-text type-disc mb_16">
               <li className="body-text-1">Plan printed shirt and kurta collections around MOQ and color families.</li>
               <li className="body-text-1">Use order approval to confirm stock, reserved quantity, and dispatch readiness.</li>
-              <li className="body-text-1">Track outstanding credit without scattered manual follow-up.</li>
+              <li className="body-text-1">Track approved order and dispatch status without scattered manual follow-up.</li>
             </ul>
             <p className="body-text-1 mb_16">This keeps the frontend fully dynamic while preserving the Modave article layout and interaction styling.</p>
           </div>
@@ -1563,16 +1447,6 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
         <div className="container">
           <div className="row">
             <div className="col-xl-8">
-              <div className="tf-cart-sold">
-                <div className="notification-sold bg-surface">
-                  <img className="icon" src="/template/storefront/images/logo/icon-fire.png" alt="cart" />
-                  <div className="count-text">Your cart will reserve stock until admin review. Please submit order request to avoid stock changes.</div>
-                </div>
-                <div className="notification-progress">
-                  <div className="text">MOQ and stock will be confirmed by <span className="fw-semibold">Sarjan admin</span></div>
-                  <div className="progress-cart"><div className="value" style={{ width: "65%" }} data-progress="65"><span className="round" /></div></div>
-                </div>
-              </div>
               <form>
                 <table className="tf-table-page-cart">
                   <thead><tr><th>Products</th><th>Price</th><th>Quantity</th><th>Total Price</th><th /></tr></thead>
@@ -1604,8 +1478,6 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
                 <div className="box-order bg-surface">
                   <h5 className="title">Order Summary</h5>
                   <div className="subtotal text-button d-flex justify-content-between"><span>Subtotal</span><PriceGate amount={subtotal} compact /></div>
-                  <div className="ship text-button d-flex justify-content-between"><span>Credit</span><span>{siteSettings.creditTermDays} days</span></div>
-                  <p className="text-secondary">No online payment gateway. Manual cheque collection after credit cycle.</p>
                   <Link href="/checkout" className="tf-btn btn-fill w-100"><span className="text text-button">Checkout</span></Link>
                 </div>
               </div>
@@ -1638,7 +1510,6 @@ function CheckoutDynamic({ cartItems, subtotal }: { cartItems: ReturnType<typeof
                     <div className="tf-select"><select className="text-title" defaultValue="India"><option>India</option><option>United States</option><option>Australia</option></select></div>
                     <div className="grid-2"><input type="text" placeholder="City*" /><input type="text" placeholder="GST / Tax ID" /></div>
                     <textarea placeholder="Dispatch notes / transport preference" rows={4} />
-                    <div className="tf-cart-checkbox"><input type="checkbox" className="tf-check" id="checkout-credit" defaultChecked /><label htmlFor="checkout-credit" className="text-secondary text-caption-1">I understand this order requires admin approval and manual cheque payment after {siteSettings.creditTermDays} days.</label></div>
                     <button className="tf-btn btn-reset" type="button">Submit Order Request</button>
                   </form>
                 </div>
@@ -1666,8 +1537,7 @@ function CheckoutDynamic({ cartItems, subtotal }: { cartItems: ReturnType<typeof
                   </div>
                   <div className="sec-total-price">
                     <div className="top">
-                      <div className="item d-flex align-items-center justify-content-between text-button"><span>Dispatch</span><span>Manual</span></div>
-                      <div className="item d-flex align-items-center justify-content-between text-button"><span>Credit</span><span>{siteSettings.creditTermDays} days</span></div>
+                      <div className="item d-flex align-items-center justify-content-between text-button"><span>Dispatch</span><span>Admin review</span></div>
                     </div>
                     <div className="bottom"><h5 className="d-flex justify-content-between"><span>Total</span><PriceGate amount={subtotal} className="total-price-checkout" compact /></h5></div>
                   </div>

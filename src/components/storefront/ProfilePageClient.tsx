@@ -38,7 +38,7 @@ export function ProfilePageClient() {
                   <td>{order.id}</td>
                   <td>{order.status}</td>
                   <td>₹{order.subtotal.toLocaleString("en-IN")}</td>
-                  <td>{order.creditDays} days cheque</td>
+                  <td>Accounts review</td>
                 </tr>
               ))}
             </tbody>

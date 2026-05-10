@@ -153,8 +153,6 @@ export function AccountDashboardPage() {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
-  const total = useMemo(() => orders.reduce((sum, order) => sum + order.subtotal, 0), [orders]);
-
   useEffect(() => {
     if (!client) return;
     setForm({
@@ -260,8 +258,6 @@ export function AccountDashboardPage() {
               </div>
               <div className="row mb_32">
                 <div className="col-md-4"><p className="text-secondary">Orders</p><h5>{orders.length}</h5></div>
-                <div className="col-md-4"><p className="text-secondary">Outstanding</p><h5>{money(total)}</h5></div>
-                <div className="col-md-4"><p className="text-secondary">Credit Cycle</p><h5>90 days</h5></div>
               </div>
               <div className="d-flex gap-12 flex-wrap mb_32">
                 <a href="/my-account-address" className="tf-btn btn-white has-border radius-4"><span className="text">Add / Edit Address</span></a>
@@ -487,7 +483,7 @@ function OrderView({ order }: { order: Order }) {
                 {steps.map((step, index) => <div className={index <= current ? "timeline-step active" : "timeline-step"} key={step}>{step}</div>)}
               </div>
               <p className="text-secondary mt_24">Dispatch Address: {order.dispatchAddress || "Will be confirmed by admin."}</p>
-              <p className="text-secondary">Payment: manual cheque after {order.creditDays} days.</p>
+              <p className="text-secondary">Payment terms will be confirmed by accounts.</p>
             </div>
           </div>
         </div>

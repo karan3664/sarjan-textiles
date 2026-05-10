@@ -242,7 +242,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
             </div>
             <div className="right">
               <h4 className="mb_8">{isRegister ? "Already have an account?" : "New Customer"}</h4>
-              <p className="text-secondary">{isRegister ? "Welcome back. Sign in to access your personalized experience, saved preferences, and more." : "Register your company to access wholesale catalog, set-wise B2B ordering, order history, and cheque credit workflow."}</p>
+              <p className="text-secondary">{isRegister ? "Welcome back. Sign in to access your personalized experience, saved preferences, and more." : "Register your company to access wholesale catalog, set-wise B2B ordering, and order history."}</p>
               <a href={isRegister ? "/login" : "/register"} className="tf-btn btn-fill"><span className="text text-button">{isRegister ? "Login" : "Register"}</span></a>
             </div>
           </div>

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
-import { siteSettings } from "@/data/mock";
 import { readCart, sameCartLine, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
@@ -95,16 +94,6 @@ export function CartPageClient() {
           ) : lines.length ? (
             <div className="row">
               <div className="col-xl-8">
-                <div className="tf-cart-sold">
-                  <div className="notification-sold bg-surface">
-                    <img className="icon" src="/template/storefront/images/logo/icon-fire.png" alt="cart" />
-                    <div className="count-text">Your cart will reserve stock until admin review. Please submit order request to avoid stock changes.</div>
-                  </div>
-                  <div className="notification-progress">
-                    <div className="text">MOQ and stock will be confirmed by <span className="fw-semibold">Sarjan admin</span></div>
-                    <div className="progress-cart"><div className="value" style={{ width: "65%" }} data-progress="65"><span className="round" /></div></div>
-                  </div>
-                </div>
                 <form>
                   <table className="tf-table-page-cart">
                     <thead><tr><th>Products</th><th>Price</th><th>Quantity</th><th>Total Price</th><th /></tr></thead>
@@ -163,19 +152,6 @@ export function CartPageClient() {
                     <h5 className="title">Order Summary</h5>
                     <div className="subtotal text-button d-flex justify-content-between align-items-center"><span>Subtotal</span><PriceGate amount={subtotal} className="total" compact /></div>
                     <div className="discount text-button d-flex justify-content-between align-items-center"><span>Discounts</span><PriceGate amount={0} className="total" compact /></div>
-                    <div className="ship">
-                      <span className="text-button">Payment</span>
-                      <div className="flex-grow-1">
-                        <fieldset className="ship-item">
-                          <input type="radio" name="ship-check" className="tf-check-rounded" id="cheque" defaultChecked />
-                          <label htmlFor="cheque"><span>{siteSettings.creditTermDays}-day cheque credit</span><span className="price">Manual</span></label>
-                        </fieldset>
-                        <fieldset className="ship-item">
-                          <input type="radio" name="ship-check" className="tf-check-rounded" id="admin-approval" />
-                          <label htmlFor="admin-approval"><span>Admin approval</span><span className="price">Required</span></label>
-                        </fieldset>
-                      </div>
-                    </div>
                     <h5 className="total-order d-flex justify-content-between align-items-center"><span>Total</span><PriceGate amount={subtotal} className="total" compact /></h5>
                     <div className="box-progress-checkout">
                       <fieldset className="check-agree">

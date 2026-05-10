@@ -96,7 +96,7 @@ export function PaymentConfirmationPage({ orderId }: { orderId?: string }) {
           <div className="payment-confirm-wrap text-center">
             <div className="box-icon w_80 round bg-success mx-auto"><i className="icon icon-check text-white" /></div>
             <h3 className="mt_24">Order request received</h3>
-            <p className="text-secondary mt_8">No online payment collected. Admin will approve order, then cheque collection follows 90-day credit cycle.</p>
+            <p className="text-secondary mt_8">Order request is sent to admin for stock, MOQ, and dispatch confirmation.</p>
             {orderId ? <h6 className="mt_16">Order ID: {orderId}</h6> : null}
             <div className="d-flex gap-12 justify-content-center mt_32">
               <Link href="/my-account-orders" className="tf-btn btn-fill radius-4"><span className="text">View Orders</span></Link>
@@ -132,7 +132,7 @@ export function TermsPage() {
     ["B2B Account Approval", "Only approved wholesale clients can place orders. Admin can approve, reject, or request more details."],
     ["MOQ & Set Buying", `Products are ordered in full size sets. Standard set: ${FULL_SIZE_RUN.join(" / ")}.`],
     ["Order Approval", "Every order remains pending until Sarjan admin confirms stock, MOQ, dispatch terms, and final quantity."],
-    ["Payment", "No online payment gateway. Payment is collected manually by cheque after 90-day credit cycle unless agreed otherwise."],
+    ["Payment", "Payment terms are confirmed by Sarjan accounts team after order approval."],
     ["Dispatch", "Dispatch stages are Pending, Approved, In Production, Packed, Ready for Dispatch, Dispatched, Delivered."],
   ];
 
@@ -158,7 +158,7 @@ export function TermsPage() {
 export function FaqPage() {
   const items = [
     ["Can clients order single pieces?", "No. Sarjan B2B flow uses set-wise ordering by size run and color."],
-    ["How payment works?", "Cheque payment after 90 days. Admin tracks outstanding payments."],
+    ["How payment works?", "Payment terms are confirmed by Sarjan accounts team after order approval."],
     ["Who approves orders?", "Admin reviews stock, MOQ, production, and dispatch before approval."],
     ["Can ERP sync later?", "Yes. Order and invoice data are structured for Tally/AWS migration later."],
   ];

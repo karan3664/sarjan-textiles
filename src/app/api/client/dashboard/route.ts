@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       latestProducts: cms.products.slice(0, 8),
       notifications: [
         client.status === "approved" ? "Account approved. Client pricing applies where configured." : "Admin approval pending before order placement.",
-        "Cheque payment cycle: 90 days after order.",
+        "Order updates appear here after admin review.",
       ],
     },
   });

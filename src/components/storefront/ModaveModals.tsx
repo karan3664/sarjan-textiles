@@ -327,41 +327,12 @@ export function ModaveModals() {
       <div className="modal fullRight fade modal-shopping-cart" id="shoppingCart" tabIndex={-1} aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">
-            <div className="tf-minicart-recommendations">
-              <h6 className="title">You May Also Like</h6>
-              <div className="wrap-recommendations">
-                <div className="list-cart">
-                  {recommendations.map((product) => (
-                    <div className="list-cart-item" key={product.id}>
-                      <div className="image">
-                        <img className="lazyload" data-src={product.images[0]} src={product.images[0]} alt={product.name} />
-                      </div>
-                      <div className="content">
-                        <div className="name"><a className="link text-line-clamp-1" href={`/products/${product.slug}`}>{product.name}</a></div>
-                        <div className="cart-item-bot">
-                          <div className="text-button price"><PriceGate amount={productSetPrice(product, product.colors[0], productSizeRun(product))} suffix=" / set" compact /></div>
-                          <button type="button" className="link text-button border-0 bg-transparent p-0 sarjan-reco-add" data-cart-add data-product-slug={product.slug} data-product-size-run={productSizeRun(product).join(",")} data-product-color={product.colors[0]}>Add to cart</button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
             <div className="d-flex flex-column flex-grow-1 h-100">
               <div className="header">
                 <h5 className="title">Shopping Cart</h5>
                 <span className="icon-close icon-close-popup" data-bs-dismiss="modal" />
               </div>
               <div className="wrap">
-                {hasItems ? (
-                  <div className="tf-mini-cart-threshold">
-                    <div className="tf-progress-bar">
-                      <div className="value" style={{ width: "75%" }} data-progress="75"><i className="icon icon-shipping" /></div>
-                    </div>
-                    <div className="text-caption-1">Congratulations! You&apos;ve got free shipping!</div>
-                  </div>
-                ) : null}
                 <div className="tf-mini-cart-wrap">
                   <div className="tf-mini-cart-main">
                     <div className="tf-mini-cart-sroll">
@@ -397,19 +368,6 @@ export function ModaveModals() {
                   </div>
                   {hasItems ? (
                     <div className="tf-mini-cart-bottom">
-                      <div className="tf-mini-cart-tool">
-                        {[
-                          ["icon-note", "Note"],
-                          ["icon-shipping", "Shipping"],
-                          ["icon-gift", "Gift"],
-                          ["icon-discount", "Coupon"],
-                        ].map(([icon, label]) => (
-                          <div className="tf-mini-cart-tool-btn" key={label}>
-                            <i className={`icon ${icon}`} />
-                            <div className="text-caption-1">{label}</div>
-                          </div>
-                        ))}
-                      </div>
                       <div className="tf-mini-cart-bottom-wrap">
                         <div className="tf-cart-totals-discounts">
                           <h5>Subtotal</h5>
@@ -511,14 +469,7 @@ export function ModaveModals() {
                     <div className="tf-product-info-name">
                       <div className="text text-btn-uppercase">{quickProduct.category}</div>
                       <h3 className="name">{quickProduct.name}</h3>
-                      <div className="tf-product-info-rate">
-                        <div className="list-star-default">
-                          {Array.from({ length: 5 }).map((_, index) => <i className="icon icon-star" key={index} />)}
-                        </div>
-                        <div className="text text-caption-1">(134 reviews)</div>
-                        <i className="icon icon-lightning text-primary" />
-                        <div className="text text-caption-1">{quickProduct.sold} sold recently</div>
-                      </div>
+                      <div className="text-caption-1 text-secondary">MOQ {quickProduct.moq}. Stock {quickProduct.stock}.</div>
                     </div>
                     <div className="tf-product-info-price">
                       <h4 className="price-on-sale"><PriceGate amount={productSetPrice(quickProduct, quickProduct.colors[0], productSizeRun(quickProduct))} suffix=" / set" /></h4>

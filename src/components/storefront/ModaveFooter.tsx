@@ -72,7 +72,7 @@ export function ModaveFooter() {
                         </div>
                       </div>
                     </form>
-                    <p className="text-caption-1">B2B ordering with admin approval, dispatch tracking, and {siteSettings.creditTermDays}-day credit workflow.</p>
+                    <p className="text-caption-1">B2B ordering with admin approval, MOQ planning, and dispatch tracking.</p>
                   </div>
                 </div>
               </div>

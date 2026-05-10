@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
-import { siteSettings } from "@/data/mock";
 import { readCart, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
@@ -198,26 +197,19 @@ export function CheckoutPageClient() {
                     </form>
                   </div>
                   <div className="wrap">
-                    <h5 className="title">Choose payment Option:</h5>
+                    <h5 className="title">Order Confirmation</h5>
                     <form className="form-payment">
                       <div className="payment-box" id="payment-box">
                         <div className="payment-item payment-choose-card active">
-                          <label htmlFor="cheque-method" className="payment-header" data-bs-toggle="collapse" data-bs-target="#cheque-payment" aria-controls="cheque-payment">
-                            <input type="radio" name="payment-method" className="tf-check-rounded" id="cheque-method" defaultChecked />
-                            <span className="text-title">Manual Cheque Payment</span>
+                          <label htmlFor="order-confirmation-method" className="payment-header" data-bs-toggle="collapse" data-bs-target="#order-confirmation" aria-controls="order-confirmation">
+                            <input type="radio" name="payment-method" className="tf-check-rounded" id="order-confirmation-method" defaultChecked />
+                            <span className="text-title">Submit Order Request</span>
                           </label>
-                          <div id="cheque-payment" className="collapse show" data-bs-parent="#payment-box">
+                          <div id="order-confirmation" className="collapse show" data-bs-parent="#payment-box">
                             <div className="payment-body">
-                              <p className="text-secondary">Order will be reviewed by Sarjan admin. Payment collected manually by cheque after {siteSettings.creditTermDays}-day credit cycle.</p>
+                              <p className="text-secondary">Sarjan admin will confirm stock, MOQ, dispatch details, and final order terms.</p>
                             </div>
                           </div>
-                        </div>
-                        <div className="payment-item">
-                          <label htmlFor="approval-method" className="payment-header collapsed" data-bs-toggle="collapse" data-bs-target="#approval-payment" aria-controls="approval-payment">
-                            <input type="radio" name="payment-method" className="tf-check-rounded" id="approval-method" />
-                            <span className="text-title">Admin Approval Required</span>
-                          </label>
-                          <div id="approval-payment" className="collapse" data-bs-parent="#payment-box" />
                         </div>
                       </div>
                       {message ? <p className={message.includes("failed") || message.includes("required") ? "text-danger" : "text-success"}>{message}</p> : null}
@@ -259,7 +251,6 @@ export function CheckoutPageClient() {
                       <div className="top">
                         <div className="item d-flex align-items-center justify-content-between text-button"><span>Shipping</span><span>Admin review</span></div>
                         <div className="item d-flex align-items-center justify-content-between text-button"><span>Discounts</span><PriceGate amount={0} compact /></div>
-                        <div className="item d-flex align-items-center justify-content-between text-button"><span>Payment</span><span>{siteSettings.creditTermDays}-day cheque</span></div>
                       </div>
                       <div className="bottom"><h5 className="d-flex justify-content-between"><span>Total</span><PriceGate amount={subtotal} className="total-price-checkout" compact /></h5></div>
                     </div>
