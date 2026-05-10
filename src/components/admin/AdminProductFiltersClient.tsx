@@ -16,7 +16,7 @@ const filterTypes: Array<{ type: CmsProductFilterType; label: string; param: str
 ];
 
 function slugValue(value: string) {
-  return value.toLowerCase().trim().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value.toLowerCase().trim().replace(/['’]/g, "").replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 function uniqueOptions(values: string[]): CmsProductFilterOption[] {

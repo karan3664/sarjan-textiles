@@ -1058,6 +1058,10 @@ function ProductListCard({ product }: { product: Product }) {
   );
 }
 
+function filterSlugValue(value: string) {
+  return value.toLowerCase().trim().replace(/['’]/g, "").replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 function productFilterHref(param: string, value: string, filters: CatalogFilters, sortValue: string, q?: string) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
@@ -1083,10 +1087,10 @@ function resetFilterHref(sortValue: string, q?: string) {
 
 function productValueCount(productsList: Product[], group: CmsProductFilterGroup, value: string) {
   return productsList.filter((product) => {
-    if (group.type === "category") return product.category.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value;
-    if (group.type === "fabric") return product.fabric.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value;
-    if (group.type === "color") return product.colors.some((color) => color.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value);
-    if (group.type === "size") return product.sizes.some((size) => size.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value);
+    if (group.type === "category") return filterSlugValue(product.category) === value;
+    if (group.type === "fabric") return filterSlugValue(product.fabric) === value;
+    if (group.type === "color") return product.colors.some((color) => filterSlugValue(color) === value);
+    if (group.type === "size") return product.sizes.some((size) => filterSlugValue(size) === value);
     if (group.type === "stock" && value === "in-stock") return product.stock > product.moq;
     if (group.type === "stock" && value === "low-stock") return product.stock > 0 && product.stock - product.reserved <= product.moq;
     if (group.type === "stock" && value === "out-of-stock") return product.stock <= 0;
