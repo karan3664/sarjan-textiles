@@ -2,12 +2,33 @@
 
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import type { Product } from "@/data/mock";
 import type { CmsHome } from "@/lib/cms-store";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
-type HomeSectionType = "hero" | "categories" | "topPicks" | "marquee" | "featuredProduct" | "trendingProducts" | "services" | "testimonials" | "gallery" | "brands";
-type HomeSectionControl = { id: string; type: HomeSectionType; title?: string; enabled?: boolean };
+type HomeSectionType = "hero" | "categories" | "topPicks" | "marquee" | "featuredProduct" | "trendingProducts" | "services" | "testimonials" | "gallery" | "brands" | "custom";
+type CustomBlockType = "text" | "image" | "button" | "product";
+type CustomBlock = {
+  id: string;
+  type: CustomBlockType;
+  heading?: string;
+  body?: string;
+  image?: string;
+  alt?: string;
+  label?: string;
+  href?: string;
+  productSlug?: string;
+};
+type HomeSectionControl = {
+  id: string;
+  type: HomeSectionType;
+  title?: string;
+  enabled?: boolean;
+  subtitle?: string;
+  layout?: "grid" | "banner" | "split";
+  blocks?: CustomBlock[];
+};
 
 const sectionOptions: Array<{ type: HomeSectionType; title: string }> = [
   { type: "hero", title: "Hero Banner" },
@@ -20,6 +41,7 @@ const sectionOptions: Array<{ type: HomeSectionType; title: string }> = [
   { type: "testimonials", title: "Testimonials" },
   { type: "gallery", title: "Shop Gallery" },
   { type: "brands", title: "Clients Slider" },
+  { type: "custom", title: "Custom Section" },
 ];
 
 type HomeDraft = Omit<CmsHome, "hero" | "sections"> & {
@@ -42,6 +64,14 @@ function defaultSections(): HomeSectionControl[] {
     title: item.title,
     enabled: true,
   }));
+}
+
+function blankBlock(type: CustomBlockType): CustomBlock {
+  const id = `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  if (type === "text") return { id, type, heading: "New heading", body: "Add section text here." };
+  if (type === "image") return { id, type, image: "/sarjan-assets/banner-textiles-studio.webp", alt: "Sarjan Textiles" };
+  if (type === "button") return { id, type, label: "Explore Now", href: "/products" };
+  return { id, type, productSlug: "" };
 }
 
 function getHeroImages(hero: HomeDraft["hero"]) {
@@ -180,7 +210,7 @@ function ImageUploadField({
   );
 }
 
-export function AdminHomePageClient({ initialHome }: { initialHome: CmsHome }) {
+export function AdminHomePageClient({ initialHome, products }: { initialHome: CmsHome; products: Product[] }) {
   const [home, setHome] = useState<HomeDraft>(() => ({
     ...(initialHome as HomeDraft),
     sections: ((initialHome as HomeDraft).sections?.length ? (initialHome as HomeDraft).sections : defaultSections()),
@@ -361,9 +391,57 @@ export function AdminHomePageClient({ initialHome }: { initialHome: CmsHome }) {
       ...current,
       sections: [
         ...(current.sections?.length ? current.sections : sections),
-        { id: `${type}-${Date.now()}`, type, title: option?.title ?? type, enabled: true },
+        {
+          id: `${type}-${Date.now()}`,
+          type,
+          title: type === "custom" ? "New Custom Section" : option?.title ?? type,
+          enabled: true,
+          layout: type === "custom" ? "grid" : undefined,
+          blocks: type === "custom" ? [blankBlock("text")] : undefined,
+        },
       ],
     }));
+  };
+
+  const addCustomBlock = (sectionIndex: number, type: CustomBlockType) => {
+    setHome((current) => {
+      const next = [...(current.sections?.length ? current.sections : sections)];
+      const currentSection = next[sectionIndex];
+      next[sectionIndex] = { ...currentSection, blocks: [...(currentSection.blocks ?? []), blankBlock(type)] };
+      return { ...current, sections: next };
+    });
+  };
+
+  const updateCustomBlock = (sectionIndex: number, blockIndex: number, patch: Partial<CustomBlock>) => {
+    setHome((current) => {
+      const next = [...(current.sections?.length ? current.sections : sections)];
+      const currentSection = next[sectionIndex];
+      const blocks = [...(currentSection.blocks ?? [])];
+      blocks[blockIndex] = { ...blocks[blockIndex], ...patch };
+      next[sectionIndex] = { ...currentSection, blocks };
+      return { ...current, sections: next };
+    });
+  };
+
+  const removeCustomBlock = (sectionIndex: number, blockIndex: number) => {
+    setHome((current) => {
+      const next = [...(current.sections?.length ? current.sections : sections)];
+      const currentSection = next[sectionIndex];
+      next[sectionIndex] = { ...currentSection, blocks: (currentSection.blocks ?? []).filter((_, index) => index !== blockIndex) };
+      return { ...current, sections: next };
+    });
+  };
+
+  const uploadCustomBlockImage = async (sectionIndex: number, blockIndex: number, file: File) => {
+    const key = `custom-${sectionIndex}-${blockIndex}`;
+    setUploadState((current) => ({ ...current, [key]: "uploading" }));
+    try {
+      const data = await uploadFile(file);
+      updateCustomBlock(sectionIndex, blockIndex, { image: data.url });
+      setUploadState((current) => ({ ...current, [key]: undefined }));
+    } catch (error) {
+      setUploadState((current) => ({ ...current, [key]: error instanceof Error ? error.message : "Upload failed" }));
+    }
   };
 
   return (
@@ -417,21 +495,120 @@ export function AdminHomePageClient({ initialHome }: { initialHome: CmsHome }) {
         </div>
         <div className="d-grid gap-3">
           {sections.map((section, index) => (
-            <div className="sarjan-section-builder-row" key={section.id}>
-              <div className="d-flex align-items-center gap10">
-                <span className="box-status text-button type-delivery">{index + 1}</span>
-                <div>
-                  <h6>{section.title ?? sectionOptions.find((item) => item.type === section.type)?.title ?? section.type}</h6>
-                  <div className="text-caption-1 text-secondary">{section.type}</div>
+            <div className="sarjan-section-builder-card" key={section.id}>
+              <div className="sarjan-section-builder-row">
+                <div className="d-flex align-items-center gap10">
+                  <span className="box-status text-button type-delivery">{index + 1}</span>
+                  <div>
+                    <h6>{section.title ?? sectionOptions.find((item) => item.type === section.type)?.title ?? section.type}</h6>
+                    <div className="text-caption-1 text-secondary">{section.type}</div>
+                  </div>
+                </div>
+                <div className="sarjan-section-builder-actions">
+                  <button type="button" className="tf-button" onClick={() => moveSection(index, -1)} disabled={index === 0}>Up</button>
+                  <button type="button" className="tf-button" onClick={() => moveSection(index, 1)} disabled={index === sections.length - 1}>Down</button>
+                  <button type="button" className="tf-button" onClick={() => updateSection(index, { enabled: section.enabled === false })}>{section.enabled === false ? "Show" : "Hide"}</button>
+                  <button type="button" className="tf-button" onClick={() => duplicateSection(index)}>Duplicate</button>
+                  <button type="button" className="tf-button" onClick={() => removeSection(index)}>Remove</button>
                 </div>
               </div>
-              <div className="sarjan-section-builder-actions">
-                <button type="button" className="tf-button" onClick={() => moveSection(index, -1)} disabled={index === 0}>Up</button>
-                <button type="button" className="tf-button" onClick={() => moveSection(index, 1)} disabled={index === sections.length - 1}>Down</button>
-                <button type="button" className="tf-button" onClick={() => updateSection(index, { enabled: section.enabled === false })}>{section.enabled === false ? "Show" : "Hide"}</button>
-                <button type="button" className="tf-button" onClick={() => duplicateSection(index)}>Duplicate</button>
-                <button type="button" className="tf-button" onClick={() => removeSection(index)}>Remove</button>
-              </div>
+
+              {section.type === "custom" && (
+                <div className="sarjan-custom-section-editor">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
+                    <Field label="Section name">
+                      <TextInput value={section.title ?? ""} onChange={(value) => updateSection(index, { title: value })} placeholder="Example: Summer Collection" />
+                    </Field>
+                    <Field label="Layout">
+                      <select value={section.layout ?? "grid"} onChange={(event) => updateSection(index, { layout: event.target.value as HomeSectionControl["layout"] })}>
+                        <option value="grid">Grid</option>
+                        <option value="banner">Banner</option>
+                        <option value="split">Split</option>
+                      </select>
+                    </Field>
+                  </div>
+                  <Field label="Section subtitle">
+                    <textarea value={section.subtitle ?? ""} onChange={(event) => updateSection(index, { subtitle: event.target.value })} placeholder="Optional subtitle shown under section name" />
+                  </Field>
+                  <div className="sarjan-custom-block-actions">
+                    <span className="body-title">Add content:</span>
+                    {(["text", "image", "button", "product"] as CustomBlockType[]).map((type) => (
+                      <button type="button" className="tf-button" onClick={() => addCustomBlock(index, type)} key={type}>{type}</button>
+                    ))}
+                  </div>
+                  <div className="sarjan-custom-block-grid">
+                    {(section.blocks ?? []).map((block, blockIndex) => {
+                      const uploadKey = `custom-${index}-${blockIndex}`;
+                      return (
+                        <div className="sarjan-custom-block-card" key={block.id}>
+                          <div className="flex justify-between gap10 items-center mb-16">
+                            <span className="box-status text-button type-delivery">{block.type}</span>
+                            <button type="button" className="tf-button" onClick={() => removeCustomBlock(index, blockIndex)}>Remove</button>
+                          </div>
+
+                          {block.type === "text" && (
+                            <div className="d-grid gap-3">
+                              <Field label="Heading">
+                                <TextInput value={block.heading ?? ""} onChange={(value) => updateCustomBlock(index, blockIndex, { heading: value })} />
+                              </Field>
+                              <Field label="Text">
+                                <textarea value={block.body ?? ""} onChange={(event) => updateCustomBlock(index, blockIndex, { body: event.target.value })} />
+                              </Field>
+                            </div>
+                          )}
+
+                          {block.type === "image" && (
+                            <div className="d-grid gap-3">
+                              <div className="sarjan-custom-image-preview">
+                                <img src={block.image || "/sarjan-assets/banner-textiles-studio.webp"} alt={block.alt ?? ""} />
+                              </div>
+                              <label className="sarjan-category-upload">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (file) uploadCustomBlockImage(index, blockIndex, file);
+                                    event.currentTarget.value = "";
+                                  }}
+                                />
+                                <span>{uploadState[uploadKey] === "uploading" ? "Uploading..." : "Upload Image / Banner"}</span>
+                                <small>JPG, PNG, WEBP</small>
+                              </label>
+                              {uploadState[uploadKey] && uploadState[uploadKey] !== "uploading" && <div className="text-tiny text-danger">{uploadState[uploadKey]}</div>}
+                              <Field label="Alt text">
+                                <TextInput value={block.alt ?? ""} onChange={(value) => updateCustomBlock(index, blockIndex, { alt: value })} />
+                              </Field>
+                            </div>
+                          )}
+
+                          {block.type === "button" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Field label="Button label">
+                                <TextInput value={block.label ?? ""} onChange={(value) => updateCustomBlock(index, blockIndex, { label: value })} />
+                              </Field>
+                              <Field label="Button link">
+                                <TextInput value={block.href ?? ""} onChange={(value) => updateCustomBlock(index, blockIndex, { href: value })} />
+                              </Field>
+                            </div>
+                          )}
+
+                          {block.type === "product" && (
+                            <Field label="Product">
+                              <select value={block.productSlug ?? ""} onChange={(event) => updateCustomBlock(index, blockIndex, { productSlug: event.target.value })}>
+                                <option value="">Select Product</option>
+                                {products.slice(0, 500).map((product) => (
+                                  <option value={product.slug} key={product.slug}>{product.name} / {product.sku}</option>
+                                ))}
+                              </select>
+                            </Field>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -9,7 +9,7 @@ export default async function AdminHomeCmsPage() {
 
   return (
     <AdminTemplateChrome active="home" title="Home Page CMS">
-      <AdminHomePageClient initialHome={cms.home} />
+      <AdminHomePageClient initialHome={cms.home} products={cms.products} />
     </AdminTemplateChrome>
   );
 }

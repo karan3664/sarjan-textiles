@@ -152,8 +152,27 @@ function ProductFeature({ product }: { product: Product }) {
   );
 }
 
-type HomeSectionType = "hero" | "categories" | "topPicks" | "marquee" | "featuredProduct" | "trendingProducts" | "services" | "testimonials" | "gallery" | "brands";
-type HomeSectionControl = { id: string; type: HomeSectionType; title?: string; enabled?: boolean };
+type HomeSectionType = "hero" | "categories" | "topPicks" | "marquee" | "featuredProduct" | "trendingProducts" | "services" | "testimonials" | "gallery" | "brands" | "custom";
+type CustomBlock = {
+  id: string;
+  type: "text" | "image" | "button" | "product";
+  heading?: string;
+  body?: string;
+  image?: string;
+  alt?: string;
+  label?: string;
+  href?: string;
+  productSlug?: string;
+};
+type HomeSectionControl = {
+  id: string;
+  type: HomeSectionType;
+  title?: string;
+  subtitle?: string;
+  enabled?: boolean;
+  layout?: "grid" | "banner" | "split";
+  blocks?: CustomBlock[];
+};
 
 const defaultHomeSections = defaultHome.sections as HomeSectionControl[];
 
@@ -181,6 +200,58 @@ function ServiceIconBox({ services = defaultHome.services }: { services?: typeof
             ))}
           </div>
           <div className="sw-pagination-iconbox sw-dots type-circle justify-content-center" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CustomHomeSection({ section, products }: { section: HomeSectionControl; products: Product[] }) {
+  const blocks = section.blocks ?? [];
+  if (!blocks.length) return null;
+
+  const layoutClass = section.layout === "banner" ? "sarjan-custom-section-banner" : section.layout === "split" ? "sarjan-custom-section-split" : "sarjan-custom-section-grid";
+
+  return (
+    <section className="flat-spacing sarjan-custom-storefront-section">
+      <div className="container">
+        <div className="heading-section text-center wow fadeInUp">
+          {section.title ? <h3 className="heading">{section.title}</h3> : null}
+          {section.subtitle ? <p className="subheading text-secondary">{section.subtitle}</p> : null}
+        </div>
+        <div className={layoutClass}>
+          {blocks.map((block) => {
+            if (block.type === "text") {
+              return (
+                <div className="sarjan-custom-text-block" key={block.id}>
+                  {block.heading ? <h4>{block.heading}</h4> : null}
+                  {block.body ? <p className="text-secondary">{block.body}</p> : null}
+                </div>
+              );
+            }
+
+            if (block.type === "image") {
+              return block.image ? (
+                <div className="sarjan-custom-image-block hover-img" key={block.id}>
+                  <img src={block.image} alt={block.alt ?? section.title ?? "Sarjan Textiles"} />
+                </div>
+              ) : null;
+            }
+
+            if (block.type === "button") {
+              return (
+                <div className="sarjan-custom-button-block" key={block.id}>
+                  <Link className="tf-btn btn-fill" href={block.href || "/products"}>
+                    <span className="text">{block.label || "Explore Now"}</span>
+                    <i className="icon icon-arrowUpRight" />
+                  </Link>
+                </div>
+              );
+            }
+
+            const product = products.find((item) => item.slug === block.productSlug);
+            return product ? <ModaveProductCard product={product} key={block.id} /> : null;
+          })}
         </div>
       </div>
     </section>
@@ -364,13 +435,14 @@ export async function HomeDynamic() {
         </div>
       </section>
     ),
+    custom: null,
   };
 
   return (
     <>
       {sections.map((section, index) => (
         <Fragment key={`${section.id}-${index}`}>
-          {renderers[section.type]}
+          {section.type === "custom" ? <CustomHomeSection section={section} products={products} /> : renderers[section.type]}
         </Fragment>
       ))}
     </>

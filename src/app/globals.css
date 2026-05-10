@@ -3196,6 +3196,18 @@ footer .footer-newsletter .subscribe-content input {
   background: #fff;
 }
 
+.sarjan-section-builder-card {
+  border: 1px solid #ececec;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.sarjan-section-builder-card .sarjan-section-builder-row {
+  border: 0;
+  border-radius: 0;
+}
+
 .sarjan-section-builder-actions {
   display: flex;
   flex-wrap: wrap;
@@ -3206,6 +3218,93 @@ footer .footer-newsletter .subscribe-content input {
 .sarjan-section-builder-actions .tf-button {
   min-height: 38px;
   padding: 9px 14px;
+}
+
+.sarjan-custom-section-editor {
+  border-top: 1px solid #f0f0f0;
+  padding: 18px;
+  background: #fafafa;
+}
+
+.sarjan-custom-block-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.sarjan-custom-block-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.sarjan-custom-block-card {
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.sarjan-custom-image-preview {
+  overflow: hidden;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #f6f6f6;
+}
+
+.sarjan-custom-image-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.sarjan-custom-storefront-section .heading-section:empty {
+  display: none;
+}
+
+.sarjan-custom-section-grid,
+.sarjan-custom-section-split,
+.sarjan-custom-section-banner {
+  display: grid;
+  gap: 24px;
+  align-items: center;
+}
+
+.sarjan-custom-section-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.sarjan-custom-section-split {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.sarjan-custom-section-banner {
+  grid-template-columns: 1fr;
+}
+
+.sarjan-custom-text-block {
+  max-width: 720px;
+}
+
+.sarjan-custom-image-block {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.sarjan-custom-image-block img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.sarjan-custom-button-block {
+  display: flex;
+  align-items: center;
 }
 
 @media (max-width: 991px) {
@@ -3244,5 +3343,9 @@ footer .footer-newsletter .subscribe-content input {
 
   .sarjan-section-builder-actions {
     justify-content: flex-start;
+  }
+
+  .sarjan-custom-section-split {
+    grid-template-columns: 1fr;
   }
 }
