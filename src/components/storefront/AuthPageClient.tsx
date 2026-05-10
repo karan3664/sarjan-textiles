@@ -46,6 +46,13 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [gstVerified, setGstVerified] = useState(false);
   const [gstManualAllowed, setGstManualAllowed] = useState(false);
   const [gstLoading, setGstLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailOtpToken, setEmailOtpToken] = useState("");
+  const [emailOtpMessage, setEmailOtpMessage] = useState("");
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailOtpLoading, setEmailOtpLoading] = useState(false);
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
   const title = isRegister ? "Register" : isForgot ? "Forget Password" : "Login";
@@ -60,6 +67,11 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     if (isRegister && payload.password !== payload.confirmPassword) {
       setLoading(false);
       setMessage("Passwords do not match");
+      return;
+    }
+    if (isRegister && !emailVerified) {
+      setLoading(false);
+      setMessage("Email OTP verification required");
       return;
     }
     if (isRegister && hasGst && !isValidGstin(String(payload.gst ?? ""))) {
@@ -96,6 +108,68 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     }
 
     setMessage("Password reset request saved. Admin will contact client.");
+  };
+
+  const resetEmailOtp = (nextEmail: string) => {
+    setEmail(nextEmail);
+    setEmailOtp("");
+    setEmailOtpToken("");
+    setEmailOtpMessage("");
+    setEmailOtpSent(false);
+    setEmailVerified(false);
+  };
+
+  const sendEmailOtp = async () => {
+    const normalized = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      setEmailOtpMessage("Enter valid email first");
+      return;
+    }
+    setEmailOtpLoading(true);
+    setEmailOtpMessage("");
+    setEmailVerified(false);
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalized }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "OTP send failed");
+      setEmail(normalized);
+      setEmailOtpToken(data.otpToken);
+      setEmailOtpSent(true);
+      setEmailOtpMessage("OTP sent. Check email inbox.");
+    } catch (error) {
+      setEmailOtpMessage(error instanceof Error ? error.message : "OTP send failed");
+    } finally {
+      setEmailOtpLoading(false);
+    }
+  };
+
+  const verifyEmailOtp = async () => {
+    if (!emailOtpToken || !emailOtp.trim()) {
+      setEmailOtpMessage("Enter OTP sent to email");
+      return;
+    }
+    setEmailOtpLoading(true);
+    setEmailOtpMessage("");
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: emailOtp, otpToken: emailOtpToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "OTP verification failed");
+      setEmailVerified(true);
+      setEmailOtpMessage("Email verified");
+    } catch (error) {
+      setEmailVerified(false);
+      setEmailOtpMessage(error instanceof Error ? error.message : "OTP verification failed");
+    } finally {
+      setEmailOtpLoading(false);
+    }
   };
 
   const verifyGst = async () => {
@@ -202,7 +276,41 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                       <fieldset><input type="text" placeholder="City / buying category" name="city" /></fieldset>
                     </>
                   ) : null}
-                  <fieldset><input type="email" placeholder="Username or email address*" name="email" required /></fieldset>
+                  <fieldset>
+                    <input
+                      type="email"
+                      placeholder="Username or email address*"
+                      name="email"
+                      value={email}
+                      onChange={(event) => resetEmailOtp(event.target.value)}
+                      required
+                    />
+                  </fieldset>
+                  {isRegister ? (
+                    <>
+                      <fieldset className="sarjan-gst-row sarjan-otp-row">
+                        <input
+                          type="text"
+                          placeholder="Email OTP*"
+                          name="emailOtp"
+                          value={emailOtp}
+                          onChange={(event) => {
+                            setEmailOtp(event.target.value.replace(/\D/g, "").slice(0, 6));
+                            setEmailVerified(false);
+                          }}
+                          required
+                        />
+                        <button type="button" className="tf-btn btn-fill" onClick={sendEmailOtp} disabled={emailOtpLoading || !email.trim()}>
+                          <span className="text text-button">{emailOtpLoading && !emailOtpSent ? "Sending..." : emailOtpSent ? "Resend OTP" : "Send OTP"}</span>
+                        </button>
+                        <button type="button" className="tf-btn btn-white has-border" onClick={verifyEmailOtp} disabled={emailOtpLoading || !emailOtpToken || emailOtp.length !== 6 || emailVerified}>
+                          <span className="text text-button">{emailVerified ? "Verified" : "Verify OTP"}</span>
+                        </button>
+                      </fieldset>
+                      <input type="hidden" name="emailOtpToken" value={emailOtpToken} />
+                      {emailOtpMessage ? <p className={emailVerified || /sent/i.test(emailOtpMessage) ? "text-success" : "text-danger"}>{emailOtpMessage}</p> : null}
+                    </>
+                  ) : null}
                   {!isForgot ? (
                     <fieldset className="position-relative password-item">
                       <input className="input-password" type="password" placeholder="Password*" name="password" required />

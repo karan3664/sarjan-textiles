@@ -1,5 +1,6 @@
 import { createClient, publicClient } from "@/lib/local-db";
 import { createClientToken } from "@/lib/client-token";
+import { verifyEmailOtpToken } from "@/lib/email-otp";
 import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
 
 export async function POST(request: Request) {
@@ -9,6 +10,9 @@ export async function POST(request: Request) {
     if (!body.email || !body.password || (!body.companyName && !body.gst)) {
       return Response.json({ error: "Email, password, and company name required" }, { status: 400 });
     }
+    const emailOtp = verifyEmailOtpToken(String(body.emailOtpToken ?? ""), String(body.email ?? ""), String(body.emailOtp ?? ""));
+    if (!emailOtp.ok) return Response.json({ error: emailOtp.error }, { status: 400 });
+
     if (hasGst) {
       if (!body.gst) return Response.json({ error: "GST number required or choose without GST registration" }, { status: 400 });
       body.gst = normalizeGstin(String(body.gst));

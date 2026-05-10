@@ -3385,6 +3385,10 @@ footer .footer-newsletter .subscribe-content input {
   align-items: stretch;
 }
 
+.sarjan-otp-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
 .sarjan-gst-row .tf-btn {
   min-width: 136px;
   height: 50px;
@@ -3914,6 +3918,10 @@ footer .footer-newsletter .subscribe-content input {
   }
 
   .sarjan-gst-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-otp-row {
     grid-template-columns: 1fr;
   }
 }
