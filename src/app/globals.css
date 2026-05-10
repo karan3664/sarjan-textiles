@@ -337,7 +337,7 @@ footer .footer-newsletter .subscribe-content input {
 }
 
 .header-dashboard .wrap .header-left {
-  gap: 0;
+  gap: 12px;
 }
 
 .header-dashboard .wrap .header-left .button-show-hide {
@@ -355,6 +355,58 @@ footer .footer-newsletter .subscribe-content input {
   border-radius: 10px;
   background: #f7f7f7;
   color: #111;
+}
+
+.sarjan-admin-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  padding: 0;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.sarjan-admin-toggle:hover {
+  border-color: #9b1c31;
+  background: #9b1c31;
+  color: #fff;
+}
+
+.sarjan-admin-toggle i {
+  color: currentColor !important;
+  font-size: 18px;
+}
+
+.header-dashboard .sarjan-admin-toggle-open {
+  display: none;
+}
+
+.layout-wrap.full-width .header-dashboard .sarjan-admin-toggle-open {
+  display: inline-flex;
+}
+
+.section-menu-left .sarjan-admin-toggle-close {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: #181818;
+}
+
+.section-menu-left .sarjan-admin-toggle-close:hover {
+  background: #f1f1f1;
+  color: #9b1c31;
 }
 
 .layout-wrap.full-width .header-dashboard .wrap .header-left .button-show-hide i {
@@ -580,6 +632,10 @@ footer .footer-newsletter .subscribe-content input {
   width: 30px !important;
   height: 30px !important;
   margin-left: auto;
+}
+
+.section-menu-left .menu-backdrop {
+  cursor: pointer;
 }
 
 .section-menu-left .section-menu-left-wrap {
@@ -3606,6 +3662,17 @@ footer .footer-newsletter .subscribe-content input {
 }
 
 @media (max-width: 991px) {
+  .header-dashboard .sarjan-admin-toggle-open,
+  .layout-wrap.full-width .header-dashboard .sarjan-admin-toggle-open {
+    display: inline-flex;
+  }
+
+  .header-dashboard .wrap .header-left .form-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+  }
+
   .sarjan-hero,
   .sarjan-detail-grid,
   .sarjan-admin-shell {

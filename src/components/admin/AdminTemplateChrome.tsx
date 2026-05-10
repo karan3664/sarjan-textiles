@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import type { ReactNode } from "react";
+import { AdminSidebarController } from "./AdminSidebarController";
 
 const adminStyles = [
   "css/animate.min.css",
@@ -55,9 +56,9 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
           />
           <span>Sarjan Textiles</span>
         </Link>
-        <div className="button-show-hide">
+        <button type="button" className="sarjan-admin-toggle sarjan-admin-toggle-close" data-admin-menu-close aria-label="Hide sidebar">
           <i className="icon-chevron-left" />
-        </div>
+        </button>
       </div>
       <div className="section-menu-left-wrap">
         <div className="center">
@@ -96,9 +97,9 @@ function Header() {
     <div className="header-dashboard">
       <div className="wrap">
         <div className="header-left">
-          <div className="button-show-hide">
+          <button type="button" className="sarjan-admin-toggle sarjan-admin-toggle-open" data-admin-menu-toggle aria-label="Toggle sidebar">
             <i className="icon-chevron-right" />
-          </div>
+          </button>
           <form className="form-search flex-grow">
             <fieldset className="name">
               <input type="text" placeholder="Enter your e-mail" className="show-search style-1" name="name" tabIndex={2} value="" aria-required="true" required readOnly />
@@ -195,6 +196,7 @@ export function AdminTemplateChrome({
               </div>
             </div>
             <Sidebar active={active} />
+            <AdminSidebarController />
             <div className="section-content-right">
               <Header />
               <div className="main-content">
