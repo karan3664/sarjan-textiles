@@ -9,6 +9,7 @@ const baseScripts = [
   "swiper-bundle.min.js",
   "carousel.js",
   "lazysize.min.js",
+  "wow.min.js",
   "main.js",
 ];
 
@@ -75,6 +76,33 @@ export function TemplateScripts() {
             event.preventDefault();
             event.stopImmediatePropagation();
           }, true);
+        `}
+      </Script>
+      <Script id="sarjan-loader-fallback" strategy="afterInteractive">
+        {`
+          (function () {
+            if (!window.WOW) {
+              window.WOW = function () {
+                return { init: function () {} };
+              };
+            }
+            function hideLoader() {
+              document.querySelectorAll(".preload").forEach(function (node) {
+                node.style.opacity = "0";
+                node.style.pointerEvents = "none";
+                setTimeout(function () {
+                  if (node && node.parentNode) node.parentNode.removeChild(node);
+                }, 250);
+              });
+            }
+            if (document.readyState === "complete" || document.readyState === "interactive") {
+              setTimeout(hideLoader, 250);
+            } else {
+              document.addEventListener("DOMContentLoaded", function () { setTimeout(hideLoader, 250); });
+            }
+            window.addEventListener("load", function () { setTimeout(hideLoader, 250); });
+            setTimeout(hideLoader, 1800);
+          })();
         `}
       </Script>
       <Script id="sarjan-hard-route-links" strategy="afterInteractive">
