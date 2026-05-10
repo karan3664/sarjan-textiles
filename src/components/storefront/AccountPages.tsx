@@ -150,7 +150,9 @@ export function AccountDashboardPage() {
   const { client, orders, loading, setClient } = useClientAndOrders();
   const [form, setForm] = useState({ companyName: "", email: "", phone: "", gst: "", city: "" });
   const [password, setPassword] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
   const total = useMemo(() => orders.reduce((sum, order) => sum + order.subtotal, 0), [orders]);
 
   useEffect(() => {
@@ -172,24 +174,6 @@ export function AccountDashboardPage() {
     if (!client?.id) {
       setMessage("Login required.");
       return;
-    }
-
-    if (password.newPassword || password.confirmPassword || password.currentPassword) {
-      if (password.newPassword !== password.confirmPassword) {
-        setMessage("New password and confirm password do not match.");
-        return;
-      }
-      const passwordRes = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: password.currentPassword, newPassword: password.newPassword }),
-      });
-      const passwordData = await passwordRes.json();
-      if (!passwordRes.ok) {
-        setMessage(passwordData.error ?? "Password update failed.");
-        return;
-      }
-      setPassword({ currentPassword: "", newPassword: "", confirmPassword: "" });
     }
 
     const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
@@ -214,11 +198,45 @@ export function AccountDashboardPage() {
     }
   };
 
+  const savePassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!client?.id) {
+      setPasswordMessage("Login required.");
+      return;
+    }
+    if (!password.currentPassword || !password.newPassword) {
+      setPasswordMessage("Current and new password required.");
+      return;
+    }
+    if (password.newPassword !== password.confirmPassword) {
+      setPasswordMessage("New password and confirm password do not match.");
+      return;
+    }
+
+    const passwordRes = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: password.currentPassword, newPassword: password.newPassword }),
+    });
+    const passwordData = await passwordRes.json();
+    if (!passwordRes.ok) {
+      setPasswordMessage(passwordData.error ?? "Password update failed.");
+      return;
+    }
+    setPassword({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setPasswordMessage("Password updated.");
+    setTimeout(() => {
+      setPasswordModalOpen(false);
+      setPasswordMessage("");
+    }, 700);
+  };
+
   return (
     <AccountFrame active="/my-account" title="My Account">
       <div className="account-details">
         {loading ? <p>Loading account...</p> : client ? (
-          <form className="form-account-details form-has-password" onSubmit={saveProfile}>
+          <>
+          <form className="form-account-details" onSubmit={saveProfile}>
             <div className="account-info">
               <h5 className="title">Information</h5>
               <div className="cols mb_20">
@@ -251,26 +269,48 @@ export function AccountDashboardPage() {
                 <a href="/order-tracking" className="tf-btn btn-white has-border radius-4"><span className="text">Track Order</span></a>
               </div>
             </div>
-            <div className="account-password">
-              <h5 className="title">Change Password</h5>
-              <fieldset className="position-relative password-item mb_20">
-                <input className="input-password" type="password" placeholder="Current Password*" value={password.currentPassword} onChange={(e) => updatePassword("currentPassword", e.target.value)} />
-                <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
-              </fieldset>
-              <fieldset className="position-relative password-item mb_20">
-                <input className="input-password" type="password" placeholder="New Password*" value={password.newPassword} onChange={(e) => updatePassword("newPassword", e.target.value)} />
-                <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
-              </fieldset>
-              <fieldset className="position-relative password-item">
-                <input className="input-password" type="password" placeholder="Confirm Password*" value={password.confirmPassword} onChange={(e) => updatePassword("confirmPassword", e.target.value)} />
-                <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
-              </fieldset>
-            </div>
             {message ? <p className={message.includes("failed") || message.includes("incorrect") || message.includes("match") || message.includes("required") ? "text-danger mt_16" : "text-success mt_16"}>{message}</p> : null}
-            <div className="button-submit">
+            <div className="button-submit d-flex gap-12 flex-wrap">
               <button className="tf-btn btn-fill" type="submit"><span className="text text-button">Update Account</span></button>
+              <button className="tf-btn btn-white has-border" type="button" onClick={() => { setPasswordModalOpen(true); setPasswordMessage(""); }}>
+                <span className="text text-button">Change Password</span>
+              </button>
             </div>
           </form>
+          {passwordModalOpen ? (
+            <div className="sarjan-password-modal" role="dialog" aria-modal="true" aria-label="Change Password">
+              <button type="button" className="sarjan-password-modal-backdrop" onClick={() => setPasswordModalOpen(false)} aria-label="Close password modal" />
+              <form className="sarjan-password-modal-card form-has-password" onSubmit={savePassword}>
+                <div className="flex justify-between gap12 items-center mb_20">
+                  <div>
+                    <h5 className="title mb_4">Change Password</h5>
+                    <p className="text-secondary">Password update is separate from account profile update.</p>
+                  </div>
+                  <button type="button" className="sarjan-password-modal-close" onClick={() => setPasswordModalOpen(false)} aria-label="Close">
+                    <i className="icon-close" />
+                  </button>
+                </div>
+                <fieldset className="position-relative password-item mb_20">
+                  <input className="input-password" type="password" placeholder="Current Password*" value={password.currentPassword} onChange={(e) => updatePassword("currentPassword", e.target.value)} />
+                  <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
+                </fieldset>
+                <fieldset className="position-relative password-item mb_20">
+                  <input className="input-password" type="password" placeholder="New Password*" value={password.newPassword} onChange={(e) => updatePassword("newPassword", e.target.value)} />
+                  <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
+                </fieldset>
+                <fieldset className="position-relative password-item">
+                  <input className="input-password" type="password" placeholder="Confirm Password*" value={password.confirmPassword} onChange={(e) => updatePassword("confirmPassword", e.target.value)} />
+                  <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
+                </fieldset>
+                {passwordMessage ? <p className={passwordMessage.includes("failed") || passwordMessage.includes("incorrect") || passwordMessage.includes("match") || passwordMessage.includes("required") ? "text-danger mt_16" : "text-success mt_16"}>{passwordMessage}</p> : null}
+                <div className="button-submit d-flex gap-12 flex-wrap mt_24">
+                  <button className="tf-btn btn-fill" type="submit"><span className="text text-button">Update Password</span></button>
+                  <button className="tf-btn btn-white has-border" type="button" onClick={() => setPasswordModalOpen(false)}><span className="text text-button">Cancel</span></button>
+                </div>
+              </form>
+            </div>
+          ) : null}
+          </>
           ) : (
           <div><p className="text-secondary">Login to view B2B account.</p><a href="/login" className="tf-btn btn-fill radius-4 mt_16"><span className="text">Login</span></a></div>
         )}
