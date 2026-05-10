@@ -1816,6 +1816,32 @@ footer .footer-newsletter .subscribe-content input {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.sarjan-size-price-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sarjan-size-price-item {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.sarjan-size-price-item span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #181818;
+}
+
+.sarjan-size-price-item input {
+  height: 40px;
+  padding: 8px 10px;
+}
+
 .sarjan-product-check {
   display: flex;
   align-items: center;
@@ -2652,6 +2678,7 @@ footer .footer-newsletter .subscribe-content input {
   }
 
   .sarjan-product-check-grid,
+  .sarjan-size-price-grid,
   .sarjan-product-size-grid {
     grid-template-columns: 1fr;
   }

@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
 import { readCart, sameCartLine, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
+import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
 type CartLine = StoredCartItem & {
   product: Product;
+  setPrice: number;
   lineTotal: number;
 };
 
@@ -49,7 +51,9 @@ export function CartPageClient() {
         setLines(cart
           .map((item) => {
             const product = bySlug.get(item.slug);
-            return product ? { ...item, product, lineTotal: product.price * item.sizes.length * item.quantity } : null;
+            if (!product) return null;
+            const setPrice = productSetPrice(product, item.color, item.sizes);
+            return { ...item, product, setPrice, lineTotal: setPrice * item.quantity };
           })
           .filter(Boolean) as CartLine[]);
       })
@@ -119,7 +123,7 @@ export function CartPageClient() {
                               <div className="text-caption-1 text-secondary">1 set = {item.sizes.length} pcs</div>
                             </div>
                           </td>
-                          <td data-cart-title="Price" className="tf-cart-item_price text-center"><div className="cart-price text-button price-on-sale"><PriceGate amount={item.product.price * item.sizes.length} compact /></div></td>
+                          <td data-cart-title="Price" className="tf-cart-item_price text-center"><div className="cart-price text-button price-on-sale"><PriceGate amount={item.setPrice} compact /></div></td>
                           <td data-cart-title="Quantity" className="tf-cart-item_quantity">
                             <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
                               <button type="button" className="btn-quantity btn-decrease" onClick={() => updateQuantity(item, item.quantity - 1)} aria-label="Decrease set quantity">-</button>
@@ -129,7 +133,7 @@ export function CartPageClient() {
                           </td>
                           <td data-cart-title="Total" className="tf-cart-item_total text-center">
                             <div className="cart-total text-button total-price"><PriceGate amount={item.lineTotal} compact /></div>
-                            <div className="text-caption-1 text-secondary">{item.quantity} set x <PriceGate amount={item.product.price * item.sizes.length} compact /></div>
+                            <div className="text-caption-1 text-secondary">{item.quantity} set x <PriceGate amount={item.setPrice} compact /></div>
                           </td>
                           <td data-cart-title="Remove" className="remove-cart"><button type="button" className="sarjan-remove-cart" onClick={() => removeItem(item)} aria-label={`Remove ${item.product.name}`}>×</button></td>
                         </tr>

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { addCompare, readCompare, removeCompare, writeCompare } from "@/lib/compare-client";
+import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
 function sizeRun(product: Product) {
@@ -95,7 +96,7 @@ export function CompareDrawer() {
                         </Link>
                         <div className="content">
                           <div className="text-title"><Link className="link text-line-clamp-2" href={`/products/${product.slug}`} onClick={closeOffcanvas}>{product.name}</Link></div>
-                          <div className="text-button"><PriceGate amount={product.price * sizeRun(product).length} suffix=" / set" compact /></div>
+                          <div className="text-button"><PriceGate amount={productSetPrice(product, product.colors[0], sizeRun(product))} suffix=" / set" compact /></div>
                         </div>
                       </div>
                     )) : (

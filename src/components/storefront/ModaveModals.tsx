@@ -4,11 +4,13 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN, parseSizeRun, readCart, sameCartLine, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
+import { productSetPrice } from "@/lib/product-pricing";
 import { readWishlist, toggleWishlist, writeWishlist } from "@/lib/wishlist-client";
 import { PriceGate } from "./PriceGate";
 
 type HydratedCartItem = StoredCartItem & {
   product: Product;
+  setPrice: number;
   lineTotal: number;
 };
 
@@ -98,7 +100,9 @@ export function ModaveModals() {
         setItems(cart
           .map((item) => {
             const product = bySlug.get(item.slug);
-            return product ? { ...item, product, lineTotal: item.quantity * item.sizes.length * product.price } : null;
+            if (!product) return null;
+            const setPrice = productSetPrice(product, item.color, item.sizes);
+            return { ...item, product, setPrice, lineTotal: item.quantity * setPrice };
           })
           .filter(Boolean) as HydratedCartItem[]);
       })
@@ -297,7 +301,7 @@ export function ModaveModals() {
                   </div>
                   <div className="card-product-info">
                     <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-                    <PriceGate amount={product.price * productSizeRun(product).length} suffix=" / set" />
+                    <PriceGate amount={productSetPrice(product, product.colors[0], productSizeRun(product))} suffix=" / set" />
                     <ul className="list-color-product mt_8">
                       {product.colors.slice(0, 3).map((color, index) => (
                         <li className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`} key={color}>
@@ -335,7 +339,7 @@ export function ModaveModals() {
                       <div className="content">
                         <div className="name"><a className="link text-line-clamp-1" href={`/products/${product.slug}`}>{product.name}</a></div>
                         <div className="cart-item-bot">
-                          <div className="text-button price"><PriceGate amount={product.price * productSizeRun(product).length} suffix=" / set" compact /></div>
+                          <div className="text-button price"><PriceGate amount={productSetPrice(product, product.colors[0], productSizeRun(product))} suffix=" / set" compact /></div>
                           <button type="button" className="link text-button border-0 bg-transparent p-0 sarjan-reco-add" data-cart-add data-product-slug={product.slug} data-product-size-run={productSizeRun(product).join(",")} data-product-color={product.colors[0]}>Add to cart</button>
                         </div>
                       </div>
@@ -376,7 +380,7 @@ export function ModaveModals() {
                               </div>
                               <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
                                 <div className="text-secondary-2">{item.color} / {item.sizes.join("/")}</div>
-                                <div className="text-button">{item.quantity} set X <PriceGate amount={item.product.price * item.sizes.length} compact /></div>
+                                <div className="text-button">{item.quantity} set X <PriceGate amount={item.setPrice} compact /></div>
                               </div>
                               <div className="text-caption-1 text-secondary-2 mt_4">1 set = {item.sizes.length} pcs</div>
                             </div>
@@ -461,7 +465,7 @@ export function ModaveModals() {
                             </div>
                             <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
                               <div className="text-secondary-2">{product.category}</div>
-                              <div className="text-button"><PriceGate amount={product.price * productSizeRun(product).length} suffix=" / set" compact /></div>
+                              <div className="text-button"><PriceGate amount={productSetPrice(product, product.colors[0], productSizeRun(product))} suffix=" / set" compact /></div>
                             </div>
                           </div>
                         </div>
@@ -517,7 +521,7 @@ export function ModaveModals() {
                       </div>
                     </div>
                     <div className="tf-product-info-price">
-                      <h4 className="price-on-sale"><PriceGate amount={quickProduct.price * productSizeRun(quickProduct).length} suffix=" / set" /></h4>
+                      <h4 className="price-on-sale"><PriceGate amount={productSetPrice(quickProduct, quickProduct.colors[0], productSizeRun(quickProduct))} suffix=" / set" /></h4>
                     </div>
                     <p className="text-secondary">{quickProduct.description}</p>
                   </div>
@@ -563,7 +567,7 @@ export function ModaveModals() {
                         data-product-slug={quickProduct.slug}
                         data-product-size-run={productSizeRun(quickProduct).join(",")}
                         data-product-color={quickProduct.colors[0]}
-                        data-set-price={quickProduct.price * productSizeRun(quickProduct).length}
+                        data-set-price={productSetPrice(quickProduct, quickProduct.colors[0], productSizeRun(quickProduct))}
                       >
                         <span>Add 1 set</span>
                       </a>

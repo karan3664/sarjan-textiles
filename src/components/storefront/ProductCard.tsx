@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Product } from "@/data/mock";
+import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -13,7 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="p-3">
         <div className="d-flex justify-content-between gap-2 mb-2">
           <span className="sarjan-muted small">{product.category}</span>
-          <PriceGate amount={product.price * sizeRun.length} suffix=" / set" className="sarjan-price" compact />
+          <PriceGate amount={productSetPrice(product, product.colors[0], sizeRun)} suffix=" / set" className="sarjan-price" compact />
         </div>
         <h5 className="mb-2">
           <Link href={`/products/${product.slug}`} className="text-decoration-none text-dark">

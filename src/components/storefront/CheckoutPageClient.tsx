@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
 import { readCart, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
+import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
 type CheckoutLine = StoredCartItem & {
   product: Product;
+  setPrice: number;
   lineTotal: number;
 };
 
@@ -74,7 +76,9 @@ export function CheckoutPageClient() {
         setLines(cart
           .map((item) => {
             const product = bySlug.get(item.slug);
-            return product ? { ...item, product, lineTotal: product.price * item.sizes.length * item.quantity } : null;
+            if (!product) return null;
+            const setPrice = productSetPrice(product, item.color, item.sizes);
+            return { ...item, product, setPrice, lineTotal: setPrice * item.quantity };
           })
           .filter(Boolean) as CheckoutLine[]);
       })
@@ -110,7 +114,7 @@ export function CheckoutPageClient() {
           sizes: item.sizes,
           setQuantity: item.quantity,
           piecesPerSet: item.sizes.length,
-          unitPrice: item.product.price,
+          unitPrice: Math.round(item.setPrice / Math.max(1, item.sizes.length)),
           lineTotal: item.lineTotal,
         })),
       }),
@@ -239,7 +243,7 @@ export function CheckoutPageClient() {
                               <div className="variant text-caption-1 text-secondary">{item.color} / {item.sizes.join("/")}</div>
                               <div className="variant text-caption-1 text-secondary">{item.quantity} set x {item.sizes.length} pcs</div>
                             </div>
-                            <div className="total-price text-button"><span className="count">{item.quantity}</span>X<span className="price"> <PriceGate amount={item.product.price * item.sizes.length} compact /></span></div>
+                            <div className="total-price text-button"><span className="count">{item.quantity}</span>X<span className="price"> <PriceGate amount={item.setPrice} compact /></span></div>
                           </div>
                         </div>
                       ))}

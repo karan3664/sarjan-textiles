@@ -10,6 +10,7 @@ import {
   products,
   siteSettings,
 } from "@/data/mock";
+import { variantUnitPrice } from "@/lib/product-pricing";
 
 export const mockApi = {
   siteSettings,
@@ -44,7 +45,7 @@ export function getCartItems() {
   return cart.items
     .map((item) => {
       const product = getProductBySlug(item.productSlug);
-      return product ? { ...item, product, lineTotal: product.price * item.quantity } : null;
+      return product ? { ...item, product, unitPrice: variantUnitPrice(product, item.color, item.size), lineTotal: variantUnitPrice(product, item.color, item.size) * item.quantity } : null;
     })
     .filter(Boolean);
 }

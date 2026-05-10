@@ -1,4 +1,5 @@
 import type { Product } from "@/data/mock";
+import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
 export function ModaveProductCard({ product, delay = "0s", className = "" }: { product: Product; delay?: string; className?: string }) {
@@ -42,7 +43,7 @@ export function ModaveProductCard({ product, delay = "0s", className = "" }: { p
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-        <PriceGate amount={product.price * sizeRun.length} suffix=" / set" />
+        <PriceGate amount={productSetPrice(product, product.colors[0], sizeRun)} suffix=" / set" />
         <div className="text-secondary small">1 set · {sizeRun.length} sizes · {product.fabric}</div>
       </div>
     </div>

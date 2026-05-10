@@ -190,6 +190,25 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
     setVariantOverrides((current) => ({ ...current, [key]: { ...(current[key] ?? {}), ...patch } }));
   };
 
+  const sizePriceValue = (size: string) => {
+    const matched = selectedColors
+      .map((color) => variantOverrides[`${color}__${size}`]?.price)
+      .find((price) => typeof price === "string" && price.trim());
+    return matched ?? form.price;
+  };
+
+  const updateSizePrice = (size: string, price: string) => {
+    setVariantOverrides((current) => {
+      const next = { ...current };
+      const colors = selectedColors.length ? selectedColors : ["Default"];
+      colors.forEach((color) => {
+        const key = `${color}__${size}`;
+        next[key] = { ...(next[key] ?? {}), price };
+      });
+      return next;
+    });
+  };
+
   const toggleListValue = (key: "care" | "colors" | "sizes", value: string) => {
     setForm((current) => {
       const values = splitList(current[key]);
@@ -561,6 +580,20 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
                   </label>
                 </fieldset>
               </div>
+              {selectedSizes.length ? (
+                <fieldset>
+                  <div className="text-button font-instrument mb-8">Size-wise Price</div>
+                  <div className="sarjan-size-price-grid">
+                    {selectedSizes.map((size) => (
+                      <label className="sarjan-size-price-item" key={size}>
+                        <span>{size}</span>
+                        <input type="number" value={sizePriceValue(size)} onChange={(event) => updateSizePrice(size, event.target.value)} placeholder="Price" />
+                      </label>
+                    ))}
+                  </div>
+                  <div className="text-caption-1 text-secondary mt-8">Set different price for each size. These values auto-fill the color-size matrix below.</div>
+                </fieldset>
+              ) : null}
               <fieldset>
                 <div className="text-button font-instrument mb-8">Pricing Rules</div>
                 <textarea

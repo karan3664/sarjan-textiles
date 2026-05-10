@@ -1,6 +1,7 @@
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import type { Product } from "@/data/mock";
 import { getClient } from "@/lib/local-db";
+import { productDefaultSetPrice } from "@/lib/product-pricing";
 
 export type CatalogSort = "best-selling" | "a-z" | "z-a" | "price-low-high" | "price-high-low";
 
@@ -24,8 +25,8 @@ export function sortProductList(products: Product[], sort: string | null | undef
     : "best-selling";
 
   return [...products].sort((a, b) => {
-    if (sortValue === "price-low-high") return a.price - b.price;
-    if (sortValue === "price-high-low") return b.price - a.price;
+    if (sortValue === "price-low-high") return productDefaultSetPrice(a) - productDefaultSetPrice(b);
+    if (sortValue === "price-high-low") return productDefaultSetPrice(b) - productDefaultSetPrice(a);
     if (sortValue === "a-z") return a.name.localeCompare(b.name);
     if (sortValue === "z-a") return b.name.localeCompare(a.name);
     return Number(Boolean(b.isFeatured)) - Number(Boolean(a.isFeatured)) || b.sold - a.sold;
@@ -45,8 +46,9 @@ function matchesFilters(product: Product, filters?: CatalogFilters) {
   if (filters.fabric && slugValue(product.fabric) !== filters.fabric) return false;
   if (filters.color && !product.colors.some((color) => slugValue(color) === filters.color)) return false;
   if (filters.size && !product.sizes.some((size) => slugValue(size) === filters.size)) return false;
-  if (typeof filters.minPrice === "number" && product.price < filters.minPrice) return false;
-  if (typeof filters.maxPrice === "number" && product.price > filters.maxPrice) return false;
+  const setPrice = productDefaultSetPrice(product);
+  if (typeof filters.minPrice === "number" && setPrice < filters.minPrice) return false;
+  if (typeof filters.maxPrice === "number" && setPrice > filters.maxPrice) return false;
   if (filters.stock === "in-stock" && product.stock <= product.moq) return false;
   if (filters.stock === "low-stock" && !(product.stock > 0 && product.stock - product.reserved <= product.moq)) return false;
   if (filters.stock === "out-of-stock" && product.stock > 0) return false;
@@ -70,10 +72,17 @@ export async function applyClientPricing(products: Product[], clientId?: string 
     const effectivePrice = typeof rule.customPrice === "number" && rule.customPrice > 0
       ? rule.customPrice
       : Math.max(0, Math.round(product.price - (product.price * (rule.discountPercentage ?? 0)) / 100));
+    const priceRatio = product.price > 0 ? effectivePrice / product.price : 1;
 
     return {
       ...product,
       price: effectivePrice,
+      variants: product.variants?.map((variant) => ({
+        ...variant,
+        price: rule.customPrice
+          ? Math.max(0, Math.round((variant.price || product.price) * priceRatio))
+          : Math.max(0, Math.round((variant.price || product.price) - ((variant.price || product.price) * (rule.discountPercentage ?? 0)) / 100)),
+      })),
       publicPrice: product.price,
       effectivePrice,
       pricingSource: rule.customPrice ? "client_custom" as const : "client_discount" as const,
