@@ -9,6 +9,17 @@ function isMobileAdmin() {
 export function AdminSidebarController() {
   useEffect(() => {
     const layout = () => document.querySelector<HTMLElement>(".layout-wrap");
+    const cleanupDuplicateMenuItems = () => {
+      document.querySelectorAll<HTMLElement>(".section-menu-left").forEach((sidebar) => {
+        const seen = new Set<string>();
+        sidebar.querySelectorAll<HTMLLIElement>(".menu-item").forEach((item) => {
+          const link = item.querySelector<HTMLAnchorElement>("a");
+          const key = `${link?.getAttribute("href") ?? ""}|${item.textContent?.trim() ?? ""}`;
+          if (seen.has(key)) item.remove();
+          else seen.add(key);
+        });
+      });
+    };
 
     const closeMobileMenu = () => {
       if (isMobileAdmin()) layout()?.classList.remove("full-width");
@@ -49,9 +60,14 @@ export function AdminSidebarController() {
       layout()?.classList.remove("full-width");
     };
 
+    cleanupDuplicateMenuItems();
+    const observer = new MutationObserver(cleanupDuplicateMenuItems);
+    document.querySelectorAll(".section-menu-left").forEach((node) => observer.observe(node, { childList: true, subtree: true }));
+
     document.addEventListener("click", onClick, true);
     window.addEventListener("resize", onResize);
     return () => {
+      observer.disconnect();
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("resize", onResize);
     };

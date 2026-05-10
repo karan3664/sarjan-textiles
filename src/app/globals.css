@@ -640,6 +640,8 @@ footer .footer-newsletter .subscribe-content input {
 
 .section-menu-left .section-menu-left-wrap {
   padding-top: 0 !important;
+  height: calc(100vh - 70px) !important;
+  overflow-y: auto !important;
 }
 
 .section-menu-left .menu-item .menu-item-button {
@@ -652,6 +654,10 @@ footer .footer-newsletter .subscribe-content input {
 .section-menu-left .menu-item .menu-item-button.active {
   transform: translateX(2px);
   box-shadow: 0 10px 24px rgba(139, 30, 45, 0.12);
+}
+
+.section-menu-left .menu-item {
+  list-style: none;
 }
 
 .wg-box {
@@ -1208,6 +1214,8 @@ footer .footer-newsletter .subscribe-content input {
 }
 
 .sarjan-empty-state {
+  display: block;
+  width: 100%;
   padding: 28px;
   border: 1px dashed var(--line);
   border-radius: 8px;
@@ -1304,7 +1312,7 @@ footer .footer-newsletter .subscribe-content input {
 
 .sarjan-inventory-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.75fr);
+  grid-template-columns: minmax(0, 1.65fr) minmax(340px, 0.75fr);
   gap: 24px;
   align-items: start;
   margin-top: 24px;
@@ -1326,13 +1334,52 @@ footer .footer-newsletter .subscribe-content input {
 
 .sarjan-inventory-table,
 .sarjan-inventory-history-table {
-  overflow-x: auto;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .sarjan-inventory-table table,
 .sarjan-inventory-history-table table,
 .sarjan-report-box table {
-  min-width: 920px;
+  width: 100%;
+}
+
+.sarjan-inventory-table table {
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.sarjan-inventory-history-table table,
+.sarjan-report-box table {
+  min-width: 860px;
+}
+
+.sarjan-inventory-table td,
+.sarjan-inventory-table th {
+  padding: 14px 12px !important;
+}
+
+.sarjan-inventory-table td:nth-child(1),
+.sarjan-inventory-table th:nth-child(1) {
+  width: 34% !important;
+}
+
+.sarjan-inventory-table td:nth-child(2),
+.sarjan-inventory-table th:nth-child(2),
+.sarjan-inventory-table td:nth-child(3),
+.sarjan-inventory-table th:nth-child(3),
+.sarjan-inventory-table td:nth-child(4),
+.sarjan-inventory-table th:nth-child(4),
+.sarjan-inventory-table td:nth-child(5),
+.sarjan-inventory-table th:nth-child(5),
+.sarjan-inventory-table td:nth-child(6),
+.sarjan-inventory-table th:nth-child(6) {
+  width: 10% !important;
+}
+
+.sarjan-inventory-table td:nth-child(7),
+.sarjan-inventory-table th:nth-child(7) {
+  width: 16% !important;
 }
 
 .sarjan-inventory-table tr {
@@ -1348,9 +1395,36 @@ footer .footer-newsletter .subscribe-content input {
 
 .sarjan-inventory-table .box-status,
 .sarjan-inventory-history-table .box-status {
-  min-width: 104px;
+  width: fit-content;
+  min-width: 86px;
   justify-content: center;
   white-space: nowrap;
+}
+
+.sarjan-inventory-table .product-item {
+  display: grid !important;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+}
+
+.sarjan-inventory-table .product-item .content {
+  min-width: 0;
+}
+
+.sarjan-inventory-table .product-item .name,
+.sarjan-inventory-table .product-item .sub {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sarjan-inventory-table .sarjan-product-table-image {
+  width: 42px;
+  height: 42px;
 }
 
 .sarjan-selected-row {
