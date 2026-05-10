@@ -3001,6 +3001,27 @@ footer .footer-newsletter .subscribe-content input {
   word-break: break-all;
 }
 
+.sarjan-gst-toggle {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf8;
+}
+
+.sarjan-gst-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.sarjan-gst-row .tf-btn {
+  min-width: 136px;
+  height: 50px;
+}
+
 .form-search-result,
 .form-order-tracking {
   display: flex;
@@ -3504,5 +3525,9 @@ footer .footer-newsletter .subscribe-content input {
 
   .sarjan-filter-builder-head {
     display: grid;
+  }
+
+  .sarjan-gst-row {
+    grid-template-columns: 1fr;
   }
 }

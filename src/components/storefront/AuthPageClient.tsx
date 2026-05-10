@@ -5,6 +5,10 @@ import { FormEvent, useState } from "react";
 
 type AuthMode = "login" | "register" | "forgot";
 
+function isErrorMessage(value: string) {
+  return /failed|invalid|required|incorrect|verify|unavailable|match/i.test(value);
+}
+
 function PageTitle({ title }: { title: string }) {
   return (
     <div className="page-title" style={{ backgroundImage: "url(/template/storefront/images/section/page-title.jpg)" }}>
@@ -25,6 +29,12 @@ function PageTitle({ title }: { title: string }) {
 export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasGst, setHasGst] = useState(true);
+  const [gst, setGst] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [gstMessage, setGstMessage] = useState("");
+  const [gstVerified, setGstVerified] = useState(false);
+  const [gstLoading, setGstLoading] = useState(false);
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
   const title = isRegister ? "Register" : isForgot ? "Forget Password" : "Login";
@@ -39,6 +49,11 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     if (isRegister && payload.password !== payload.confirmPassword) {
       setLoading(false);
       setMessage("Passwords do not match");
+      return;
+    }
+    if (isRegister && hasGst && !gstVerified) {
+      setLoading(false);
+      setMessage("Please verify GST number first or choose without GST registration");
       return;
     }
     const endpoint = isRegister ? "/api/auth/register" : isForgot ? "/api/auth/forgot" : "/api/auth/login";
@@ -67,6 +82,29 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     setMessage("Password reset request saved. Admin will contact client.");
   };
 
+  const verifyGst = async () => {
+    setGstLoading(true);
+    setGstMessage("");
+    setGstVerified(false);
+    try {
+      const res = await fetch("/api/gst/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gst }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "GST verification failed");
+      setCompanyName(data.gst.legalName);
+      setGst(data.gst.gstin);
+      setGstVerified(true);
+      setGstMessage(`Verified: ${data.gst.legalName}`);
+    } catch (error) {
+      setGstMessage(error instanceof Error ? error.message : "GST verification failed");
+    } finally {
+      setGstLoading(false);
+    }
+  };
+
   return (
     <>
       <PageTitle title={title} />
@@ -79,8 +117,44 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                 <div className="wrap">
                   {isRegister ? (
                     <>
-                      <fieldset><input type="text" placeholder="Company name*" name="companyName" required /></fieldset>
-                      <fieldset><input type="text" placeholder="GST number" name="gst" /></fieldset>
+                      <div className="sarjan-gst-toggle">
+                        <label className="tf-cart-checkbox">
+                          <input type="checkbox" className="tf-check" checked={hasGst} onChange={(event) => {
+                            setHasGst(event.target.checked);
+                            setGstVerified(false);
+                            setGstMessage("");
+                            if (event.target.checked) setCompanyName("");
+                          }} />
+                          <span>Company has GST number</span>
+                        </label>
+                        <p className="text-caption-1 text-secondary">If no GST, uncheck and register with company name manually.</p>
+                      </div>
+                      <input type="hidden" name="hasGst" value={hasGst ? "true" : "false"} />
+                      {hasGst ? (
+                        <>
+                          <fieldset className="sarjan-gst-row">
+                            <input
+                              type="text"
+                              placeholder="GST number*"
+                              name="gst"
+                              value={gst}
+                              onChange={(event) => {
+                                setGst(event.target.value.toUpperCase());
+                                setGstVerified(false);
+                                setCompanyName("");
+                              }}
+                              required
+                            />
+                            <button type="button" className="tf-btn btn-fill" onClick={verifyGst} disabled={gstLoading || !gst.trim()}>
+                              <span className="text text-button">{gstLoading ? "Verifying..." : "Verify GST"}</span>
+                            </button>
+                          </fieldset>
+                          <fieldset><input type="text" placeholder="Company name from GST portal*" name="companyName" value={companyName} readOnly required /></fieldset>
+                          {gstMessage ? <p className={gstVerified ? "text-success" : "text-danger"}>{gstMessage}</p> : null}
+                        </>
+                      ) : (
+                        <fieldset><input type="text" placeholder="Company name*" name="companyName" value={companyName} onChange={(event) => setCompanyName(event.target.value)} required /></fieldset>
+                      )}
                       <fieldset><input type="text" placeholder="City / buying category" name="city" /></fieldset>
                     </>
                   ) : null}
@@ -116,7 +190,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                     </div>
                   ) : null}
                 </div>
-                {message ? <p className={message.includes("failed") || message.includes("Invalid") ? "text-danger" : "text-success"}>{message}</p> : null}
+                {message ? <p className={isErrorMessage(message) ? "text-danger" : "text-success"}>{message}</p> : null}
                 <div className="button-submit">
                   <button className="tf-btn btn-fill" type="submit" disabled={loading}><span className="text text-button">{loading ? "Please wait..." : isForgot ? "Reset Password" : title}</span></button>
                 </div>
