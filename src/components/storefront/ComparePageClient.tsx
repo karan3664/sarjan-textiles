@@ -6,9 +6,10 @@ import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
 import { PageTitle } from "./PageTitle";
+import { PriceGate } from "./PriceGate";
 
-function money(value: number) {
-  return `₹${value.toLocaleString("en-IN")}`;
+function sizeRun(product: Product) {
+  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
 }
 
 function StarRow() {
@@ -40,10 +41,10 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
 
   const rows = [
     ["Rating", (product: Product) => <><StarRow /><span>({product.sold.toLocaleString("en-IN")})</span></>],
-    ["Price", (product: Product) => <span className="price">{money(product.price)}</span>],
+    ["Price", (product: Product) => <PriceGate amount={product.price * sizeRun(product).length} suffix=" / set" />],
     ["Type", (product: Product) => <span className="type">{product.category}</span>],
     ["Brand", () => <span className="brand">Sarjan Textiles</span>],
-    ["Size", (product: Product) => <span className="size">{(product.sizes.length ? product.sizes : FULL_SIZE_RUN).join(", ")}</span>],
+    ["Size", (product: Product) => <span className="size">{sizeRun(product).join(", ")}</span>],
     ["Color", (product: Product) => <div className="list-compare-color justify-content-center">{product.colors.slice(0, 5).map((color, index) => <span className={`item ${index === 0 ? "active" : ""}`} style={{ background: color.toLowerCase() }} key={color} />)}</div>],
     ["Material", (product: Product) => <span className="size">{product.fabric}</span>],
     ["MOQ", (product: Product) => <span>{product.moq} pcs</span>],
@@ -81,7 +82,7 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
                 <div className="tf-compare-col tf-compare-field d-md-block d-none"><h6>Add To Cart</h6></div>
                 {products.map((product) => (
                   <div className="tf-compare-col tf-compare-field tf-compare-viewcart text-center" key={`${product.slug}-cart`}>
-                    <a href="#shoppingCart" data-bs-toggle="modal" className="btn-view-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}>Add To Cart</a>
+                    <a href="#shoppingCart" data-bs-toggle="modal" className="btn-view-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun(product).join(",")} data-product-color={product.colors[0]}>Add To Cart</a>
                   </div>
                 ))}
               </div>

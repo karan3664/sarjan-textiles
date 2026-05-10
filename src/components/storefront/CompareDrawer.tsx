@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
+import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { addCompare, readCompare, removeCompare, writeCompare } from "@/lib/compare-client";
+import { PriceGate } from "./PriceGate";
 
-function money(value: number) {
-  return `₹${value.toLocaleString("en-IN")}`;
+function sizeRun(product: Product) {
+  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
 }
 
 function RepeatIcon() {
@@ -93,7 +95,7 @@ export function CompareDrawer() {
                         </Link>
                         <div className="content">
                           <div className="text-title"><Link className="link text-line-clamp-2" href={`/products/${product.slug}`} onClick={closeOffcanvas}>{product.name}</Link></div>
-                          <div className="text-button">{money(product.price)}</div>
+                          <div className="text-button"><PriceGate amount={product.price * sizeRun(product).length} suffix=" / set" compact /></div>
                         </div>
                       </div>
                     )) : (

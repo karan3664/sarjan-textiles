@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
 import { readCart, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
+import { PriceGate } from "./PriceGate";
 
 type CheckoutLine = StoredCartItem & {
   product: Product;
@@ -238,7 +239,7 @@ export function CheckoutPageClient() {
                               <div className="variant text-caption-1 text-secondary">{item.color} / {item.sizes.join("/")}</div>
                               <div className="variant text-caption-1 text-secondary">{item.quantity} set x {item.sizes.length} pcs</div>
                             </div>
-                            <div className="total-price text-button"><span className="count">{item.quantity}</span>X<span className="price"> ₹{(item.product.price * item.sizes.length).toLocaleString("en-IN")}</span></div>
+                            <div className="total-price text-button"><span className="count">{item.quantity}</span>X<span className="price"> <PriceGate amount={item.product.price * item.sizes.length} compact /></span></div>
                           </div>
                         </div>
                       ))}
@@ -253,10 +254,10 @@ export function CheckoutPageClient() {
                     <div className="sec-total-price">
                       <div className="top">
                         <div className="item d-flex align-items-center justify-content-between text-button"><span>Shipping</span><span>Admin review</span></div>
-                        <div className="item d-flex align-items-center justify-content-between text-button"><span>Discounts</span><span>₹0</span></div>
+                        <div className="item d-flex align-items-center justify-content-between text-button"><span>Discounts</span><PriceGate amount={0} compact /></div>
                         <div className="item d-flex align-items-center justify-content-between text-button"><span>Payment</span><span>{siteSettings.creditTermDays}-day cheque</span></div>
                       </div>
-                      <div className="bottom"><h5 className="d-flex justify-content-between"><span>Total</span><span className="total-price-checkout">₹{subtotal.toLocaleString("en-IN")}</span></h5></div>
+                      <div className="bottom"><h5 className="d-flex justify-content-between"><span>Total</span><PriceGate amount={subtotal} className="total-price-checkout" compact /></h5></div>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import type { Product } from "@/data/mock";
+import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
+  const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
+
   return (
     <article className="sarjan-card h-100">
       <Link href={`/products/${product.slug}`} className="sarjan-card-img d-block">
@@ -10,7 +13,7 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="p-3">
         <div className="d-flex justify-content-between gap-2 mb-2">
           <span className="sarjan-muted small">{product.category}</span>
-          <span className="sarjan-price">₹{product.price.toLocaleString("en-IN")}</span>
+          <PriceGate amount={product.price * sizeRun.length} suffix=" / set" className="sarjan-price" compact />
         </div>
         <h5 className="mb-2">
           <Link href={`/products/${product.slug}`} className="text-decoration-none text-dark">

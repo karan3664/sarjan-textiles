@@ -2619,6 +2619,57 @@ footer .footer-newsletter .subscribe-content input {
   font-weight: 800;
 }
 
+.sarjan-price-locked {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid #ead7d1;
+  border-radius: 999px;
+  background: #fff6f3;
+  color: #9b1c31;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.tf-product-info-price .sarjan-price-locked,
+.card-product-info .sarjan-price-locked {
+  margin-top: 4px;
+}
+
+.sarjan-product-action-row {
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.sarjan-product-action-row .sarjan-all-colors-btn {
+  min-height: 50px;
+}
+
+.sarjan-size-group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.sarjan-size-group-actions .tf-button {
+  min-height: 36px;
+  border-radius: 6px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid #dedede;
+  color: #181818;
+}
+
+.sarjan-size-group-actions .tf-button:hover {
+  border-color: #9b1c31;
+  color: #9b1c31;
+}
+
 .sarjan-pill {
   display: inline-flex;
   align-items: center;

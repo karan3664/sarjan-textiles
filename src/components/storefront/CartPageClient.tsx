@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
 import { readCart, sameCartLine, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
+import { PriceGate } from "./PriceGate";
 
 type CartLine = StoredCartItem & {
   product: Product;
@@ -118,7 +119,7 @@ export function CartPageClient() {
                               <div className="text-caption-1 text-secondary">1 set = {item.sizes.length} pcs</div>
                             </div>
                           </td>
-                          <td data-cart-title="Price" className="tf-cart-item_price text-center"><div className="cart-price text-button price-on-sale">₹{item.product.price.toLocaleString("en-IN")}</div></td>
+                          <td data-cart-title="Price" className="tf-cart-item_price text-center"><div className="cart-price text-button price-on-sale"><PriceGate amount={item.product.price * item.sizes.length} compact /></div></td>
                           <td data-cart-title="Quantity" className="tf-cart-item_quantity">
                             <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
                               <button type="button" className="btn-quantity btn-decrease" onClick={() => updateQuantity(item, item.quantity - 1)} aria-label="Decrease set quantity">-</button>
@@ -127,8 +128,8 @@ export function CartPageClient() {
                             </div>
                           </td>
                           <td data-cart-title="Total" className="tf-cart-item_total text-center">
-                            <div className="cart-total text-button total-price">₹{item.lineTotal.toLocaleString("en-IN")}</div>
-                            <div className="text-caption-1 text-secondary">{item.quantity} set x ₹{(item.product.price * item.sizes.length).toLocaleString("en-IN")}</div>
+                            <div className="cart-total text-button total-price"><PriceGate amount={item.lineTotal} compact /></div>
+                            <div className="text-caption-1 text-secondary">{item.quantity} set x <PriceGate amount={item.product.price * item.sizes.length} compact /></div>
                           </td>
                           <td data-cart-title="Remove" className="remove-cart"><button type="button" className="sarjan-remove-cart" onClick={() => removeItem(item)} aria-label={`Remove ${item.product.name}`}>×</button></td>
                         </tr>
@@ -156,8 +157,8 @@ export function CartPageClient() {
                 <div className="fl-sidebar-cart">
                   <div className="box-order bg-surface">
                     <h5 className="title">Order Summary</h5>
-                    <div className="subtotal text-button d-flex justify-content-between align-items-center"><span>Subtotal</span><span className="total">₹{subtotal.toLocaleString("en-IN")}</span></div>
-                    <div className="discount text-button d-flex justify-content-between align-items-center"><span>Discounts</span><span className="total">₹0</span></div>
+                    <div className="subtotal text-button d-flex justify-content-between align-items-center"><span>Subtotal</span><PriceGate amount={subtotal} className="total" compact /></div>
+                    <div className="discount text-button d-flex justify-content-between align-items-center"><span>Discounts</span><PriceGate amount={0} className="total" compact /></div>
                     <div className="ship">
                       <span className="text-button">Payment</span>
                       <div className="flex-grow-1">
@@ -171,7 +172,7 @@ export function CartPageClient() {
                         </fieldset>
                       </div>
                     </div>
-                    <h5 className="total-order d-flex justify-content-between align-items-center"><span>Total</span><span className="total">₹{subtotal.toLocaleString("en-IN")}</span></h5>
+                    <h5 className="total-order d-flex justify-content-between align-items-center"><span>Total</span><PriceGate amount={subtotal} className="total" compact /></h5>
                     <div className="box-progress-checkout">
                       <fieldset className="check-agree">
                         <input type="checkbox" id="check-agree" className="tf-check-rounded" defaultChecked />

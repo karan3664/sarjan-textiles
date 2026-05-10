@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
+import { SIZE_GROUPS } from "@/lib/cart-client";
 
 type ProductForm = {
   name: string;
@@ -34,7 +35,7 @@ type VariantOverride = {
 const masterFabrics = ["Cotton cambric", "Cotton flex", "Rayon cotton blend", "Cotton slub", "Cotton rayon", "Fine cotton", "Linen cotton", "Viscose", "Modal cotton"];
 const commonCareInstructions = ["Gentle wash separately", "Dry in shade", "Do not bleach", "Iron inside out", "Use mild detergent", "Wash dark colors separately", "Hand wash recommended"];
 const commonColors = ["Black", "Indigo", "Ivory", "Mustard", "Maroon", "Blue", "Peach", "Teal", "Red", "Brown", "Beige", "White", "Green"];
-const commonSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "Free Size"];
+const commonSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "Free Size"];
 
 const emptyForm: ProductForm = {
   name: "",
@@ -194,6 +195,17 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
       const values = splitList(current[key]);
       const next = values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
       return { ...current, [key]: next.join(", ") };
+    });
+  };
+
+  const toggleSizeGroup = (sizes: string[]) => {
+    setForm((current) => {
+      const values = splitList(current.sizes);
+      const allSelected = sizes.every((size) => values.includes(size));
+      const next = allSelected
+        ? values.filter((size) => !sizes.includes(size))
+        : Array.from(new Set([...values, ...sizes]));
+      return { ...current, sizes: next.join(", ") };
     });
   };
 
@@ -499,6 +511,10 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
               </fieldset>
               <fieldset>
                 <div className="text-button mb-8">Size<span className="text-primary">*</span></div>
+                <div className="sarjan-size-group-actions">
+                  <button type="button" className="tf-button style-1" onClick={() => toggleSizeGroup(SIZE_GROUPS.regular)}>XS to XXL</button>
+                  <button type="button" className="tf-button style-1" onClick={() => toggleSizeGroup(SIZE_GROUPS.plus)}>3XL to 5XL</button>
+                </div>
                 <div className="sarjan-product-check-grid sarjan-product-size-grid">
                   {commonSizes.map((size) => (
                     <label className="sarjan-product-check" key={size}>

@@ -1,8 +1,9 @@
 import type { Product } from "@/data/mock";
-import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { PriceGate } from "./PriceGate";
 
 export function ModaveProductCard({ product, delay = "0s", className = "" }: { product: Product; delay?: string; className?: string }) {
   const hover = product.images[1] ?? product.images[0];
+  const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
 
   return (
     <div className={`card-product wow fadeInUp${className ? ` ${className}` : ""}`} data-wow-delay={delay}>
@@ -32,8 +33,7 @@ export function ModaveProductCard({ product, delay = "0s", className = "" }: { p
             className="btn-main-product"
             data-cart-add
             data-product-slug={product.slug}
-           
-            data-product-size-run={FULL_SIZE_RUN.join(",")}
+            data-product-size-run={sizeRun.join(",")}
             data-product-color={product.colors[0]}
           >
             Add To cart
@@ -42,8 +42,8 @@ export function ModaveProductCard({ product, delay = "0s", className = "" }: { p
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-        <span className="price">₹{(product.price * FULL_SIZE_RUN.length).toLocaleString("en-IN")} / set</span>
-        <div className="text-secondary small">1 set · {FULL_SIZE_RUN.length} sizes · {product.fabric}</div>
+        <PriceGate amount={product.price * sizeRun.length} suffix=" / set" />
+        <div className="text-secondary small">1 set · {sizeRun.length} sizes · {product.fabric}</div>
       </div>
     </div>
   );

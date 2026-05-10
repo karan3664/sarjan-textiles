@@ -5,11 +5,16 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN, parseSizeRun, readCart, sameCartLine, syncCartWithApi, type StoredCartItem, writeCart } from "@/lib/cart-client";
 import { readWishlist, toggleWishlist, writeWishlist } from "@/lib/wishlist-client";
+import { PriceGate } from "./PriceGate";
 
 type HydratedCartItem = StoredCartItem & {
   product: Product;
   lineTotal: number;
 };
+
+function productSizeRun(product: Product) {
+  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+}
 
 export function ModaveModals() {
   const [cart, setCart] = useState<StoredCartItem[]>([]);
@@ -112,13 +117,18 @@ export function ModaveModals() {
       const quantityInput = quantityScope?.querySelector<HTMLInputElement>(".quantity-product, input[name='number']");
       const quantity = Math.max(1, Number(quantityInput?.value ?? 1) || 1);
       const sizes = parseSizeRun(target.dataset.productSizeRun);
-      const color = target.dataset.productColor || "Default";
-      const incoming = { slug, quantity, sizes, color };
+      const colors = target.dataset.productAllColors === "true"
+        ? (target.dataset.productColors?.split(",").map((item) => item.trim()).filter(Boolean) ?? [])
+        : [];
+      const selectedColors = colors.length ? colors : [target.dataset.productColor || "Default"];
 
       const next = readCart();
-      const existing = next.find((item) => sameCartLine(item, incoming));
-      if (existing) existing.quantity += quantity;
-      else next.push(incoming);
+      selectedColors.forEach((color) => {
+        const incoming = { slug, quantity, sizes, color };
+        const existing = next.find((item) => sameCartLine(item, incoming));
+        if (existing) existing.quantity += quantity;
+        else next.push(incoming);
+      });
 
       writeCart(next);
     };
@@ -287,7 +297,7 @@ export function ModaveModals() {
                   </div>
                   <div className="card-product-info">
                     <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-                    <span className="price">₹{product.price.toLocaleString("en-IN")}</span>
+                    <PriceGate amount={product.price * productSizeRun(product).length} suffix=" / set" />
                     <ul className="list-color-product mt_8">
                       {product.colors.slice(0, 3).map((color, index) => (
                         <li className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`} key={color}>
@@ -325,8 +335,8 @@ export function ModaveModals() {
                       <div className="content">
                         <div className="name"><a className="link text-line-clamp-1" href={`/products/${product.slug}`}>{product.name}</a></div>
                         <div className="cart-item-bot">
-                          <div className="text-button price">₹{product.price.toLocaleString("en-IN")}</div>
-                          <button type="button" className="link text-button border-0 bg-transparent p-0 sarjan-reco-add" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}>Add to cart</button>
+                          <div className="text-button price"><PriceGate amount={product.price * productSizeRun(product).length} suffix=" / set" compact /></div>
+                          <button type="button" className="link text-button border-0 bg-transparent p-0 sarjan-reco-add" data-cart-add data-product-slug={product.slug} data-product-size-run={productSizeRun(product).join(",")} data-product-color={product.colors[0]}>Add to cart</button>
                         </div>
                       </div>
                     </div>
@@ -366,7 +376,7 @@ export function ModaveModals() {
                               </div>
                               <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
                                 <div className="text-secondary-2">{item.color} / {item.sizes.join("/")}</div>
-                                <div className="text-button">{item.quantity} set X ₹{(item.product.price * item.sizes.length).toLocaleString("en-IN")}</div>
+                                <div className="text-button">{item.quantity} set X <PriceGate amount={item.product.price * item.sizes.length} compact /></div>
                               </div>
                               <div className="text-caption-1 text-secondary-2 mt_4">1 set = {item.sizes.length} pcs</div>
                             </div>
@@ -399,7 +409,7 @@ export function ModaveModals() {
                       <div className="tf-mini-cart-bottom-wrap">
                         <div className="tf-cart-totals-discounts">
                           <h5>Subtotal</h5>
-                          <h5 className="tf-totals-total-value">₹{subtotal.toLocaleString("en-IN")}</h5>
+                          <h5><PriceGate amount={subtotal} className="tf-totals-total-value" compact /></h5>
                         </div>
                         <div className="tf-cart-checkbox">
                           <div className="tf-checkbox-wrapp">
@@ -451,7 +461,7 @@ export function ModaveModals() {
                             </div>
                             <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
                               <div className="text-secondary-2">{product.category}</div>
-                              <div className="text-button">₹{(product.price * FULL_SIZE_RUN.length).toLocaleString("en-IN")} / set</div>
+                              <div className="text-button"><PriceGate amount={product.price * productSizeRun(product).length} suffix=" / set" compact /></div>
                             </div>
                           </div>
                         </div>
@@ -507,9 +517,7 @@ export function ModaveModals() {
                       </div>
                     </div>
                     <div className="tf-product-info-price">
-                      <h4 className="price-on-sale">₹{quickProduct.price.toLocaleString("en-IN")}</h4>
-                      <div className="old-price">₹{Math.round(quickProduct.price * 1.25).toLocaleString("en-IN")}</div>
-                      <div className="badges-on-sale text-btn-uppercase">-20%</div>
+                      <h4 className="price-on-sale"><PriceGate amount={quickProduct.price * productSizeRun(quickProduct).length} suffix=" / set" /></h4>
                     </div>
                     <p className="text-secondary">{quickProduct.description}</p>
                   </div>
@@ -527,11 +535,11 @@ export function ModaveModals() {
                     </div>
                     <div className="variant-picker-item">
                       <div className="d-flex justify-content-between mb_12">
-                        <div className="variant-picker-label">Size:<span className="text-title variant-picker-label-value">{FULL_SIZE_RUN[0]}</span></div>
+                        <div className="variant-picker-label">Size:<span className="text-title variant-picker-label-value">{productSizeRun(quickProduct)[0]}</span></div>
                         <a href="#size-guide" data-bs-toggle="modal" className="size-guide text-caption-1 text-primary">Size Guide</a>
                       </div>
                       <div className="variant-picker-values">
-                        {FULL_SIZE_RUN.map((size, index) => (
+                        {productSizeRun(quickProduct).map((size, index) => (
                           <span className={`style-text size-btn${index === 0 ? " active" : ""}`} data-value={size} key={size}>
                             <span className="text-title">{size}</span>
                           </span>
@@ -546,19 +554,31 @@ export function ModaveModals() {
                         <span className="btn-quantity btn-increase">+</span>
                       </div>
                     </div>
-                    <div className="tf-product-info-by-btn mb_10">
+                    <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
                       <a
                         href="#shoppingCart"
                         data-bs-toggle="modal"
                         className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
                         data-cart-add
                         data-product-slug={quickProduct.slug}
-                        data-product-size-run={FULL_SIZE_RUN.join(",")}
+                        data-product-size-run={productSizeRun(quickProduct).join(",")}
                         data-product-color={quickProduct.colors[0]}
-                        data-set-price={quickProduct.price * FULL_SIZE_RUN.length}
+                        data-set-price={quickProduct.price * productSizeRun(quickProduct).length}
                       >
-                        <span>Add 1 set -&nbsp;</span>
-                        <span className="tf-qty-price total-price">₹{(quickProduct.price * FULL_SIZE_RUN.length).toLocaleString("en-IN")}</span>
+                        <span>Add 1 set</span>
+                      </a>
+                      <a
+                        href="#shoppingCart"
+                        data-bs-toggle="modal"
+                        className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
+                        data-cart-add
+                        data-product-all-colors="true"
+                        data-product-colors={quickProduct.colors.join(",")}
+                        data-product-slug={quickProduct.slug}
+                        data-product-size-run={productSizeRun(quickProduct).join(",")}
+                        data-product-color={quickProduct.colors[0]}
+                      >
+                        Add all colors
                       </a>
                       <a href="#compare" data-bs-toggle="offcanvas" aria-controls="compare" className="box-icon hover-tooltip compare btn-icon-action" data-compare-add data-product-slug={quickProduct.slug}><span className="icon icon-gitDiff" /><span className="tooltip text-caption-2">Compare</span></a>
                       <a href="#" className="box-icon hover-tooltip wishlist btn-icon-action" data-wishlist-toggle data-product-slug={quickProduct.slug}><span className="icon icon-heart" /><span className="tooltip text-caption-2">Wishlist</span></a>

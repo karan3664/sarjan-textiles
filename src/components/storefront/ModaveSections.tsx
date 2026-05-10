@@ -11,6 +11,7 @@ import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
 import { ProductSortSelect } from "./ProductSortSelect";
+import { PriceGate } from "./PriceGate";
 import { WishlistPageClient } from "./WishlistPageClient";
 import type { CmsCustomSection } from "@/types/cms-custom";
 
@@ -35,6 +36,7 @@ function MarqueeBand({ items }: { items: string[] }) {
 
 function ProductFeature({ product }: { product: Product }) {
   const images = [product.images[0], product.images[1] ?? product.images[0], ...products.slice(1, 3).map((item) => item.images[0])];
+  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
 
   return (
     <section className="flat-spacing bg-surface">
@@ -91,9 +93,7 @@ function ProductFeature({ product }: { product: Product }) {
                     </div>
                   </div>
                   <div className="tf-product-info-price">
-                    <h4 className="price-on-sale" data-base-price={product.price * FULL_SIZE_RUN.length}>₹{product.price.toLocaleString("en-IN")}</h4>
-                    <div className="old-price">₹{Math.round(product.price * 1.25).toLocaleString("en-IN")}</div>
-                    <div className="badges-on-sale text-btn-uppercase">-20%</div>
+                    <h4 className="price-on-sale" data-base-price={product.price * sizeRun.length}><PriceGate amount={product.price * sizeRun.length} suffix=" / set" /></h4>
                   </div>
                 </div>
                 <div className="tf-product-info-choose-option">
@@ -112,11 +112,11 @@ function ProductFeature({ product }: { product: Product }) {
                   </div>
                   <div className="variant-picker-item">
                     <div className="d-flex justify-content-between mb_12">
-                      <div className="variant-picker-label">Size:<span className="text-title variant-picker-label-value">{product.sizes[0]}</span></div>
+                      <div className="variant-picker-label">Size:<span className="text-title variant-picker-label-value">{sizeRun[0]}</span></div>
                       <a href="#size-guide" data-bs-toggle="modal" data-bs-target="#size-guide" className="size-guide text-caption-1 text-primary">Size Guide</a>
                     </div>
                     <div className="variant-picker-values">
-                      {product.sizes.map((size, index) => (
+                      {sizeRun.map((size, index) => (
                         <span className={`style-text size-btn${index === 0 ? " active" : ""}`} data-value={size} key={size}>
                           <span className="text-title">{size}</span>
                         </span>
@@ -130,15 +130,16 @@ function ProductFeature({ product }: { product: Product }) {
                       <input className="quantity-product" type="text" name="number" defaultValue={1} />
                       <span className="btn-quantity btn-increase">+</span>
                     </div>
-                    <div className="text-caption-1 text-secondary mt_8">1 set = {FULL_SIZE_RUN.join(" / ")}</div>
+                    <div className="text-caption-1 text-secondary mt_8">1 set = {sizeRun.join(" / ")}</div>
                   </div>
                   <div>
-                    <div className="tf-product-info-by-btn mb_10">
-                      <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]} data-set-price={product.price * FULL_SIZE_RUN.length}><span>Add 1 set -&nbsp;</span><span className="tf-qty-price total-price">₹{(product.price * FULL_SIZE_RUN.length).toLocaleString("en-IN")}</span></a>
+                    <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
+                      <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]} data-set-price={product.price * sizeRun.length}><span>Add 1 set</span></a>
+                      <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn" data-cart-add data-product-all-colors="true" data-product-colors={product.colors.join(",")} data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}>Add all colors</a>
                       <a href="#compare" data-bs-toggle="offcanvas" aria-controls="compare" className="box-icon hover-tooltip compare btn-icon-action" data-compare-add data-product-slug={product.slug}><span className="icon icon-gitDiff" /><span className="tooltip text-caption-2">Compare</span></a>
                       <a href="#" className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action" data-wishlist-toggle data-product-slug={product.slug}><span className="icon icon-heart" /><span className="tooltip text-caption-2">Wishlist</span></a>
                     </div>
-                    <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 text-btn-uppercase" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}>Buy it now</a>
+                    <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 text-btn-uppercase" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}>Buy it now</a>
                   </div>
                   <div>
                     <Link href={`/products/${product.slug}`} className="btn-line">View Full details</Link>
@@ -469,7 +470,7 @@ export async function HomeDynamic() {
 
 export function ProductDetailDynamic({ product }: { product: Product }) {
   const galleryImages = [product.images[0], product.images[1] ?? product.images[0], ...products.filter((item) => item.id !== product.id).slice(0, 4).map((item) => item.images[0])];
-  const total = product.price * product.moq;
+  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
 
   return (
     <>
@@ -503,8 +504,8 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
           </div>
           <div className="content">
             <div className="text-title"><Link className="link" href={`/products/${product.slug}`}>{product.name}</Link></div>
-            <div className="text-caption-1 text-secondary-2">{product.colors[0]}, {product.sizes[0]}, {product.fabric}</div>
-            <div className="text-title">₹{product.price.toLocaleString("en-IN")}</div>
+            <div className="text-caption-1 text-secondary-2">{product.colors[0]}, {sizeRun[0]}, {product.fabric}</div>
+            <div className="text-title"><PriceGate amount={product.price * sizeRun.length} suffix=" / set" compact /></div>
           </div>
         </div>
         <Link href="/cart" className="tf-btn w-100 btn-fill radius-4"><span className="text text-btn-uppercase">View cart</span></Link>
@@ -565,9 +566,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                       <div className="tf-product-info-desc">
                         <div className="tf-product-info-price">
-                          <h5 className="price-on-sale font-2" data-base-price={product.price * FULL_SIZE_RUN.length}>₹{product.price.toLocaleString("en-IN")}</h5>
-                          <div className="compare-at-price font-2">₹{Math.round(product.price * 1.25).toLocaleString("en-IN")}</div>
-                          <div className="badges-on-sale text-btn-uppercase">-20%</div>
+                          <h5 className="price-on-sale font-2" data-base-price={product.price * sizeRun.length}><PriceGate amount={product.price * sizeRun.length} suffix=" / set" /></h5>
                         </div>
                         <p>{product.description}</p>
                         <div className="tf-product-info-liveview">
@@ -595,11 +594,11 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                       <div className="variant-picker-item">
                         <div className="d-flex justify-content-between mb_12">
-                          <div className="variant-picker-label">Size:<span className="text-title variant-picker-label-value">{product.sizes[0]}</span></div>
+                          <div className="variant-picker-label">Size:<span className="text-title variant-picker-label-value">{sizeRun[0]}</span></div>
                           <a href="#size-guide" data-bs-toggle="modal" data-bs-target="#size-guide" className="size-guide text-title link">Size Guide</a>
                         </div>
                         <div className="variant-picker-values gap12">
-                          {product.sizes.map((size, index) => (
+                          {sizeRun.map((size, index) => (
                             <Fragment key={size}>
                               <input type="radio" name="size1" id={`product-size-${index}`} defaultChecked={index === 0} />
                               <label className="style-text size-btn" htmlFor={`product-size-${index}`} data-value={size}>
@@ -616,15 +615,16 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                           <input className="quantity-product" type="text" name="number" defaultValue={1} />
                           <span className="btn-quantity btn-increase">+</span>
                         </div>
-                        <div className="text-caption-1 text-secondary mt_8">1 set = {FULL_SIZE_RUN.join(" / ")}</div>
+                        <div className="text-caption-1 text-secondary mt_8">1 set = {sizeRun.join(" / ")}</div>
                       </div>
                       <div>
-                        <div className="tf-product-info-by-btn mb_10">
-                          <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]} data-set-price={product.price * FULL_SIZE_RUN.length}><span>Add 1 set -&nbsp;</span><span className="tf-qty-price total-price">₹{(product.price * FULL_SIZE_RUN.length).toLocaleString("en-IN")}</span></a>
+                        <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
+                          <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]} data-set-price={product.price * sizeRun.length}><span>Add 1 set</span></a>
+                          <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn" data-cart-add data-product-all-colors="true" data-product-colors={product.colors.join(",")} data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}>Add all colors</a>
                           <a href="#compare" data-bs-toggle="offcanvas" aria-controls="compare" className="box-icon hover-tooltip compare btn-icon-action" data-compare-add data-product-slug={product.slug}><span className="icon icon-gitDiff" /><span className="tooltip text-caption-2">Compare</span></a>
                           <a href="#" className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action" data-wishlist-toggle data-product-slug={product.slug}><span className="icon icon-heart" /><span className="tooltip text-caption-2">Wishlist</span></a>
                         </div>
-                        <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 text-btn-uppercase" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}>Buy it now</a>
+                        <a href="#shoppingCart" data-bs-toggle="modal" className="btn-style-3 text-btn-uppercase" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}>Buy it now</a>
                       </div>
                       <div className="tf-product-info-help">
                         <div className="tf-product-info-extra-link">
@@ -666,20 +666,20 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                     <div className="content">
                       <div className="text-title">{product.name}</div>
                       <div className="text-caption-1 text-secondary-2">{product.colors[0]}, full size set, {product.fabric}</div>
-                      <div className="text-title">₹{(product.price * FULL_SIZE_RUN.length).toLocaleString("en-IN")} / set</div>
+                      <div className="text-title"><PriceGate amount={product.price * sizeRun.length} suffix=" / set" compact /></div>
                     </div>
                   </div>
                   <div className="tf-sticky-atc-infos">
                     <div className="tf-sticky-atc-size d-flex gap-12 align-items-center">
                       <div className="tf-sticky-atc-infos-title text-title">Set:</div>
-                      <div className="text-caption-1 text-secondary">{FULL_SIZE_RUN.join(" / ")}</div>
+                      <div className="text-caption-1 text-secondary">{sizeRun.join(" / ")}</div>
                     </div>
                     <div className="tf-sticky-atc-quantity d-flex gap-12 align-items-center">
                       <div className="tf-sticky-atc-infos-title text-title">Sets:</div>
                       <div className="wg-quantity style-1"><span className="btn-quantity minus-btn">-</span><input type="text" name="number" defaultValue={1} /><span className="btn-quantity plus-btn">+</span></div>
                     </div>
                     <div className="tf-sticky-atc-btns">
-                      <a href="#shoppingCart" data-bs-toggle="modal" className="tf-btn w-100 btn-reset radius-4 btn-add-to-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}><span className="text text-btn-uppercase">Add To Cart</span></a>
+                      <a href="#shoppingCart" data-bs-toggle="modal" className="tf-btn w-100 btn-reset radius-4 btn-add-to-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}><span className="text text-btn-uppercase">Add To Cart</span></a>
                     </div>
                   </div>
                 </form>
@@ -1019,6 +1019,7 @@ function Pagination({ basePath, page, totalPages, query = {} }: { basePath: stri
 
 function ProductListCard({ product }: { product: Product }) {
   const hover = product.images[1] ?? product.images[0];
+  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
 
   return (
     <div className="card-product style-list" data-availability={product.stock > 0 ? "In stock" : "Out of stock"} data-brand={siteSettings.brandName}>
@@ -1031,7 +1032,7 @@ function ProductListCard({ product }: { product: Product }) {
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-        <div className="price"><span className="old-price">₹{Math.round(product.price * 1.2).toLocaleString("en-IN")}</span> <span className="current-price">₹{product.price.toLocaleString("en-IN")}</span></div>
+        <div className="price"><PriceGate amount={product.price * sizeRun.length} suffix=" / set" /></div>
         <p className="description text-secondary text-line-clamp-2">{product.description}</p>
         <div className="variant-wrap-list">
           <ul className="list-color-product">
@@ -1044,10 +1045,10 @@ function ProductListCard({ product }: { product: Product }) {
             ))}
           </ul>
           <div className="size-box list-product-btn">
-            {product.sizes.map((size, index) => <span className={`size-item box-icon${index === 0 ? " active" : ""}`} key={size}>{size}</span>)}
+            {sizeRun.map((size, index) => <span className={`size-item box-icon${index === 0 ? " active" : ""}`} key={size}>{size}</span>)}
           </div>
           <div className="list-product-btn">
-            <a href="#shoppingCart" data-bs-toggle="modal" className="btn-main-product" data-cart-add data-product-slug={product.slug} data-product-size-run={FULL_SIZE_RUN.join(",")} data-product-color={product.colors[0]}>Add To cart</a>
+            <a href="#shoppingCart" data-bs-toggle="modal" className="btn-main-product" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun.join(",")} data-product-color={product.colors[0]}>Add To cart</a>
             <a href="#" className="box-icon wishlist btn-icon-action" data-wishlist-toggle data-product-slug={product.slug}><span className="icon icon-heart" /><span className="tooltip">Wishlist</span></a>
             <a href="#compare" data-bs-toggle="offcanvas" aria-controls="compare" className="box-icon compare btn-icon-action" data-compare-add data-product-slug={product.slug}><span className="icon icon-gitDiff" /><span className="tooltip">Compare</span></a>
             <a href="#quickView" data-bs-toggle="modal" className="box-icon quickview tf-btn-loading"><span className="icon icon-eye" /><span className="tooltip">Quick View</span></a>
@@ -1581,9 +1582,9 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
                             </div>
                           </div>
                         </td>
-                        <td data-cart-title="Price" className="tf-cart-item_price text-center"><div className="cart-price text-button price-on-sale">₹{item.product.price.toLocaleString("en-IN")}</div></td>
+                        <td data-cart-title="Price" className="tf-cart-item_price text-center"><div className="cart-price text-button price-on-sale"><PriceGate amount={item.product.price} compact /></div></td>
                         <td data-cart-title="Quantity" className="tf-cart-item_quantity"><div className="wg-quantity mx-md-auto"><span className="btn-quantity btn-decrease">-</span><input type="text" className="quantity-product" name="number" defaultValue={item.quantity} /><span className="btn-quantity btn-increase">+</span></div></td>
-                        <td data-cart-title="Total" className="tf-cart-item_total text-center"><div className="cart-total text-button total-price">₹{item.lineTotal.toLocaleString("en-IN")}</div></td>
+                        <td data-cart-title="Total" className="tf-cart-item_total text-center"><div className="cart-total text-button total-price"><PriceGate amount={item.lineTotal} compact /></div></td>
                         <td data-cart-title="Remove" className="remove-cart"><span className="remove icon icon-close" /></td>
                       </tr>
                     ) : null)}
@@ -1595,7 +1596,7 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
               <div className="fl-sidebar-cart">
                 <div className="box-order bg-surface">
                   <h5 className="title">Order Summary</h5>
-                  <div className="subtotal text-button d-flex justify-content-between"><span>Subtotal</span><span>₹{subtotal.toLocaleString("en-IN")}</span></div>
+                  <div className="subtotal text-button d-flex justify-content-between"><span>Subtotal</span><PriceGate amount={subtotal} compact /></div>
                   <div className="ship text-button d-flex justify-content-between"><span>Credit</span><span>{siteSettings.creditTermDays} days</span></div>
                   <p className="text-secondary">No online payment gateway. Manual cheque collection after credit cycle.</p>
                   <Link href="/checkout" className="tf-btn btn-fill w-100"><span className="text text-button">Checkout</span></Link>
@@ -1647,7 +1648,7 @@ function CheckoutDynamic({ cartItems, subtotal }: { cartItems: ReturnType<typeof
                         <Link href={`/products/${item.product.slug}`} className="img-product"><img src={item.product.images[0]} alt={item.product.name} /></Link>
                         <div className="content-box">
                           <div className="info"><Link href={`/products/${item.product.slug}`} className="name-product link text-title">{item.product.name}</Link><div className="variant text-caption-1 text-secondary"><span className="size">{item.size}</span>/<span className="color">{item.color}</span></div></div>
-                          <div className="total-price text-button"><span className="count">{item.quantity}</span>X<span className="price">₹{item.product.price.toLocaleString("en-IN")}</span></div>
+                          <div className="total-price text-button"><span className="count">{item.quantity}</span>X<span className="price"><PriceGate amount={item.product.price} compact /></span></div>
                         </div>
                       </div>
                     ) : null)}
@@ -1661,7 +1662,7 @@ function CheckoutDynamic({ cartItems, subtotal }: { cartItems: ReturnType<typeof
                       <div className="item d-flex align-items-center justify-content-between text-button"><span>Dispatch</span><span>Manual</span></div>
                       <div className="item d-flex align-items-center justify-content-between text-button"><span>Credit</span><span>{siteSettings.creditTermDays} days</span></div>
                     </div>
-                    <div className="bottom"><h5 className="d-flex justify-content-between"><span>Total</span><span className="total-price-checkout">₹{subtotal.toLocaleString("en-IN")}</span></h5></div>
+                    <div className="bottom"><h5 className="d-flex justify-content-between"><span>Total</span><PriceGate amount={subtotal} className="total-price-checkout" compact /></h5></div>
                   </div>
                 </div>
               </div>

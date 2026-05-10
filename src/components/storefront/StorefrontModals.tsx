@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCartItems, mockApi } from "@/lib/mock-api";
+import { PriceGate } from "./PriceGate";
 
 export function StorefrontModals() {
   const cartItems = getCartItems();
@@ -45,7 +46,7 @@ export function StorefrontModals() {
                       <div className="flex-grow-1">
                         <div className="fw-bold">{item.product.name}</div>
                         <div className="sarjan-muted small">{item.color} / {item.size} / Qty {item.quantity}</div>
-                        <div className="sarjan-price mt-2">₹{item.lineTotal.toLocaleString("en-IN")}</div>
+                        <div className="sarjan-price mt-2"><PriceGate amount={item.lineTotal} compact /></div>
                       </div>
                     </div>
                   ) : null,
@@ -55,7 +56,7 @@ export function StorefrontModals() {
             <div className="modal-footer d-grid gap-2">
               <div className="d-flex justify-content-between w-100 fw-bold">
                 <span>Subtotal</span>
-                <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                <PriceGate amount={subtotal} compact />
               </div>
               <Link className="sarjan-btn w-100" href="/cart">View Cart</Link>
               <Link className="sarjan-btn secondary w-100" href="/checkout">Place Order Request</Link>

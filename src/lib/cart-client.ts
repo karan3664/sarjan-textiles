@@ -1,5 +1,9 @@
 export const CART_KEY = "sarjan-cart";
 export const FULL_SIZE_RUN = ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+export const SIZE_GROUPS = {
+  regular: ["XS", "S", "M", "L", "XL", "XXL"],
+  plus: ["3XL", "4XL", "5XL"],
+};
 
 export type StoredCartItem = {
   slug: string;
@@ -70,7 +74,8 @@ export function sameCartLine(a: StoredCartItem, b: StoredCartItem) {
 }
 
 export function parseSizeRun(value?: string) {
-  return value?.split(",").map((item) => item.trim()).filter(Boolean) ?? FULL_SIZE_RUN;
+  const sizes = value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+  return sizes.length ? sizes : FULL_SIZE_RUN;
 }
 
 export async function syncCartWithApi() {
