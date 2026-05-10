@@ -1933,6 +1933,55 @@ footer .footer-newsletter .subscribe-content input {
   margin: -8px 0 2px;
 }
 
+.sarjan-seo-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.sarjan-seo-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.sarjan-seo-nav button {
+  width: 100%;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+}
+
+.sarjan-seo-nav button.active,
+.sarjan-seo-nav button:hover {
+  border-color: #1a1a1a;
+  background: #f5f5f5;
+}
+
+.sarjan-seo-nav span,
+.sarjan-seo-nav small {
+  display: block;
+}
+
+.sarjan-seo-nav small {
+  margin-top: 4px;
+  color: #777;
+}
+
+.sarjan-seo-preview {
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 18px;
+}
+
+.sarjan-seo-index-toggle {
+  margin-top: 12px;
+}
+
 .sarjan-product-check {
   display: flex;
   align-items: center;
@@ -3922,6 +3971,10 @@ footer .footer-newsletter .subscribe-content input {
   }
 
   .sarjan-otp-row {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-seo-layout {
     grid-template-columns: 1fr;
   }
 }

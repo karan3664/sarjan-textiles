@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
-import type { CmsBlog, CmsPages } from "@/lib/cms-store";
+import type { CmsBlog, CmsPages, CmsSeoPage } from "@/lib/cms-store";
 
 type SeoInput = {
   title: string;
   description: string;
   path?: string;
   image?: string;
+  imageAlt?: string;
   keywords?: string[];
   type?: "website" | "article";
   noIndex?: boolean;
@@ -67,7 +68,7 @@ export function pageMetadata(input: SeoInput): Metadata {
       description,
       url,
       siteName: siteSettings.brandName,
-      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      images: [{ url: image, width: 1200, height: 630, alt: input.imageAlt || title }],
     },
     twitter: {
       card: "summary_large_image",
@@ -85,6 +86,7 @@ export function productMetadata(product: Product): Metadata {
     description: item.metaDescription || product.description || `${product.name} by ${siteSettings.brandName}. MOQ ${product.moq}.`,
     path: `/products/${product.slug}`,
     image: product.images[0],
+    imageAlt: item.imageAlt || product.name,
     keywords: splitKeywords(item.keywords).length ? splitKeywords(item.keywords) : [product.name, product.category, product.fabric, ...product.colors, ...product.sizes],
   });
 }
@@ -96,6 +98,7 @@ export function blogMetadata(blog: CmsBlog): Metadata {
     description: item.metaDescription || blog.excerpt,
     path: `/blog/${blog.slug}`,
     image: blog.image,
+    imageAlt: item.imageAlt || blog.title,
     keywords: splitKeywords(item.keywords),
     type: "article",
   });
@@ -108,7 +111,20 @@ export function cmsPageMetadata(type: keyof CmsPages, page: CmsPages[keyof CmsPa
     description: item.metaDescription || page.body,
     path: type === "about" ? "/about" : "/contact",
     image: page.image,
+    imageAlt: item.imageAlt || page.title,
     keywords: splitKeywords(item.keywords),
+  });
+}
+
+export function seoPageMetadata(page: CmsSeoPage) {
+  return pageMetadata({
+    title: page.metaTitle || page.label,
+    description: page.metaDescription,
+    path: page.path,
+    image: page.image,
+    imageAlt: page.imageAlt,
+    keywords: splitKeywords(page.keywords),
+    noIndex: page.noIndex,
   });
 }
 

@@ -92,6 +92,18 @@ export type CmsProductFilterGroup = {
   max?: number;
 };
 
+export type CmsSeoPage = {
+  id: string;
+  label: string;
+  path: string;
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string;
+  image: string;
+  imageAlt: string;
+  noIndex?: boolean;
+};
+
 export type CmsSnapshot = {
   siteSettings: CmsSiteSettings;
   home: CmsHome;
@@ -101,6 +113,7 @@ export type CmsSnapshot = {
   testimonials: CmsTestimonial[];
   clientPricing: ClientPricingRule[];
   pages: CmsPages;
+  seoPages: CmsSeoPage[];
   inventoryLogs: InventoryMovement[];
   auditLogs: AuditLog[];
   updatedAt: string;
@@ -183,6 +196,139 @@ function defaultProductFilters(products: Product[]): CmsProductFilterGroup[] {
   ];
 }
 
+export const defaultSeoPages: CmsSeoPage[] = [
+  {
+    id: "home",
+    label: "Home",
+    path: "/",
+    metaTitle: defaultSiteSettings.seo.title,
+    metaDescription: "Explore Sarjan Textiles collections, place B2B orders, and track dispatches through a dynamic textile platform.",
+    keywords: "Sarjan Textiles, B2B textiles, wholesale textile catalog, printed shirts, kurtas",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles B2B textile collections",
+  },
+  {
+    id: "products",
+    label: "Products Listing",
+    path: "/products",
+    metaTitle: "Products",
+    metaDescription: "Explore admin-managed Sarjan Textiles B2B product catalog with MOQ, size runs, color variants, and approved-client pricing.",
+    keywords: "textile products, printed shirts, kurtas, wholesale catalog",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles product catalog",
+  },
+  {
+    id: "blog",
+    label: "Blog Listing",
+    path: "/blog",
+    metaTitle: "Blog",
+    metaDescription: "Read Sarjan Textiles buying guides, textile workflow updates, dispatch planning notes, and B2B catalog insights.",
+    keywords: "textile blog, B2B buying guide, wholesale textile tips",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles blog",
+  },
+  {
+    id: "about",
+    label: "About",
+    path: "/about",
+    metaTitle: "About Sarjan Textiles",
+    metaDescription: "Learn about Sarjan Textiles, its B2B textile collections, company history, mission, infrastructure, and operating workflow.",
+    keywords: "Sarjan Textiles, textile manufacturer, B2B textiles, Surat textiles",
+    image: "/sarjan-assets/sarjan-logo-full.png",
+    imageAlt: "About Sarjan Textiles",
+  },
+  {
+    id: "contact",
+    label: "Contact",
+    path: "/contact",
+    metaTitle: "Contact Sarjan Textiles",
+    metaDescription: "Contact Sarjan Textiles for B2B textile inquiries, product catalogs, wholesale requirements, and dispatch support.",
+    keywords: "contact textile supplier, Surat textiles, B2B inquiry",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Contact Sarjan Textiles",
+  },
+  {
+    id: "collections",
+    label: "Collections",
+    path: "/collections",
+    metaTitle: "Collections",
+    metaDescription: "Explore Sarjan Textiles B2B collections for printed shirts, kurtas, festive edits, and wholesale-ready assortments.",
+    keywords: "textile collections, printed shirt collections, kurta collections, B2B wholesale",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles collections",
+  },
+  {
+    id: "process",
+    label: "Process",
+    path: "/process",
+    metaTitle: "Process",
+    metaDescription: "Understand Sarjan Textiles B2B workflow from client approval to order approval and dispatch tracking.",
+    keywords: "B2B order process, textile dispatch, client approval",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles process",
+  },
+  {
+    id: "infrastructure",
+    label: "Infrastructure",
+    path: "/infrastructure",
+    metaTitle: "Infrastructure",
+    metaDescription: "Sarjan Textiles platform infrastructure connects catalog, inventory, dispatch, CMS, and ERP-ready data workflows.",
+    keywords: "textile ERP, inventory management, dispatch tracking, B2B CMS",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles infrastructure",
+  },
+  {
+    id: "certifications",
+    label: "Certifications",
+    path: "/certifications",
+    metaTitle: "Certifications",
+    metaDescription: "View Sarjan Textiles certification and compliance information for B2B textile partners.",
+    keywords: "textile certifications, business documents, B2B compliance",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles certifications",
+  },
+  {
+    id: "inquiry",
+    label: "Inquiry",
+    path: "/inquiry",
+    metaTitle: "Inquiry",
+    metaDescription: "Send wholesale textile buying requirements to Sarjan Textiles for catalog, MOQ, dispatch, and client approval support.",
+    keywords: "textile inquiry, wholesale inquiry, B2B textile requirement",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles inquiry form",
+  },
+  {
+    id: "faqs",
+    label: "FAQs",
+    path: "/faqs",
+    metaTitle: "FAQs",
+    metaDescription: "Frequently asked questions about Sarjan Textiles B2B registration, MOQ, orders, dispatch, and account workflow.",
+    keywords: "textile FAQ, B2B orders, MOQ, dispatch",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles FAQ",
+  },
+  {
+    id: "privacy-policy",
+    label: "Privacy Policy",
+    path: "/privacy-policy",
+    metaTitle: "Privacy Policy",
+    metaDescription: "Sarjan Textiles privacy policy for client registration, order, dispatch, inquiry, and payment workflow data.",
+    keywords: "privacy policy, Sarjan Textiles data policy",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles privacy policy",
+  },
+  {
+    id: "terms",
+    label: "Terms",
+    path: "/terms",
+    metaTitle: "Terms",
+    metaDescription: "Sarjan Textiles terms for B2B catalog browsing, client approval, order requests, dispatch, and payment workflows.",
+    keywords: "terms, B2B textile terms, order terms",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles terms",
+  },
+];
+
 function optimizedMediaPath(value: string) {
   if (!/\.(png|jpe?g)$/i.test(value)) return value;
   if (value.startsWith("/sarjan-assets/")) {
@@ -238,12 +384,19 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   })),
   clientPricing: [],
   pages: defaultPages,
+  seoPages: defaultSeoPages,
   inventoryLogs: [],
   auditLogs: [],
   updatedAt: new Date(0).toISOString(),
 };
 
 function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
+  const inputSeoPages = Array.isArray(input.seoPages) ? input.seoPages : [];
+  const seoPages = defaultSeoPages.map((page) => ({ ...page, ...(inputSeoPages.find((item) => item.id === page.id) ?? {}) }));
+  for (const page of inputSeoPages) {
+    if (!seoPages.some((item) => item.id === page.id)) seoPages.push(page);
+  }
+
   return optimizeMedia({
     siteSettings: { ...defaultCmsSnapshot.siteSettings, ...(input.siteSettings ?? {}) },
     home: { ...defaultCmsSnapshot.home, ...(input.home ?? {}) },
@@ -253,6 +406,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     testimonials: Array.isArray(input.testimonials) && input.testimonials.length ? input.testimonials : defaultCmsSnapshot.testimonials,
     clientPricing: Array.isArray(input.clientPricing) ? input.clientPricing : defaultCmsSnapshot.clientPricing,
     pages: { ...defaultCmsSnapshot.pages, ...(input.pages ?? {}) },
+    seoPages,
     inventoryLogs: Array.isArray(input.inventoryLogs) ? input.inventoryLogs : defaultCmsSnapshot.inventoryLogs,
     auditLogs: Array.isArray(input.auditLogs) ? input.auditLogs : defaultCmsSnapshot.auditLogs,
     updatedAt: input.updatedAt ?? new Date().toISOString(),

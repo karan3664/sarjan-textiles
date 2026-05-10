@@ -1,13 +1,10 @@
 import { DynamicInfoPage } from "@/components/storefront/StaticPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { pageMetadata } from "@/lib/seo";
+import { cmsSeoMetadata } from "@/lib/page-seo";
 
-export const metadata = pageMetadata({
-  title: "Privacy Policy",
-  description: "Sarjan Textiles privacy policy for client registration, order, dispatch, inquiry, and payment workflow data.",
-  path: "/privacy-policy",
-  noIndex: false,
-});
+export async function generateMetadata() {
+  return cmsSeoMetadata("privacy-policy");
+}
 
 export default function PrivacyPolicyPage() {
   return (

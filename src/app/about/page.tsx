@@ -1,11 +1,9 @@
 import { CmsPageDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { getCachedCmsSnapshot } from "@/lib/cms-store";
-import { cmsPageMetadata } from "@/lib/seo";
+import { cmsSeoMetadata } from "@/lib/page-seo";
 
 export async function generateMetadata() {
-  const { pages } = await getCachedCmsSnapshot();
-  return cmsPageMetadata("about", pages.about);
+  return cmsSeoMetadata("about");
 }
 
 export default function AboutPage() {

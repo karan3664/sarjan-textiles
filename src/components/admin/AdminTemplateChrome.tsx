@@ -39,7 +39,7 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "audit";
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "seo" | "audit";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -79,7 +79,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/contact-inquiries" icon="icon-message" label="Contact Inquiries" active={active === "inquiries"} />
             <MenuItem href="/admin/blogs-list" icon="icon-edit" label="Blogs" active={active === "blogs"} />
             <MenuItem href="/admin/testimonials" icon="icon-message" label="Testimonials" active={active === "testimonials"} />
-            <MenuItem href="/admin/tags" icon="icon-chart-bar" label="SEO" />
+            <MenuItem href="/admin/seo" icon="icon-chart-bar" label="SEO" active={active === "seo"} />
             <MenuItem href="/admin/notice" icon="icon-bell" label="Notifications" />
             <MenuItem href="/admin/reports" icon="icon-chart-bar" label="Reports" />
             <MenuItem href="/admin/audit" icon="icon-clipboard-text" label="Audit Logs" active={active === "audit"} />

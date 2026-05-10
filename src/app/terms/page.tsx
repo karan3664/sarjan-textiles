@@ -1,9 +1,7 @@
-import { pageMetadata } from "@/lib/seo";
+import { cmsSeoMetadata } from "@/lib/page-seo";
 
-export const metadata = pageMetadata({
-  title: "Terms",
-  description: "Sarjan Textiles terms for B2B catalog browsing, client approval, order requests, dispatch, and payment workflows.",
-  path: "/terms",
-});
+export async function generateMetadata() {
+  return cmsSeoMetadata("terms");
+}
 
 export { default } from "@/app/term-of-use/page";
