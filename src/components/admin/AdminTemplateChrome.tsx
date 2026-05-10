@@ -38,7 +38,7 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "blogs" | "about" | "contact" | "inquiries";
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "blogs" | "about" | "contact" | "inquiries" | "audit";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -80,6 +80,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/tags" icon="icon-chart-bar" label="SEO" />
             <MenuItem href="/admin/notice" icon="icon-bell" label="Notifications" />
             <MenuItem href="/admin/reports" icon="icon-chart-bar" label="Reports" />
+            <MenuItem href="/admin/audit" icon="icon-clipboard-text" label="Audit Logs" active={active === "audit"} />
             <MenuItem href="/admin/change-password" icon="icon-users" label="Roles & Permissions" />
             <MenuItem href="/" icon="icon-sign-out" label="Front Store" />
           </ul>

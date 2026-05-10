@@ -49,6 +49,19 @@ export type InventoryMovement = {
   actor?: string;
 };
 
+export type AuditLog = {
+  id: string;
+  actor: string;
+  role?: string;
+  action: string;
+  entity: string;
+  entityId?: string;
+  before?: unknown;
+  after?: unknown;
+  note?: string;
+  createdAt: string;
+};
+
 export type CmsSnapshot = {
   siteSettings: CmsSiteSettings;
   home: CmsHome;
@@ -58,6 +71,7 @@ export type CmsSnapshot = {
   clientPricing: ClientPricingRule[];
   pages: CmsPages;
   inventoryLogs: InventoryMovement[];
+  auditLogs: AuditLog[];
   updatedAt: string;
 };
 
@@ -118,6 +132,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   clientPricing: [],
   pages: defaultPages,
   inventoryLogs: [],
+  auditLogs: [],
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -131,6 +146,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     clientPricing: Array.isArray(input.clientPricing) ? input.clientPricing : defaultCmsSnapshot.clientPricing,
     pages: { ...defaultCmsSnapshot.pages, ...(input.pages ?? {}) },
     inventoryLogs: Array.isArray(input.inventoryLogs) ? input.inventoryLogs : defaultCmsSnapshot.inventoryLogs,
+    auditLogs: Array.isArray(input.auditLogs) ? input.auditLogs : defaultCmsSnapshot.auditLogs,
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   });
 }
@@ -239,6 +255,16 @@ export async function upsertClientPricingRule(rule: ClientPricingRule): Promise<
 export async function deleteClientPricingRule(id: string): Promise<CmsSnapshot> {
   const cms = await getCmsSnapshot();
   return saveCmsSnapshot({ clientPricing: cms.clientPricing.filter((rule) => rule.id !== id) });
+}
+
+export async function appendAuditLog(input: Omit<AuditLog, "id" | "createdAt">) {
+  const cms = await getCmsSnapshot();
+  const log: AuditLog = {
+    ...input,
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+  };
+  return saveCmsSnapshot({ auditLogs: [log, ...(cms.auditLogs ?? [])].slice(0, 1000) });
 }
 
 export async function getCmsProductBySlug(slug: string) {

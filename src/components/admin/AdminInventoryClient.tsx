@@ -29,6 +29,19 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
+function downloadCsv(filename: string, rows: Array<Record<string, string | number | undefined>>) {
+  const headers = Object.keys(rows[0] ?? { empty: "" });
+  const escape = (value: string | number | undefined) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const csv = [headers.join(","), ...rows.map((row) => headers.map((header) => escape(row[header])).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export function AdminInventoryClient({ initialProducts, initialLogs }: { initialProducts: Product[]; initialLogs: InventoryMovement[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [logs, setLogs] = useState(initialLogs);
@@ -199,7 +212,21 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
             <h5>Inventory Movement History</h5>
             <div className="body-text text-secondary">Stock in, stock out, manual adjustment, transfer, return, and damage logs.</div>
           </div>
-          <div className="box-status text-button type-delivery">{logs.length} Logs</div>
+          <div className="d-flex gap10 flex-wrap">
+            <button type="button" className="tf-button" onClick={() => downloadCsv("inventory-ledger.csv", logs.map((log) => ({
+              date: formatDate(log.createdAt),
+              product: log.productName,
+              sku: log.sku,
+              operation: operationLabels[log.operation],
+              quantity: log.quantity,
+              beforeStock: log.beforeStock,
+              afterStock: log.afterStock,
+              reference: log.reference,
+              note: log.note,
+              actor: log.actor,
+            })))}>Export CSV</button>
+            <div className="box-status text-button type-delivery">{logs.length} Logs</div>
+          </div>
         </div>
         <div className="wg-table table-product-list">
           <table>

@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
 import { getCmsSnapshot, saveCmsSnapshot, type InventoryMovement } from "@/lib/cms-store";
+import { verifyAdminToken } from "@/lib/admin-token";
 import type { Product } from "@/data/mock";
+import { cookies } from "next/headers";
 
 const operations = ["add", "reduce", "adjust", "transfer", "return", "damage"] as const;
 
@@ -29,6 +31,8 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
+    const session = await verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
+    if (!session) return Response.json({ error: "Admin login required" }, { status: 401 });
     const body = await request.json();
     const productSlug = String(body.productSlug ?? "");
     const operation = String(body.operation ?? "") as InventoryMovement["operation"];
@@ -56,12 +60,27 @@ export async function PATCH(request: Request) {
       reference: String(body.reference ?? "").trim() || undefined,
       note: String(body.note ?? "").trim() || undefined,
       createdAt: new Date().toISOString(),
-      actor: "Super Admin",
+      actor: session.email,
     };
 
     const products = cms.products.map((item) => (item.slug === product.slug ? nextProduct : item));
     const inventoryLogs = [movement, ...(cms.inventoryLogs ?? [])].slice(0, 500);
-    const next = await saveCmsSnapshot({ products, inventoryLogs });
+    const next = await saveCmsSnapshot({
+      products,
+      inventoryLogs,
+      auditLogs: [{
+        id: randomUUID(),
+        actor: session.email,
+        role: session.role,
+        action: "inventory_movement",
+        entity: "product",
+        entityId: product.slug,
+        before: product,
+        after: nextProduct,
+        note: movement.note || movement.reference,
+        createdAt: movement.createdAt,
+      }, ...(cms.auditLogs ?? [])].slice(0, 1000),
+    });
 
     return Response.json({ products: next.products, inventoryLogs: next.inventoryLogs });
   } catch (error) {

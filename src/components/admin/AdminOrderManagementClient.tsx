@@ -42,6 +42,19 @@ function statusClass(value?: string) {
   return "type-pending";
 }
 
+function downloadCsv(filename: string, rows: Array<Record<string, string | number | undefined>>) {
+  const headers = Object.keys(rows[0] ?? { empty: "" });
+  const escape = (value: string | number | undefined) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const csv = [headers.join(","), ...rows.map((row) => headers.map((header) => escape(row[header])).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrders: AdminOrder[]; mode: Mode }) {
   const [orders, setOrders] = useState(initialOrders);
   const [query, setQuery] = useState("");
@@ -130,6 +143,18 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               <fieldset className="name"><input className="show-search" placeholder="Search orders" value={query} onChange={(event) => setQuery(event.target.value)} /></fieldset>
               <div className="button-submit"><button type="submit"><i className="icon-search-1 link" /></button></div>
             </form>
+            <button type="button" className="tf-button" onClick={() => downloadCsv(`${mode}-orders.csv`, visibleOrders.map((order) => ({
+              id: order.id,
+              client: order.clientName,
+              status: order.status,
+              paymentStatus: order.paymentStatus,
+              dispatchDate: order.dispatchDate,
+              lrNumber: order.lrNumber,
+              total: order.subtotal,
+              outstanding: order.outstandingAmount,
+            })))}>
+              Export CSV
+            </button>
           </div>
           <div className="sarjan-order-list">
             {visibleOrders.map((order) => (
@@ -227,7 +252,17 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               <h5>Dispatch Logs</h5>
               <div className="body-text text-secondary">LR, courier, vehicle, tracking notes, and full status timeline.</div>
             </div>
-            <div className="box-status text-button type-delivery">{dispatchLogs.length} Logs</div>
+            <div className="d-flex gap10 flex-wrap">
+              <button type="button" className="tf-button" onClick={() => downloadCsv("dispatch-logs.csv", dispatchLogs.map((log) => ({
+                date: formatDate(log.createdAt),
+                order: log.orderId,
+                client: log.clientName,
+                status: log.status,
+                lrNumber: log.lrNumber,
+                note: log.note,
+              })))}>Export CSV</button>
+              <div className="box-status text-button type-delivery">{dispatchLogs.length} Logs</div>
+            </div>
           </div>
           <div className="wg-table table-product-list">
             <table>
@@ -265,7 +300,20 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
                 <h5>Payment Ledger Aging Report</h5>
                 <div className="body-text text-secondary">90-day cheque workflow, pending dues, overdue buckets, partial payments, and deposit status.</div>
               </div>
-              <div className="box-status text-button type-delivery">{agingRows.length} Orders</div>
+              <div className="d-flex gap10 flex-wrap">
+                <button type="button" className="tf-button" onClick={() => downloadCsv("payment-aging-report.csv", agingRows.map((order) => ({
+                  order: order.id,
+                  client: order.clientName,
+                  dueDate: formatDate(order.creditDueOn),
+                  aging: order.bucket,
+                  invoice: order.subtotal,
+                  paid: order.paidAmount ?? 0,
+                  outstanding: order.outstandingAmount ?? 0,
+                  cheque: order.chequeNumber,
+                  deposit: order.depositStatus,
+                })))}>Export CSV</button>
+                <div className="box-status text-button type-delivery">{agingRows.length} Orders</div>
+              </div>
             </div>
             <div className="wg-table table-product-list">
               <table>

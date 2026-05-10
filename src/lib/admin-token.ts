@@ -4,7 +4,16 @@ export type AdminSession = {
   email: string;
   name: string;
   role: AdminRole;
+  iat: number;
   exp: number;
+};
+
+export type ConfiguredAdmin = {
+  email: string;
+  password?: string;
+  passwordHash?: string;
+  name: string;
+  role: AdminRole;
 };
 
 const roleAccess: Record<AdminRole, string[]> = {
@@ -42,6 +51,13 @@ function base64UrlDecode(value: string) {
   return atob(padded);
 }
 
+function constantTimeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let index = 0; index < a.length; index += 1) diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  return diff === 0;
+}
+
 async function hmac(value: string) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret()), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
@@ -50,7 +66,8 @@ async function hmac(value: string) {
 }
 
 export async function createAdminToken(session: Omit<AdminSession, "exp">) {
-  const payload: AdminSession = { ...session, exp: Date.now() + 1000 * 60 * 60 * 8 };
+  const now = Date.now();
+  const payload: AdminSession = { ...session, iat: session.iat ?? now, exp: now + 1000 * 60 * 60 * 8 };
   const encoded = base64UrlEncode(JSON.stringify(payload));
   return `${encoded}.${await hmac(encoded)}`;
 }
@@ -58,10 +75,10 @@ export async function createAdminToken(session: Omit<AdminSession, "exp">) {
 export async function verifyAdminToken(token?: string): Promise<AdminSession | null> {
   if (!token || !token.includes(".")) return null;
   const [encoded, signature] = token.split(".");
-  if (!encoded || !signature || signature !== await hmac(encoded)) return null;
+  if (!encoded || !signature || !constantTimeEqual(signature, await hmac(encoded))) return null;
   try {
     const payload = JSON.parse(base64UrlDecode(encoded)) as AdminSession;
-    if (!payload.email || !payload.role || Date.now() > payload.exp) return null;
+    if (!payload.email || !payload.role || !roleAccess[payload.role] || Date.now() > payload.exp) return null;
     return payload;
   } catch {
     return null;
@@ -76,11 +93,11 @@ export function roleLabel(role: AdminRole) {
   return role.replace("_", " ").replace(/\b\w/g, (value) => value.toUpperCase());
 }
 
-export function configuredAdmins() {
+export function configuredAdmins(): ConfiguredAdmin[] {
   const configured = process.env.ADMIN_USERS_JSON;
   if (configured) {
     try {
-      return JSON.parse(configured) as Array<{ email: string; password: string; name: string; role: AdminRole }>;
+      return JSON.parse(configured) as ConfiguredAdmin[];
     } catch {
       return [];
     }
@@ -90,6 +107,7 @@ export function configuredAdmins() {
     {
       email: process.env.ADMIN_EMAIL || "admin@sarjantextiles.com",
       password: process.env.ADMIN_PASSWORD || "admin123",
+      passwordHash: process.env.ADMIN_PASSWORD_HASH,
       name: "Super Admin",
       role: "super_admin" as const,
     },
