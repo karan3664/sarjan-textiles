@@ -1,6 +1,7 @@
 import { ProductsListingDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { cmsSeoMetadata } from "@/lib/page-seo";
+import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -13,6 +14,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   return (
     <ModaveShell>
+      <JsonLd data={await cmsSeoJsonLd("products")} />
       <ProductsListingDynamic
         page={Number(page ?? 1)}
         sort={sort}

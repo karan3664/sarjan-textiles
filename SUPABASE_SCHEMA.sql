@@ -117,3 +117,13 @@ create table blog_posts (
   published_at timestamptz,
   is_published boolean not null default false
 );
+
+create table if not exists app_backups (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  source text not null default 'manual' check (source in ('manual', 'daily')),
+  created_by text not null,
+  size_bytes integer not null default 0,
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);

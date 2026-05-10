@@ -39,7 +39,7 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "seo" | "audit";
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "seo" | "audit" | "reports" | "roles" | "backups";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -79,7 +79,10 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/blogs-list" icon="icon-edit" label="Blogs" active={active === "blogs"} />
             <MenuItem href="/admin/testimonials" icon="icon-message" label="Testimonials" active={active === "testimonials"} />
             <MenuItem href="/admin/seo" icon="icon-chart-bar" label="SEO" active={active === "seo"} />
+            <MenuItem href="/admin/reports" icon="icon-chart-bar" label="Reports" active={active === "reports"} />
             <MenuItem href="/admin/audit" icon="icon-clipboard-text" label="Audit Logs" active={active === "audit"} />
+            <MenuItem href="/admin/roles" icon="icon-users" label="Roles & Permissions" active={active === "roles"} />
+            <MenuItem href="/admin/backups" icon="icon-database" label="DB Backup / Restore" active={active === "backups"} />
             <MenuItem href="/" icon="icon-sign-out" label="Front Store" />
           </ul>
         </div>

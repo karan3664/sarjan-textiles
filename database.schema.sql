@@ -114,9 +114,21 @@ create table if not exists product_special_prices (
   created_at timestamptz not null default now()
 );
 
+create table if not exists app_backups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  source text not null default 'manual' check (source in ('manual', 'daily')),
+  created_by text not null,
+  size_bytes integer not null default 0,
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_orders_client_id on orders(client_id);
 create index if not exists idx_orders_status on orders(status);
 create index if not exists idx_feedbacks_status on feedbacks(status);
 create index if not exists idx_client_pricing_client_product on client_pricing(client_id, product_slug);
 create index if not exists idx_client_discounts_client on client_discounts(client_id);
 create index if not exists idx_product_special_prices_product on product_special_prices(product_slug);
+create index if not exists idx_app_backups_created_at on app_backups(created_at desc);
+create index if not exists idx_app_backups_source on app_backups(source);

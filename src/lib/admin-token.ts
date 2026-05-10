@@ -16,14 +16,17 @@ export type ConfiguredAdmin = {
   role: AdminRole;
 };
 
-const roleAccess: Record<AdminRole, string[]> = {
+export const roleAccess: Record<AdminRole, string[]> = {
   super_admin: ["/admin", "/api/admin"],
   admin: ["/admin", "/api/admin"],
-  sales: ["/admin/customers", "/admin/orders", "/admin/pricing", "/api/admin/customers", "/api/admin/orders", "/api/admin/pricing"],
-  dispatch: ["/admin/dispatch", "/admin/orders", "/api/admin/orders"],
-  accounts: ["/admin/payments", "/api/admin/orders"],
+  sales: ["/admin", "/admin/customers", "/admin/orders", "/admin/pricing", "/admin/reports", "/api/admin/dashboard", "/api/admin/customers", "/api/admin/orders", "/api/admin/pricing", "/api/admin/reports"],
+  dispatch: ["/admin", "/admin/dispatch", "/admin/orders", "/admin/products-low", "/admin/reports", "/api/admin/dashboard", "/api/admin/orders", "/api/admin/inventory", "/api/admin/reports"],
+  accounts: ["/admin", "/admin/payments", "/admin/reports", "/api/admin/dashboard", "/api/admin/orders", "/api/admin/reports"],
   content: [
+    "/admin",
     "/admin/home",
+    "/admin/products-list",
+    "/admin/products-create",
     "/admin/product-filters",
     "/admin/about",
     "/admin/contact",
@@ -32,12 +35,31 @@ const roleAccess: Record<AdminRole, string[]> = {
     "/admin/blogs-create",
     "/admin/testimonials",
     "/admin/contact-inquiries",
+    "/admin/seo",
+    "/api/admin/dashboard",
     "/api/admin/cms",
     "/api/admin/uploads",
     "/api/admin/testimonials",
     "/api/admin/inquiries",
   ],
 };
+
+export const roleModules = [
+  { key: "dashboard", label: "Dashboard", roles: ["super_admin", "admin", "sales", "dispatch", "accounts", "content"] },
+  { key: "clients", label: "Client Management", roles: ["super_admin", "admin", "sales"] },
+  { key: "products", label: "Products", roles: ["super_admin", "admin", "content"] },
+  { key: "inventory", label: "Inventory", roles: ["super_admin", "admin", "dispatch"] },
+  { key: "orders", label: "Orders", roles: ["super_admin", "admin", "sales", "dispatch"] },
+  { key: "dispatch", label: "Dispatch", roles: ["super_admin", "admin", "dispatch"] },
+  { key: "payments", label: "Payments & Credit", roles: ["super_admin", "admin", "accounts"] },
+  { key: "pricing", label: "Client Pricing", roles: ["super_admin", "admin", "sales"] },
+  { key: "cms", label: "CMS / Pages / Blogs", roles: ["super_admin", "admin", "content"] },
+  { key: "seo", label: "SEO", roles: ["super_admin", "admin", "content"] },
+  { key: "reports", label: "Reports / Exports", roles: ["super_admin", "admin", "sales", "dispatch", "accounts"] },
+  { key: "audit", label: "Audit Logs", roles: ["super_admin", "admin"] },
+  { key: "backup", label: "DB Backup / Restore", roles: ["super_admin"] },
+  { key: "roles", label: "Roles & Permissions", roles: ["super_admin"] },
+] as const satisfies Array<{ key: string; label: string; roles: AdminRole[] }>;
 
 function secret() {
   return process.env.ADMIN_SESSION_SECRET || "sarjan-demo-admin-secret-change-before-production";

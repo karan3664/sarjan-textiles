@@ -526,7 +526,55 @@ export async function appendAuditLog(input: Omit<AuditLog, "id" | "createdAt">) 
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    try {
+      await supabase.from("audit_logs").insert({
+        id: log.id,
+        actor_email: log.actor,
+        actor_role: log.role,
+        action: log.action,
+        entity_type: log.entity,
+        entity_id: log.entityId,
+        metadata: {
+          before: log.before,
+          after: log.after,
+          note: log.note,
+        },
+        created_at: log.createdAt,
+      });
+    } catch {
+      // CMS audit fallback below keeps admin history usable if the table is not migrated yet.
+    }
+  }
   return saveCmsSnapshot({ auditLogs: [log, ...(cms.auditLogs ?? [])].slice(0, 1000) });
+}
+
+export async function getAuditLogs(): Promise<AuditLog[]> {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (!error && data?.length) {
+      return data.map((row: any) => ({
+        id: row.id,
+        actor: row.actor_email ?? "system",
+        role: row.actor_role ?? undefined,
+        action: row.action,
+        entity: row.entity_type,
+        entityId: row.entity_id ?? undefined,
+        before: row.metadata?.before,
+        after: row.metadata?.after,
+        note: row.metadata?.note,
+        createdAt: row.created_at,
+      }));
+    }
+  }
+  const cms = await getCmsSnapshot();
+  return cms.auditLogs ?? [];
 }
 
 export async function getCmsProductBySlug(slug: string) {

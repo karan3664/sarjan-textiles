@@ -11,6 +11,12 @@ export async function GET() {
     adminAuth: true,
     rbac: true,
     auditLogs: true,
-    exports: ["csv"],
+    exports: ["csv", "excel", "pdf"],
+    backups: {
+      daily: true,
+      manual: true,
+      restore: true,
+      storage: supabaseStorageReady ? "supabase-app_backups" : "local-json",
+    },
   });
 }

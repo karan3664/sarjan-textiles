@@ -128,6 +128,26 @@ export function seoPageMetadata(page: CmsSeoPage) {
   });
 }
 
+export function seoPageJsonLd(page: CmsSeoPage) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: page.metaTitle || page.label,
+    description: page.metaDescription,
+    url: absoluteUrl(page.path),
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: imageUrl(page.image),
+      caption: page.imageAlt || page.label,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteSettings.brandName,
+      logo: { "@type": "ImageObject", url: imageUrl(siteSettings.logoIcon) },
+    },
+  };
+}
+
 export function productJsonLd(product: Product) {
   return {
     "@context": "https://schema.org",

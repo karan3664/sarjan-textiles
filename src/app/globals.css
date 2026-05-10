@@ -3978,3 +3978,81 @@ footer .footer-newsletter .subscribe-content input {
     grid-template-columns: 1fr;
   }
 }
+
+.sarjan-backup-name {
+  min-width: 220px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 14px;
+}
+
+.sarjan-report-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.sarjan-report-tabs button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  padding: 10px 16px;
+  font-weight: 600;
+}
+
+.sarjan-report-tabs button.active,
+.sarjan-report-tabs button:hover {
+  background: var(--main);
+  color: var(--white);
+  border-color: var(--main);
+}
+
+.sarjan-report-search {
+  max-width: 380px;
+  margin-bottom: 18px;
+}
+
+.sarjan-report-table,
+.sarjan-role-table {
+  overflow-x: auto;
+}
+
+.sarjan-report-table table {
+  min-width: 960px;
+}
+
+.sarjan-role-prefix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.sarjan-role-prefix-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--white);
+}
+
+.sarjan-role-prefix-card h6 {
+  margin-bottom: 12px;
+}
+
+.sarjan-role-prefix-card span {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-table);
+  color: var(--secondary);
+  font-size: 12px;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.sarjan-report-box .list-icon-function a,
+.sarjan-report-box .list-icon-function button {
+  width: 34px;
+  height: 34px;
+}
