@@ -3241,11 +3241,23 @@ footer .footer-newsletter .subscribe-content input {
 
 .sarjan-gst-toggle {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfaf8;
+}
+
+.sarjan-gst-toggle .tf-cart-checkbox {
+  align-items: center;
+  gap: 8px;
+}
+
+.sarjan-gst-toggle .tf-check {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
 }
 
 .sarjan-gst-row {

@@ -1,6 +1,6 @@
 import { createClient, publicClient } from "@/lib/local-db";
 import { createClientToken } from "@/lib/client-token";
-import { normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
+import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
 
 export async function POST(request: Request) {
   try {
@@ -11,9 +11,20 @@ export async function POST(request: Request) {
     }
     if (hasGst) {
       if (!body.gst) return Response.json({ error: "GST number required or choose without GST registration" }, { status: 400 });
-      const verified = await verifyGstinFromPortal(String(body.gst));
       body.gst = normalizeGstin(String(body.gst));
-      body.companyName = verified.legalName;
+      if (!isValidGstin(body.gst)) return Response.json({ error: "Invalid GST number format" }, { status: 400 });
+      try {
+        const verified = await verifyGstinFromPortal(body.gst);
+        body.companyName = verified.legalName;
+      } catch (error) {
+        if (!String(body.companyName ?? "").trim()) {
+          return Response.json({
+            error: error instanceof Error && /invalid/i.test(error.message)
+              ? error.message
+              : "GST portal unavailable. Enter company name manually; admin will verify GST during approval.",
+          }, { status: 400 });
+        }
+      }
     } else {
       body.gst = "";
       if (!String(body.companyName ?? "").trim()) return Response.json({ error: "Company name required without GST" }, { status: 400 });

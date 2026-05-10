@@ -9,6 +9,16 @@ function isErrorMessage(value: string) {
   return /failed|invalid|required|incorrect|verify|unavailable|match/i.test(value);
 }
 
+const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+function normalizeGstin(value: string) {
+  return value.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function isValidGstin(value: string) {
+  return gstinPattern.test(normalizeGstin(value));
+}
+
 function PageTitle({ title }: { title: string }) {
   return (
     <div className="page-title" style={{ backgroundImage: "url(/template/storefront/images/section/page-title.jpg)" }}>
@@ -34,6 +44,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [companyName, setCompanyName] = useState("");
   const [gstMessage, setGstMessage] = useState("");
   const [gstVerified, setGstVerified] = useState(false);
+  const [gstManualAllowed, setGstManualAllowed] = useState(false);
   const [gstLoading, setGstLoading] = useState(false);
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
@@ -51,9 +62,14 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setMessage("Passwords do not match");
       return;
     }
-    if (isRegister && hasGst && !gstVerified) {
+    if (isRegister && hasGst && !isValidGstin(String(payload.gst ?? ""))) {
       setLoading(false);
-      setMessage("Please verify GST number first or choose without GST registration");
+      setMessage("Enter valid GST number or choose without GST registration");
+      return;
+    }
+    if (isRegister && hasGst && !gstVerified && !String(payload.companyName ?? "").trim()) {
+      setLoading(false);
+      setMessage("Verify GST or enter company name manually if GST portal is unavailable");
       return;
     }
     const endpoint = isRegister ? "/api/auth/register" : isForgot ? "/api/auth/forgot" : "/api/auth/login";
@@ -83,14 +99,23 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   };
 
   const verifyGst = async () => {
+    const normalized = normalizeGstin(gst);
+    setGst(normalized);
+    if (!isValidGstin(normalized)) {
+      setGstVerified(false);
+      setGstManualAllowed(false);
+      setGstMessage("Invalid GST number format");
+      return;
+    }
     setGstLoading(true);
     setGstMessage("");
     setGstVerified(false);
+    setGstManualAllowed(false);
     try {
       const res = await fetch("/api/gst/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gst }),
+        body: JSON.stringify({ gst: normalized }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "GST verification failed");
@@ -99,7 +124,14 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setGstVerified(true);
       setGstMessage(`Verified: ${data.gst.legalName}`);
     } catch (error) {
-      setGstMessage(error instanceof Error ? error.message : "GST verification failed");
+      const message = error instanceof Error ? error.message : "GST verification failed";
+      if (/unavailable|blocked|try again|portal/i.test(message)) {
+        setGstManualAllowed(true);
+        setGstMessage("GST portal is not responding. Enter company name manually; admin will verify GST during approval.");
+      } else {
+        setGstManualAllowed(false);
+        setGstMessage(message);
+      }
     } finally {
       setGstLoading(false);
     }
@@ -122,6 +154,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                           <input type="checkbox" className="tf-check" checked={hasGst} onChange={(event) => {
                             setHasGst(event.target.checked);
                             setGstVerified(false);
+                            setGstManualAllowed(false);
                             setGstMessage("");
                             if (event.target.checked) setCompanyName("");
                           }} />
@@ -141,6 +174,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                               onChange={(event) => {
                                 setGst(event.target.value.toUpperCase());
                                 setGstVerified(false);
+                                setGstManualAllowed(false);
                                 setCompanyName("");
                               }}
                               required
@@ -149,8 +183,18 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                               <span className="text text-button">{gstLoading ? "Verifying..." : "Verify GST"}</span>
                             </button>
                           </fieldset>
-                          <fieldset><input type="text" placeholder="Company name from GST portal*" name="companyName" value={companyName} readOnly required /></fieldset>
-                          {gstMessage ? <p className={gstVerified ? "text-success" : "text-danger"}>{gstMessage}</p> : null}
+                          <fieldset>
+                            <input
+                              type="text"
+                              placeholder={gstManualAllowed ? "Company name*" : "Company name from GST portal*"}
+                              name="companyName"
+                              value={companyName}
+                              onChange={(event) => setCompanyName(event.target.value)}
+                              readOnly={!gstManualAllowed && !gstVerified}
+                              required
+                            />
+                          </fieldset>
+                          {gstMessage ? <p className={gstVerified || gstManualAllowed ? "text-success" : "text-danger"}>{gstMessage}</p> : null}
                         </>
                       ) : (
                         <fieldset><input type="text" placeholder="Company name*" name="companyName" value={companyName} onChange={(event) => setCompanyName(event.target.value)} required /></fieldset>
