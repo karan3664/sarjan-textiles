@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { home as defaultHome, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
-import { getCatalogProducts } from "@/lib/catalog";
+import { getCatalogProducts, type CatalogFilters } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { getCachedCmsSnapshot, type CmsProductFilterGroup } from "@/lib/cms-store";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { HomeHeroRotator } from "./HomeHeroRotator";
@@ -1058,7 +1058,108 @@ function ProductListCard({ product }: { product: Product }) {
   );
 }
 
-export async function ProductsListingDynamic({ page = 1, sort = "best-selling", q }: { page?: number; sort?: string; q?: string }) {
+function productFilterHref(param: string, value: string, filters: CatalogFilters, sortValue: string, q?: string) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (sortValue) params.set("sort", sortValue);
+  (["category", "fabric", "color", "size", "stock"] as const).forEach((key) => {
+    const current = filters[key];
+    if (current && key !== param) params.set(key, current);
+  });
+  if (typeof filters.minPrice === "number") params.set("minPrice", String(filters.minPrice));
+  if (typeof filters.maxPrice === "number") params.set("maxPrice", String(filters.maxPrice));
+  if (filters[param as keyof CatalogFilters] !== value) params.set(param, value);
+  params.set("page", "1");
+  return `/products?${params.toString()}`;
+}
+
+function resetFilterHref(sortValue: string, q?: string) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (sortValue) params.set("sort", sortValue);
+  params.set("page", "1");
+  return `/products?${params.toString()}`;
+}
+
+function productValueCount(productsList: Product[], group: CmsProductFilterGroup, value: string) {
+  return productsList.filter((product) => {
+    if (group.type === "category") return product.category.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value;
+    if (group.type === "fabric") return product.fabric.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value;
+    if (group.type === "color") return product.colors.some((color) => color.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value);
+    if (group.type === "size") return product.sizes.some((size) => size.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === value);
+    if (group.type === "stock" && value === "in-stock") return product.stock > product.moq;
+    if (group.type === "stock" && value === "low-stock") return product.stock > 0 && product.stock - product.reserved <= product.moq;
+    if (group.type === "stock" && value === "out-of-stock") return product.stock <= 0;
+    return true;
+  }).length;
+}
+
+function ProductFilterPanel({
+  filtersConfig,
+  productsList,
+  filters,
+  sortValue,
+  q,
+}: {
+  filtersConfig: CmsProductFilterGroup[];
+  productsList: Product[];
+  filters: CatalogFilters;
+  sortValue: string;
+  q?: string;
+}) {
+  const enabledFilters = filtersConfig.filter((group) => group.enabled);
+  const priceFilter = enabledFilters.find((group) => group.type === "price");
+
+  return (
+    <div className="canvas-body">
+      {enabledFilters.filter((group) => group.type !== "price").map((group) => (
+        <div className="widget-facet facet-categories" key={group.id}>
+          <h6 className="facet-title">{group.title}</h6>
+          <ul className="list-categories current-scrollbar mb_36">
+            {group.options.filter((option) => option.enabled).map((option) => {
+              const active = filters[group.param as keyof CatalogFilters] === option.value;
+              return (
+                <li key={option.id}>
+                  <Link href={productFilterHref(group.param, option.value, filters, sortValue, q)} className={`categories-item${active ? " active" : ""}`}>
+                    {option.label} <span className="count-cate">({productValueCount(productsList, group, option.value)})</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+      {priceFilter ? (
+        <div className="widget-facet facet-price">
+          <h6 className="facet-title">{priceFilter.title}</h6>
+          <form action="/products" className="sarjan-price-filter-form">
+            {q ? <input type="hidden" name="q" value={q} /> : null}
+            <input type="hidden" name="sort" value={sortValue} />
+            {filters.category ? <input type="hidden" name="category" value={filters.category} /> : null}
+            {filters.fabric ? <input type="hidden" name="fabric" value={filters.fabric} /> : null}
+            {filters.color ? <input type="hidden" name="color" value={filters.color} /> : null}
+            {filters.size ? <input type="hidden" name="size" value={filters.size} /> : null}
+            {filters.stock ? <input type="hidden" name="stock" value={filters.stock} /> : null}
+            <div className="box-price-product">
+              <label className="box-price-item">
+                <span className="title-price">Min price</span>
+                <input name="minPrice" type="number" min={priceFilter.min ?? 0} max={priceFilter.max} defaultValue={filters.minPrice ?? priceFilter.min ?? 0} />
+              </label>
+              <label className="box-price-item">
+                <span className="title-price">Max price</span>
+                <input name="maxPrice" type="number" min={priceFilter.min ?? 0} max={priceFilter.max} defaultValue={filters.maxPrice ?? priceFilter.max ?? 0} />
+              </label>
+            </div>
+            <button className="tf-btn btn-fill radius-4 w-100 mt_16" type="submit"><span className="text">Apply Price</span></button>
+          </form>
+        </div>
+      ) : null}
+      <Link href={resetFilterHref(sortValue, q)} id="reset-filter" className="tf-btn btn-reset">Reset Filters</Link>
+    </div>
+  );
+}
+
+export async function ProductsListingDynamic({ page = 1, sort = "best-selling", q, filters = {} }: { page?: number; sort?: string; q?: string; filters?: CatalogFilters }) {
   const perPage = 24;
   const sortValue = ["best-selling", "a-z", "z-a", "price-low-high", "price-high-low"].includes(sort ?? "") ? sort ?? "best-selling" : "best-selling";
   const sortLabels: Record<string, string> = {
@@ -1068,13 +1169,14 @@ export async function ProductsListingDynamic({ page = 1, sort = "best-selling", 
     "price-low-high": "Price, low to high",
     "price-high-low": "Price, high to low",
   };
-  const catalog = await getCatalogProducts({ page, limit: perPage, sort: sortValue, q });
+  const cms = await getCachedCmsSnapshot();
+  const catalog = await getCatalogProducts({ page, limit: perPage, sort: sortValue, q, filters });
   const totalPages = catalog.totalPages;
   const currentPage = catalog.page;
   const start = (currentPage - 1) * perPage;
   const visibleProducts = catalog.items;
-  const cms = await getCachedCmsSnapshot();
-  const filterMaxPrice = Math.ceil(Math.max(...cms.products.map((product) => product.price)) / 100) * 100;
+  const productFilters = cms.productFilters ?? [];
+  const activeFilterCount = Object.values(filters).filter((value) => value !== undefined && value !== "").length;
   const layoutDots = [
     { className: "tf-view-layout-switch sw-layout-list list-layout", value: "list", width: 20, circles: [[3, 6], [3, 14]], rects: [[7.5, 3.5], [7.5, 11.5]] },
     { className: "tf-view-layout-switch sw-layout-2", value: "tf-col-2", width: 20, circles: [[6, 6], [14, 6], [6, 14], [14, 14]] },
@@ -1113,10 +1215,10 @@ export async function ProductsListingDynamic({ page = 1, sort = "best-selling", 
           </div>
           <div className="wrapper-control-shop">
             <div className="meta-filter-shop">
-              <div id="product-count-grid" className="count-text">Showing {visibleProducts.length ? start + 1 : 0}-{start + visibleProducts.length} of {catalog.total} products{q ? ` for "${q}"` : ""}</div>
-              <div id="product-count-list" className="count-text">Showing {visibleProducts.length ? start + 1 : 0}-{start + visibleProducts.length} of {catalog.total} products{q ? ` for "${q}"` : ""}</div>
+              <div id="product-count-grid" className="count-text">Showing {visibleProducts.length ? start + 1 : 0}-{start + visibleProducts.length} of {catalog.total} products{q ? ` for "${q}"` : ""}{activeFilterCount ? ` with ${activeFilterCount} filter${activeFilterCount > 1 ? "s" : ""}` : ""}</div>
+              <div id="product-count-list" className="count-text">Showing {visibleProducts.length ? start + 1 : 0}-{start + visibleProducts.length} of {catalog.total} products{q ? ` for "${q}"` : ""}{activeFilterCount ? ` with ${activeFilterCount} filter${activeFilterCount > 1 ? "s" : ""}` : ""}</div>
               <div id="applied-filters" />
-              <button id="remove-all" className="remove-all-filters text-btn-uppercase" style={{ display: "none" }}>REMOVE ALL <i className="icon icon-close" /></button>
+              {activeFilterCount ? <Link href={resetFilterHref(sortValue, q)} id="remove-all" className="remove-all-filters text-btn-uppercase">REMOVE ALL <i className="icon icon-close" /></Link> : null}
             </div>
             <div className="tf-list-layout wrapper-shop" id="listLayout">
               {visibleProducts.map((product) => <ProductListCard product={product} key={`list-${product.id}`} />)}
@@ -1126,99 +1228,14 @@ export async function ProductsListingDynamic({ page = 1, sort = "best-selling", 
                 <ModaveProductCard product={product} delay={`${index / 10}s`} className="grid" key={`grid-${product.id}`} />
               ))}
             </div>
-            <Pagination basePath="/products" page={currentPage} totalPages={totalPages} query={{ sort: sortValue, q }} />
+            <Pagination basePath="/products" page={currentPage} totalPages={totalPages} query={{ sort: sortValue, q, category: filters.category, fabric: filters.fabric, color: filters.color, size: filters.size, stock: filters.stock, minPrice: filters.minPrice ? String(filters.minPrice) : undefined, maxPrice: filters.maxPrice ? String(filters.maxPrice) : undefined }} />
           </div>
         </div>
       </section>
       <div className="offcanvas offcanvas-start canvas-filter" id="filterShop">
         <div className="canvas-wrapper">
           <div className="canvas-header"><h5>Filters</h5><span className="icon-close icon-close-popup" data-bs-dismiss="offcanvas" aria-label="Close" /></div>
-          <div className="canvas-body">
-            <div className="widget-facet facet-categories">
-              <h6 className="facet-title">Product Categories</h6>
-              <ul className="facet-content">
-                <li><a href="#" className="categories-item">Bags <span className="count-cate">(112)</span></a></li>
-                <li><a href="#" className="categories-item">Booking <span className="count-cate">(32)</span></a></li>
-                <li><a href="#" className="categories-item">Clothing <span className="count-cate">(42)</span></a></li>
-                <li><a href="#" className="categories-item active">Women <span className="count-cate">(65)</span></a></li>
-                <li><a href="#" className="categories-item">Men <span className="count-cate">(13)</span></a></li>
-                <li><a href="#" className="categories-item">Shoes <span className="count-cate">(52)</span></a></li>
-                <li><a href="#" className="categories-item">Uncategorized <span className="count-cate">(14)</span></a></li>
-              </ul>
-            </div>
-            <div className="widget-facet facet-price">
-              <h6 className="facet-title">Price</h6>
-              <div className="price-val-range" id="price-value-range" data-min="0" data-max={filterMaxPrice} />
-              <div className="box-price-product">
-                <div className="box-price-item">
-                  <span className="title-price">Min price</span>
-                  <div className="price-val" id="price-min-value" data-currency="₹">₹0</div>
-                </div>
-                <div className="box-price-item">
-                  <span className="title-price">Max price</span>
-                  <div className="price-val" id="price-max-value" data-currency="₹">₹{filterMaxPrice.toLocaleString("en-IN")}</div>
-                </div>
-              </div>
-            </div>
-            <div className="widget-facet facet-size">
-              <h6 className="facet-title">Size</h6>
-              <div className="facet-size-box size-box">
-                {["XS", "S", "M", "L", "XL", "2XL", "3XL", "Free Size"].map((size) => (
-                  <span className={`size-item size-check${size === "Free Size" ? " free-size" : ""}`} key={size}>{size}</span>
-                ))}
-              </div>
-            </div>
-            <div className="widget-facet facet-color">
-              <h6 className="facet-title">Colors</h6>
-              <div className="facet-color-box">
-                <div className="color-item color-check"><span className="color bg-light-pink-2" />Pink</div>
-                <div className="color-item color-check"><span className="color bg-red" /> Red</div>
-                <div className="color-item color-check"><span className="color bg-beige-2" />Beige</div>
-                <div className="color-item color-check"><span className="color bg-orange-2" />Orange</div>
-                <div className="color-item color-check"><span className="color bg-light-green" />Green</div>
-                <div className="color-item color-check"><span className="color bg-main" />Black</div>
-                <div className="color-item color-check"><span className="color bg-white line-black" />White</div>
-                <div className="color-item color-check"><span className="color bg-purple-3" />Purple</div>
-                <div className="color-item color-check"><span className="color bg-grey" />Grey</div>
-                <div className="color-item color-check"><span className="color bg-light-blue-5" />Light Blue</div>
-                <div className="color-item color-check"><span className="color bg-dark-blue" />Dark Blue</div>
-              </div>
-            </div>
-            <div className="widget-facet facet-fieldset">
-              <h6 className="facet-title">Availability</h6>
-              <div className="box-fieldset-item">
-                <fieldset className="fieldset-item">
-                  <input type="radio" name="availability" className="tf-check" id="inStock" />
-                  <label htmlFor="inStock">In stock <span className="count-stock">(32)</span></label>
-                </fieldset>
-                <fieldset className="fieldset-item">
-                  <input type="radio" name="availability" className="tf-check" id="outStock" />
-                  <label htmlFor="outStock">Out of stock <span className="count-stock">(2)</span></label>
-                </fieldset>
-              </div>
-            </div>
-            <div className="widget-facet facet-fieldset">
-              <h6 className="facet-title">Brands</h6>
-              <div className="box-fieldset-item">
-                {[
-                  ["nike", "Nike", "(112)"],
-                  ["LV", "Louis Vuitton", "(2)"],
-                  ["hermes", "Hermes", "(42)"],
-                  ["gucci", "Gucci", "(13)"],
-                  ["zalando", "Zalando", "(54)"],
-                  ["adidas", "Adidas", "(93)"],
-                ].map(([id, label, count]) => (
-                  <fieldset className="fieldset-item" key={id}>
-                    <input type="checkbox" name="brand" className="tf-check" id={id} />
-                    <label htmlFor={id}>{label} <span className="count-brand">{count}</span></label>
-                  </fieldset>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="canvas-bottom">
-            <button id="reset-filter" className="tf-btn btn-reset">Reset Filters</button>
-          </div>
+          <ProductFilterPanel filtersConfig={productFilters} productsList={cms.products} filters={filters} sortValue={sortValue} q={q} />
         </div>
       </div>
     </>

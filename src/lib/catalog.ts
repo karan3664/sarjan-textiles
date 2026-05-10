@@ -4,6 +4,20 @@ import { getClient } from "@/lib/local-db";
 
 export type CatalogSort = "best-selling" | "a-z" | "z-a" | "price-low-high" | "price-high-low";
 
+export type CatalogFilters = {
+  category?: string;
+  fabric?: string;
+  color?: string;
+  size?: string;
+  stock?: string;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+function slugValue(value: string) {
+  return value.toLowerCase().trim().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export function sortProductList(products: Product[], sort: string | null | undefined = "best-selling") {
   const sortValue = ["best-selling", "a-z", "z-a", "price-low-high", "price-high-low"].includes(sort ?? "")
     ? (sort as CatalogSort)
@@ -22,6 +36,20 @@ function isRuleActive(rule: { active: boolean; validFrom?: string; validTo?: str
   if (!rule.active) return false;
   if (rule.validFrom && new Date(rule.validFrom).getTime() > now) return false;
   if (rule.validTo && new Date(rule.validTo).getTime() < now) return false;
+  return true;
+}
+
+function matchesFilters(product: Product, filters?: CatalogFilters) {
+  if (!filters) return true;
+  if (filters.category && slugValue(product.category) !== filters.category) return false;
+  if (filters.fabric && slugValue(product.fabric) !== filters.fabric) return false;
+  if (filters.color && !product.colors.some((color) => slugValue(color) === filters.color)) return false;
+  if (filters.size && !product.sizes.some((size) => slugValue(size) === filters.size)) return false;
+  if (typeof filters.minPrice === "number" && product.price < filters.minPrice) return false;
+  if (typeof filters.maxPrice === "number" && product.price > filters.maxPrice) return false;
+  if (filters.stock === "in-stock" && product.stock <= product.moq) return false;
+  if (filters.stock === "low-stock" && !(product.stock > 0 && product.stock - product.reserved <= product.moq)) return false;
+  if (filters.stock === "out-of-stock" && product.stock > 0) return false;
   return true;
 }
 
@@ -54,11 +82,11 @@ export async function applyClientPricing(products: Product[], clientId?: string 
   });
 }
 
-export async function getCatalogProducts({ page = 1, limit = 24, sort = "best-selling", ids, q, clientId }: { page?: number; limit?: number; sort?: string; ids?: string[]; q?: string; clientId?: string | null }) {
+export async function getCatalogProducts({ page = 1, limit = 24, sort = "best-selling", ids, q, clientId, filters }: { page?: number; limit?: number; sort?: string; ids?: string[]; q?: string; clientId?: string | null; filters?: CatalogFilters }) {
   const { products } = await getCachedCmsSnapshot();
   const query = q?.trim().toLowerCase();
   const source = ids?.length ? products.filter((product) => ids.includes(product.slug)) : sortProductList(products, sort);
-  const filtered = query
+  const searched = query
     ? source.filter((product) => [
       product.name,
       product.slug,
@@ -70,6 +98,7 @@ export async function getCatalogProducts({ page = 1, limit = 24, sort = "best-se
       ...product.sizes,
     ].join(" ").toLowerCase().includes(query))
     : source;
+  const filtered = searched.filter((product) => matchesFilters(product, filters));
   const total = filtered.length;
   const safeLimit = Math.min(Math.max(limit, 1), 60);
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));

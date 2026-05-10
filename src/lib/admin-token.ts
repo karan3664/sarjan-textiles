@@ -24,6 +24,7 @@ const roleAccess: Record<AdminRole, string[]> = {
   accounts: ["/admin/payments", "/api/admin/orders"],
   content: [
     "/admin/home",
+    "/admin/product-filters",
     "/admin/about",
     "/admin/contact",
     "/admin/blogs",

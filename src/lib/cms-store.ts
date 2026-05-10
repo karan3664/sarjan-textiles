@@ -72,10 +72,31 @@ export type AuditLog = {
   createdAt: string;
 };
 
+export type CmsProductFilterType = "category" | "fabric" | "color" | "size" | "stock" | "price" | "custom";
+
+export type CmsProductFilterOption = {
+  id: string;
+  label: string;
+  value: string;
+  enabled: boolean;
+};
+
+export type CmsProductFilterGroup = {
+  id: string;
+  type: CmsProductFilterType;
+  title: string;
+  param: string;
+  enabled: boolean;
+  options: CmsProductFilterOption[];
+  min?: number;
+  max?: number;
+};
+
 export type CmsSnapshot = {
   siteSettings: CmsSiteSettings;
   home: CmsHome;
   products: Product[];
+  productFilters: CmsProductFilterGroup[];
   blogs: CmsBlog[];
   testimonials: CmsTestimonial[];
   clientPricing: ClientPricingRule[];
@@ -86,6 +107,81 @@ export type CmsSnapshot = {
 };
 
 const cmsPath = path.join(process.cwd(), "data", "cms-db.json");
+
+function slugValue(value: string) {
+  return value.toLowerCase().trim().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function filterOptions(values: string[]): CmsProductFilterOption[] {
+  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
+    .sort((a, b) => a.localeCompare(b))
+    .map((label) => ({
+      id: slugValue(label),
+      label,
+      value: slugValue(label),
+      enabled: true,
+    }));
+}
+
+function defaultProductFilters(products: Product[]): CmsProductFilterGroup[] {
+  const maxPrice = Math.ceil(Math.max(...products.map((product) => product.price), 1000) / 100) * 100;
+  return [
+    {
+      id: "category",
+      type: "category",
+      title: "Categories",
+      param: "category",
+      enabled: true,
+      options: filterOptions(products.map((product) => product.category)),
+    },
+    {
+      id: "fabric",
+      type: "fabric",
+      title: "Fabric Type",
+      param: "fabric",
+      enabled: true,
+      options: filterOptions(products.map((product) => product.fabric)),
+    },
+    {
+      id: "color",
+      type: "color",
+      title: "Colors",
+      param: "color",
+      enabled: true,
+      options: filterOptions(products.flatMap((product) => product.colors)),
+    },
+    {
+      id: "size",
+      type: "size",
+      title: "Sizes",
+      param: "size",
+      enabled: true,
+      options: filterOptions(products.flatMap((product) => product.sizes)),
+    },
+    {
+      id: "stock",
+      type: "stock",
+      title: "Availability",
+      param: "stock",
+      enabled: true,
+      options: [
+        { id: "in-stock", label: "In Stock", value: "in-stock", enabled: true },
+        { id: "low-stock", label: "Low Stock", value: "low-stock", enabled: true },
+        { id: "out-of-stock", label: "Out of Stock", value: "out-of-stock", enabled: true },
+      ],
+    },
+    {
+      id: "price",
+      type: "price",
+      title: "Price",
+      param: "price",
+      enabled: true,
+      min: 0,
+      max: maxPrice,
+      options: [],
+    },
+  ];
+}
 
 function optimizedMediaPath(value: string) {
   if (!/\.(png|jpe?g)$/i.test(value)) return value;
@@ -132,6 +228,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   siteSettings: defaultSiteSettings,
   home: defaultHome,
   products: defaultProducts,
+  productFilters: defaultProductFilters(defaultProducts),
   blogs: defaultBlogs,
   testimonials: defaultHome.testimonials.map((testimonial, index) => ({
     ...testimonial,
@@ -151,6 +248,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     siteSettings: { ...defaultCmsSnapshot.siteSettings, ...(input.siteSettings ?? {}) },
     home: { ...defaultCmsSnapshot.home, ...(input.home ?? {}) },
     products: Array.isArray(input.products) && input.products.length ? input.products : defaultCmsSnapshot.products,
+    productFilters: Array.isArray(input.productFilters) && input.productFilters.length ? input.productFilters : defaultProductFilters(Array.isArray(input.products) && input.products.length ? input.products : defaultCmsSnapshot.products),
     blogs: Array.isArray(input.blogs) && input.blogs.length ? input.blogs : defaultCmsSnapshot.blogs,
     testimonials: Array.isArray(input.testimonials) && input.testimonials.length ? input.testimonials : defaultCmsSnapshot.testimonials,
     clientPricing: Array.isArray(input.clientPricing) ? input.clientPricing : defaultCmsSnapshot.clientPricing,

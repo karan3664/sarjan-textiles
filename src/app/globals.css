@@ -2933,6 +2933,74 @@ footer .footer-newsletter .subscribe-content input {
   border-radius: 8px;
 }
 
+.sarjan-price-filter-form {
+  display: grid;
+  gap: 14px;
+}
+
+.sarjan-price-filter-form .box-price-product {
+  gap: 12px;
+}
+
+.sarjan-price-filter-form .box-price-item {
+  display: grid;
+  gap: 8px;
+}
+
+.sarjan-price-filter-form input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.sarjan-filter-builder {
+  display: grid;
+  gap: 18px;
+}
+
+.sarjan-filter-builder-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.sarjan-filter-builder-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.sarjan-filter-value-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.sarjan-filter-value-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(120px, 180px) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf8;
+}
+
+.sarjan-filter-value-row code {
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text-2);
+  background: #f1f1f1;
+  font-size: 12px;
+  word-break: break-all;
+}
+
 .form-search-result,
 .form-order-tracking {
   display: flex;
@@ -3426,5 +3494,15 @@ footer .footer-newsletter .subscribe-content input {
 
   .sarjan-custom-section-split {
     grid-template-columns: 1fr;
+  }
+
+  .sarjan-filter-builder-head,
+  .sarjan-filter-value-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .sarjan-filter-builder-head {
+    display: grid;
   }
 }
