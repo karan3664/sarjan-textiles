@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
-const adminApiPattern = /\/api\/admin\//;
-
 function isAdminHref(anchor: HTMLAnchorElement) {
   const href = anchor.getAttribute("href") ?? "";
   if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return false;
@@ -35,26 +33,27 @@ export function AdminLoaderMarkup() {
 export function AdminGlobalLoader() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(true);
-  const pendingRef = useRef(0);
   const hideTimerRef = useRef<number | null>(null);
-  const showTimerRef = useRef<number | null>(null);
+  const lastShowRef = useRef(0);
+  const hasMountedRef = useRef(false);
 
   const clearTimers = () => {
     if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current);
-    if (showTimerRef.current) window.clearTimeout(showTimerRef.current);
     hideTimerRef.current = null;
-    showTimerRef.current = null;
   };
 
-  const show = (delay = 0) => {
-    if (showTimerRef.current) window.clearTimeout(showTimerRef.current);
-    showTimerRef.current = window.setTimeout(() => setVisible(true), delay);
+  const show = () => {
+    const now = Date.now();
+    if (now - lastShowRef.current < 650) return;
+    lastShowRef.current = now;
+    clearTimers();
+    setVisible(true);
   };
 
   const hide = (delay = 420) => {
     if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current);
     hideTimerRef.current = window.setTimeout(() => {
-      if (pendingRef.current <= 0) setVisible(false);
+      setVisible(false);
     }, delay);
   };
 
@@ -64,31 +63,11 @@ export function AdminGlobalLoader() {
   }, []);
 
   useEffect(() => {
-    hide(520);
+    if (hasMountedRef.current) hide(360);
+    else hasMountedRef.current = true;
   }, [pathname]);
 
   useEffect(() => {
-    const originalFetch = window.fetch.bind(window);
-
-    window.fetch = async (...args) => {
-      const target = typeof args[0] === "string" ? args[0] : args[0] instanceof URL ? args[0].toString() : args[0]?.url ?? "";
-      const shouldTrack = adminApiPattern.test(target) || window.location.pathname.startsWith("/admin");
-
-      if (shouldTrack) {
-        pendingRef.current += 1;
-        show(140);
-      }
-
-      try {
-        return await originalFetch(...args);
-      } finally {
-        if (shouldTrack) {
-          pendingRef.current = Math.max(0, pendingRef.current - 1);
-          if (pendingRef.current === 0) hide(360);
-        }
-      }
-    };
-
     const onClick = (event: MouseEvent) => {
       const anchor = (event.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
       if (!anchor || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
@@ -106,7 +85,6 @@ export function AdminGlobalLoader() {
     document.addEventListener("submit", onSubmit, true);
 
     return () => {
-      window.fetch = originalFetch;
       document.removeEventListener("click", onClick, true);
       document.removeEventListener("submit", onSubmit, true);
     };
