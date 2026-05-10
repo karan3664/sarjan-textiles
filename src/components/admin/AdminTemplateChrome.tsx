@@ -2,6 +2,7 @@ import Link from "next/link";
 import Script from "next/script";
 import type { ReactNode } from "react";
 import { AdminSidebarController } from "./AdminSidebarController";
+import { AdminGlobalLoader } from "./AdminGlobalLoader";
 
 const adminStyles = [
   "css/animate.min.css",
@@ -186,14 +187,10 @@ export function AdminTemplateChrome({
       {adminStyles.map((style) => (
         <link key={style} rel="stylesheet" href={`/template/admin/${style}`} />
       ))}
+      <AdminGlobalLoader />
       <div id="wrapper">
         <div id="page">
           <div className="layout-wrap loader-off">
-            <div id="preload" className="preload-container">
-              <div className="preloading">
-                <span />
-              </div>
-            </div>
             <Sidebar active={active} />
             <AdminSidebarController />
             <div className="section-content-right">
