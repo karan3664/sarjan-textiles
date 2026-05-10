@@ -159,13 +159,13 @@ export function AdminProductFiltersClient({ initialFilters, products }: { initia
         ))}
       </div>
 
-      <div className="wg-box mb-30 sarjan-home-editor-card">
-        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
+      <div className="wg-box mb-30 sarjan-home-editor-card sarjan-filter-editor-card">
+        <div className="sarjan-filter-toolbar">
           <div>
             <h5>Product Filters</h5>
             <div className="body-text text-secondary">Frontend products page reads these filters from CMS/backend.</div>
           </div>
-          <div className="flex gap10">
+          <div className="sarjan-filter-toolbar-actions">
             <select value={newType} onChange={(event) => setNewType(event.target.value as CmsProductFilterType)}>
               {filterTypes.map((item) => <option value={item.type} key={item.type}>{item.label}</option>)}
             </select>
@@ -184,6 +184,10 @@ export function AdminProductFiltersClient({ initialFilters, products }: { initia
                   <input type="checkbox" className="tf-check" checked={filter.enabled} onChange={(event) => updateFilter(index, { enabled: event.target.checked })} />
                   <span>{filter.enabled ? "Visible" : "Hidden"}</span>
                 </label>
+                <div className="sarjan-filter-card-title">
+                  <strong>{filter.title}</strong>
+                  <span>{filter.type === "price" ? "Price range" : `${filter.options.length} values`}</span>
+                </div>
                 <div className="flex gap8">
                   <button type="button" className="tf-button style-1" onClick={() => moveFilter(index, -1)}>Up</button>
                   <button type="button" className="tf-button style-1" onClick={() => moveFilter(index, 1)}>Down</button>
