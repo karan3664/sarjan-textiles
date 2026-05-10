@@ -2,10 +2,13 @@ import { createClient, publicClient } from "@/lib/local-db";
 import { createClientToken } from "@/lib/client-token";
 import { verifyEmailOtpToken } from "@/lib/email-otp";
 import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const limit = rateLimit(rateLimitKey(request, "client-register", String(body.email ?? "")), 5, 60_000);
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
     const hasGst = body.hasGst !== false && body.hasGst !== "false" && body.noGst !== true && body.noGst !== "on";
     if (!body.email || !body.password || (!body.companyName && !body.gst)) {
       return Response.json({ error: "Email, password, and company name required" }, { status: 400 });

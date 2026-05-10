@@ -1,5 +1,6 @@
 import { configuredAdmins, createAdminToken } from "@/lib/admin-token";
 import { verifyPassword } from "@/lib/local-db";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 function passwordMatches(admin: ReturnType<typeof configuredAdmins>[number], password: string) {
   if (admin.passwordHash) return verifyPassword(password, admin.passwordHash);
@@ -11,6 +12,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
+    const limit = rateLimit(rateLimitKey(request, "admin-login", email), 6, 60_000);
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
     const admin = configuredAdmins().find((item) => item.email.toLowerCase() === email && passwordMatches(item, password));
     if (!admin) return Response.json({ error: "Invalid admin credentials" }, { status: 401 });
 

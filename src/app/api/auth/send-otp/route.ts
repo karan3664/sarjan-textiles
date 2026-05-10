@@ -1,6 +1,7 @@
 import { createEmailOtpToken, generateEmailOtp, normalizeEmail } from "@/lib/email-otp";
 import { readLocalDb } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +10,8 @@ export async function POST(request: Request) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return Response.json({ error: "Valid email required" }, { status: 400 });
     }
+    const limit = rateLimit(rateLimitKey(request, "email-otp", email), 3, 60_000);
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
     const db = await readLocalDb();
     if (db.clients.some((client) => client.email === email)) {
