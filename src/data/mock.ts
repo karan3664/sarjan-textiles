@@ -15,8 +15,12 @@ export type Product = {
   colors: string[];
   sizes: string[];
   images: string[];
+  imageAlt?: string;
   description: string;
   care: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
   variants?: Array<{ sku: string; color: string; size: string; price: number; stock: number }>;
   pricingRules?: Array<{ minQty: number; price: number }>;
   publicPrice?: number;

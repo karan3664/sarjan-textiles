@@ -5,13 +5,14 @@ import { PriceGate } from "./PriceGate";
 export function ModaveProductCard({ product, delay = "0s", className = "" }: { product: Product; delay?: string; className?: string }) {
   const hover = product.images[1] ?? product.images[0];
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
+  const altText = product.imageAlt || `${product.name} ${product.category}`;
 
   return (
     <div className={`card-product wow fadeInUp${className ? ` ${className}` : ""}`} data-wow-delay={delay}>
       <div className="card-product-wrapper">
         <a href={`/products/${product.slug}`} className="product-img">
-          <img className="lazyload img-product" data-src={product.images[0]} src={product.images[0]} alt={product.name} />
-          <img className="lazyload img-hover" data-src={hover} src={hover} alt={product.name} />
+          <img className="lazyload img-product" data-src={product.images[0]} src={product.images[0]} alt={altText} />
+          <img className="lazyload img-hover" data-src={hover} src={hover} alt={`${altText} alternate view`} />
         </a>
         <div className="list-product-btn">
           <a href="#" className="box-icon wishlist btn-icon-action" data-wishlist-toggle data-product-slug={product.slug}>

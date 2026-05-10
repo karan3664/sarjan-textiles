@@ -1,5 +1,13 @@
 import { DynamicInfoPage } from "@/components/storefront/StaticPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Process",
+  description: "Understand Sarjan Textiles B2B workflow from client approval to order approval, dispatch tracking, and 90-day cheque credit.",
+  path: "/process",
+  keywords: ["B2B order process", "textile dispatch", "client approval", "cheque credit"],
+});
 
 export default function ProcessPage() {
   return (

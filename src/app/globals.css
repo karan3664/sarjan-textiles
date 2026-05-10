@@ -1916,6 +1916,23 @@ footer .footer-newsletter .subscribe-content input {
   padding: 8px 10px;
 }
 
+.sarjan-seo-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(139, 30, 45, 0.16);
+  border-radius: 8px;
+  background: #fffaf7;
+}
+
+.sarjan-seo-panel h6 {
+  margin: 0;
+}
+
+.sarjan-seo-panel p {
+  margin: -8px 0 2px;
+}
+
 .sarjan-product-check {
   display: flex;
   align-items: center;

@@ -8,6 +8,10 @@ import type { CmsPages } from "@/lib/cms-store";
 import type { CmsCustomSection } from "@/types/cms-custom";
 
 type ContactPage = CmsPages["contact"] & {
+  imageAlt?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
   sections?: CmsCustomSection[];
 };
 
@@ -109,6 +113,26 @@ export function AdminContactPageClient({ initialPages, products }: { initialPage
                 <div className="text-title mb-8">Page Description<span className="text-primary">*</span></div>
                 <textarea value={contact.body} onChange={(event) => update("body", event.target.value)} required />
               </fieldset>
+              <div className="sarjan-seo-panel">
+                <h6>Contact Page SEO</h6>
+                <p className="text-secondary">Page-wise SEO metadata and contact banner alt text.</p>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Image Alt Text</div>
+                  <input value={contact.imageAlt ?? ""} onChange={(event) => update("imageAlt", event.target.value)} placeholder="Contact Sarjan Textiles Surat Gujarat" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Title</div>
+                  <input value={contact.metaTitle ?? ""} onChange={(event) => update("metaTitle", event.target.value)} maxLength={70} placeholder="Contact Sarjan Textiles" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Description</div>
+                  <textarea rows={3} value={contact.metaDescription ?? ""} onChange={(event) => update("metaDescription", event.target.value)} maxLength={170} placeholder="Search result description" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Keywords</div>
+                  <input value={contact.keywords ?? ""} onChange={(event) => update("keywords", event.target.value)} placeholder="contact textile supplier, Surat textiles, B2B inquiry" />
+                </fieldset>
+              </div>
             </div>
           </div>
         </div>

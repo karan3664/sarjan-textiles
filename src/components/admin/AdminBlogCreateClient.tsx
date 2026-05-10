@@ -13,8 +13,12 @@ type BlogForm = {
   slug: string;
   excerpt: string;
   image: string;
+  imageAlt: string;
   date: string;
   content: string;
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string;
 };
 
 type BlogBlock = {
@@ -27,13 +31,24 @@ type CmsBlogWithSections = CmsBlog & {
   sections?: CmsCustomSection[];
 };
 
+type CmsBlogWithSeo = CmsBlogWithSections & {
+  imageAlt?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+};
+
 const emptyForm: BlogForm = {
   title: "",
   slug: "",
   excerpt: "",
   image: "",
+  imageAlt: "",
   date: new Date().toISOString().slice(0, 10),
   content: "",
+  metaTitle: "",
+  metaDescription: "",
+  keywords: "",
 };
 
 const blockPrefix = "__SARJAN_BLOG_BLOCKS__";
@@ -53,8 +68,12 @@ function formFromBlog(blog?: CmsBlog): BlogForm {
     slug: blog.slug,
     excerpt: blog.excerpt,
     image: blog.image,
+    imageAlt: (blog as CmsBlogWithSeo).imageAlt ?? "",
     date: blog.date,
     content: blog.content,
+    metaTitle: (blog as CmsBlogWithSeo).metaTitle ?? "",
+    metaDescription: (blog as CmsBlogWithSeo).metaDescription ?? "",
+    keywords: (blog as CmsBlogWithSeo).keywords ?? "",
   };
 }
 
@@ -78,14 +97,18 @@ function contentFromBlocks(blocks: BlogBlock[]) {
   return `${blockPrefix}${JSON.stringify(blocks.filter((block) => block.value.trim()))}`;
 }
 
-function blogFromForm(form: BlogForm, blocks: BlogBlock[], sections: CmsCustomSection[]): CmsBlogWithSections {
+function blogFromForm(form: BlogForm, blocks: BlogBlock[], sections: CmsCustomSection[]): CmsBlogWithSeo {
   return {
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
     excerpt: form.excerpt.trim(),
     image: form.image || "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: form.imageAlt.trim() || `${form.title.trim()} blog image`,
     date: form.date,
     content: contentFromBlocks(blocks),
+    metaTitle: form.metaTitle.trim() || form.title.trim(),
+    metaDescription: form.metaDescription.trim() || form.excerpt.trim().slice(0, 155),
+    keywords: form.keywords.trim(),
     sections,
   };
 }
@@ -276,6 +299,26 @@ export function AdminBlogCreateClient({ initialBlogs, editBlog, products }: { in
                 <div className="text-title mb-8">Short Excerpt<span className="text-primary">*</span></div>
                 <textarea value={form.excerpt} onChange={(event) => update("excerpt", event.target.value)} required />
               </fieldset>
+              <div className="sarjan-seo-panel">
+                <h6>Blog SEO</h6>
+                <p className="text-secondary">Page title, search description, keywords, and image alt text.</p>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Main Image Alt Text</div>
+                  <input value={form.imageAlt} onChange={(event) => update("imageAlt", event.target.value)} placeholder="B2B textile buying guide cover image" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Title</div>
+                  <input value={form.metaTitle} onChange={(event) => update("metaTitle", event.target.value)} maxLength={70} placeholder="SEO title" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Description</div>
+                  <textarea rows={3} value={form.metaDescription} onChange={(event) => update("metaDescription", event.target.value)} maxLength={170} placeholder="SEO description" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Keywords</div>
+                  <input value={form.keywords} onChange={(event) => update("keywords", event.target.value)} placeholder="textile buying, wholesale, dispatch" />
+                </fieldset>
+              </div>
               <fieldset>
                 <div className="flex justify-between gap12 items-center mb-12">
                   <div>

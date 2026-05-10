@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { siteSettings } from "@/data/mock";
+import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: siteSettings.seo.title,
-  description: siteSettings.seo.description,
+  ...pageMetadata({
+    title: siteSettings.seo.title,
+    description: siteSettings.seo.description,
+    path: "/",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    keywords: ["Sarjan Textiles", "B2B textiles", "wholesale textile catalog", "printed shirts", "kurtas"],
+  }),
   metadataBase: new URL(`https://${siteSettings.domain}`),
   icons: {
     icon: siteSettings.favicon,
     apple: siteSettings.favicon,
   },
-  openGraph: {
-    title: siteSettings.seo.title,
-    description: siteSettings.seo.description,
-    url: `https://${siteSettings.domain}`,
-    siteName: siteSettings.brandName,
-    images: ["/sarjan-assets/banner-textiles-studio.webp"],
-  },
+  category: "B2B Textile Platform",
+  applicationName: siteSettings.brandName,
+  creator: siteSettings.brandName,
+  publisher: siteSettings.brandName,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -5,11 +5,12 @@ import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
+  const altText = product.imageAlt || `${product.name} ${product.category}`;
 
   return (
     <article className="sarjan-card h-100">
       <Link href={`/products/${product.slug}`} className="sarjan-card-img d-block">
-        <img src={product.images[0]} alt={product.name} />
+        <img src={product.images[0]} alt={altText} />
       </Link>
       <div className="p-3">
         <div className="d-flex justify-content-between gap-2 mb-2">

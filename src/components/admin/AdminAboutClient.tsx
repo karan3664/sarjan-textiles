@@ -12,6 +12,10 @@ type AboutPage = CmsPages["about"] & {
   mission?: string;
   vision?: string;
   infrastructure?: string;
+  imageAlt?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
   sections?: CmsCustomSection[];
 };
 
@@ -110,6 +114,26 @@ export function AdminAboutClient({ initialPages, products }: { initialPages: Cms
                 <div className="text-title mb-8">Introduction<span className="text-primary">*</span></div>
                 <textarea value={about.body} onChange={(event) => update("body", event.target.value)} required />
               </fieldset>
+              <div className="sarjan-seo-panel">
+                <h6>About Page SEO</h6>
+                <p className="text-secondary">Page-wise SEO metadata and main image alt text.</p>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Image Alt Text</div>
+                  <input value={about.imageAlt ?? ""} onChange={(event) => update("imageAlt", event.target.value)} placeholder="Sarjan Textiles company and textile infrastructure" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Title</div>
+                  <input value={about.metaTitle ?? ""} onChange={(event) => update("metaTitle", event.target.value)} maxLength={70} placeholder="About Sarjan Textiles" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Description</div>
+                  <textarea rows={3} value={about.metaDescription ?? ""} onChange={(event) => update("metaDescription", event.target.value)} maxLength={170} placeholder="Search result description" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Keywords</div>
+                  <input value={about.keywords ?? ""} onChange={(event) => update("keywords", event.target.value)} placeholder="Sarjan Textiles, textile manufacturer, B2B textiles" />
+                </fieldset>
+              </div>
               <fieldset>
                 <div className="text-title mb-8">Company History</div>
                 <textarea value={about.history ?? ""} onChange={(event) => update("history", event.target.value)} />

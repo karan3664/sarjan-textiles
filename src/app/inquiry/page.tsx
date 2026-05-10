@@ -1,6 +1,14 @@
 import { ContactInquiryForm } from "@/components/storefront/ContactInquiryForm";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { PageTitle } from "@/components/storefront/PageTitle";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Inquiry",
+  description: "Send wholesale textile buying requirements to Sarjan Textiles for catalog, MOQ, dispatch, and client approval support.",
+  path: "/inquiry",
+  keywords: ["textile inquiry", "wholesale inquiry", "B2B textile requirement"],
+});
 
 export default function InquiryPage() {
   return (

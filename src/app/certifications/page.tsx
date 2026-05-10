@@ -1,5 +1,13 @@
 import { DynamicInfoPage } from "@/components/storefront/StaticPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Certifications",
+  description: "View Sarjan Textiles certification and compliance information for B2B textile partners.",
+  path: "/certifications",
+  keywords: ["textile certifications", "business documents", "B2B compliance"],
+});
 
 export default function CertificationsPage() {
   return (

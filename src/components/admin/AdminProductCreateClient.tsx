@@ -23,6 +23,10 @@ type ProductForm = {
   variantStock: string;
   pricingRules: string;
   images: string[];
+  imageAlt: string;
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string;
   isFeatured: boolean;
 };
 
@@ -54,6 +58,10 @@ const emptyForm: ProductForm = {
   variantStock: "",
   pricingRules: "",
   images: [],
+  imageAlt: "",
+  metaTitle: "",
+  metaDescription: "",
+  keywords: "",
   isFeatured: false,
 };
 
@@ -93,8 +101,12 @@ function productFromForm(form: ProductForm, index = 0, variantOverrides: Record<
     colors: splitList(form.colors),
     sizes: splitList(form.sizes),
     images: form.images.length ? form.images : ["/sarjan-assets/sarjan-logo-icon.png"],
+    imageAlt: form.imageAlt.trim() || `${name} ${form.category.trim()} by Sarjan Textiles`,
     description: form.description.trim(),
     care: form.care.trim(),
+    metaTitle: form.metaTitle.trim() || name,
+    metaDescription: form.metaDescription.trim() || form.description.trim().slice(0, 155),
+    keywords: form.keywords.trim(),
     variants: splitList(form.colors).flatMap((color) => splitList(form.sizes).map((size) => {
       const key = `${color}__${size}`;
       const override = variantOverrides[key] ?? {};
@@ -136,6 +148,10 @@ function formFromProduct(product?: Product): ProductForm {
     variantStock: String(product.variants?.[0]?.stock ?? ""),
     pricingRules: product.pricingRules?.map((rule) => `${rule.minQty}, ${rule.price}`).join("\n") ?? "",
     images: product.images,
+    imageAlt: product.imageAlt ?? "",
+    metaTitle: product.metaTitle ?? "",
+    metaDescription: product.metaDescription ?? "",
+    keywords: product.keywords ?? "",
     isFeatured: Boolean(product.isFeatured),
   };
 }
@@ -479,6 +495,30 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
                 <div className="text-title mb-8">Description<span className="text-primary">*</span></div>
                 <textarea value={form.description} onChange={(event) => update("description", event.target.value)} required />
               </fieldset>
+              <div className="sarjan-seo-panel">
+                <h6>Product SEO</h6>
+                <p className="text-secondary">Page-wise metadata and image alt text for Google/social previews.</p>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">URL Slug<span className="text-primary">*</span></div>
+                  <input type="text" value={slugify(form.name || form.sku)} readOnly />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Image Alt Text</div>
+                  <input type="text" value={form.imageAlt} onChange={(event) => update("imageAlt", event.target.value)} placeholder="Ajrak black printed shirt for wholesale buyers" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Title</div>
+                  <input type="text" value={form.metaTitle} onChange={(event) => update("metaTitle", event.target.value)} maxLength={70} placeholder="Product page title" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Meta Description</div>
+                  <textarea rows={3} value={form.metaDescription} onChange={(event) => update("metaDescription", event.target.value)} maxLength={170} placeholder="Search result description" />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument fw-6 mb-8">Keywords</div>
+                  <input type="text" value={form.keywords} onChange={(event) => update("keywords", event.target.value)} placeholder="printed shirt, ajrak, cotton cambric" />
+                </fieldset>
+              </div>
               <fieldset>
                 <div className="text-button mb-8">Categories<span className="text-primary">*</span></div>
                 <div className="tf-select">

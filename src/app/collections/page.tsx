@@ -1,5 +1,13 @@
 import { DynamicInfoPage } from "@/components/storefront/StaticPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Collections",
+  description: "Explore Sarjan Textiles B2B collections for printed shirts, kurtas, festive edits, and wholesale-ready assortments.",
+  path: "/collections",
+  keywords: ["textile collections", "printed shirt collections", "kurta collections", "B2B wholesale"],
+});
 
 export default function CollectionsPage() {
   return (

@@ -1,5 +1,13 @@
 import { DynamicInfoPage } from "@/components/storefront/StaticPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Infrastructure",
+  description: "Sarjan Textiles platform infrastructure connects catalog, inventory, dispatch, credit, CMS, and ERP-ready data workflows.",
+  path: "/infrastructure",
+  keywords: ["textile ERP", "inventory management", "dispatch tracking", "B2B CMS"],
+});
 
 export default function InfrastructurePage() {
   return (

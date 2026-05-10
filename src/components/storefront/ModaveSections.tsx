@@ -39,6 +39,7 @@ function ProductFeature({ product }: { product: Product }) {
   const images = [product.images[0], product.images[1] ?? product.images[0], ...products.slice(1, 3).map((item) => item.images[0])];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
+  const altText = product.imageAlt || `${product.name} ${product.category}`;
 
   return (
     <section className="flat-spacing bg-surface">
@@ -52,7 +53,7 @@ function ProductFeature({ product }: { product: Product }) {
                     {images.map((image, index) => (
                       <div className="swiper-slide stagger-item" data-color={product.colors[index % product.colors.length]?.toLowerCase()} key={`thumb-${image}-${index}`}>
                         <div className="item">
-                          <img className="lazyload" data-src={image} src={image} alt={product.name} />
+                          <img className="lazyload" data-src={image} src={image} alt={`${altText} thumbnail ${index + 1}`} />
                         </div>
                       </div>
                     ))}
@@ -63,7 +64,7 @@ function ProductFeature({ product }: { product: Product }) {
                     {images.map((image, index) => (
                       <div className="swiper-slide" data-color={product.colors[index % product.colors.length]?.toLowerCase()} key={`main-${image}-${index}`}>
                         <a href={image} target="_blank" className="item" data-pswp-width="800px" data-pswp-height="1000px">
-                          <img className="tf-image-zoom lazyload" data-zoom={image} data-src={image} src={image} alt={product.name} />
+                          <img className="tf-image-zoom lazyload" data-zoom={image} data-src={image} src={image} alt={`${altText} view ${index + 1}`} />
                         </a>
                       </div>
                     ))}
@@ -474,6 +475,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
   const galleryImages = [product.images[0], product.images[1] ?? product.images[0], ...products.filter((item) => item.id !== product.id).slice(0, 4).map((item) => item.images[0])];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
+  const altText = product.imageAlt || `${product.name} ${product.category}`;
 
   return (
     <>
@@ -503,7 +505,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
         </div>
         <div className="tf-add-cart-product">
           <div className="image">
-            <img className="lazyload" data-src={product.images[0]} alt={product.name} src={product.images[0]} />
+            <img className="lazyload" data-src={product.images[0]} alt={altText} src={product.images[0]} />
           </div>
           <div className="content">
             <div className="text-title"><Link className="link" href={`/products/${product.slug}`}>{product.name}</Link></div>
@@ -526,7 +528,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                         {galleryImages.map((image, index) => (
                           <div className="swiper-slide stagger-item" data-color={product.colors[index % product.colors.length]?.toLowerCase()} key={`thumb-${image}-${index}`}>
                             <div className="item">
-                              <img className="lazyload" data-src={image} src={image} alt={product.name} />
+                              <img className="lazyload" data-src={image} src={image} alt={`${altText} thumbnail ${index + 1}`} />
                             </div>
                           </div>
                         ))}
@@ -537,7 +539,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                         {galleryImages.map((image, index) => (
                           <div className="swiper-slide" data-color={product.colors[index % product.colors.length]?.toLowerCase()} key={`main-${image}-${index}`}>
                             <a href={image} target="_blank" className="item" data-pswp-width="800px" data-pswp-height="1000px">
-                              <img className="tf-image-zoom lazyload" data-zoom={image} data-src={image} src={image} alt={product.name} />
+                              <img className="tf-image-zoom lazyload" data-zoom={image} data-src={image} src={image} alt={`${altText} view ${index + 1}`} />
                             </a>
                           </div>
                         ))}
@@ -665,7 +667,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
               <div className="col-12">
                 <form className="form-sticky-atc">
                   <div className="tf-sticky-atc-product">
-                    <div className="image"><img className="lazyload" data-src={product.images[0]} alt={product.name} src={product.images[0]} /></div>
+                    <div className="image"><img className="lazyload" data-src={product.images[0]} alt={altText} src={product.images[0]} /></div>
                     <div className="content">
                       <div className="text-title">{product.name}</div>
                       <div className="text-caption-1 text-secondary-2">{product.colors[0]}, full size set, {product.fabric}</div>
@@ -1024,13 +1026,14 @@ function ProductListCard({ product }: { product: Product }) {
   const hover = product.images[1] ?? product.images[0];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
+  const altText = product.imageAlt || `${product.name} ${product.category}`;
 
   return (
     <div className="card-product style-list" data-availability={product.stock > 0 ? "In stock" : "Out of stock"} data-brand={siteSettings.brandName}>
       <div className="card-product-wrapper">
         <a href={`/products/${product.slug}`} className="product-img">
-          <img className="lazyload img-product" data-src={product.images[0]} src={product.images[0]} alt={product.name} />
-          <img className="lazyload img-hover" data-src={hover} src={hover} alt={product.name} />
+          <img className="lazyload img-product" data-src={product.images[0]} src={product.images[0]} alt={altText} />
+          <img className="lazyload img-hover" data-src={hover} src={hover} alt={`${altText} alternate view`} />
         </a>
         {product.isFeatured ? <div className="on-sale-wrap"><span className="on-sale-item">Hot</span></div> : null}
       </div>
@@ -1044,7 +1047,7 @@ function ProductListCard({ product }: { product: Product }) {
               <li className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`} key={color}>
                 <span className="d-none text-capitalize color-filter">{color}</span>
                 <span className={index === 0 ? "swatch-value bg-main" : index === 1 ? "swatch-value bg-light-blue" : "swatch-value bg-grey"} />
-                <img className="lazyload" data-src={product.images[0]} src={product.images[0]} alt={product.name} />
+                <img className="lazyload" data-src={product.images[0]} src={product.images[0]} alt={altText} />
               </li>
             ))}
           </ul>
@@ -1414,7 +1417,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
   const settings = cms.siteSettings;
   const isContact = type === "contact";
   const pageSections = (page as typeof page & { sections?: CmsCustomSection[] }).sections;
-  const about = page as typeof page & { history?: string; mission?: string; vision?: string; infrastructure?: string; sections?: CmsCustomSection[] };
+  const about = page as typeof page & { history?: string; mission?: string; vision?: string; infrastructure?: string; imageAlt?: string; sections?: CmsCustomSection[] };
 
   return (
     <>
@@ -1472,7 +1475,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
           <section className="flat-spacing about-us-main pb_0">
             <div className="container">
               <div className="row">
-                <div className="col-md-6"><div className="about-us-features wow fadeInLeft"><img className="lazyload" data-src={page.image} src={page.image} alt={page.title} /></div></div>
+                <div className="col-md-6"><div className="about-us-features wow fadeInLeft"><img className="lazyload" data-src={page.image} src={page.image} alt={about.imageAlt || page.title} /></div></div>
                 <div className="col-md-6">
                   <div className="about-us-content">
                     <h3 className="title wow fadeInUp">{page.title}</h3>
