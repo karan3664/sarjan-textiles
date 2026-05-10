@@ -1304,19 +1304,53 @@ footer .footer-newsletter .subscribe-content input {
 
 .sarjan-inventory-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(360px, 0.7fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.75fr);
   gap: 24px;
   align-items: start;
   margin-top: 24px;
 }
 
+.sarjan-inventory-grid .wg-box,
+.sarjan-inventory-history {
+  padding: 24px !important;
+}
+
+.sarjan-inventory-toolbar {
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.sarjan-inventory-toolbar .form-search-2 {
+  max-width: 420px;
+}
+
+.sarjan-inventory-table,
+.sarjan-inventory-history-table {
+  overflow-x: auto;
+}
+
 .sarjan-inventory-table table,
+.sarjan-inventory-history-table table,
 .sarjan-report-box table {
   min-width: 920px;
 }
 
 .sarjan-inventory-table tr {
   cursor: pointer;
+}
+
+.sarjan-inventory-table td,
+.sarjan-inventory-table th,
+.sarjan-inventory-history-table td,
+.sarjan-inventory-history-table th {
+  vertical-align: middle;
+}
+
+.sarjan-inventory-table .box-status,
+.sarjan-inventory-history-table .box-status {
+  min-width: 104px;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .sarjan-selected-row {
@@ -1328,6 +1362,11 @@ footer .footer-newsletter .subscribe-content input {
 .sarjan-payment-ledger-card {
   display: grid;
   gap: 16px;
+}
+
+.sarjan-inventory-ops {
+  position: sticky;
+  top: 92px;
 }
 
 .sarjan-inventory-ops fieldset,
@@ -1353,6 +1392,15 @@ footer .footer-newsletter .subscribe-content input {
 .sarjan-inventory-history,
 .sarjan-report-box {
   margin-top: 24px;
+}
+
+.sarjan-inventory-history > .flex:first-child {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sarjan-inventory-pagination {
+  margin-top: 18px;
 }
 
 .sarjan-admin-mini-ledger {
@@ -2573,6 +2621,10 @@ footer .footer-newsletter .subscribe-content input {
   .sarjan-payment-ledger-card,
   .sarjan-aging-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sarjan-inventory-ops {
+    position: static;
   }
 
   .sarjan-ledger-line {

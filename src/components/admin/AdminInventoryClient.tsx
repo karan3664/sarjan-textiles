@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import type { InventoryMovement } from "@/lib/cms-store";
 
@@ -59,10 +59,20 @@ function printPdf(title: string, rows: Array<Record<string, string | number | un
   popup.print();
 }
 
+function visiblePageNumbers(totalPages: number, currentPage: number) {
+  return Array.from({ length: totalPages }, (_, index) => index + 1).filter(
+    (item) => item === 1 || item === totalPages || Math.abs(item - currentPage) <= 1,
+  );
+}
+
 export function AdminInventoryClient({ initialProducts, initialLogs }: { initialProducts: Product[]; initialLogs: InventoryMovement[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [logs, setLogs] = useState(initialLogs);
   const [query, setQuery] = useState("");
+  const [productPage, setProductPage] = useState(1);
+  const [productPageSize, setProductPageSize] = useState(8);
+  const [logPage, setLogPage] = useState(1);
+  const [logPageSize, setLogPageSize] = useState(10);
   const [selectedSlug, setSelectedSlug] = useState(initialProducts[0]?.slug ?? "");
   const [operation, setOperation] = useState<Operation>("add");
   const [quantity, setQuantity] = useState("1");
@@ -75,6 +85,28 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
     const normalized = query.trim().toLowerCase();
     return products.filter((product) => !normalized || [product.name, product.sku, product.category, product.fabric].some((value) => value.toLowerCase().includes(normalized)));
   }, [products, query]);
+
+  useEffect(() => {
+    setProductPage(1);
+  }, [productPageSize, query]);
+
+  useEffect(() => {
+    setLogPage(1);
+  }, [logPageSize, logs.length]);
+
+  const totalProductPages = Math.max(1, Math.ceil(filtered.length / productPageSize));
+  const currentProductPage = Math.min(productPage, totalProductPages);
+  const productStartIndex = filtered.length ? (currentProductPage - 1) * productPageSize : 0;
+  const productEndIndex = Math.min(productStartIndex + productPageSize, filtered.length);
+  const paginatedProducts = filtered.slice(productStartIndex, productEndIndex);
+  const productPages = visiblePageNumbers(totalProductPages, currentProductPage);
+
+  const totalLogPages = Math.max(1, Math.ceil(logs.length / logPageSize));
+  const currentLogPage = Math.min(logPage, totalLogPages);
+  const logStartIndex = logs.length ? (currentLogPage - 1) * logPageSize : 0;
+  const logEndIndex = Math.min(logStartIndex + logPageSize, logs.length);
+  const paginatedLogs = logs.slice(logStartIndex, logEndIndex);
+  const logPages = visiblePageNumbers(totalLogPages, currentLogPage);
 
   const selected = products.find((product) => product.slug === selectedSlug) ?? filtered[0] ?? products[0];
   const ledgerRows = () => logs.map((log) => ({
@@ -146,7 +178,7 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
       <div className="sarjan-inventory-grid">
         <div className="wg-box sarjan-products-list-box">
           {message ? <div className="sarjan-admin-message mb-20">{message}</div> : null}
-          <div className="box-top">
+          <div className="box-top sarjan-inventory-toolbar">
             <form className="form-search-2" onSubmit={(event) => event.preventDefault()}>
               <fieldset className="name">
                 <input className="show-search" placeholder="Search inventory" value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -169,7 +201,7 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((product) => {
+                {paginatedProducts.map((product) => {
                   const info = statusInfo(product);
                   return (
                     <tr className={`tf-table-item item-row ${selected?.slug === product.slug ? "sarjan-selected-row" : ""}`} key={product.slug} onClick={() => setSelectedSlug(product.slug)}>
@@ -191,9 +223,47 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
                     </tr>
                   );
                 })}
+                {!filtered.length ? (
+                  <tr><td colSpan={7}><div className="sarjan-empty-state">No products found.</div></td></tr>
+                ) : null}
               </tbody>
             </table>
           </div>
+          {filtered.length > productPageSize ? (
+            <div className="sarjan-products-pagination sarjan-inventory-pagination">
+              <div className="body-text text-secondary">
+                Showing <span>{productStartIndex + 1}</span>-<span>{productEndIndex}</span> of <span>{filtered.length}</span> products
+              </div>
+              <div className="sarjan-products-pagination-actions">
+                <div className="tf-select sarjan-products-page-size">
+                  <select value={productPageSize} onChange={(event) => setProductPageSize(Number(event.target.value))}>
+                    <option value={8}>8 / page</option>
+                    <option value={12}>12 / page</option>
+                    <option value={20}>20 / page</option>
+                  </select>
+                </div>
+                <button type="button" className="sarjan-products-page-btn" disabled={currentProductPage === 1} onClick={() => setProductPage((value) => Math.max(1, value - 1))}>
+                  <i className="icon icon-chevron-left" />
+                </button>
+                <div className="sarjan-products-page-list">
+                  {productPages.map((pageNumber, index) => {
+                    const previous = productPages[index - 1];
+                    return (
+                      <span className="sarjan-products-page-group" key={pageNumber}>
+                        {previous && pageNumber - previous > 1 ? <span className="sarjan-products-page-ellipsis">...</span> : null}
+                        <button type="button" className={`sarjan-products-page-btn ${pageNumber === currentProductPage ? "active" : ""}`} onClick={() => setProductPage(pageNumber)}>
+                          {pageNumber}
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+                <button type="button" className="sarjan-products-page-btn" disabled={currentProductPage === totalProductPages} onClick={() => setProductPage((value) => Math.min(totalProductPages, value + 1))}>
+                  <i className="icon icon-chevron-right" />
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="wg-box sarjan-inventory-ops">
@@ -248,7 +318,7 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
             <div className="box-status text-button type-delivery">{logs.length} Logs</div>
           </div>
         </div>
-        <div className="wg-table table-product-list">
+        <div className="wg-table table-product-list sarjan-inventory-history-table">
           <table>
             <thead>
               <tr>
@@ -262,7 +332,7 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
               </tr>
             </thead>
             <tbody>
-              {logs.slice(0, 80).map((log) => (
+              {paginatedLogs.map((log) => (
                 <tr className="tf-table-item item-row" key={log.id}>
                   <td>{formatDate(log.createdAt)}</td>
                   <td><div className="text-title">{log.productName}</div><div className="text-caption-1 text-secondary">{log.sku}</div></td>
@@ -279,6 +349,41 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
             </tbody>
           </table>
         </div>
+        {logs.length > logPageSize ? (
+          <div className="sarjan-products-pagination sarjan-inventory-pagination">
+            <div className="body-text text-secondary">
+              Showing <span>{logStartIndex + 1}</span>-<span>{logEndIndex}</span> of <span>{logs.length}</span> logs
+            </div>
+            <div className="sarjan-products-pagination-actions">
+              <div className="tf-select sarjan-products-page-size">
+                <select value={logPageSize} onChange={(event) => setLogPageSize(Number(event.target.value))}>
+                  <option value={10}>10 / page</option>
+                  <option value={20}>20 / page</option>
+                  <option value={50}>50 / page</option>
+                </select>
+              </div>
+              <button type="button" className="sarjan-products-page-btn" disabled={currentLogPage === 1} onClick={() => setLogPage((value) => Math.max(1, value - 1))}>
+                <i className="icon icon-chevron-left" />
+              </button>
+              <div className="sarjan-products-page-list">
+                {logPages.map((pageNumber, index) => {
+                  const previous = logPages[index - 1];
+                  return (
+                    <span className="sarjan-products-page-group" key={pageNumber}>
+                      {previous && pageNumber - previous > 1 ? <span className="sarjan-products-page-ellipsis">...</span> : null}
+                      <button type="button" className={`sarjan-products-page-btn ${pageNumber === currentLogPage ? "active" : ""}`} onClick={() => setLogPage(pageNumber)}>
+                        {pageNumber}
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+              <button type="button" className="sarjan-products-page-btn" disabled={currentLogPage === totalLogPages} onClick={() => setLogPage((value) => Math.min(totalLogPages, value + 1))}>
+                <i className="icon icon-chevron-right" />
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </>
   );
