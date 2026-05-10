@@ -67,7 +67,6 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/customers" icon="icon-users" label="Client Management" active={active === "customers"} />
             <MenuItem href="/admin/products-list" icon="icon-package" label="Products" active={active === "products"} />
             <MenuItem href="/admin/product-filters" icon="icon-chart-bar" label="Product Filters" active={active === "filters"} />
-            <MenuItem href="/admin/categories" icon="icon-folders" label="Categories" />
             <MenuItem href="/admin/products-low" icon="icon-basket" label="Inventory" active={active === "inventory"} />
             <MenuItem href="/admin/orders" icon="icon-dollar" label="Orders" active={active === "orders"} />
             <MenuItem href="/admin/dispatch" icon="icon-send" label="Dispatch" active={active === "dispatch"} />
@@ -80,10 +79,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/blogs-list" icon="icon-edit" label="Blogs" active={active === "blogs"} />
             <MenuItem href="/admin/testimonials" icon="icon-message" label="Testimonials" active={active === "testimonials"} />
             <MenuItem href="/admin/seo" icon="icon-chart-bar" label="SEO" active={active === "seo"} />
-            <MenuItem href="/admin/notice" icon="icon-bell" label="Notifications" />
-            <MenuItem href="/admin/reports" icon="icon-chart-bar" label="Reports" />
             <MenuItem href="/admin/audit" icon="icon-clipboard-text" label="Audit Logs" active={active === "audit"} />
-            <MenuItem href="/admin/change-password" icon="icon-users" label="Roles & Permissions" />
             <MenuItem href="/" icon="icon-sign-out" label="Front Store" />
           </ul>
         </div>

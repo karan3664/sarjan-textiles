@@ -86,7 +86,7 @@ export function AdminDashboardClient() {
   useEffect(() => {
     let active = true;
 
-    fetch("/api/mock/admin/dashboard", { cache: "no-store" })
+    fetch("/api/admin/dashboard", { cache: "no-store" })
       .then((response) => {
         if (!response.ok) throw new Error("Dashboard API failed");
         return response.json();
@@ -236,7 +236,7 @@ export function AdminDashboardClient() {
           </ul>
           <div className="sarjan-admin-rule-note">
             <div className="text-title">Payment Rule</div>
-            <div className="body-text text-secondary">No online payment gateway. Payments collected manually after 90 days by cheque.</div>
+            <div className="body-text text-secondary">Dashboard reads live backend data from clients, orders, products, inventory, finance, and inquiries.</div>
           </div>
         </div>
       </div>
