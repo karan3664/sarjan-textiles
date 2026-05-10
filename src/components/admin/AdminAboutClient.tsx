@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
+import type { Product } from "@/data/mock";
 import type { CmsPages } from "@/lib/cms-store";
+import type { CmsCustomSection } from "@/types/cms-custom";
 
 type AboutPage = CmsPages["about"] & {
   history?: string;
   mission?: string;
   vision?: string;
   infrastructure?: string;
+  sections?: CmsCustomSection[];
 };
 
-export function AdminAboutClient({ initialPages }: { initialPages: CmsPages }) {
+export function AdminAboutClient({ initialPages, products }: { initialPages: CmsPages; products: Product[] }) {
   const [pages, setPages] = useState(initialPages);
   const [about, setAbout] = useState<AboutPage>(initialPages.about as AboutPage);
   const [uploading, setUploading] = useState(false);
@@ -126,6 +130,14 @@ export function AdminAboutClient({ initialPages }: { initialPages: CmsPages }) {
           </div>
         </div>
       </div>
+
+      <AdminCustomSectionsEditor
+        title="About Page Custom Sections"
+        description="Client can add any About section: image, banner, text, button, or product block."
+        sections={about.sections ?? []}
+        onChange={(sections) => setAbout((current) => ({ ...current, sections }))}
+        products={products}
+      />
     </form>
   );
 }

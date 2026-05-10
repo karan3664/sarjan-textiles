@@ -38,7 +38,7 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "blogs" | "about" | "inquiries";
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "blogs" | "about" | "contact" | "inquiries";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -73,6 +73,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/pricing" icon="icon-dollar" label="Client Pricing" active={active === "pricing"} />
             <MenuItem href="/admin/home" icon="icon-edit" label="CMS / Home Page" active={active === "home"} />
             <MenuItem href="/admin/about" icon="icon-edit" label="About Us" active={active === "about"} />
+            <MenuItem href="/admin/contact" icon="icon-edit" label="Contact Us" active={active === "contact"} />
             <MenuItem href="/admin/contact-inquiries" icon="icon-message" label="Contact Inquiries" active={active === "inquiries"} />
             <MenuItem href="/admin/blogs-list" icon="icon-edit" label="Blogs" active={active === "blogs"} />
             <MenuItem href="/admin/testimonials" icon="icon-message" label="Testimonials" active={active === "testimonials"} />

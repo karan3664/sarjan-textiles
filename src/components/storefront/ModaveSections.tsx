@@ -12,6 +12,7 @@ import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
 import { ProductSortSelect } from "./ProductSortSelect";
 import { WishlistPageClient } from "./WishlistPageClient";
+import type { CmsCustomSection } from "@/types/cms-custom";
 
 function repeatedMarquee(items: string[], repeat = 4) {
   return Array.from({ length: repeat }).flatMap(() => items);
@@ -255,6 +256,23 @@ function CustomHomeSection({ section, products }: { section: HomeSectionControl;
         </div>
       </div>
     </section>
+  );
+}
+
+function CustomContentSections({ sections, products }: { sections?: CmsCustomSection[]; products: Product[] }) {
+  const visibleSections = Array.isArray(sections) ? sections.filter((section) => section.enabled !== false && (section.blocks ?? []).length) : [];
+  if (!visibleSections.length) return null;
+
+  return (
+    <>
+      {visibleSections.map((section) => (
+        <CustomHomeSection
+          key={section.id}
+          section={{ ...section, type: "custom" }}
+          products={products}
+        />
+      ))}
+    </>
   );
 }
 
@@ -1227,6 +1245,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
   const previous = otherBlogs[0] ?? blog;
   const next = otherBlogs[1] ?? otherBlogs[0] ?? blog;
   const blogBlocks = parseBlogBlocks(blog.content);
+  const blogSections = (blog as typeof blog & { sections?: CmsCustomSection[] }).sections;
 
   return (
     <>
@@ -1339,6 +1358,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
           </div>
         </div>
       </div>
+      <CustomContentSections sections={blogSections} products={products} />
       <section className="flat-spacing">
         <div className="container">
           <div className="heading-section text-center">
@@ -1367,7 +1387,8 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
   const page = cms.pages[type];
   const settings = cms.siteSettings;
   const isContact = type === "contact";
-  const about = page as typeof page & { history?: string; mission?: string; vision?: string; infrastructure?: string };
+  const pageSections = (page as typeof page & { sections?: CmsCustomSection[] }).sections;
+  const about = page as typeof page & { history?: string; mission?: string; vision?: string; infrastructure?: string; sections?: CmsCustomSection[] };
 
   return (
     <>
@@ -1418,6 +1439,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
               <ContactInquiryForm />
             </div>
           </section>
+          <CustomContentSections sections={pageSections} products={cms.products} />
         </>
       ) : (
         <>
@@ -1445,6 +1467,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
               </div>
             </div>
           </section>
+          <CustomContentSections sections={pageSections} products={cms.products} />
           <ServiceIconBox />
         </>
       )}

@@ -9,7 +9,7 @@ export default async function AdminAboutPage() {
 
   return (
     <AdminTemplateChrome active="about" title="About Us CMS">
-      <AdminAboutClient initialPages={cms.pages} />
+      <AdminAboutClient initialPages={cms.pages} products={cms.products} />
     </AdminTemplateChrome>
   );
 }

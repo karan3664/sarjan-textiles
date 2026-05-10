@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
+import type { Product } from "@/data/mock";
 import type { CmsBlog } from "@/lib/cms-store";
+import type { CmsCustomSection } from "@/types/cms-custom";
 
 type BlogForm = {
   title: string;
@@ -18,6 +21,10 @@ type BlogBlock = {
   id: string;
   type: "text" | "image";
   value: string;
+};
+
+type CmsBlogWithSections = CmsBlog & {
+  sections?: CmsCustomSection[];
 };
 
 const emptyForm: BlogForm = {
@@ -71,7 +78,7 @@ function contentFromBlocks(blocks: BlogBlock[]) {
   return `${blockPrefix}${JSON.stringify(blocks.filter((block) => block.value.trim()))}`;
 }
 
-function blogFromForm(form: BlogForm, blocks: BlogBlock[]): CmsBlog {
+function blogFromForm(form: BlogForm, blocks: BlogBlock[], sections: CmsCustomSection[]): CmsBlogWithSections {
   return {
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
@@ -79,13 +86,15 @@ function blogFromForm(form: BlogForm, blocks: BlogBlock[]): CmsBlog {
     image: form.image || "/sarjan-assets/banner-textiles-studio.webp",
     date: form.date,
     content: contentFromBlocks(blocks),
+    sections,
   };
 }
 
-export function AdminBlogCreateClient({ initialBlogs, editBlog }: { initialBlogs: CmsBlog[]; editBlog?: CmsBlog }) {
+export function AdminBlogCreateClient({ initialBlogs, editBlog, products }: { initialBlogs: CmsBlog[]; editBlog?: CmsBlog; products: Product[] }) {
   const isEdit = Boolean(editBlog);
   const [form, setForm] = useState<BlogForm>(() => formFromBlog(editBlog));
   const [blocks, setBlocks] = useState<BlogBlock[]>(() => blocksFromContent(editBlog?.content ?? ""));
+  const [sections, setSections] = useState<CmsCustomSection[]>(() => ((editBlog as CmsBlogWithSections | undefined)?.sections ?? []));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
@@ -144,7 +153,7 @@ export function AdminBlogCreateClient({ initialBlogs, editBlog }: { initialBlogs
 
   const saveBlog = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const blog = blogFromForm(form, blocks);
+    const blog = blogFromForm(form, blocks, sections);
     if (!blog.title || !blog.slug) {
       setMessage("Title and slug required.");
       return;
@@ -304,6 +313,14 @@ export function AdminBlogCreateClient({ initialBlogs, editBlog }: { initialBlogs
           </div>
         </div>
       </div>
+
+      <AdminCustomSectionsEditor
+        title="Blog Custom Sections"
+        description="Add optional blog sections: text, image/banner, button, or product card. They render after article content."
+        sections={sections}
+        onChange={setSections}
+        products={products}
+      />
     </form>
   );
 }

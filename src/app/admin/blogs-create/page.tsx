@@ -11,7 +11,7 @@ export default async function AdminBlogsCreatePage({ searchParams }: { searchPar
 
   return (
     <AdminTemplateChrome active="blogs" title={editBlog ? "Edit Blog" : "Add New Blog"}>
-      <AdminBlogCreateClient initialBlogs={cms.blogs} editBlog={editBlog} />
+      <AdminBlogCreateClient initialBlogs={cms.blogs} editBlog={editBlog} products={cms.products} />
     </AdminTemplateChrome>
   );
 }

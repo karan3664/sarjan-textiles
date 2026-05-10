@@ -16,6 +16,7 @@ const roleAccess: Record<AdminRole, string[]> = {
   content: [
     "/admin/home",
     "/admin/about",
+    "/admin/contact",
     "/admin/blogs",
     "/admin/blogs-list",
     "/admin/blogs-create",
