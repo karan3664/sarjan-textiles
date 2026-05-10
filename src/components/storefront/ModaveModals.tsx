@@ -310,7 +310,7 @@ export function ModaveModals() {
         </div>
       </div>
 
-      <div className="modal fullRight fade modal-shopping-cart" id="shoppingCart" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div className="modal fullRight fade modal-shopping-cart" id="shoppingCart" tabIndex={-1} aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="tf-minicart-recommendations">
