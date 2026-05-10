@@ -16,6 +16,18 @@ body {
   background: #fff;
 }
 
+body.preload-wrapper .preload.preload-container {
+  animation: sarjanPreloadFallback 0.25s ease 1.8s forwards;
+}
+
+@keyframes sarjanPreloadFallback {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
 .sarjan-admin-login {
   display: grid;
   min-height: 100vh;
