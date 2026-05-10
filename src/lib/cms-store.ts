@@ -21,6 +21,19 @@ export type CmsTestimonial = (typeof defaultHome.testimonials)[number] & {
   submittedAt: string;
 };
 
+export type ClientPricingRule = {
+  id: string;
+  clientId: string;
+  productSlug: string;
+  customPrice?: number;
+  discountPercentage?: number;
+  validFrom?: string;
+  validTo?: string;
+  active: boolean;
+  note?: string;
+  updatedAt: string;
+};
+
 export type InventoryMovement = {
   id: string;
   productSlug: string;
@@ -42,6 +55,7 @@ export type CmsSnapshot = {
   products: Product[];
   blogs: CmsBlog[];
   testimonials: CmsTestimonial[];
+  clientPricing: ClientPricingRule[];
   pages: CmsPages;
   inventoryLogs: InventoryMovement[];
   updatedAt: string;
@@ -101,6 +115,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
     status: index === 0 ? "approved" : "pending",
     submittedAt: new Date(0).toISOString(),
   })),
+  clientPricing: [],
   pages: defaultPages,
   inventoryLogs: [],
   updatedAt: new Date(0).toISOString(),
@@ -113,6 +128,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     products: Array.isArray(input.products) && input.products.length ? input.products : defaultCmsSnapshot.products,
     blogs: Array.isArray(input.blogs) && input.blogs.length ? input.blogs : defaultCmsSnapshot.blogs,
     testimonials: Array.isArray(input.testimonials) && input.testimonials.length ? input.testimonials : defaultCmsSnapshot.testimonials,
+    clientPricing: Array.isArray(input.clientPricing) ? input.clientPricing : defaultCmsSnapshot.clientPricing,
     pages: { ...defaultCmsSnapshot.pages, ...(input.pages ?? {}) },
     inventoryLogs: Array.isArray(input.inventoryLogs) ? input.inventoryLogs : defaultCmsSnapshot.inventoryLogs,
     updatedAt: input.updatedAt ?? new Date().toISOString(),
@@ -206,6 +222,20 @@ export async function upsertCmsBlog(blog: CmsBlog): Promise<CmsSnapshot> {
 export async function deleteCmsBlog(slug: string): Promise<CmsSnapshot> {
   const cms = await getCmsSnapshot();
   return saveCmsSnapshot({ blogs: cms.blogs.filter((blog) => blog.slug !== slug) });
+}
+
+export async function upsertClientPricingRule(rule: ClientPricingRule): Promise<CmsSnapshot> {
+  const cms = await getCmsSnapshot();
+  const index = cms.clientPricing.findIndex((item) => item.id === rule.id);
+  const nextRules = [...cms.clientPricing];
+  if (index >= 0) nextRules[index] = rule;
+  else nextRules.unshift(rule);
+  return saveCmsSnapshot({ clientPricing: nextRules });
+}
+
+export async function deleteClientPricingRule(id: string): Promise<CmsSnapshot> {
+  const cms = await getCmsSnapshot();
+  return saveCmsSnapshot({ clientPricing: cms.clientPricing.filter((rule) => rule.id !== id) });
 }
 
 export async function getCmsProductBySlug(slug: string) {

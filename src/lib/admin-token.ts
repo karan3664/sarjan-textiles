@@ -10,7 +10,7 @@ export type AdminSession = {
 const roleAccess: Record<AdminRole, string[]> = {
   super_admin: ["/admin", "/api/admin"],
   admin: ["/admin", "/api/admin"],
-  sales: ["/admin/customers", "/admin/orders", "/api/admin/customers", "/api/admin/orders"],
+  sales: ["/admin/customers", "/admin/orders", "/admin/pricing", "/api/admin/customers", "/api/admin/orders", "/api/admin/pricing"],
   dispatch: ["/admin/dispatch", "/admin/orders", "/api/admin/orders"],
   accounts: ["/admin/payments", "/api/admin/orders"],
   content: [

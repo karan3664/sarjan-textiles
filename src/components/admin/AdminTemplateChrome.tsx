@@ -38,7 +38,7 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "home" | "testimonials" | "products" | "blogs" | "about" | "inquiries";
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "blogs" | "about" | "inquiries";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -70,6 +70,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin/orders" icon="icon-dollar" label="Orders" active={active === "orders"} />
             <MenuItem href="/admin/dispatch" icon="icon-send" label="Dispatch" active={active === "dispatch"} />
             <MenuItem href="/admin/payments" icon="icon-hand-coins" label="Payments & Credit" active={active === "payments"} />
+            <MenuItem href="/admin/pricing" icon="icon-dollar" label="Client Pricing" active={active === "pricing"} />
             <MenuItem href="/admin/home" icon="icon-edit" label="CMS / Home Page" active={active === "home"} />
             <MenuItem href="/admin/about" icon="icon-edit" label="About Us" active={active === "about"} />
             <MenuItem href="/admin/contact-inquiries" icon="icon-message" label="Contact Inquiries" active={active === "inquiries"} />

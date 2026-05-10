@@ -3185,6 +3185,29 @@ footer .footer-newsletter .subscribe-content input {
   min-height: 56px;
 }
 
+.sarjan-section-builder-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.sarjan-section-builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.sarjan-section-builder-actions .tf-button {
+  min-height: 38px;
+  padding: 9px 14px;
+}
+
 @media (max-width: 991px) {
   .sarjan-hero,
   .sarjan-detail-grid,
@@ -3212,5 +3235,14 @@ footer .footer-newsletter .subscribe-content input {
   .modal-quick-view .tf-product-info-wrap {
     grid-template-columns: 1fr;
     padding: 20px;
+  }
+
+  .sarjan-section-builder-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sarjan-section-builder-actions {
+    justify-content: flex-start;
   }
 }

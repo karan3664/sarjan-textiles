@@ -6,6 +6,53 @@ import { ModaveProductCard } from "./ModaveProductCard";
 import { PageTitle } from "./PageTitle";
 import { FeedbackForm } from "./FeedbackForm";
 
+export function DynamicInfoPage({
+  title,
+  subtitle,
+  image = "/sarjan-assets/banner-textiles-studio.webp",
+  items,
+  cta,
+}: {
+  title: string;
+  subtitle: string;
+  image?: string;
+  items: Array<{ title: string; body: string }>;
+  cta?: { label: string; href: string };
+}) {
+  return (
+    <>
+      <PageTitle title={title} crumbs={["Homepage", title]} />
+      <section className="flat-spacing">
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-lg-6">
+              <img className="radius-16 w-100" src={image} alt={title} />
+            </div>
+            <div className="col-lg-6">
+              <div className="heading-section mb_24">
+                <h3>{title}</h3>
+                <p className="text-secondary">{subtitle}</p>
+              </div>
+              <div className="d-grid gap-16">
+                {items.map((item) => (
+                  <div className="feature-with-icon" key={item.title}>
+                    <div className="box-icon w_40 round"><i className="icon icon-sealCheck" /></div>
+                    <div>
+                      <h6>{item.title}</h6>
+                      <p className="text-secondary mb-0">{item.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {cta ? <Link href={cta.href} className="tf-btn btn-fill radius-4 mt_32"><span className="text">{cta.label}</span></Link> : null}
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 export async function SearchResultPage({ q = "", page = 1 }: { q?: string; page?: number }) {
   const data = await getCatalogProducts({ q, page, limit: 24 });
 

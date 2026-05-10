@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Fragment } from "react";
-import { blogs, home, products, siteSettings } from "@/data/mock";
+import { Fragment, type ReactNode } from "react";
+import { home as defaultHome, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
@@ -152,13 +152,23 @@ function ProductFeature({ product }: { product: Product }) {
   );
 }
 
-function ServiceIconBox() {
+type HomeSectionType = "hero" | "categories" | "topPicks" | "marquee" | "featuredProduct" | "trendingProducts" | "services" | "testimonials" | "gallery" | "brands";
+type HomeSectionControl = { id: string; type: HomeSectionType; title?: string; enabled?: boolean };
+
+const defaultHomeSections = defaultHome.sections as HomeSectionControl[];
+
+function normalizeHomeSections(sections?: HomeSectionControl[]) {
+  const source = Array.isArray(sections) && sections.length ? sections : defaultHomeSections;
+  return source.filter((section) => section.enabled !== false);
+}
+
+function ServiceIconBox({ services = defaultHome.services }: { services?: typeof defaultHome.services }) {
   return (
     <section className="flat-spacing pt-0 line-bottom-container">
       <div className="container">
         <div dir="ltr" className="swiper tf-sw-iconbox" data-preview="4" data-tablet="3" data-mobile-sm="2" data-mobile="1" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-sm="2" data-pagination-md="3" data-pagination-lg="4">
           <div className="swiper-wrapper">
-            {home.services.map((service) => (
+            {services.map((service) => (
               <div className="swiper-slide" key={service.title}>
                 <div className="tf-icon-box">
                   <div className="icon-box"><span className={`icon ${service.icon}`} /></div>
@@ -191,6 +201,7 @@ export async function HomeDynamic() {
     topPicksDescription?: string;
     testimonialsTitle?: string;
     testimonialsDescription?: string;
+    sections?: HomeSectionControl[];
     hero: typeof home.hero & { images?: string[] };
   };
   const heroImages = (Array.isArray(homeContent.hero.images) && homeContent.hero.images.length ? homeContent.hero.images : [home.hero.image]).filter(Boolean);
@@ -199,20 +210,20 @@ export async function HomeDynamic() {
   const approvedTestimonials = cms.testimonials.filter((testimonial) => testimonial.status === "approved");
   const featured = products[0];
   const galleryProducts = products.slice(0, 5);
+  const sections = normalizeHomeSections(homeContent.sections as HomeSectionControl[] | undefined);
 
-  return (
-    <>
-      <HomeHeroRotator images={heroImages} title={home.hero.title} description={home.hero.description} cta={home.hero.primaryCta} />
-
+  const renderers: Record<HomeSectionType, ReactNode> = {
+    hero: <HomeHeroRotator images={heroImages} title={home.hero.title} description={home.hero.description} cta={home.hero.primaryCta} />,
+    categories: (
       <section className="space-30 sarjan-category-strip">
         <div dir="ltr" className="swiper tf-sw-collection" data-preview="3" data-tablet="2" data-mobile="1" data-space-lg="30" data-space-md="30" data-space="15" data-pagination="1" data-pagination-md="1" data-pagination-lg="1">
           <div className="swiper-wrapper">
-            {home.categories.map((category, index) => (
+            {(home.categories as Array<(typeof home.categories)[number] & { href?: string }>).map((category, index) => (
               <div className="swiper-slide" key={category.name}>
                 <div className="collection-position-2 style-4 hover-img wow fadeInUp" data-wow-delay={`${index / 10}s`}>
                   <a className="img-style"><img className="lazyload" data-src={category.image} src={category.image} alt={category.name} /></a>
                   <div className="content">
-                    <a href="#catalog" className="cls-btn"><h6 className="text">{category.name}</h6><i className="icon icon-arrowUpRight" /></a>
+                    <a href={category.href ?? "#catalog"} className="cls-btn"><h6 className="text">{category.name}</h6><i className="icon icon-arrowUpRight" /></a>
                   </div>
                 </div>
               </div>
@@ -223,7 +234,8 @@ export async function HomeDynamic() {
           <div className="sw-pagination-collection sw-dots type-circle justify-content-center" />
         </div>
       </section>
-
+    ),
+    topPicks: (
       <section className="flat-spacing" id="catalog">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
@@ -244,7 +256,8 @@ export async function HomeDynamic() {
           </div>
         </div>
       </section>
-
+    ),
+    marquee: (
       <section className="flat-spacing pt-0">
         <div className="tf-marquee marquee-style2">
           <MarqueeBand items={home.marqueeTop} />
@@ -253,9 +266,9 @@ export async function HomeDynamic() {
           <MarqueeBand items={home.marqueeBottom} />
         </div>
       </section>
-
-      <ProductFeature product={featured} />
-
+    ),
+    featuredProduct: featured ? <ProductFeature product={featured} /> : null,
+    trendingProducts: (
       <section className="flat-spacing">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
@@ -274,10 +287,9 @@ export async function HomeDynamic() {
           </div>
         </div>
       </section>
-
-      <ServiceIconBox />
-
-      {approvedTestimonials.length > 0 && (
+    ),
+    services: <ServiceIconBox services={home.services} />,
+    testimonials: approvedTestimonials.length > 0 ? (
         <section className="flat-spacing">
           <div className="container">
             <div className="heading-section text-center wow fadeInUp">
@@ -315,8 +327,8 @@ export async function HomeDynamic() {
             </div>
           </div>
         </section>
-      )}
-
+      ) : null,
+    gallery: (
       <section className="flat-spacing pt-0">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
@@ -338,7 +350,8 @@ export async function HomeDynamic() {
           </div>
         </div>
       </section>
-
+    ),
+    brands: (
       <section className="flat-spacing-5 line-top">
         <div dir="ltr" className="swiper tf-sw-partner sw-auto" data-preview="auto" data-tablet="auto" data-mobile-sm="auto" data-mobile="auto" data-space-lg="74" data-space-md="50" data-space="50" data-loop="true" data-auto-play="true" data-delay="0">
           <div className="swiper-wrapper">
@@ -350,6 +363,16 @@ export async function HomeDynamic() {
           </div>
         </div>
       </section>
+    ),
+  };
+
+  return (
+    <>
+      {sections.map((section, index) => (
+        <Fragment key={`${section.id}-${index}`}>
+          {renderers[section.type]}
+        </Fragment>
+      ))}
     </>
   );
 }

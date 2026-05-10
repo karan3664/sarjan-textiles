@@ -19,6 +19,10 @@ export type Product = {
   care: string;
   variants?: Array<{ sku: string; color: string; size: string; price: number; stock: number }>;
   pricingRules?: Array<{ minQty: number; price: number }>;
+  publicPrice?: number;
+  effectivePrice?: number;
+  pricingSource?: "public" | "client_custom" | "client_discount";
+  clientDiscountPercentage?: number;
   isFeatured?: boolean;
 };
 
@@ -53,6 +57,8 @@ export const siteSettings = {
 export const navigation = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/products" },
+  { label: "Collections", href: "/collections" },
+  { label: "Process", href: "/process" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
@@ -243,6 +249,18 @@ const generatedProducts: Product[] = Array.from({ length: 1994 }, (_, index) => 
 export const products: Product[] = [...baseProducts, ...generatedProducts];
 
 export const home = {
+  sections: [
+    { id: "hero", type: "hero", title: "Hero Banner", enabled: true },
+    { id: "categories", type: "categories", title: "Category Cards", enabled: true },
+    { id: "top-picks", type: "topPicks", title: "Featured Products", enabled: true },
+    { id: "marquee", type: "marquee", title: "Marquee Text", enabled: true },
+    { id: "featured-product", type: "featuredProduct", title: "Product Feature", enabled: true },
+    { id: "trending-products", type: "trendingProducts", title: "Trending Products", enabled: true },
+    { id: "services", type: "services", title: "Service Icons", enabled: true },
+    { id: "testimonials", type: "testimonials", title: "Testimonials", enabled: true },
+    { id: "gallery", type: "gallery", title: "Shop Gallery", enabled: true },
+    { id: "brands", type: "brands", title: "Clients Slider", enabled: true },
+  ],
   hero: {
     eyebrow: "Wholesale textile collections",
     title: "Premium prints ready for your next retail season",

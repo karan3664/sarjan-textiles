@@ -26,6 +26,8 @@ export const siteSettings = {
 export const navigation = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/products" },
+  { label: "Collections", href: "/collections" },
+  { label: "Process", href: "/process" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },

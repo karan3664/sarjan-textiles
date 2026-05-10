@@ -6,9 +6,25 @@ import type { CmsHome } from "@/lib/cms-store";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
+type HomeSectionType = "hero" | "categories" | "topPicks" | "marquee" | "featuredProduct" | "trendingProducts" | "services" | "testimonials" | "gallery" | "brands";
+type HomeSectionControl = { id: string; type: HomeSectionType; title?: string; enabled?: boolean };
 
-type HomeDraft = Omit<CmsHome, "hero"> & {
+const sectionOptions: Array<{ type: HomeSectionType; title: string }> = [
+  { type: "hero", title: "Hero Banner" },
+  { type: "categories", title: "Category Cards" },
+  { type: "topPicks", title: "Featured Products" },
+  { type: "marquee", title: "Marquee Text" },
+  { type: "featuredProduct", title: "Product Feature" },
+  { type: "trendingProducts", title: "Trending Products" },
+  { type: "services", title: "Service Icons" },
+  { type: "testimonials", title: "Testimonials" },
+  { type: "gallery", title: "Shop Gallery" },
+  { type: "brands", title: "Clients Slider" },
+];
+
+type HomeDraft = Omit<CmsHome, "hero" | "sections"> & {
   hero: CmsHome["hero"] & { images?: string[] };
+  sections?: HomeSectionControl[];
   topPicksTitle?: string;
   topPicksDescription?: string;
   testimonialsTitle?: string;
@@ -18,6 +34,15 @@ type HomeDraft = Omit<CmsHome, "hero"> & {
 type Category = HomeDraft["categories"][number] & { href?: string };
 type Highlight = HomeDraft["highlights"][number];
 type Service = HomeDraft["services"][number];
+
+function defaultSections(): HomeSectionControl[] {
+  return sectionOptions.map((item) => ({
+    id: `${item.type}-${Math.random().toString(36).slice(2, 8)}`,
+    type: item.type,
+    title: item.title,
+    enabled: true,
+  }));
+}
 
 function getHeroImages(hero: HomeDraft["hero"]) {
   const images = Array.isArray(hero.images) && hero.images.length ? hero.images : [hero.image];
@@ -155,8 +180,11 @@ function ImageUploadField({
   );
 }
 
-export function AdminHomePageClient({ initialHome }: { initialHome: HomeDraft }) {
-  const [home, setHome] = useState<HomeDraft>(initialHome);
+export function AdminHomePageClient({ initialHome }: { initialHome: CmsHome }) {
+  const [home, setHome] = useState<HomeDraft>(() => ({
+    ...(initialHome as HomeDraft),
+    sections: ((initialHome as HomeDraft).sections?.length ? (initialHome as HomeDraft).sections : defaultSections()),
+  }));
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [uploadState, setUploadState] = useState<UploadState>({});
 
@@ -170,6 +198,7 @@ export function AdminHomePageClient({ initialHome }: { initialHome: HomeDraft })
   );
 
   const heroImages = getHeroImages(home.hero);
+  const sections = home.sections?.length ? home.sections : defaultSections();
 
   const saveHome = async () => {
     setSaveState("saving");
@@ -291,6 +320,48 @@ export function AdminHomePageClient({ initialHome }: { initialHome: HomeDraft })
     updateHeroImages(heroImages.filter((_, imageIndex) => imageIndex !== index));
   };
 
+  const updateSection = (index: number, patch: Partial<HomeSectionControl>) => {
+    setHome((current) => {
+      const next = [...(current.sections?.length ? current.sections : sections)];
+      next[index] = { ...next[index], ...patch };
+      return { ...current, sections: next };
+    });
+  };
+
+  const moveSection = (index: number, direction: -1 | 1) => {
+    setHome((current) => {
+      const next = [...(current.sections?.length ? current.sections : sections)];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return current;
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...current, sections: next };
+    });
+  };
+
+  const duplicateSection = (index: number) => {
+    setHome((current) => {
+      const next = [...(current.sections?.length ? current.sections : sections)];
+      const source = next[index];
+      next.splice(index + 1, 0, { ...source, id: `${source.type}-${Date.now()}`, title: `${source.title ?? source.type} Copy` });
+      return { ...current, sections: next };
+    });
+  };
+
+  const removeSection = (index: number) => {
+    setHome((current) => ({ ...current, sections: (current.sections?.length ? current.sections : sections).filter((_, itemIndex) => itemIndex !== index) }));
+  };
+
+  const addSection = (type: HomeSectionType) => {
+    const option = sectionOptions.find((item) => item.type === type);
+    setHome((current) => ({
+      ...current,
+      sections: [
+        ...(current.sections?.length ? current.sections : sections),
+        { id: `${type}-${Date.now()}`, type, title: option?.title ?? type, enabled: true },
+      ],
+    }));
+  };
+
   return (
     <>
       <div className="sarjan-home-kpi-grid">
@@ -323,6 +394,42 @@ export function AdminHomePageClient({ initialHome }: { initialHome: HomeDraft })
               Preview Frontend
             </a>
           </div>
+        </div>
+      </div>
+
+      <div className="wg-box mb-30 sarjan-home-editor-card">
+        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
+          <div>
+            <h5>Shopify-style Section Builder</h5>
+            <div className="body-text text-secondary">Add, hide/show, reorder, duplicate, and remove homepage sections. Frontend renders in this exact order.</div>
+          </div>
+          <select className="w-auto" defaultValue="" onChange={(event) => {
+            if (event.target.value) addSection(event.target.value as HomeSectionType);
+            event.currentTarget.value = "";
+          }}>
+            <option value="">Add Section</option>
+            {sectionOptions.map((item) => <option value={item.type} key={item.type}>{item.title}</option>)}
+          </select>
+        </div>
+        <div className="d-grid gap-3">
+          {sections.map((section, index) => (
+            <div className="sarjan-section-builder-row" key={section.id}>
+              <div className="d-flex align-items-center gap10">
+                <span className="box-status text-button type-delivery">{index + 1}</span>
+                <div>
+                  <h6>{section.title ?? sectionOptions.find((item) => item.type === section.type)?.title ?? section.type}</h6>
+                  <div className="text-caption-1 text-secondary">{section.type}</div>
+                </div>
+              </div>
+              <div className="sarjan-section-builder-actions">
+                <button type="button" className="tf-button" onClick={() => moveSection(index, -1)} disabled={index === 0}>Up</button>
+                <button type="button" className="tf-button" onClick={() => moveSection(index, 1)} disabled={index === sections.length - 1}>Down</button>
+                <button type="button" className="tf-button" onClick={() => updateSection(index, { enabled: section.enabled === false })}>{section.enabled === false ? "Show" : "Hide"}</button>
+                <button type="button" className="tf-button" onClick={() => duplicateSection(index)}>Duplicate</button>
+                <button type="button" className="tf-button" onClick={() => removeSection(index)}>Remove</button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
