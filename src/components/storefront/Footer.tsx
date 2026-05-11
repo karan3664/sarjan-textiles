@@ -31,6 +31,17 @@ export function Footer() {
             </p>
           </div>
         </div>
+        <div className="mt-4 border-top pt-3 d-flex flex-wrap justify-content-between gap-2">
+          <p className="sarjan-muted mb-0">©2026 {siteSettings.brandName}. All Rights Reserved.</p>
+          <a
+            href="https://karandigitallabs.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-decoration-none text-dark fw-semibold"
+          >
+            Designed & Developed by Karan Digital Labs
+          </a>
+        </div>
       </div>
     </footer>
   );

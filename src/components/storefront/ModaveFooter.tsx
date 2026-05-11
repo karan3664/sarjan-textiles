@@ -87,6 +87,13 @@ export function ModaveFooter() {
                   <div className="left">
                     <p className="text-caption-1">©2026 {siteSettings.brandName}. All Rights Reserved.</p>
                   </div>
+                  <div className="right">
+                    <p className="text-caption-1">
+                      <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="footer-menu_item">
+                        Designed & Developed by Karan Digital Labs
+                      </a>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
