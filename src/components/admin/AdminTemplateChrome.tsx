@@ -205,7 +205,7 @@ export function AdminTemplateChrome({
                 </div>
                 <div className="bottom-page">
                   <div className="body-text">Copyright © 2026 Sarjan Textiles.</div>
-                  <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="body-text">
+                  <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="body-text sarjan-admin-footer-credit">
                     Designed & Developed by Karan Digital Labs
                   </a>
                 </div>

@@ -217,6 +217,37 @@ footer .footer-newsletter .subscribe-content input {
   background: transparent;
 }
 
+footer.bg-main .footer-bottom-wrap .sarjan-footer-credit,
+footer .footer-bottom-wrap .sarjan-footer-credit,
+.sarjan-footer-credit {
+  color: #ffffff !important;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(179, 139, 69, 0.75);
+  text-underline-offset: 4px;
+}
+
+footer.bg-main .footer-bottom-wrap .sarjan-footer-credit:hover,
+footer .footer-bottom-wrap .sarjan-footer-credit:hover,
+.sarjan-footer-credit:hover {
+  color: #f1c46a !important;
+}
+
+.sarjan-band .sarjan-footer-credit {
+  color: #8b1e2d !important;
+}
+
+.sarjan-admin-footer-credit {
+  color: #8b1e2d !important;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sarjan-admin-footer-credit:hover {
+  color: #141414 !important;
+}
+
 .sarjan-page {
   min-height: 100vh;
 }

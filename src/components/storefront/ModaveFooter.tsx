@@ -89,7 +89,7 @@ export function ModaveFooter() {
                   </div>
                   <div className="right">
                     <p className="text-caption-1">
-                      <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="footer-menu_item">
+                      <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="footer-menu_item sarjan-footer-credit">
                         Designed & Developed by Karan Digital Labs
                       </a>
                     </p>

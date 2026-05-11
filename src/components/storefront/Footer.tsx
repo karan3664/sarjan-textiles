@@ -37,7 +37,7 @@ export function Footer() {
             href="https://karandigitallabs.com"
             target="_blank"
             rel="noreferrer"
-            className="text-decoration-none text-dark fw-semibold"
+            className="sarjan-footer-credit text-decoration-none fw-semibold"
           >
             Designed & Developed by Karan Digital Labs
           </a>
