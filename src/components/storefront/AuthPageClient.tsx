@@ -107,7 +107,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       return;
     }
 
-    setMessage("Password reset request saved. Admin will contact client.");
+    setMessage(isForgot ? data.message ?? "Password reset email sent." : "Password reset request saved. Admin will contact client.");
   };
 
   const resetEmailOtp = (nextEmail: string) => {
