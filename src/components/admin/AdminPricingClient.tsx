@@ -20,7 +20,7 @@ export function AdminPricingClient({
   const [rules, setRules] = useState(initialRules);
   const [categoryMaster, setCategoryMaster] = useState(initialCategoryMaster);
   const [editing, setEditing] = useState<ClientPricingRule | null>(null);
-  const [pricingScope, setPricingScope] = useState<"product" | "category">("product");
+  const [pricingScope, setPricingScope] = useState<"product" | "category">("category");
   const [categoryDraft, setCategoryDraft] = useState({ level1: "", level2: "", level3: "" });
   const [message, setMessage] = useState("");
   const productOptions = useMemo(() => products.slice(0, 250), [products]);
@@ -61,7 +61,7 @@ export function AdminPricingClient({
     }
     setRules(data.pricing);
     setEditing(null);
-    setPricingScope("product");
+    setPricingScope("category");
     event.currentTarget.reset();
     setMessage("Saved");
   };
@@ -117,27 +117,11 @@ export function AdminPricingClient({
             </select>
           </fieldset>
           <fieldset>
-            <div className="body-title">Pricing Level</div>
-            <select name="scope" value={pricingScope} onChange={(event) => setPricingScope(event.target.value === "category" ? "category" : "product")} required>
-              <option value="product">Product</option>
-              <option value="category">Multi Level Category</option>
+            <div className="body-title">Product Category</div>
+            <select name="categoryPath" defaultValue={(editing?.categoryPath ?? categoryOptions[0]?.path ?? []).join(",")} required>
+              {categoryOptions.map((category) => <option value={category.path.join(",")} key={category.name}>{category.name}</option>)}
             </select>
           </fieldset>
-          {pricingScope === "product" ? (
-            <fieldset>
-              <div className="body-title">Product</div>
-              <select name="productSlug" defaultValue={editing?.productSlug ?? productOptions[0]?.slug ?? ""} required>
-                {productOptions.map((product) => <option value={product.slug} key={product.slug}>{product.name} / {product.sku}</option>)}
-              </select>
-            </fieldset>
-          ) : (
-            <fieldset>
-              <div className="body-title">Category Path</div>
-              <select name="categoryPath" defaultValue={(editing?.categoryPath ?? categoryOptions[0]?.path ?? []).join(",")} required>
-                {categoryOptions.map((category) => <option value={category.path.join(",")} key={category.name}>{category.name}</option>)}
-              </select>
-            </fieldset>
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <fieldset>
               <div className="body-title">Custom Price</div>
@@ -166,7 +150,7 @@ export function AdminPricingClient({
           </label>
           <div className="flex gap10 items-center">
             <button className="tf-button style-1" type="submit">{editing ? "Update Pricing" : "Add Pricing Rule"}</button>
-            {editing ? <button className="tf-button" type="button" onClick={() => { setEditing(null); setPricingScope("product"); }}>Cancel</button> : null}
+            {editing ? <button className="tf-button" type="button" onClick={() => { setEditing(null); setPricingScope("category"); }}>Cancel</button> : null}
             {message ? <span className="body-text text-secondary">{message}</span> : null}
           </div>
         </form>
@@ -242,7 +226,7 @@ export function AdminPricingClient({
                     <div>{rule.validFrom || "Now"} - {rule.validTo || "Open"}</div>
                     <div><span className={`box-status text-button ${ruleStatus(rule).className}`}>{ruleStatus(rule).label}</span></div>
                     <div className="list-icon-function">
-                      <button type="button" className="item edit" onClick={() => { setEditing(rule); setPricingScope(rule.scope === "category" ? "category" : "product"); }}><i className="icon-edit-3" /></button>
+                      <button type="button" className="item edit" onClick={() => { setEditing(rule); setPricingScope("category"); }}><i className="icon-edit-3" /></button>
                       <button type="button" className="item trash" onClick={() => deleteRule(rule.id)}><i className="icon-trash-2" /></button>
                     </div>
                   </div>

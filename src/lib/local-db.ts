@@ -168,6 +168,9 @@ function orderRow(order: Partial<LocalOrder>) {
     bank_details: order.bankDetails,
     deposit_status: order.depositStatus,
     payment_received_at: order.paymentReceivedAt || null,
+    subtotal: order.subtotal,
+    items: order.items,
+    dispatch_address: order.dispatchAddress,
     dispatch_date: order.dispatchDate || null,
     transport_details: order.transportDetails,
     lr_number: order.lrNumber,
@@ -289,6 +292,47 @@ export async function createClient(input: { email: string; password: string; com
   };
 
   db.clients.push(client);
+  await writeLocalDb(db);
+  return client;
+}
+
+export async function createAdminClient(input: { email: string; password?: string; companyName: string; gst?: string; city?: string; phone?: string; status?: LocalClient["status"] }) {
+  const email = input.email.trim().toLowerCase();
+  const password = input.password?.trim() || `Sarjan@${new Date().getFullYear()}`;
+  const clientInput = {
+    email,
+    password,
+    companyName: input.companyName,
+    gst: input.gst,
+    city: input.city,
+  };
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    try {
+      const row = {
+        email,
+        password_hash: hashPassword(password),
+        company_name: input.companyName.trim(),
+        gst: input.gst?.trim(),
+        city: input.city?.trim(),
+        phone: input.phone?.trim(),
+        status: input.status ?? "approved",
+      };
+      const { data, error } = await supabase.from("clients").insert(row).select("*").single();
+      if (error) throw new Error(error.message);
+      return mapClient(data);
+    } catch {
+      // Fall through to JSON fallback.
+    }
+  }
+
+  const client = await createClient(clientInput);
+  client.phone = input.phone?.trim();
+  client.status = input.status ?? "approved";
+  const db = await readLocalDb();
+  const index = db.clients.findIndex((item) => item.id === client.id);
+  if (index >= 0) db.clients[index] = client;
   await writeLocalDb(db);
   return client;
 }
@@ -517,6 +561,64 @@ export async function createOrder(input: Omit<LocalOrder, "id" | "status" | "pay
   return order;
 }
 
+export async function createAdminOrder(input: {
+  clientId: string;
+  items: LocalOrder["items"];
+  dispatchAddress?: string;
+  note?: string;
+  status?: LocalOrder["status"];
+}) {
+  const db = await readLocalDb();
+  const client = db.clients.find((item) => item.id === input.clientId);
+  if (!client) throw new Error("Client not found");
+  const createdAt = new Date().toISOString();
+  const order: LocalOrder = {
+    id: `ST-${Date.now()}`,
+    clientId: client.id,
+    clientEmail: client.email,
+    status: input.status ?? "Pending approval",
+    paymentMode: "cheque",
+    paymentStatus: "Pending",
+    creditDays: 90,
+    depositStatus: "Not deposited",
+    subtotal: input.items.reduce((sum, item) => sum + item.lineTotal, 0),
+    items: input.items,
+    dispatchAddress: input.dispatchAddress || client.city || client.address?.city || "",
+    dispatchHistory: [{ status: input.status ?? "Pending approval", note: "Order created by admin.", createdAt }],
+    note: input.note?.trim(),
+    createdAt,
+  };
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from("orders").insert({
+        id: order.id,
+        client_id: order.clientId,
+        client_email: order.clientEmail,
+        status: order.status,
+        payment_mode: order.paymentMode,
+        payment_status: order.paymentStatus,
+        credit_days: order.creditDays,
+        deposit_status: order.depositStatus,
+        subtotal: order.subtotal,
+        items: order.items,
+        dispatch_address: order.dispatchAddress,
+        dispatch_history: order.dispatchHistory,
+        note: order.note,
+      }).select("*").single();
+      if (error) throw new Error(error.message);
+      return mapOrder(data);
+    } catch {
+      // Fall through to JSON fallback.
+    }
+  }
+
+  db.orders.push(order);
+  await writeLocalDb(db);
+  return order;
+}
+
 export async function updateOrderStatus(id: string, status: LocalOrder["status"], note?: string) {
   const supabase = supabaseAdmin();
   if (supabase) {
@@ -543,7 +645,7 @@ export async function updateOrderStatus(id: string, status: LocalOrder["status"]
 
 export async function updateOrderAdmin(id: string, input: Partial<Pick<LocalOrder,
   "status" | "approvalRemark" | "note" | "paymentStatus" | "paidAmount" | "chequeNumber" | "chequeDate" | "bankDetails" | "depositStatus" | "paymentReceivedAt" |
-  "dispatchDate" | "transportDetails" | "lrNumber" | "courierDetails" | "vehicleDetails" | "trackingNotes"
+  "dispatchDate" | "transportDetails" | "lrNumber" | "courierDetails" | "vehicleDetails" | "trackingNotes" | "items" | "subtotal" | "dispatchAddress"
 >>) {
   const supabase = supabaseAdmin();
   if (supabase) {

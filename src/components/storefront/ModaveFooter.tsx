@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { navigation, siteSettings } from "@/data/mock";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 
-export function ModaveFooter() {
+export async function ModaveFooter() {
+  const cms = await getCachedCmsSnapshot();
+  const settings = { ...siteSettings, ...cms.siteSettings };
   return (
     <footer id="footer" className="footer bg-main">
       <div className="footer-wrap">
@@ -12,28 +15,28 @@ export function ModaveFooter() {
                 <div className="footer-infor">
                   <div className="footer-logo">
                     <Link href="/">
-                      <img src={siteSettings.logo} alt={siteSettings.brandName} />
+                      <img src={settings.logo} alt={settings.brandName} />
                     </Link>
                   </div>
                   <div className="footer-address">
-                    <p>{siteSettings.address}</p>
+                    <p>{settings.address}</p>
                     <Link href="/contact" className="tf-btn-default style-white fw-6">GET DIRECTION<i className="icon-arrowUpRight" /></Link>
                   </div>
                   <ul className="footer-info">
-                    <li><i className="icon-mail" /><p>{siteSettings.ordersEmail}</p></li>
-                    <li><i className="icon-phone" /><p>{siteSettings.phone}</p></li>
+                    <li><i className="icon-mail" /><p>{settings.ordersEmail}</p></li>
+                    <li><i className="icon-phone" /><p>{settings.phone}</p></li>
                   </ul>
                   <ul className="tf-social-icon style-white">
-                    <li><a href="#" className="social-facebook"><i className="icon icon-fb" /></a></li>
-                    <li><a href="#" className="social-instagram"><i className="icon icon-instagram" /></a></li>
-                    <li><a href="#" className="social-pinterest"><i className="icon icon-pinterest" /></a></li>
+                    <li><a href={settings.facebookUrl ?? "#"} className="social-facebook"><i className="icon icon-fb" /></a></li>
+                    <li><a href={settings.instagramUrl ?? "#"} className="social-instagram"><i className="icon icon-instagram" /></a></li>
+                    <li><a href={settings.pinterestUrl ?? "#"} className="social-pinterest"><i className="icon icon-pinterest" /></a></li>
                   </ul>
                 </div>
               </div>
               <div className="col-lg-4">
                 <div className="footer-menu">
                   <div className="footer-col-block">
-                    <div className="footer-heading text-button footer-heading-mobile">Infomation</div>
+                    <div className="footer-heading text-button footer-heading-mobile">{settings.footerInfoHeading ?? "Information"}</div>
                     <div className="tf-collapse-content">
                       <ul className="footer-menu-list">
                         {navigation.map((item) => (
@@ -45,7 +48,7 @@ export function ModaveFooter() {
                     </div>
                   </div>
                   <div className="footer-col-block">
-                    <div className="footer-heading text-button footer-heading-mobile">Customer Services</div>
+                    <div className="footer-heading text-button footer-heading-mobile">{settings.footerCustomerHeading ?? "Customer Services"}</div>
                     <div className="tf-collapse-content">
                       <ul className="footer-menu-list">
                         <li className="text-caption-1"><Link href="/login" className="footer-menu_item">Client Login</Link></li>
@@ -59,9 +62,9 @@ export function ModaveFooter() {
               </div>
               <div className="col-lg-4">
                 <div className="footer-newsletter">
-                  <div className="footer-heading text-button footer-heading-mobile">Newsletter</div>
+                  <div className="footer-heading text-button footer-heading-mobile">{settings.footerNewsletterHeading ?? "Newsletter"}</div>
                   <div className="tf-collapse-content">
-                    <p>{siteSettings.footerNote}</p>
+                    <p>{settings.footerNote}</p>
                     <form className="form-newsletter subscribe-form style-black">
                       <div className="subscribe-content">
                         <fieldset className="email">
@@ -72,7 +75,7 @@ export function ModaveFooter() {
                         </div>
                       </div>
                     </form>
-                    <p className="text-caption-1">B2B ordering with admin approval, MOQ planning, and dispatch tracking.</p>
+                    <p className="text-caption-1">{settings.footerNewsletterText ?? "B2B ordering with admin approval, MOQ planning, and dispatch tracking."}</p>
                   </div>
                 </div>
               </div>
@@ -85,12 +88,12 @@ export function ModaveFooter() {
               <div className="col-12">
                 <div className="footer-bottom-wrap">
                   <div className="left">
-                    <p className="text-caption-1">©2026 {siteSettings.brandName}. All Rights Reserved.</p>
+                    <p className="text-caption-1">©2026 {settings.brandName}. All Rights Reserved.</p>
                   </div>
                   <div className="right">
                     <p className="text-caption-1">
                       <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="footer-menu_item sarjan-footer-credit">
-                        Designed & Developed by Karan Digital Labs
+                        {settings.footerCredit ?? "Designed & Developed by Karan Digital Labs"}
                       </a>
                     </p>
                   </div>

@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { navigation, siteSettings } from "@/data/mock";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 
-export function Footer() {
+export async function Footer() {
+  const cms = await getCachedCmsSnapshot();
+  const settings = { ...siteSettings, ...cms.siteSettings };
   return (
     <footer className="sarjan-band sarjan-band-soft">
       <div className="container">
         <div className="row g-4 align-items-start">
           <div className="col-lg-5">
-            <img className="sarjan-logo mb-3" src={siteSettings.logo} alt={siteSettings.brandName} />
-            <p className="sarjan-muted mb-4">{siteSettings.footerNote}</p>
+            <img className="sarjan-logo mb-3" src={settings.logo} alt={settings.brandName} />
+            <p className="sarjan-muted mb-4">{settings.footerNote}</p>
             <div className="d-flex flex-wrap gap-2">
-              <span className="sarjan-pill">{siteSettings.email}</span>
-              <span className="sarjan-pill">{siteSettings.phone}</span>
+              <span className="sarjan-pill">{settings.email}</span>
+              <span className="sarjan-pill">{settings.phone}</span>
             </div>
           </div>
           <div className="col-lg-3">
@@ -32,14 +35,14 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-4 border-top pt-3 d-flex flex-wrap justify-content-between gap-2">
-          <p className="sarjan-muted mb-0">©2026 {siteSettings.brandName}. All Rights Reserved.</p>
+          <p className="sarjan-muted mb-0">©2026 {settings.brandName}. All Rights Reserved.</p>
           <a
             href="https://karandigitallabs.com"
             target="_blank"
             rel="noreferrer"
             className="sarjan-footer-credit text-decoration-none fw-semibold"
           >
-            Designed & Developed by Karan Digital Labs
+            {settings.footerCredit ?? "Designed & Developed by Karan Digital Labs"}
           </a>
         </div>
       </div>

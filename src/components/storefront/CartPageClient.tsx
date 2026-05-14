@@ -158,6 +158,10 @@ export function CartPageClient() {
                         <input type="checkbox" id="check-agree" className="tf-check-rounded" defaultChecked />
                         <label htmlFor="check-agree">I agree with the <a href="/term-of-use">terms and conditions</a></label>
                       </fieldset>
+                      <div className="d-grid gap-2 mb_12">
+                        <Link href="/login" className="tf-btn btn-fill radius-4"><span className="text">Login</span></Link>
+                        <Link href="/register" className="tf-btn btn-reset radius-4"><span className="text">Sign Up</span></Link>
+                      </div>
                       <a href="/checkout" className="tf-btn btn-reset">Process To Checkout</a>
                       <p className="text-button text-center">Or continue shopping</p>
                     </div>
@@ -169,7 +173,11 @@ export function CartPageClient() {
             <div className="text-center py-5">
               <h5>Your cart is empty</h5>
               <p className="text-secondary mt_8">Add products to create an order request.</p>
-              <Link href="/products" className="tf-btn btn-fill radius-4 mt_24"><span className="text">Browse Products</span></Link>
+              <div className="d-flex gap10 flex-wrap justify-content-center mt_24">
+                <Link href="/login" className="tf-btn btn-reset radius-4"><span className="text">Login</span></Link>
+                <Link href="/register" className="tf-btn btn-fill radius-4"><span className="text">Sign Up</span></Link>
+                <Link href="/products" className="tf-btn btn-fill radius-4"><span className="text">Browse Products</span></Link>
+              </div>
             </div>
           )}
         </div>

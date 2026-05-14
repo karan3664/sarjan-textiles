@@ -301,6 +301,15 @@ export function AdminCmsClient() {
           <fieldset><div className="body-title mb-10">Open Time Weekday</div><input value={cms.siteSettings.openTimeWeekday} onChange={(event) => setSettings("openTimeWeekday", event.target.value)} /></fieldset>
           <fieldset><div className="body-title mb-10">Open Time Sunday</div><input value={cms.siteSettings.openTimeSunday} onChange={(event) => setSettings("openTimeSunday", event.target.value)} /></fieldset>
           <fieldset><div className="body-title mb-10">Credit Days</div><input type="number" value={cms.siteSettings.creditTermDays} onChange={(event) => setSettings("creditTermDays", Number(event.target.value))} /></fieldset>
+          <fieldset><div className="body-title mb-10">Footer Note</div><input value={cms.siteSettings.footerNote} onChange={(event) => setSettings("footerNote", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Footer Info Heading</div><input value={cms.siteSettings.footerInfoHeading ?? ""} onChange={(event) => setSettings("footerInfoHeading", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Footer Customer Heading</div><input value={cms.siteSettings.footerCustomerHeading ?? ""} onChange={(event) => setSettings("footerCustomerHeading", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Footer Newsletter Heading</div><input value={cms.siteSettings.footerNewsletterHeading ?? ""} onChange={(event) => setSettings("footerNewsletterHeading", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Footer Newsletter Text</div><input value={cms.siteSettings.footerNewsletterText ?? ""} onChange={(event) => setSettings("footerNewsletterText", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Footer Credit</div><input value={cms.siteSettings.footerCredit ?? ""} onChange={(event) => setSettings("footerCredit", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Facebook URL</div><input value={cms.siteSettings.facebookUrl ?? ""} onChange={(event) => setSettings("facebookUrl", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Instagram URL</div><input value={cms.siteSettings.instagramUrl ?? ""} onChange={(event) => setSettings("instagramUrl", event.target.value)} /></fieldset>
+          <fieldset><div className="body-title mb-10">Pinterest URL</div><input value={cms.siteSettings.pinterestUrl ?? ""} onChange={(event) => setSettings("pinterestUrl", event.target.value)} /></fieldset>
         </div>
         <div className={`body-text mt-20 ${saveState === "error" ? "text-danger" : ""}`}>
           {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved. Storefront now reads updated CMS data." : saveState === "error" ? "Save failed." : "Ready."}

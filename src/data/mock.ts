@@ -55,6 +55,14 @@ export const siteSettings = {
   openTimeSunday: "Sunday: By appointment",
   creditTermDays: 90,
   footerNote: "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
+  footerInfoHeading: "Information",
+  footerCustomerHeading: "Customer Services",
+  footerNewsletterHeading: "Newsletter",
+  footerNewsletterText: "B2B ordering with admin approval, MOQ planning, and dispatch tracking.",
+  footerCredit: "Designed & Developed by Karan Digital Labs",
+  facebookUrl: "#",
+  instagramUrl: "#",
+  pinterestUrl: "#",
   seo: {
     title: "Sarjan Textiles | B2B Textile Ordering Platform",
     description:

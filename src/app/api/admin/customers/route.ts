@@ -2,7 +2,7 @@ import { getAdminCustomers } from "@/lib/admin-customers";
 import { orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
 import { verifyAdminToken } from "@/lib/admin-token";
-import { updateClientStatus, updateOrderStatus, type LocalClient } from "@/lib/local-db";
+import { createAdminClient, updateClientStatus, updateOrderStatus, type LocalClient } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { cookies } from "next/headers";
 import { after } from "next/server";
@@ -11,6 +11,30 @@ const clientStatuses: LocalClient["status"][] = ["pending", "approved", "rejecte
 
 export async function GET() {
   return Response.json({ customers: await getAdminCustomers() });
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
+    if (!session) return Response.json({ error: "Admin login required" }, { status: 401 });
+    if (!["super_admin", "admin", "sales"].includes(session.role)) return Response.json({ error: "Permission denied" }, { status: 403 });
+    const body = await request.json();
+    if (!body.email || !body.companyName) return Response.json({ error: "Company name and email required" }, { status: 400 });
+    const client = await createAdminClient({
+      email: body.email,
+      password: body.password,
+      companyName: body.companyName,
+      gst: body.gst,
+      city: body.city,
+      phone: body.phone,
+      status: body.status ?? "approved",
+    });
+    const customers = await getAdminCustomers();
+    appendAuditLog({ actor: session.email, role: session.role, action: "create_client_account", entity: "client", entityId: client.id, after: client }).catch(() => null);
+    return Response.json({ customers, client });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Customer create failed" }, { status: 400 });
+  }
 }
 
 export async function PATCH(request: Request) {

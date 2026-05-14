@@ -1,7 +1,7 @@
 import { getAdminOrders, orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
 import { verifyAdminToken, type AdminRole } from "@/lib/admin-token";
-import { updateOrderAdmin } from "@/lib/local-db";
+import { createAdminOrder, updateOrderAdmin } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { cookies } from "next/headers";
 import { after } from "next/server";
@@ -32,6 +32,9 @@ function patchForRole(role: AdminRole, body: any) {
     courierDetails: body.courierDetails,
     vehicleDetails: body.vehicleDetails,
     trackingNotes: body.trackingNotes,
+    items: Array.isArray(body.items) ? body.items : undefined,
+    subtotal: body.subtotal === "" || body.subtotal === undefined ? undefined : Number(body.subtotal),
+    dispatchAddress: body.dispatchAddress,
   };
 
   if (role === "super_admin" || role === "admin") return all;
@@ -57,8 +60,58 @@ function patchForRole(role: AdminRole, body: any) {
   return {};
 }
 
+function withoutUndefined<T extends Record<string, unknown>>(input: T) {
+  return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)) as T;
+}
+
 export async function GET() {
   return Response.json({ orders: await getAdminOrders() });
+}
+
+function normalizeItems(items: any[]) {
+  return items
+    .map((item) => {
+      const sizes = Array.isArray(item.sizes)
+        ? item.sizes.map((size: unknown) => String(size).trim()).filter(Boolean)
+        : String(item.sizes ?? "").split(",").map((size) => size.trim()).filter(Boolean);
+      const setQuantity = Math.max(1, Number(item.setQuantity ?? 1) || 1);
+      const unitPrice = Math.max(0, Number(item.unitPrice ?? item.price ?? 0) || 0);
+      const piecesPerSet = Math.max(1, Number(item.piecesPerSet ?? sizes.length ?? 1) || 1);
+      const lineTotal = Math.max(0, Number(item.lineTotal ?? unitPrice * setQuantity * piecesPerSet) || 0);
+      return {
+        slug: String(item.slug ?? "custom-item").trim(),
+        name: String(item.name ?? "").trim(),
+        color: String(item.color ?? "").trim() || "Default",
+        sizes,
+        setQuantity,
+        piecesPerSet,
+        unitPrice,
+        lineTotal,
+      };
+    })
+    .filter((item) => item.name && item.unitPrice >= 0);
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await adminSession();
+    if (!session) return Response.json({ error: "Admin login required" }, { status: 401 });
+    if (!["super_admin", "admin", "sales"].includes(session.role)) return Response.json({ error: "Permission denied" }, { status: 403 });
+    const body = await request.json();
+    const items = normalizeItems(body.items ?? []);
+    if (!body.clientId || !items.length) return Response.json({ error: "Client and products required" }, { status: 400 });
+    const order = await createAdminOrder({
+      clientId: String(body.clientId),
+      items,
+      dispatchAddress: body.dispatchAddress,
+      note: body.note,
+      status: body.status,
+    });
+    await appendAuditLog({ actor: session.email, role: session.role, action: "create_custom_order", entity: "order", entityId: order.id, after: order }).catch(() => null);
+    return Response.json({ orders: await getAdminOrders(), order });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Order create failed" }, { status: 400 });
+  }
 }
 
 export async function PATCH(request: Request) {
@@ -76,7 +129,11 @@ export async function PATCH(request: Request) {
     }
 
     const before = (await getAdminOrders()).find((order) => order.id === String(body.id));
-    const patch = patchForRole(session.role, body);
+    const patch = withoutUndefined(patchForRole(session.role, body)) as Record<string, any>;
+    if (Array.isArray(body.items)) {
+      patch.items = normalizeItems(body.items);
+      patch.subtotal = patch.items.reduce((sum: number, item: { lineTotal: number }) => sum + item.lineTotal, 0);
+    }
     const nextPaid = patch.paidAmount ?? before?.paidAmount ?? 0;
     if (patch.paymentStatus && before && nextPaid >= before.subtotal) patch.paymentStatus = "Paid";
     const updated = await updateOrderAdmin(String(body.id), patch);

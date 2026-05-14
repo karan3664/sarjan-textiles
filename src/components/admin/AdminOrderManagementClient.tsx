@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { AdminOrder } from "@/lib/admin-orders";
+import type { AdminCustomer } from "@/lib/admin-customers";
+import type { Product } from "@/data/mock";
 
 type Mode = "orders" | "dispatch" | "payments";
 
@@ -9,6 +11,7 @@ const orderStatusOptions = ["Pending approval", "Approved", "Rejected", "In Prod
 const paymentStatusOptions = ["Pending", "Partial", "Paid", "Overdue"];
 const depositStatusOptions = ["Not deposited", "Deposited", "Cleared", "Bounced"];
 type OrderDraft = AdminOrder & Record<string, any>;
+type OrderItemDraft = AdminOrder["items"][number];
 
 function formatInr(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -77,13 +80,25 @@ function printPdf(title: string, rows: Array<Record<string, string | number | un
   popup.print();
 }
 
-export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrders: AdminOrder[]; mode: Mode }) {
+export function AdminOrderManagementClient({ initialOrders, mode, clients = [], products = [] }: { initialOrders: AdminOrder[]; mode: Mode; clients?: AdminCustomer[]; products?: Product[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(initialOrders[0]?.id ?? "");
   const [drafts, setDrafts] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
+  const approvedClients = clients.filter((client) => client.status === "approved" && client.source === "local");
+  const [customOrder, setCustomOrder] = useState({
+    clientId: approvedClients[0]?.id ?? "",
+    productSlug: products[0]?.slug ?? "",
+    setQuantity: "1",
+    unitPrice: String(products[0]?.price ?? 0),
+    sizes: products[0]?.sizes.join(", ") ?? "",
+    color: products[0]?.colors[0] ?? "Default",
+    note: "",
+    dispatchAddress: "",
+    items: [] as OrderItemDraft[],
+  });
 
   const visibleOrders = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -109,6 +124,92 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
 
   const setDraft = (id: string, patch: Record<string, any>) => {
     setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? {}), ...patch } }));
+  };
+
+  const recalcItem = (item: OrderItemDraft): OrderItemDraft => ({
+    ...item,
+    piecesPerSet: Math.max(1, item.piecesPerSet || item.sizes.length || 1),
+    setQuantity: Math.max(1, Number(item.setQuantity) || 1),
+    unitPrice: Math.max(0, Number(item.unitPrice) || 0),
+    lineTotal: Math.max(0, (Number(item.unitPrice) || 0) * (Number(item.setQuantity) || 1) * Math.max(1, item.piecesPerSet || item.sizes.length || 1)),
+  });
+
+  const productToItem = (product: Product, patch: Partial<OrderItemDraft> = {}): OrderItemDraft => {
+    const sizes = patch.sizes?.length ? patch.sizes : (product.sizes.length ? product.sizes : ["M"]);
+    return recalcItem({
+      slug: product.slug,
+      name: product.name,
+      color: patch.color || product.colors[0] || "Default",
+      sizes,
+      setQuantity: patch.setQuantity ?? 1,
+      piecesPerSet: patch.piecesPerSet ?? sizes.length,
+      unitPrice: patch.unitPrice ?? product.price,
+      lineTotal: 0,
+    });
+  };
+
+  const addCustomOrderItem = () => {
+    const product = products.find((item) => item.slug === customOrder.productSlug) ?? products[0];
+    if (!product) return;
+    const sizes = customOrder.sizes.split(",").map((item) => item.trim()).filter(Boolean);
+    const nextItem = productToItem(product, {
+      color: customOrder.color,
+      sizes,
+      setQuantity: Number(customOrder.setQuantity) || 1,
+      unitPrice: Number(customOrder.unitPrice) || product.price,
+      piecesPerSet: sizes.length || product.sizes.length || 1,
+    });
+    setCustomOrder((current) => ({ ...current, items: [...current.items, nextItem] }));
+  };
+
+  const createCustomOrder = async () => {
+    if (!customOrder.clientId || !customOrder.items.length) {
+      setNotice("Client and products required.");
+      return;
+    }
+    setSaving("custom-order");
+    setNotice("");
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify(customOrder),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotice(data.error ?? "Custom order create failed");
+        return;
+      }
+      setOrders(data.orders);
+      setSelectedId(data.order.id);
+      setCustomOrder((current) => ({ ...current, items: [], note: "", dispatchAddress: "" }));
+      setNotice("Custom order created.");
+    } catch {
+      setNotice("Custom order create failed.");
+    } finally {
+      setSaving("");
+    }
+  };
+
+  const updateDraftItem = (index: number, patch: Partial<OrderItemDraft>) => {
+    if (!draft) return;
+    const items = draft.items.map((item, itemIndex) => itemIndex === index ? recalcItem({ ...item, ...patch }) : item);
+    setDraft(draft.id, { items, subtotal: items.reduce((sum, item) => sum + item.lineTotal, 0) });
+  };
+
+  const removeDraftItem = (index: number) => {
+    if (!draft) return;
+    const items = draft.items.filter((_, itemIndex) => itemIndex !== index);
+    setDraft(draft.id, { items, subtotal: items.reduce((sum, item) => sum + item.lineTotal, 0) });
+  };
+
+  const addDraftProduct = (slug: string) => {
+    if (!draft) return;
+    const product = products.find((item) => item.slug === slug);
+    if (!product) return;
+    const items = [...draft.items, productToItem(product)];
+    setDraft(draft.id, { items, subtotal: items.reduce((sum, item) => sum + item.lineTotal, 0) });
   };
 
   const orderRows = () => visibleOrders.map((order) => ({
@@ -196,6 +297,53 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
         ))}
       </div>
 
+      {mode === "orders" ? (
+        <div className="wg-box mb-30">
+          <div className="flex flex-wrap justify-between gap14 items-center mb-20">
+            <div>
+              <h5>Create Custom Order</h5>
+              <div className="body-text text-secondary">Admin can create an order for any approved client, then edit products, quantity, and price.</div>
+            </div>
+            <button type="button" className="tf-button style-1" disabled={saving === "custom-order" || !customOrder.items.length} onClick={createCustomOrder}>
+              {saving === "custom-order" ? "Creating..." : "Create Order"}
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <fieldset>
+              <div className="body-title mb-10">Client</div>
+              <select value={customOrder.clientId} onChange={(event) => setCustomOrder((current) => ({ ...current, clientId: event.target.value }))}>
+                {approvedClients.map((client) => <option value={client.id} key={client.id}>{client.companyName}</option>)}
+              </select>
+            </fieldset>
+            <fieldset>
+              <div className="body-title mb-10">Product</div>
+              <select value={customOrder.productSlug} onChange={(event) => {
+                const product = products.find((item) => item.slug === event.target.value);
+                setCustomOrder((current) => ({
+                  ...current,
+                  productSlug: event.target.value,
+                  unitPrice: String(product?.price ?? current.unitPrice),
+                  sizes: product?.sizes.join(", ") ?? current.sizes,
+                  color: product?.colors[0] ?? current.color,
+                }));
+              }}>
+                {products.map((product) => <option value={product.slug} key={product.slug}>{product.name} / {product.sku}</option>)}
+              </select>
+            </fieldset>
+            <fieldset><div className="body-title mb-10">Set Qty</div><input type="number" value={customOrder.setQuantity} onChange={(event) => setCustomOrder((current) => ({ ...current, setQuantity: event.target.value }))} /></fieldset>
+            <fieldset><div className="body-title mb-10">Piece Price</div><input type="number" value={customOrder.unitPrice} onChange={(event) => setCustomOrder((current) => ({ ...current, unitPrice: event.target.value }))} /></fieldset>
+            <fieldset><div className="body-title mb-10">Color</div><input value={customOrder.color} onChange={(event) => setCustomOrder((current) => ({ ...current, color: event.target.value }))} /></fieldset>
+            <fieldset><div className="body-title mb-10">Sizes</div><input value={customOrder.sizes} onChange={(event) => setCustomOrder((current) => ({ ...current, sizes: event.target.value }))} /></fieldset>
+            <fieldset><div className="body-title mb-10">Dispatch Address</div><input value={customOrder.dispatchAddress} onChange={(event) => setCustomOrder((current) => ({ ...current, dispatchAddress: event.target.value }))} /></fieldset>
+            <fieldset><div className="body-title mb-10">Note</div><input value={customOrder.note} onChange={(event) => setCustomOrder((current) => ({ ...current, note: event.target.value }))} /></fieldset>
+          </div>
+          <div className="d-flex gap10 flex-wrap mt-16">
+            <button type="button" className="tf-button" onClick={addCustomOrderItem}>Add Product To Order</button>
+            <span className="body-text text-secondary">{customOrder.items.length} products / {formatInr(customOrder.items.reduce((sum, item) => sum + item.lineTotal, 0))}</span>
+          </div>
+        </div>
+      ) : null}
+
       <div className="sarjan-order-admin-layout">
         <div className="wg-box">
           {notice ? <div className="sarjan-mail-notice mb-16">{notice}</div> : null}
@@ -282,13 +430,39 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               ) : null}
 
               <div className="sarjan-order-items">
-                <h6>Ordered Products</h6>
-                {draft.items.length ? draft.items.map((item) => (
-                  <div key={`${item.slug}-${item.color}`}>
-                    <span>{item.name} / {item.color} / {item.sizes.join(", ")}</span>
-                    <strong>{item.setQuantity} sets / {formatInr(item.lineTotal)}</strong>
+                <div className="flex flex-wrap justify-between gap14 items-center mb-16">
+                  <h6>Ordered Products</h6>
+                  {mode === "orders" && products.length ? (
+                    <div className="tf-select">
+                      <select defaultValue="" onChange={(event) => { if (event.target.value) addDraftProduct(event.target.value); event.currentTarget.value = ""; }} disabled={draft.source === "demo"}>
+                        <option value="">Add product</option>
+                        {products.map((product) => <option value={product.slug} key={product.slug}>{product.name} / {product.sku}</option>)}
+                      </select>
+                    </div>
+                  ) : null}
+                </div>
+                {draft.items.length ? (
+                  <div className="sarjan-product-bulk-table">
+                    <table>
+                      <thead><tr><th>Product</th><th>Qty sets</th><th>Unit price</th><th>Sizes</th><th>Total</th><th /></tr></thead>
+                      <tbody>
+                        {draft.items.map((item, index) => (
+                          <tr key={`${item.slug}-${item.color}-${index}`}>
+                            <td>{item.name}<div className="text-caption-1 text-secondary">{item.color}</div></td>
+                            <td><input type="number" value={item.setQuantity} disabled={draft.source === "demo"} onChange={(event) => updateDraftItem(index, { setQuantity: Number(event.target.value) })} /></td>
+                            <td><input type="number" value={item.unitPrice} disabled={draft.source === "demo"} onChange={(event) => updateDraftItem(index, { unitPrice: Number(event.target.value) })} /></td>
+                            <td><input value={item.sizes.join(", ")} disabled={draft.source === "demo"} onChange={(event) => {
+                              const sizes = event.target.value.split(",").map((size) => size.trim()).filter(Boolean);
+                              updateDraftItem(index, { sizes, piecesPerSet: Math.max(1, sizes.length) });
+                            }} /></td>
+                            <td>{formatInr(item.lineTotal)}</td>
+                            <td><button type="button" className="tf-button style-2" disabled={draft.source === "demo"} onClick={() => removeDraftItem(index)}>Remove</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )) : <p className="text-secondary">Demo item details pending.</p>}
+                ) : <p className="text-secondary">Demo item details pending.</p>}
               </div>
 
               <button type="button" className="tf-button sarjan-button-loader" disabled={selectedSaving || draft.source === "demo"} onClick={save}>

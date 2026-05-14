@@ -50,6 +50,7 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
   const [selectedId, setSelectedId] = useState(initialCustomers[0]?.id ?? "");
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
+  const [newClient, setNewClient] = useState({ companyName: "", email: "", phone: "", city: "", gst: "", password: "" });
   const selected = customers.find((customer) => customer.id === selectedId) ?? customers[0];
 
   const visibleCustomers = useMemo(() => {
@@ -85,6 +86,29 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
     }
   };
 
+  const createClient = async () => {
+    setSaving("new-client");
+    setNotice("");
+    try {
+      const res = await fetch("/api/admin/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify(newClient),
+      });
+      const data = (await res.json().catch(() => ({}))) as { customers?: AdminCustomer[]; client?: AdminCustomer; error?: string };
+      if (!res.ok || !data.customers) throw new Error(data.error || "Client create failed");
+      setCustomers(data.customers);
+      if (data.client?.id) setSelectedId(data.client.id);
+      setNewClient({ companyName: "", email: "", phone: "", city: "", gst: "", password: "" });
+      setNotice("Custom client account created.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Client create failed");
+    } finally {
+      setSaving("");
+    }
+  };
+
   const localOnly = (customer: AdminCustomer) => customer.source === "local";
 
   return (
@@ -106,6 +130,26 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="wg-box mb-30">
+        <div className="flex flex-wrap justify-between gap14 items-center mb-20">
+          <div>
+            <h5>Create Custom Client Account</h5>
+            <div className="body-text text-secondary">Admin-created clients are approved by default and can place orders immediately.</div>
+          </div>
+          <button type="button" className="tf-button style-1" disabled={saving === "new-client" || !newClient.companyName || !newClient.email} onClick={createClient}>
+            {saving === "new-client" ? "Creating..." : "Create Client"}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <fieldset><div className="body-title mb-10">Company Name</div><input value={newClient.companyName} onChange={(event) => setNewClient((current) => ({ ...current, companyName: event.target.value }))} /></fieldset>
+          <fieldset><div className="body-title mb-10">Email</div><input type="email" value={newClient.email} onChange={(event) => setNewClient((current) => ({ ...current, email: event.target.value }))} /></fieldset>
+          <fieldset><div className="body-title mb-10">Password</div><input value={newClient.password} placeholder="Auto default if blank" onChange={(event) => setNewClient((current) => ({ ...current, password: event.target.value }))} /></fieldset>
+          <fieldset><div className="body-title mb-10">Phone</div><input value={newClient.phone} onChange={(event) => setNewClient((current) => ({ ...current, phone: event.target.value }))} /></fieldset>
+          <fieldset><div className="body-title mb-10">City</div><input value={newClient.city} onChange={(event) => setNewClient((current) => ({ ...current, city: event.target.value }))} /></fieldset>
+          <fieldset><div className="body-title mb-10">GST</div><input value={newClient.gst} onChange={(event) => setNewClient((current) => ({ ...current, gst: event.target.value }))} /></fieldset>
+        </div>
       </div>
 
       <div className="sarjan-customer-layout">
