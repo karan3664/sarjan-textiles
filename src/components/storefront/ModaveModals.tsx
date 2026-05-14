@@ -360,7 +360,7 @@ export function ModaveModals() {
                           <div className="text-center py-5">
                             <h6>Your cart is empty</h6>
                             <p className="text-secondary">Add products to create an order request.</p>
-                            <div className="d-grid gap-2 mt_12">
+                            <div className="sarjan-mini-cart-empty-actions mt_12">
                               <button type="button" className="tf-btn btn-white radius-4 has-border" onClick={() => goFromModal("shoppingCart", "/login")}><span className="text">Login</span></button>
                               <button type="button" className="tf-btn btn-fill radius-4" onClick={() => goFromModal("shoppingCart", "/register")}><span className="text">Sign Up</span></button>
                               <button type="button" className="tf-btn btn-fill radius-4" onClick={() => goFromModal("shoppingCart", "/products")}><span className="text">Browse Products</span></button>
@@ -385,6 +385,8 @@ export function ModaveModals() {
                           <label htmlFor="CartDrawer-Form_agree">I agree with <a href="#">Terms &amp; Conditions</a></label>
                         </div>
                         <div className="tf-mini-cart-view-checkout">
+                          <button type="button" className="tf-btn w-100 btn-white radius-4 has-border" onClick={() => goFromModal("shoppingCart", "/login")}><span className="text">Login</span></button>
+                          <button type="button" className="tf-btn w-100 btn-white radius-4 has-border" onClick={() => goFromModal("shoppingCart", "/register")}><span className="text">Sign Up</span></button>
                           <button type="button" className="tf-btn w-100 btn-white radius-4 has-border" onClick={() => goFromModal("shoppingCart", "/cart")}><span className="text">View Cart</span></button>
                           <button type="button" className="tf-btn w-100 btn-fill radius-4" onClick={() => goFromModal("shoppingCart", "/checkout")}><span className="text">Check Out</span></button>
                         </div>

@@ -4389,3 +4389,27 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   width: 34px;
   height: 34px;
 }
+
+.sarjan-mini-cart-empty-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 460px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sarjan-mini-cart-empty-actions .tf-btn {
+  width: 100%;
+  min-width: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 575px) {
+  .sarjan-mini-cart-empty-actions {
+    grid-template-columns: 1fr;
+    max-width: 260px;
+  }
+}
