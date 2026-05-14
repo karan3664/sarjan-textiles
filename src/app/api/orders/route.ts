@@ -1,5 +1,7 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { createOrder, readLocalDb } from "@/lib/local-db";
+import { sendOrderPlacedEmail } from "@/lib/order-emails";
+import { after } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -29,6 +31,7 @@ export async function POST(request: Request) {
     const session = verifyClientToken(bearerToken(request));
     if (!session || session.clientId !== body.clientId) return Response.json({ error: "Valid client token required" }, { status: 401 });
     const order = await createOrder(body);
+    after(() => sendOrderPlacedEmail(order).catch((error) => console.error("Order placed email failed", error)));
     return Response.json({ order });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Order failed" }, { status: 400 });

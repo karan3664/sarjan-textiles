@@ -2,7 +2,9 @@ import { getAdminOrders, orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
 import { verifyAdminToken, type AdminRole } from "@/lib/admin-token";
 import { updateOrderAdmin } from "@/lib/local-db";
+import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { cookies } from "next/headers";
+import { after } from "next/server";
 
 const paymentStatuses = ["Pending", "Partial", "Paid", "Overdue"];
 const depositStatuses = ["Not deposited", "Deposited", "Cleared", "Bounced"];
@@ -77,8 +79,11 @@ export async function PATCH(request: Request) {
     const patch = patchForRole(session.role, body);
     const nextPaid = patch.paidAmount ?? before?.paidAmount ?? 0;
     if (patch.paymentStatus && before && nextPaid >= before.subtotal) patch.paymentStatus = "Paid";
-    await updateOrderAdmin(String(body.id), patch);
-    const after = (await getAdminOrders()).find((order) => order.id === String(body.id));
+    const updated = await updateOrderAdmin(String(body.id), patch);
+    if (patch.status && before?.status !== updated.status) {
+      after(() => sendOrderStatusEmail(updated).catch((error) => console.error("Order status email failed", error)));
+    }
+    const updatedOrder = (await getAdminOrders()).find((order) => order.id === String(body.id));
     await appendAuditLog({
       actor: session.email,
       role: session.role,
@@ -86,7 +91,7 @@ export async function PATCH(request: Request) {
       entity: "order",
       entityId: String(body.id),
       before,
-      after,
+      after: updatedOrder,
       note: body.trackingNotes || body.approvalRemark || body.note || body.chequeNumber,
     }).catch(() => null);
 

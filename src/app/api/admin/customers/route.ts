@@ -3,7 +3,9 @@ import { orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
 import { verifyAdminToken } from "@/lib/admin-token";
 import { updateClientStatus, updateOrderStatus, type LocalClient } from "@/lib/local-db";
+import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { cookies } from "next/headers";
+import { after } from "next/server";
 
 const clientStatuses: LocalClient["status"][] = ["pending", "approved", "rejected", "inactive"];
 
@@ -28,10 +30,14 @@ export async function PATCH(request: Request) {
 
     if (body.type === "order") {
       if (!body.id || !orderStatuses.includes(body.status)) return Response.json({ error: "Valid order id and status required" }, { status: 400 });
-      await updateOrderStatus(body.id, body.status, body.note);
+      const before = (await getAdminCustomers()).flatMap((customer) => customer.orders).find((order) => order.id === body.id);
+      const updated = await updateOrderStatus(body.id, body.status, body.note);
+      if (before?.status !== updated.status) {
+        after(() => sendOrderStatusEmail(updated).catch((error) => console.error("Order status email failed", error)));
+      }
       const customers = await getAdminCustomers();
-      const after = customers.flatMap((customer) => customer.orders).find((order) => order.id === body.id);
-      appendAuditLog({ actor: session.email, role: session.role, action: "update_customer_order_status", entity: "order", entityId: body.id, after, note: body.note || body.status }).catch(() => null);
+      const updatedOrder = customers.flatMap((customer) => customer.orders).find((order) => order.id === body.id);
+      appendAuditLog({ actor: session.email, role: session.role, action: "update_customer_order_status", entity: "order", entityId: body.id, after: updatedOrder, note: body.note || body.status }).catch(() => null);
       return Response.json({ customers });
     }
 

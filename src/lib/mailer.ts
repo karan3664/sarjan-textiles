@@ -4,6 +4,7 @@ type SendDomainMailInput = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
 };
 
@@ -25,6 +26,9 @@ export async function sendDomainMail(input: SendDomainMailInput) {
     port,
     secure: port === 465,
     auth: { user, pass },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000,
   });
 
   return transporter.sendMail({
@@ -33,5 +37,6 @@ export async function sendDomainMail(input: SendDomainMailInput) {
     replyTo: input.replyTo || from,
     subject: input.subject,
     text: input.text,
+    html: input.html,
   });
 }
