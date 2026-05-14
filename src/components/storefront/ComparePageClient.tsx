@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
-import { productSetPrice } from "@/lib/product-pricing";
 import { PageTitle } from "./PageTitle";
 import { PriceGate } from "./PriceGate";
 
@@ -42,7 +41,7 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
 
   const rows = [
     ["Rating", (product: Product) => <><StarRow /><span>({product.sold.toLocaleString("en-IN")})</span></>],
-    ["Price", (product: Product) => <PriceGate amount={productSetPrice(product, product.colors[0], sizeRun(product))} suffix=" / set" />],
+    ["Price", (product: Product) => <PriceGate amount={product.price} suffix=" / piece" />],
     ["Type", (product: Product) => <span className="type">{product.category}</span>],
     ["Brand", () => <span className="brand">Sarjan Textiles</span>],
     ["Size", (product: Product) => <span className="size">{sizeRun(product).join(", ")}</span>],

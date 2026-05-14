@@ -12,7 +12,7 @@ export default async function AdminProductsCreatePage({ searchParams }: { search
 
   return (
     <AdminTemplateChrome active="products" title={title}>
-      <AdminProductCreateClient initialProducts={cms.products} editProduct={editProduct} />
+      <AdminProductCreateClient initialProducts={cms.products} editProduct={editProduct} categoryMaster={cms.categoryMaster} />
     </AdminTemplateChrome>
   );
 }

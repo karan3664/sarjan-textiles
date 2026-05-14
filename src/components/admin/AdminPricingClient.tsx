@@ -3,22 +3,37 @@
 import { FormEvent, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import type { AdminCustomer } from "@/lib/admin-customers";
-import type { ClientPricingRule } from "@/lib/cms-store";
+import type { ClientPricingRule, ProductCategoryMaster } from "@/lib/cms-store";
 
 export function AdminPricingClient({
   initialRules,
   clients,
   products,
+  initialCategoryMaster,
 }: {
   initialRules: ClientPricingRule[];
   clients: AdminCustomer[];
   products: Product[];
+  initialCategoryMaster: ProductCategoryMaster[];
 }) {
   const approvedClients = clients.filter((client) => client.status === "approved");
   const [rules, setRules] = useState(initialRules);
+  const [categoryMaster, setCategoryMaster] = useState(initialCategoryMaster);
   const [editing, setEditing] = useState<ClientPricingRule | null>(null);
+  const [pricingScope, setPricingScope] = useState<"product" | "category">("product");
+  const [categoryDraft, setCategoryDraft] = useState({ level1: "", level2: "", level3: "" });
   const [message, setMessage] = useState("");
   const productOptions = useMemo(() => products.slice(0, 250), [products]);
+  const categoryOptions = useMemo(() => {
+    const masterPaths = categoryMaster.filter((category) => category.active !== false).map((category) => category.path);
+    const productPaths = products.map((product) => product.categoryPath?.length ? product.categoryPath : [product.category]);
+    const byName = new Map<string, string[]>();
+    [...masterPaths, ...productPaths].forEach((path) => {
+      const cleanPath = path.map((item) => item.trim()).filter(Boolean);
+      if (cleanPath.length) byName.set(cleanPath.join(" > "), cleanPath);
+    });
+    return Array.from(byName.entries()).map(([name, path]) => ({ name, path })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [categoryMaster, products]);
   const pricingHistory = useMemo(() => rules.flatMap((rule) => (rule.history ?? []).map((item) => ({ ...item, rule }))).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()), [rules]);
 
   const ruleStatus = (rule: ClientPricingRule) => {
@@ -37,7 +52,7 @@ export function AdminPricingClient({
     const res = await fetch("/api/admin/pricing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...payload, id: editing?.id, active: payload.active === "on" }),
+      body: JSON.stringify({ ...payload, id: editing?.id, scope: pricingScope, active: payload.active === "on" }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -46,8 +61,36 @@ export function AdminPricingClient({
     }
     setRules(data.pricing);
     setEditing(null);
+    setPricingScope("product");
     event.currentTarget.reset();
     setMessage("Saved");
+  };
+
+  const addCategoryMaster = async () => {
+    const path = [categoryDraft.level1, categoryDraft.level2, categoryDraft.level3].map((item) => item.trim()).filter(Boolean);
+    if (!path.length) {
+      setMessage("Category level 1 required");
+      return;
+    }
+    const name = path.join(" > ");
+    const next = [
+      { id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""), name, path, active: true, updatedAt: new Date().toISOString() },
+      ...categoryMaster.filter((category) => category.name !== name),
+    ];
+    setMessage("Saving category master...");
+    const res = await fetch("/api/admin/pricing/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categories: next }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error ?? "Category save failed");
+      return;
+    }
+    setCategoryMaster(data.categories);
+    setCategoryDraft({ level1: "", level2: "", level3: "" });
+    setMessage("Category master saved");
   };
 
   const deleteRule = async (id: string) => {
@@ -66,7 +109,7 @@ export function AdminPricingClient({
           </div>
           <div className="box-status text-button type-delivery">{rules.length} Rules</div>
         </div>
-        <form className="form-new-product form-style-1" onSubmit={saveRule}>
+        <form className="form-new-product form-style-1" onSubmit={saveRule} key={editing?.id ?? "new-pricing-rule"}>
           <fieldset>
             <div className="body-title">Client</div>
             <select name="clientId" defaultValue={editing?.clientId ?? approvedClients[0]?.id ?? ""} required>
@@ -74,11 +117,27 @@ export function AdminPricingClient({
             </select>
           </fieldset>
           <fieldset>
-            <div className="body-title">Product</div>
-            <select name="productSlug" defaultValue={editing?.productSlug ?? productOptions[0]?.slug ?? ""} required>
-              {productOptions.map((product) => <option value={product.slug} key={product.slug}>{product.name} / {product.sku}</option>)}
+            <div className="body-title">Pricing Level</div>
+            <select name="scope" value={pricingScope} onChange={(event) => setPricingScope(event.target.value === "category" ? "category" : "product")} required>
+              <option value="product">Product</option>
+              <option value="category">Multi Level Category</option>
             </select>
           </fieldset>
+          {pricingScope === "product" ? (
+            <fieldset>
+              <div className="body-title">Product</div>
+              <select name="productSlug" defaultValue={editing?.productSlug ?? productOptions[0]?.slug ?? ""} required>
+                {productOptions.map((product) => <option value={product.slug} key={product.slug}>{product.name} / {product.sku}</option>)}
+              </select>
+            </fieldset>
+          ) : (
+            <fieldset>
+              <div className="body-title">Category Path</div>
+              <select name="categoryPath" defaultValue={(editing?.categoryPath ?? categoryOptions[0]?.path ?? []).join(",")} required>
+                {categoryOptions.map((category) => <option value={category.path.join(",")} key={category.name}>{category.name}</option>)}
+              </select>
+            </fieldset>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <fieldset>
               <div className="body-title">Custom Price</div>
@@ -107,10 +166,50 @@ export function AdminPricingClient({
           </label>
           <div className="flex gap10 items-center">
             <button className="tf-button style-1" type="submit">{editing ? "Update Pricing" : "Add Pricing Rule"}</button>
-            {editing ? <button className="tf-button" type="button" onClick={() => setEditing(null)}>Cancel</button> : null}
+            {editing ? <button className="tf-button" type="button" onClick={() => { setEditing(null); setPricingScope("product"); }}>Cancel</button> : null}
             {message ? <span className="body-text text-secondary">{message}</span> : null}
           </div>
         </form>
+      </div>
+
+      <div className="wg-box mb-30">
+        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
+          <div>
+            <h5>Multi Level Category Master</h5>
+            <div className="body-text text-secondary">Client pricing category dropdown and product category paths come from this master.</div>
+          </div>
+          <div className="box-status text-button type-delivery">{categoryMaster.length} Categories</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
+          <fieldset>
+            <div className="body-title">Level 1</div>
+            <input value={categoryDraft.level1} onChange={(event) => setCategoryDraft((current) => ({ ...current, level1: event.target.value }))} placeholder="Men" />
+          </fieldset>
+          <fieldset>
+            <div className="body-title">Level 2</div>
+            <input value={categoryDraft.level2} onChange={(event) => setCategoryDraft((current) => ({ ...current, level2: event.target.value }))} placeholder="Shirts" />
+          </fieldset>
+          <fieldset>
+            <div className="body-title">Level 3</div>
+            <input value={categoryDraft.level3} onChange={(event) => setCategoryDraft((current) => ({ ...current, level3: event.target.value }))} placeholder="Printed Shirts" />
+          </fieldset>
+        </div>
+        <button type="button" className="tf-button style-1" onClick={addCategoryMaster}>Add Category Path</button>
+        <div className="sarjan-product-bulk-table mt-20">
+          <table>
+            <thead><tr><th>Level 1</th><th>Level 2</th><th>Level 3</th><th>Status</th></tr></thead>
+            <tbody>
+              {categoryMaster.slice(0, 50).map((category) => (
+                <tr key={category.id}>
+                  <td>{category.path[0] ?? "-"}</td>
+                  <td>{category.path[1] ?? "-"}</td>
+                  <td>{category.path[2] ?? "-"}</td>
+                  <td>{category.active ? "Active" : "Hidden"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="wg-box">
@@ -133,16 +232,17 @@ export function AdminPricingClient({
             {rules.map((rule) => {
               const client = clients.find((item) => item.id === rule.clientId);
               const product = products.find((item) => item.slug === rule.productSlug);
+              const target = rule.scope === "category" ? rule.categoryPath?.join(" > ") : (product?.name ?? rule.productSlug);
               return (
                 <li className="product-item gap14" key={rule.id}>
                   <div className="flex items-center justify-between gap20 flex-grow">
                     <div>{client?.companyName ?? rule.clientId}</div>
-                    <div>{product?.name ?? rule.productSlug}</div>
+                    <div>{target}</div>
                     <div>{rule.customPrice ? `₹${rule.customPrice}` : `${rule.discountPercentage ?? 0}% discount`}</div>
                     <div>{rule.validFrom || "Now"} - {rule.validTo || "Open"}</div>
                     <div><span className={`box-status text-button ${ruleStatus(rule).className}`}>{ruleStatus(rule).label}</span></div>
                     <div className="list-icon-function">
-                      <button type="button" className="item edit" onClick={() => setEditing(rule)}><i className="icon-edit-3" /></button>
+                      <button type="button" className="item edit" onClick={() => { setEditing(rule); setPricingScope(rule.scope === "category" ? "category" : "product"); }}><i className="icon-edit-3" /></button>
                       <button type="button" className="item trash" onClick={() => deleteRule(rule.id)}><i className="icon-trash-2" /></button>
                     </div>
                   </div>
@@ -168,11 +268,12 @@ export function AdminPricingClient({
               {pricingHistory.slice(0, 100).map((item, index) => {
                 const client = clients.find((entry) => entry.id === item.rule.clientId);
                 const product = products.find((entry) => entry.slug === item.rule.productSlug);
+                const target = item.rule.scope === "category" ? item.rule.categoryPath?.join(" > ") : (product?.name ?? item.rule.productSlug);
                 return (
                   <tr className="tf-table-item item-row" key={`${item.rule.id}-${item.updatedAt}-${index}`}>
                     <td>{new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.updatedAt))}</td>
                     <td>{client?.companyName ?? item.rule.clientId}</td>
-                    <td>{product?.name ?? item.rule.productSlug}</td>
+                    <td>{target}</td>
                     <td>{item.customPrice ? `₹${item.customPrice}` : `${item.discountPercentage ?? 0}% discount`}</td>
                     <td>{item.validFrom || "Now"} - {item.validTo || "Open"}</td>
                     <td><div>{item.actor || "Admin"}</div><div className="text-caption-1 text-secondary">{item.note || "-"}</div></td>

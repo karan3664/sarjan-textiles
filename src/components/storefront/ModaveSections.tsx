@@ -85,7 +85,7 @@ function ProductFeature({ product }: { product: Product }) {
                     <div className="text-caption-1 text-secondary">MOQ {product.moq}. Stock {product.stock}.</div>
                   </div>
                   <div className="tf-product-info-price">
-                    <h4 className="price-on-sale" data-base-price={setPrice}><PriceGate amount={setPrice} suffix=" / set" /></h4>
+                    <h4 className="price-on-sale" data-base-price={product.price}><PriceGate amount={product.price} suffix=" / piece" /></h4>
                   </div>
                 </div>
                 <div className="tf-product-info-choose-option">
@@ -555,7 +555,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                       <div className="tf-product-info-desc">
                         <div className="tf-product-info-price">
-                          <h5 className="price-on-sale font-2" data-base-price={setPrice}><PriceGate amount={setPrice} suffix=" / set" /></h5>
+                          <h5 className="price-on-sale font-2" data-base-price={product.price}><PriceGate amount={product.price} suffix=" / piece" /></h5>
                         </div>
                         <p>{product.description}</p>
                       </div>
@@ -613,7 +613,6 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                       <ul className="tf-product-info-sku">
                         <li><p className="text-caption-1">SKU:</p><p className="text-caption-1 text-1">{product.sku}</p></li>
-                        <li><p className="text-caption-1">Vendor:</p><p className="text-caption-1 text-1">{siteSettings.brandName}</p></li>
                         <li><p className="text-caption-1">Available:</p><p className="text-caption-1 text-1">In stock: {product.stock}</p></li>
                         <li><p className="text-caption-1">Categories:</p><p className="text-caption-1"><a href="#" className="text-1 link">{product.category}</a>, <a href="#" className="text-1 link">{product.fabric}</a></p></li>
                       </ul>
@@ -634,7 +633,7 @@ export function ProductDetailDynamic({ product }: { product: Product }) {
                     <div className="content">
                       <div className="text-title">{product.name}</div>
                       <div className="text-caption-1 text-secondary-2">{product.colors[0]}, full size set, {product.fabric}</div>
-                      <div className="text-title"><PriceGate amount={setPrice} suffix=" / set" compact /></div>
+                      <div className="text-title"><PriceGate amount={product.price} suffix=" / piece" compact /></div>
                     </div>
                   </div>
                   <div className="tf-sticky-atc-infos">
@@ -917,7 +916,6 @@ function Pagination({ basePath, page, totalPages, query = {} }: { basePath: stri
 function ProductListCard({ product }: { product: Product }) {
   const hover = product.images[1] ?? product.images[0];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-  const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = product.imageAlt || `${product.name} ${product.category}`;
 
   return (
@@ -931,7 +929,7 @@ function ProductListCard({ product }: { product: Product }) {
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-        <div className="price"><PriceGate amount={setPrice} suffix=" / set" /></div>
+        <div className="price"><PriceGate amount={product.price} suffix=" / piece" /></div>
         <p className="description text-secondary text-line-clamp-2">{product.description}</p>
         <div className="variant-wrap-list">
           <ul className="list-color-product">

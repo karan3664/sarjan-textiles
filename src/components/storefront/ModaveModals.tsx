@@ -301,7 +301,7 @@ export function ModaveModals() {
                   </div>
                   <div className="card-product-info">
                     <a href={`/products/${product.slug}`} className="title link">{product.name}</a>
-                    <PriceGate amount={productSetPrice(product, product.colors[0], productSizeRun(product))} suffix=" / set" />
+                    <PriceGate amount={product.price} suffix=" / piece" />
                     <ul className="list-color-product mt_8">
                       {product.colors.slice(0, 3).map((color, index) => (
                         <li className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`} key={color}>
@@ -423,7 +423,7 @@ export function ModaveModals() {
                             </div>
                             <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
                               <div className="text-secondary-2">{product.category}</div>
-                              <div className="text-button"><PriceGate amount={productSetPrice(product, product.colors[0], productSizeRun(product))} suffix=" / set" compact /></div>
+                              <div className="text-button"><PriceGate amount={product.price} suffix=" / piece" compact /></div>
                             </div>
                           </div>
                         </div>
@@ -472,7 +472,7 @@ export function ModaveModals() {
                       <div className="text-caption-1 text-secondary">MOQ {quickProduct.moq}. Stock {quickProduct.stock}.</div>
                     </div>
                     <div className="tf-product-info-price">
-                      <h4 className="price-on-sale"><PriceGate amount={productSetPrice(quickProduct, quickProduct.colors[0], productSizeRun(quickProduct))} suffix=" / set" /></h4>
+                      <h4 className="price-on-sale"><PriceGate amount={quickProduct.price} suffix=" / piece" /></h4>
                     </div>
                     <p className="text-secondary">{quickProduct.description}</p>
                   </div>

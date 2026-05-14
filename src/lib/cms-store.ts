@@ -24,7 +24,9 @@ export type CmsTestimonial = (typeof defaultHome.testimonials)[number] & {
 export type ClientPricingRule = {
   id: string;
   clientId: string;
-  productSlug: string;
+  scope?: "product" | "category";
+  productSlug?: string;
+  categoryPath?: string[];
   customPrice?: number;
   discountPercentage?: number;
   validFrom?: string;
@@ -35,6 +37,9 @@ export type ClientPricingRule = {
   history?: Array<{
     customPrice?: number;
     discountPercentage?: number;
+    scope?: "product" | "category";
+    productSlug?: string;
+    categoryPath?: string[];
     validFrom?: string;
     validTo?: string;
     active: boolean;
@@ -42,6 +47,14 @@ export type ClientPricingRule = {
     updatedAt: string;
     actor?: string;
   }>;
+};
+
+export type ProductCategoryMaster = {
+  id: string;
+  name: string;
+  path: string[];
+  active: boolean;
+  updatedAt: string;
 };
 
 export type InventoryMovement = {
@@ -112,6 +125,7 @@ export type CmsSnapshot = {
   blogs: CmsBlog[];
   testimonials: CmsTestimonial[];
   clientPricing: ClientPricingRule[];
+  categoryMaster: ProductCategoryMaster[];
   pages: CmsPages;
   seoPages: CmsSeoPage[];
   inventoryLogs: InventoryMovement[];
@@ -133,6 +147,37 @@ function filterOptions(values: string[]): CmsProductFilterOption[] {
       label,
       value: slugValue(label),
       enabled: true,
+    }));
+}
+
+function productCategoryPath(product: Product) {
+  const path = Array.isArray(product.categoryPath) ? product.categoryPath : [];
+  return [
+    ...path,
+    product.categoryLevel1,
+    product.categoryLevel2,
+    product.categoryLevel3,
+    product.category,
+  ]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index);
+}
+
+function defaultCategoryMaster(products: Product[]): ProductCategoryMaster[] {
+  const uniquePaths = new Map<string, string[]>();
+  products.forEach((product) => {
+    const path = productCategoryPath(product);
+    if (path.length) uniquePaths.set(path.join(" > "), path);
+  });
+  return Array.from(uniquePaths.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, path]) => ({
+      id: slugValue(name),
+      name,
+      path,
+      active: true,
+      updatedAt: new Date(0).toISOString(),
     }));
 }
 
@@ -383,6 +428,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
     submittedAt: new Date(0).toISOString(),
   })),
   clientPricing: [],
+  categoryMaster: defaultCategoryMaster(defaultProducts),
   pages: defaultPages,
   seoPages: defaultSeoPages,
   inventoryLogs: [],
@@ -405,6 +451,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     blogs: Array.isArray(input.blogs) && input.blogs.length ? input.blogs : defaultCmsSnapshot.blogs,
     testimonials: Array.isArray(input.testimonials) && input.testimonials.length ? input.testimonials : defaultCmsSnapshot.testimonials,
     clientPricing: Array.isArray(input.clientPricing) ? input.clientPricing : defaultCmsSnapshot.clientPricing,
+    categoryMaster: Array.isArray(input.categoryMaster) && input.categoryMaster.length ? input.categoryMaster : defaultCategoryMaster(Array.isArray(input.products) && input.products.length ? input.products : defaultCmsSnapshot.products),
     pages: { ...defaultCmsSnapshot.pages, ...(input.pages ?? {}) },
     seoPages,
     inventoryLogs: Array.isArray(input.inventoryLogs) ? input.inventoryLogs : defaultCmsSnapshot.inventoryLogs,
@@ -512,6 +559,19 @@ export async function upsertClientPricingRule(rule: ClientPricingRule): Promise<
   if (index >= 0) nextRules[index] = rule;
   else nextRules.unshift(rule);
   return saveCmsSnapshot({ clientPricing: nextRules });
+}
+
+export async function saveCategoryMaster(categories: ProductCategoryMaster[]): Promise<CmsSnapshot> {
+  return saveCmsSnapshot({
+    categoryMaster: categories
+      .filter((category) => category.path.some(Boolean))
+      .map((category) => ({
+        ...category,
+        name: category.path.filter(Boolean).join(" > "),
+        id: category.id || slugValue(category.path.filter(Boolean).join(" > ")),
+        updatedAt: category.updatedAt || new Date().toISOString(),
+      })),
+  });
 }
 
 export async function deleteClientPricingRule(id: string): Promise<CmsSnapshot> {

@@ -1,7 +1,6 @@
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import type { Product } from "@/data/mock";
 import { getClient } from "@/lib/local-db";
-import { productDefaultSetPrice } from "@/lib/product-pricing";
 
 export type CatalogSort = "best-selling" | "a-z" | "z-a" | "price-low-high" | "price-high-low";
 
@@ -25,8 +24,8 @@ export function sortProductList(products: Product[], sort: string | null | undef
     : "best-selling";
 
   return [...products].sort((a, b) => {
-    if (sortValue === "price-low-high") return productDefaultSetPrice(a) - productDefaultSetPrice(b);
-    if (sortValue === "price-high-low") return productDefaultSetPrice(b) - productDefaultSetPrice(a);
+    if (sortValue === "price-low-high") return a.price - b.price;
+    if (sortValue === "price-high-low") return b.price - a.price;
     if (sortValue === "a-z") return a.name.localeCompare(b.name);
     if (sortValue === "z-a") return b.name.localeCompare(a.name);
     return Number(Boolean(b.isFeatured)) - Number(Boolean(a.isFeatured)) || b.sold - a.sold;
@@ -40,15 +39,35 @@ function isRuleActive(rule: { active: boolean; validFrom?: string; validTo?: str
   return true;
 }
 
+function categoryPath(product: Product) {
+  const path = Array.isArray(product.categoryPath) ? product.categoryPath : [];
+  return [
+    ...path,
+    product.categoryLevel1,
+    product.categoryLevel2,
+    product.categoryLevel3,
+    product.category,
+  ]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index);
+}
+
+function categoryMatches(product: Product, rulePath?: string[]) {
+  if (!rulePath?.length) return false;
+  const productPath = categoryPath(product).map(slugValue);
+  const targetPath = rulePath.map(slugValue);
+  return targetPath.every((part, index) => productPath[index] === part);
+}
+
 function matchesFilters(product: Product, filters?: CatalogFilters) {
   if (!filters) return true;
   if (filters.category && slugValue(product.category) !== filters.category) return false;
   if (filters.fabric && slugValue(product.fabric) !== filters.fabric) return false;
   if (filters.color && !product.colors.some((color) => slugValue(color) === filters.color)) return false;
   if (filters.size && !product.sizes.some((size) => slugValue(size) === filters.size)) return false;
-  const setPrice = productDefaultSetPrice(product);
-  if (typeof filters.minPrice === "number" && setPrice < filters.minPrice) return false;
-  if (typeof filters.maxPrice === "number" && setPrice > filters.maxPrice) return false;
+  if (typeof filters.minPrice === "number" && product.price < filters.minPrice) return false;
+  if (typeof filters.maxPrice === "number" && product.price > filters.maxPrice) return false;
   if (filters.stock === "in-stock" && product.stock <= product.moq) return false;
   if (filters.stock === "low-stock" && !(product.stock > 0 && product.stock - product.reserved <= product.moq)) return false;
   if (filters.stock === "out-of-stock" && product.stock > 0) return false;
@@ -66,7 +85,12 @@ export async function applyClientPricing(products: Product[], clientId?: string 
   }
 
   return products.map((product) => {
-    const rule = cms.clientPricing.find((item) => item.clientId === clientId && item.productSlug === product.slug && isRuleActive(item));
+    const activeRules = cms.clientPricing.filter((item) => item.clientId === clientId && isRuleActive(item));
+    const productRule = activeRules.find((item) => (item.scope ?? "product") === "product" && item.productSlug === product.slug);
+    const categoryRule = activeRules
+      .filter((item) => item.scope === "category" && categoryMatches(product, item.categoryPath))
+      .sort((a, b) => (b.categoryPath?.length ?? 0) - (a.categoryPath?.length ?? 0))[0];
+    const rule = productRule ?? categoryRule;
     if (!rule) return { ...product, publicPrice: product.price, effectivePrice: product.price, pricingSource: "public" as const };
 
     const effectivePrice = typeof rule.customPrice === "number" && rule.customPrice > 0

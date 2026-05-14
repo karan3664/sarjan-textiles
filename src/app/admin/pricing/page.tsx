@@ -10,7 +10,7 @@ export default async function AdminPricingPage() {
 
   return (
     <AdminTemplateChrome active="pricing" title="Client Pricing">
-      <AdminPricingClient initialRules={cms.clientPricing} clients={customers} products={cms.products} />
+      <AdminPricingClient initialRules={cms.clientPricing} clients={customers} products={cms.products} initialCategoryMaster={cms.categoryMaster} />
     </AdminTemplateChrome>
   );
 }

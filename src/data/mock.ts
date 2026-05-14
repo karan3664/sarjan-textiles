@@ -4,6 +4,10 @@ export type Product = {
   name: string;
   sku: string;
   category: string;
+  categoryPath?: string[];
+  categoryLevel1?: string;
+  categoryLevel2?: string;
+  categoryLevel3?: string;
   fabric: string;
   price: number;
   moq: number;

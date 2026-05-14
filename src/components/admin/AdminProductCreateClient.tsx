@@ -5,11 +5,13 @@ import { useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
 import { SIZE_GROUPS } from "@/lib/cart-client";
+import type { ProductCategoryMaster } from "@/lib/cms-store";
 
 type ProductForm = {
   name: string;
   sku: string;
   category: string;
+  categoryPath: string;
   fabric: string;
   price: string;
   moq: string;
@@ -45,6 +47,7 @@ const emptyForm: ProductForm = {
   name: "",
   sku: "",
   category: "Printed Shirts",
+  categoryPath: "Printed Shirts",
   fabric: "",
   price: "",
   moq: "12",
@@ -85,13 +88,19 @@ function productFromForm(form: ProductForm, index = 0, variantOverrides: Record<
   const sku = form.sku.trim();
   const slug = slugify(name || sku || `product-${Date.now()}`);
   const fallbackId = `PRD-${Date.now().toString().slice(-6)}-${String(index + 1).padStart(2, "0")}`;
+  const categoryPath = splitList(form.categoryPath).length ? splitList(form.categoryPath) : [form.category.trim() || "Uncategorized"];
+  const category = form.category.trim() || categoryPath.at(-1) || "Uncategorized";
 
   return {
     id: fallbackId,
     slug,
     name,
     sku,
-    category: form.category.trim() || "Uncategorized",
+    category,
+    categoryPath,
+    categoryLevel1: categoryPath[0],
+    categoryLevel2: categoryPath[1],
+    categoryLevel3: categoryPath[2],
     fabric: form.fabric.trim() || "Cotton",
     price: Number(form.price) || 0,
     moq: Number(form.moq) || 1,
@@ -101,7 +110,7 @@ function productFromForm(form: ProductForm, index = 0, variantOverrides: Record<
     colors: splitList(form.colors),
     sizes: splitList(form.sizes),
     images: form.images.length ? form.images : ["/sarjan-assets/sarjan-logo-icon.png"],
-    imageAlt: form.imageAlt.trim() || `${name} ${form.category.trim()} by Sarjan Textiles`,
+    imageAlt: form.imageAlt.trim() || `${name} ${category}`,
     description: form.description.trim(),
     care: form.care.trim(),
     metaTitle: form.metaTitle.trim() || name,
@@ -135,6 +144,7 @@ function formFromProduct(product?: Product): ProductForm {
     name: product.name,
     sku: product.sku,
     category: product.category,
+    categoryPath: (product.categoryPath ?? [product.category]).join(", "),
     fabric: product.fabric,
     price: String(product.price),
     moq: String(product.moq),
@@ -168,7 +178,7 @@ function validProduct(product: Product) {
   return Boolean(product.name && product.sku && product.slug);
 }
 
-export function AdminProductCreateClient({ initialProducts, editProduct }: { initialProducts: Product[]; editProduct?: Product }) {
+export function AdminProductCreateClient({ initialProducts, editProduct, categoryMaster = [] }: { initialProducts: Product[]; editProduct?: Product; categoryMaster?: ProductCategoryMaster[] }) {
   const isEdit = Boolean(editProduct);
   const [form, setForm] = useState<ProductForm>(() => formFromProduct(editProduct));
   const [variantOverrides, setVariantOverrides] = useState<Record<string, VariantOverride>>(() => Object.fromEntries((editProduct?.variants ?? []).map((variant) => [`${variant.color}__${variant.size}`, { sku: variant.sku, price: String(variant.price), stock: String(variant.stock) }])));
@@ -180,7 +190,12 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
   const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const categories = useMemo(() => Array.from(new Set(initialProducts.map((product) => product.category))).sort(), [initialProducts]);
+  const categories = useMemo(() => {
+    const masterPaths = categoryMaster.filter((category) => category.active !== false).map((category) => category.path.filter(Boolean));
+    const productPaths = initialProducts.map((product) => product.categoryPath?.length ? product.categoryPath : [product.category]);
+    const labels = [...masterPaths, ...productPaths].map((path) => path.join(", ")).filter(Boolean);
+    return Array.from(new Set(labels)).sort();
+  }, [categoryMaster, initialProducts]);
   const fabricOptions = useMemo(() => Array.from(new Set([...masterFabrics, ...initialProducts.map((product) => product.fabric).filter(Boolean)])).sort(), [initialProducts]);
   const selectedCare = splitList(form.care);
   const selectedColors = splitList(form.colors);
@@ -200,6 +215,15 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
 
   const update = (key: keyof ProductForm, value: ProductForm[keyof ProductForm]) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const updateCategoryPath = (value: string) => {
+    const path = splitList(value);
+    setForm((current) => ({
+      ...current,
+      categoryPath: value,
+      category: path.at(-1) ?? current.category,
+    }));
   };
 
   const updateVariantOverride = (key: string, patch: VariantOverride) => {
@@ -522,11 +546,21 @@ export function AdminProductCreateClient({ initialProducts, editProduct }: { ini
               <fieldset>
                 <div className="text-button mb-8">Categories<span className="text-primary">*</span></div>
                 <div className="tf-select">
-                  <select className="w-100" value={form.category} onChange={(event) => update("category", event.target.value)}>
-                    {categories.map((category) => <option key={category}>{category}</option>)}
-                    <option>New Collection</option>
+                  <select className="w-100" value={form.categoryPath} onChange={(event) => updateCategoryPath(event.target.value)}>
+                    {categories.map((categoryPath) => <option value={categoryPath} key={categoryPath}>{splitList(categoryPath).join(" > ")}</option>)}
+                    <option value="New Collection">New Collection</option>
                   </select>
                 </div>
+              </fieldset>
+              <fieldset>
+                <div className="text-button mb-8">Multi Level Category Path</div>
+                <div className="tf-select">
+                  <select className="w-100" value={form.categoryPath} onChange={(event) => updateCategoryPath(event.target.value)}>
+                    {categories.map((categoryPath) => <option value={categoryPath} key={categoryPath}>{splitList(categoryPath).join(" > ")}</option>)}
+                    <option value={form.category}>{form.category}</option>
+                  </select>
+                </div>
+                <div className="text-caption-1 text-secondary mt-8">Master paths come from Client Pricing category master.</div>
               </fieldset>
               <fieldset>
                 <div className="text-button font-instrument fw-6 mb-8">Fabric Type<span className="text-primary">*</span></div>

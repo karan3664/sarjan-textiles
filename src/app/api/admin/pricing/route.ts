@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { appendAuditLog, deleteClientPricingRule, getCmsSnapshot, upsertClientPricingRule } from "@/lib/cms-store";
+import { appendAuditLog, deleteClientPricingRule, getCmsSnapshot, upsertClientPricingRule, type ClientPricingRule } from "@/lib/cms-store";
 import { verifyAdminToken } from "@/lib/admin-token";
 import { cookies } from "next/headers";
 
@@ -13,17 +13,26 @@ export async function POST(request: Request) {
     const session = await verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
     if (!session) return Response.json({ error: "Admin login required" }, { status: 401 });
     const body = await request.json();
-    if (!body.clientId || !body.productSlug) return Response.json({ error: "Client and product required" }, { status: 400 });
+    const scope: ClientPricingRule["scope"] = body.scope === "category" ? "category" : "product";
+    const categoryPath = Array.isArray(body.categoryPath)
+      ? body.categoryPath.map((item: unknown) => String(item).trim()).filter(Boolean)
+      : String(body.categoryPath ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+    const productSlug = String(body.productSlug ?? "").trim();
+    if (!body.clientId || (scope === "product" && !productSlug) || (scope === "category" && !categoryPath.length)) {
+      return Response.json({ error: "Client and product/category required" }, { status: 400 });
+    }
     const customPrice = body.customPrice === "" || body.customPrice === undefined ? undefined : Number(body.customPrice);
     const discountPercentage = body.discountPercentage === "" || body.discountPercentage === undefined ? undefined : Number(body.discountPercentage);
 
     const current = await getCmsSnapshot();
     const previous = body.id ? current.clientPricing.find((rule) => rule.id === body.id) : undefined;
     const updatedAt = new Date().toISOString();
-    const rule = {
+    const rule: ClientPricingRule = {
       id: body.id || randomUUID(),
       clientId: String(body.clientId),
-      productSlug: String(body.productSlug),
+      scope,
+      productSlug: scope === "product" ? productSlug : undefined,
+      categoryPath: scope === "category" ? categoryPath : undefined,
       customPrice: Number.isFinite(customPrice) ? customPrice : undefined,
       discountPercentage: Number.isFinite(discountPercentage) ? discountPercentage : undefined,
       validFrom: body.validFrom || undefined,
@@ -35,6 +44,9 @@ export async function POST(request: Request) {
         {
           customPrice: Number.isFinite(customPrice) ? customPrice : undefined,
           discountPercentage: Number.isFinite(discountPercentage) ? discountPercentage : undefined,
+          scope,
+          productSlug: scope === "product" ? productSlug : undefined,
+          categoryPath: scope === "category" ? categoryPath : undefined,
           validFrom: body.validFrom || undefined,
           validTo: body.validTo || undefined,
           active: body.active !== false,
