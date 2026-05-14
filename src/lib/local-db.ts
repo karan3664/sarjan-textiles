@@ -250,7 +250,6 @@ export async function readLocalDb(): Promise<LocalDb> {
 }
 
 export async function writeLocalDb(db: LocalDb) {
-  if (supabaseAdmin()) return;
   await mkdir(path.dirname(dbPath), { recursive: true });
   await writeFile(dbPath, JSON.stringify(db, null, 2));
 }
@@ -521,12 +520,16 @@ export async function createOrder(input: Omit<LocalOrder, "id" | "status" | "pay
 export async function updateOrderStatus(id: string, status: LocalOrder["status"], note?: string) {
   const supabase = supabaseAdmin();
   if (supabase) {
-    const { data: existing, error: existingError } = await supabase.from("orders").select("*").eq("id", id).single();
-    if (existingError || !existing) throw new Error("Order not found");
-    const history = [...(existing.dispatch_history ?? []), { status, note: note?.trim(), createdAt: new Date().toISOString() }];
-    const { data, error } = await supabase.from("orders").update({ status, note, dispatch_history: history }).eq("id", id).select("*").single();
-    if (error) throw new Error(error.message);
-    return mapOrder(data);
+    try {
+      const { data: existing, error: existingError } = await supabase.from("orders").select("*").eq("id", id).single();
+      if (existingError || !existing) throw new Error("Order not found");
+      const history = [...(existing.dispatch_history ?? []), { status, note: note?.trim(), createdAt: new Date().toISOString() }];
+      const { data, error } = await supabase.from("orders").update({ status, note, dispatch_history: history }).eq("id", id).select("*").single();
+      if (error) throw new Error(error.message);
+      return mapOrder(data);
+    } catch {
+      // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
+    }
   }
   const db = await readLocalDb();
   const order = db.orders.find((item) => item.id === id);
@@ -544,15 +547,19 @@ export async function updateOrderAdmin(id: string, input: Partial<Pick<LocalOrde
 >>) {
   const supabase = supabaseAdmin();
   if (supabase) {
-    const { data: existing, error: existingError } = await supabase.from("orders").select("*").eq("id", id).single();
-    if (existingError || !existing) throw new Error("Order not found");
-    const history = existing.dispatch_history ?? [];
-    const nextHistory = input.status && input.status !== existing.status
-      ? [...history, { status: input.status, note: input.trackingNotes || input.note, createdAt: new Date().toISOString() }]
-      : history;
-    const { data, error } = await supabase.from("orders").update({ ...orderRow({ ...input, dispatchHistory: nextHistory }), dispatch_history: nextHistory }).eq("id", id).select("*").single();
-    if (error) throw new Error(error.message);
-    return mapOrder(data);
+    try {
+      const { data: existing, error: existingError } = await supabase.from("orders").select("*").eq("id", id).single();
+      if (existingError || !existing) throw new Error("Order not found");
+      const history = existing.dispatch_history ?? [];
+      const nextHistory = input.status && input.status !== existing.status
+        ? [...history, { status: input.status, note: input.trackingNotes || input.note, createdAt: new Date().toISOString() }]
+        : history;
+      const { data, error } = await supabase.from("orders").update({ ...orderRow({ ...input, dispatchHistory: nextHistory }), dispatch_history: nextHistory }).eq("id", id).select("*").single();
+      if (error) throw new Error(error.message);
+      return mapOrder(data);
+    } catch {
+      // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
+    }
   }
   const db = await readLocalDb();
   const order = db.orders.find((item) => item.id === id);

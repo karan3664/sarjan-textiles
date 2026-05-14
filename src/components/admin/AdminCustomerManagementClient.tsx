@@ -39,6 +39,10 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
 }
 
+function InlineLoader({ show }: { show: boolean }) {
+  return show ? <span className="sarjan-inline-loader" aria-label="Updating" /> : null;
+}
+
 export function AdminCustomerManagementClient({ initialCustomers }: { initialCustomers: AdminCustomer[] }) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [query, setQuery] = useState("");
@@ -66,6 +70,7 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(12000),
       });
       const data = (await res.json().catch(() => ({}))) as { customers?: AdminCustomer[]; error?: string };
       if (!res.ok) throw new Error(data.error || "Update failed");
@@ -74,7 +79,7 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
       setSelectedId(body.type === "client" ? body.id : selectedId);
       setNotice("Customer data updated.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Customer update failed");
+      setNotice(error instanceof Error && error.name === "TimeoutError" ? "Customer update timed out. Please retry." : error instanceof Error ? error.message : "Customer update failed");
     } finally {
       setSaving("");
     }
@@ -221,6 +226,7 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
                             <option value={status} key={status}>{status}</option>
                           ))}
                         </select>
+                        <InlineLoader show={saving === order.id} />
                       </div>
                       <span className={`box-status text-button ${statusClass[order.status]}`}>{order.status}</span>
                     </div>

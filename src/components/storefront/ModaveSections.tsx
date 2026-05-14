@@ -15,6 +15,7 @@ import { ProductSortSelect } from "./ProductSortSelect";
 import { PriceGate } from "./PriceGate";
 import { WishlistPageClient } from "./WishlistPageClient";
 import type { CmsCustomSection } from "@/types/cms-custom";
+import { getInstagramPosts, instagramProfileUrl, type InstagramPost } from "@/lib/instagram";
 
 function repeatedMarquee(items: string[], repeat = 4) {
   return Array.from({ length: repeat }).flatMap(() => items);
@@ -274,6 +275,16 @@ function testimonialAvatar(avatar?: string) {
   return avatar && !avatar.includes("/template/storefront/images/avatar/") ? avatar : defaultTestimonialAvatar;
 }
 
+function fallbackInstagramPosts(sourceProducts: Product[]): InstagramPost[] {
+  return sourceProducts.slice(0, 6).map((product) => ({
+    id: `fallback-${product.id}`,
+    image: product.images[0],
+    alt: product.imageAlt || product.name,
+    href: instagramProfileUrl,
+    source: "fallback",
+  }));
+}
+
 export async function HomeDynamic() {
   const cms = await getCachedCmsSnapshot();
   const home = cms.home;
@@ -290,7 +301,8 @@ export async function HomeDynamic() {
   const blogs = cms.blogs;
   const approvedTestimonials = cms.testimonials.filter((testimonial) => testimonial.status === "approved");
   const featured = products[0];
-  const galleryProducts = products.slice(0, 5);
+  const liveInstagramPosts = await getInstagramPosts(6);
+  const instagramPosts = liveInstagramPosts.length ? liveInstagramPosts : fallbackInstagramPosts(products);
   const sections = normalizeHomeSections(homeContent.sections as HomeSectionControl[] | undefined);
 
   const renderers: Record<HomeSectionType, ReactNode> = {
@@ -381,11 +393,7 @@ export async function HomeDynamic() {
               <div className="swiper-wrapper">
                 {approvedTestimonials.map((testimonial) => (
                   <div className="swiper-slide" key={testimonial.id}>
-                    <div className="testimonial-item hover-img">
-                      <div className="img-style">
-                        <img data-src={testimonial.image} src={testimonial.image} alt={testimonial.product} />
-                        <a href="#quickView" data-bs-toggle="modal" className="box-icon hover-tooltip center"><span className="icon icon-eye" /><span className="tooltip">Quick View</span></a>
-                      </div>
+                    <div className="testimonial-item hover-img sarjan-testimonial-text-only">
                       <div className="content">
                         <div className="content-top">
                           <div className="list-star-default">{Array.from({ length: 5 }).map((_, index) => <i className="icon icon-star" key={index} />)}</div>
@@ -418,11 +426,11 @@ export async function HomeDynamic() {
           </div>
           <div dir="ltr" className="swiper tf-sw-shop-gallery" data-preview="5" data-tablet="3" data-mobile="2" data-space-lg="10" data-space-md="10" data-space="8" data-pagination="2" data-pagination-md="3" data-pagination-lg="1">
             <div className="swiper-wrapper">
-              {galleryProducts.map((product, index) => (
-                <div className="swiper-slide" key={`gallery-${product.id}`}>
+              {instagramPosts.map((post, index) => (
+                <div className="swiper-slide" key={`gallery-${post.id}`}>
                   <div className="gallery-item hover-overlay hover-img wow fadeInUp" data-wow-delay={`.${index + 1}s`}>
-                    <div className="img-style"><img className="lazyload img-hover" data-src={product.images[0]} src={product.images[0]} alt={product.name} /></div>
-                    <Link href={`/products/${product.slug}`} className="box-icon hover-tooltip"><span className="icon icon-eye" /> <span className="tooltip">View Product</span></Link>
+                    <a href={post.href} target="_blank" rel="noopener noreferrer" className="img-style sarjan-instagram-gallery-link"><img className="lazyload img-hover" data-src={post.image} src={post.image} alt={post.alt} /></a>
+                    <a href={post.href} target="_blank" rel="noopener noreferrer" className="box-icon hover-tooltip"><span className="icon icon-instagram" /> <span className="tooltip">Open Instagram</span></a>
                   </div>
                 </div>
               ))}

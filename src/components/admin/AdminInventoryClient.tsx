@@ -5,6 +5,8 @@ import type { Product } from "@/data/mock";
 import type { InventoryMovement } from "@/lib/cms-store";
 
 type Operation = InventoryMovement["operation"];
+type InventorySortKey = "product" | "available" | "reserved" | "sold" | "returned" | "damaged" | "alert";
+type SortDirection = "asc" | "desc";
 
 const operationLabels: Record<Operation, string> = {
   add: "Add Stock",
@@ -65,10 +67,61 @@ function visiblePageNumbers(totalPages: number, currentPage: number) {
   );
 }
 
+function sortValue(product: Product, key: InventorySortKey) {
+  if (key === "product") return product.name.toLowerCase();
+  if (key === "available") return available(product);
+  if (key === "reserved") return product.reserved;
+  if (key === "sold") return product.sold;
+  if (key === "returned") return product.returned ?? 0;
+  if (key === "damaged") return product.damaged ?? 0;
+  return statusInfo(product).label;
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  activeKey,
+  direction,
+  onSort,
+}: {
+  label: string;
+  sortKey: InventorySortKey;
+  activeKey: InventorySortKey;
+  direction: SortDirection;
+  onSort: (key: InventorySortKey, direction: SortDirection) => void;
+}) {
+  const active = sortKey === activeKey;
+  return (
+    <div className={`sarjan-table-sort${active ? " active" : ""}`}>
+      <span>{label}</span>
+      <span className="sarjan-table-sort-actions">
+        <button
+          type="button"
+          className={active && direction === "asc" ? "active" : ""}
+          aria-label={`Sort ${label} ascending`}
+          onClick={() => onSort(sortKey, "asc")}
+        >
+          <i className="icon-chevron-up" />
+        </button>
+        <button
+          type="button"
+          className={active && direction === "desc" ? "active" : ""}
+          aria-label={`Sort ${label} descending`}
+          onClick={() => onSort(sortKey, "desc")}
+        >
+          <i className="icon-chevron-down" />
+        </button>
+      </span>
+    </div>
+  );
+}
+
 export function AdminInventoryClient({ initialProducts, initialLogs }: { initialProducts: Product[]; initialLogs: InventoryMovement[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [logs, setLogs] = useState(initialLogs);
   const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState<InventorySortKey>("product");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [productPage, setProductPage] = useState(1);
   const [productPageSize, setProductPageSize] = useState(8);
   const [logPage, setLogPage] = useState(1);
@@ -83,12 +136,23 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return products.filter((product) => !normalized || [product.name, product.sku, product.category, product.fabric].some((value) => value.toLowerCase().includes(normalized)));
-  }, [products, query]);
+    const matches = products.filter((product) => !normalized || [product.name, product.sku, product.category, product.fabric].some((value) => value.toLowerCase().includes(normalized)));
+    return [...matches].sort((a, b) => {
+      const first = sortValue(a, sortKey);
+      const second = sortValue(b, sortKey);
+      const result = typeof first === "number" && typeof second === "number" ? first - second : String(first).localeCompare(String(second));
+      return sortDirection === "asc" ? result : -result;
+    });
+  }, [products, query, sortDirection, sortKey]);
+
+  const updateSort = (key: InventorySortKey, direction: SortDirection) => {
+    setSortKey(key);
+    setSortDirection(direction);
+  };
 
   useEffect(() => {
     setProductPage(1);
-  }, [productPageSize, query]);
+  }, [productPageSize, query, sortDirection, sortKey]);
 
   useEffect(() => {
     setLogPage(1);
@@ -191,13 +255,13 @@ export function AdminInventoryClient({ initialProducts, initialLogs }: { initial
             <table>
               <thead>
                 <tr>
-                  <th className="text-title">Product</th>
-                  <th className="text-title">Available</th>
-                  <th className="text-title">Reserved</th>
-                  <th className="text-title">Sold</th>
-                  <th className="text-title">Returned</th>
-                  <th className="text-title">Damaged</th>
-                  <th className="text-title">Alert</th>
+                  <th className="text-title"><SortHeader label="Product" sortKey="product" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
+                  <th className="text-title"><SortHeader label="Avail." sortKey="available" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
+                  <th className="text-title"><SortHeader label="Reserved" sortKey="reserved" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
+                  <th className="text-title"><SortHeader label="Sold" sortKey="sold" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
+                  <th className="text-title"><SortHeader label="Return" sortKey="returned" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
+                  <th className="text-title"><SortHeader label="Damage" sortKey="damaged" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
+                  <th className="text-title"><SortHeader label="Alert" sortKey="alert" activeKey={sortKey} direction={sortDirection} onSort={updateSort} /></th>
                 </tr>
               </thead>
               <tbody>

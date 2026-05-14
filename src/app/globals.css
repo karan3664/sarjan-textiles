@@ -31,6 +31,7 @@ body.preload-wrapper .preload.preload-container {
     radial-gradient(circle at 50% 44%, rgba(160, 31, 50, 0.08), transparent 34%),
     rgba(250, 249, 246, 0.92);
   backdrop-filter: blur(16px);
+  animation: sarjanAdminLoaderFallback 0.24s ease 3s forwards;
 }
 
 .sarjan-admin-loader-card {
@@ -134,6 +135,14 @@ body.preload-wrapper .preload.preload-container {
 }
 
 @keyframes sarjanPreloadFallback {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes sarjanAdminLoaderFallback {
   to {
     opacity: 0;
     visibility: hidden;
@@ -1354,6 +1363,7 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-customer-order-actions .tf-select {
+  position: relative;
   width: 240px;
 }
 
@@ -1432,6 +1442,46 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   background: var(--White);
 }
 
+.sarjan-select-loader-wrap {
+  position: relative;
+}
+
+.sarjan-select-loader-wrap select,
+.sarjan-customer-order-actions .tf-select select {
+  padding-right: 44px;
+}
+
+.sarjan-inline-loader {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(160, 31, 49, 0.2);
+  border-top-color: var(--sarjan-accent);
+  border-radius: 999px;
+  animation: sarjan-spin 0.75s linear infinite;
+}
+
+.sarjan-select-loader-wrap .sarjan-inline-loader,
+.sarjan-customer-order-actions .tf-select .sarjan-inline-loader {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  margin-top: -9px;
+}
+
+.sarjan-button-loader {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@keyframes sarjan-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .sarjan-order-editor textarea {
   padding: 12px 14px;
   resize: vertical;
@@ -1479,7 +1529,7 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-inventory-table,
 .sarjan-inventory-history-table {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 .sarjan-inventory-table table,
@@ -1489,7 +1539,7 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-inventory-table table {
-  min-width: 0 !important;
+  min-width: 900px !important;
   table-layout: fixed;
 }
 
@@ -1500,12 +1550,12 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-inventory-table td,
 .sarjan-inventory-table th {
-  padding: 14px 12px !important;
+  padding: 14px 10px !important;
 }
 
 .sarjan-inventory-table td:nth-child(1),
 .sarjan-inventory-table th:nth-child(1) {
-  width: 34% !important;
+  width: 27% !important;
 }
 
 .sarjan-inventory-table td:nth-child(2),
@@ -1518,12 +1568,17 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-inventory-table th:nth-child(5),
 .sarjan-inventory-table td:nth-child(6),
 .sarjan-inventory-table th:nth-child(6) {
-  width: 10% !important;
+  width: 12% !important;
 }
 
 .sarjan-inventory-table td:nth-child(7),
 .sarjan-inventory-table th:nth-child(7) {
-  width: 16% !important;
+  width: 13% !important;
+}
+
+.sarjan-inventory-table th:not(:first-child),
+.sarjan-inventory-table td:not(:first-child) {
+  text-align: center;
 }
 
 .sarjan-inventory-table tr {
@@ -1543,6 +1598,58 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   min-width: 86px;
   justify-content: center;
   white-space: nowrap;
+}
+
+.sarjan-table-sort {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.sarjan-table-sort span {
+  min-width: max-content;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sarjan-table-sort-actions {
+  display: inline-grid;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.sarjan-table-sort-actions button {
+  display: grid;
+  width: 18px;
+  height: 14px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  line-height: 1;
+}
+
+.sarjan-table-sort-actions button:hover,
+.sarjan-table-sort-actions button.active {
+  color: var(--sarjan-accent);
+}
+
+.sarjan-table-sort-actions button:focus,
+.sarjan-table-sort-actions button:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
+.sarjan-table-sort-actions i {
+  flex: 0 0 auto;
+  font-size: 10px;
 }
 
 .sarjan-inventory-table .product-item {
@@ -2741,6 +2848,27 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sarjan-testimonial-text-only {
+  display: flex;
+  min-height: 320px;
+}
+
+.sarjan-testimonial-text-only .content {
+  width: 100%;
+}
+
+.sarjan-instagram-gallery-link {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.sarjan-instagram-gallery-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sarjan-testimonial-copy blockquote {

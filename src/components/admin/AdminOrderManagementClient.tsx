@@ -42,6 +42,10 @@ function statusClass(value?: string) {
   return "type-pending";
 }
 
+function InlineLoader({ show }: { show: boolean }) {
+  return show ? <span className="sarjan-inline-loader" aria-label="Updating" /> : null;
+}
+
 function downloadCsv(filename: string, rows: Array<Record<string, string | number | undefined>>) {
   const headers = Object.keys(rows[0] ?? { empty: "" });
   const escape = (value: string | number | undefined) => `"${String(value ?? "").replaceAll('"', '""')}"`;
@@ -95,6 +99,7 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
 
   const selected = visibleOrders.find((order) => order.id === selectedId) ?? visibleOrders[0];
   const draft = selected ? ({ ...selected, ...(drafts[selected.id] ?? {}) } as OrderDraft) : null;
+  const selectedSaving = Boolean(draft && saving === draft.id);
   const dispatchLogs = useMemo(() => orders.flatMap((order) => (order.dispatchHistory ?? []).map((log) => ({ ...log, orderId: order.id, clientName: order.clientName, lrNumber: order.lrNumber }))).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [orders]);
   const agingRows = useMemo(() => orders.filter((order) => order.status !== "Rejected").map((order) => ({ ...order, bucket: agingBucket(order), overdueDays: daysBetween(order.creditDueOn) })).sort((a, b) => (b.outstandingAmount ?? 0) - (a.outstandingAmount ?? 0)), [orders]);
   const agingTotals = useMemo(() => agingRows.reduce<Record<string, number>>((acc, order) => {
@@ -142,21 +147,27 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
     if (!draft) return;
     setSaving(draft.id);
     setNotice("");
-    const res = await fetch("/api/admin/orders", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-      body: JSON.stringify(draft),
-    });
-    const data = await res.json().catch(() => ({}));
-    setSaving("");
-    if (!res.ok) {
-      setNotice(data.error ?? "Order update failed");
-      return;
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify(draft),
+        signal: AbortSignal.timeout(12000),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotice(data.error ?? "Order update failed");
+        return;
+      }
+      setOrders(data.orders);
+      setDrafts((current) => ({ ...current, [draft.id]: {} }));
+      setNotice("Order updated.");
+    } catch (error) {
+      setNotice(error instanceof Error && error.name === "TimeoutError" ? "Order update timed out. Please retry." : "Order update failed. Please retry.");
+    } finally {
+      setSaving("");
     }
-    setOrders(data.orders);
-    setDrafts((current) => ({ ...current, [draft.id]: {} }));
-    setNotice("Order updated.");
   };
 
   return (
@@ -221,7 +232,7 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               {mode === "orders" ? (
                 <>
                   <div className="cols gap22">
-                    <fieldset><div className="body-title mb-10">Approval / Process Status</div><select value={draft.status} onChange={(event) => setDraft(draft.id, { status: event.target.value as AdminOrder["status"] })}>{orderStatusOptions.map((item) => <option key={item}>{item}</option>)}</select></fieldset>
+                    <fieldset><div className="body-title mb-10">Approval / Process Status</div><div className="sarjan-select-loader-wrap"><select value={draft.status} disabled={selectedSaving} onChange={(event) => setDraft(draft.id, { status: event.target.value as AdminOrder["status"] })}>{orderStatusOptions.map((item) => <option key={item}>{item}</option>)}</select><InlineLoader show={selectedSaving} /></div></fieldset>
                     <fieldset><div className="body-title mb-10">Admin Remark</div><input value={draft.approvalRemark ?? ""} onChange={(event) => setDraft(draft.id, { approvalRemark: event.target.value })} /></fieldset>
                   </div>
                   <fieldset><div className="body-title mb-10">Client / Internal Notes</div><textarea rows={4} value={draft.note ?? ""} onChange={(event) => setDraft(draft.id, { note: event.target.value })} /></fieldset>
@@ -231,7 +242,7 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               {mode === "dispatch" ? (
                 <>
                   <div className="cols gap22">
-                    <fieldset><div className="body-title mb-10">Dispatch Status</div><select value={draft.status} onChange={(event) => setDraft(draft.id, { status: event.target.value as AdminOrder["status"] })}>{orderStatusOptions.map((item) => <option key={item}>{item}</option>)}</select></fieldset>
+                    <fieldset><div className="body-title mb-10">Dispatch Status</div><div className="sarjan-select-loader-wrap"><select value={draft.status} disabled={selectedSaving} onChange={(event) => setDraft(draft.id, { status: event.target.value as AdminOrder["status"] })}>{orderStatusOptions.map((item) => <option key={item}>{item}</option>)}</select><InlineLoader show={selectedSaving} /></div></fieldset>
                     <fieldset><div className="body-title mb-10">Dispatch Date</div><input type="date" value={draft.dispatchDate ?? ""} onChange={(event) => setDraft(draft.id, { dispatchDate: event.target.value })} /></fieldset>
                     <fieldset><div className="body-title mb-10">LR Number</div><input value={draft.lrNumber ?? ""} onChange={(event) => setDraft(draft.id, { lrNumber: event.target.value })} /></fieldset>
                     <fieldset><div className="body-title mb-10">Vehicle Details</div><input value={draft.vehicleDetails ?? ""} onChange={(event) => setDraft(draft.id, { vehicleDetails: event.target.value })} /></fieldset>
@@ -253,11 +264,11 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
               {mode === "payments" ? (
                 <>
                   <div className="cols gap22">
-                    <fieldset><div className="body-title mb-10">Payment Status</div><select value={draft.paymentStatus ?? "Pending"} onChange={(event) => setDraft(draft.id, { paymentStatus: event.target.value as AdminOrder["paymentStatus"] })}>{paymentStatusOptions.map((item) => <option key={item}>{item}</option>)}</select></fieldset>
+                    <fieldset><div className="body-title mb-10">Payment Status</div><div className="sarjan-select-loader-wrap"><select value={draft.paymentStatus ?? "Pending"} disabled={selectedSaving} onChange={(event) => setDraft(draft.id, { paymentStatus: event.target.value as AdminOrder["paymentStatus"] })}>{paymentStatusOptions.map((item) => <option key={item}>{item}</option>)}</select><InlineLoader show={selectedSaving} /></div></fieldset>
                     <fieldset><div className="body-title mb-10">Paid Amount</div><input type="number" value={draft.paidAmount ?? 0} onChange={(event) => setDraft(draft.id, { paidAmount: Number(event.target.value) })} /></fieldset>
                     <fieldset><div className="body-title mb-10">Cheque Number</div><input value={draft.chequeNumber ?? ""} onChange={(event) => setDraft(draft.id, { chequeNumber: event.target.value })} /></fieldset>
                     <fieldset><div className="body-title mb-10">Cheque Date</div><input type="date" value={draft.chequeDate ?? ""} onChange={(event) => setDraft(draft.id, { chequeDate: event.target.value })} /></fieldset>
-                    <fieldset><div className="body-title mb-10">Deposit Status</div><select value={draft.depositStatus ?? "Not deposited"} onChange={(event) => setDraft(draft.id, { depositStatus: event.target.value as AdminOrder["depositStatus"] })}>{depositStatusOptions.map((item) => <option key={item}>{item}</option>)}</select></fieldset>
+                    <fieldset><div className="body-title mb-10">Deposit Status</div><div className="sarjan-select-loader-wrap"><select value={draft.depositStatus ?? "Not deposited"} disabled={selectedSaving} onChange={(event) => setDraft(draft.id, { depositStatus: event.target.value as AdminOrder["depositStatus"] })}>{depositStatusOptions.map((item) => <option key={item}>{item}</option>)}</select><InlineLoader show={selectedSaving} /></div></fieldset>
                     <fieldset><div className="body-title mb-10">Payment Received At</div><input type="date" value={draft.paymentReceivedAt ?? ""} onChange={(event) => setDraft(draft.id, { paymentReceivedAt: event.target.value })} /></fieldset>
                   </div>
                   <fieldset><div className="body-title mb-10">Bank Details</div><textarea rows={3} value={draft.bankDetails ?? ""} onChange={(event) => setDraft(draft.id, { bankDetails: event.target.value })} /></fieldset>
@@ -280,8 +291,9 @@ export function AdminOrderManagementClient({ initialOrders, mode }: { initialOrd
                 )) : <p className="text-secondary">Demo item details pending.</p>}
               </div>
 
-              <button type="button" className="tf-button" disabled={saving === draft.id || draft.source === "demo"} onClick={save}>
-                {draft.source === "demo" ? "Demo Order Read Only" : saving === draft.id ? "Saving..." : "Save Updates"}
+              <button type="button" className="tf-button sarjan-button-loader" disabled={selectedSaving || draft.source === "demo"} onClick={save}>
+                <InlineLoader show={selectedSaving} />
+                {draft.source === "demo" ? "Demo Order Read Only" : selectedSaving ? "Saving..." : "Save Updates"}
               </button>
             </div>
           ) : <div className="sarjan-empty-state">Select order.</div>}
