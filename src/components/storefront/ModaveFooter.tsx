@@ -56,6 +56,8 @@ export async function ModaveFooter() {
                       <a
                         href={settings.facebookUrl ?? "#"}
                         className="social-facebook"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         <i className="icon icon-fb" />
                       </a>
@@ -64,8 +66,27 @@ export async function ModaveFooter() {
                       <a
                         href={settings.instagramUrl ?? "#"}
                         className="social-instagram"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         <i className="icon icon-instagram" />
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href={settings.linkedinUrl ?? "#"}
+                        className="social-linkedin"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="LinkedIn"
+                      >
+                        <img
+                          src="/sarjan-assets/email-icon-linkedin.svg"
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="sarjan-footer-linkedin-icon"
+                        />
                       </a>
                     </li>
                   </ul>

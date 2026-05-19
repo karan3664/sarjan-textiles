@@ -32,6 +32,43 @@ import { siteUrl } from "@/lib/seo";
 import { BlogShareBar } from "./BlogShareBar";
 import { BlogCommentsBlock } from "./BlogCommentsBlock";
 
+function contactInstagramHandle(url: string, fallback = "@sarjantextiles") {
+  try {
+    const u = new URL(url.trim());
+    if (!u.hostname.includes("instagram.com")) return fallback;
+    const user = u.pathname.split("/").filter(Boolean)[0];
+    return user ? `@${user}` : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function contactFacebookLabel(url: string) {
+  try {
+    const u = new URL(url.trim());
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (!parts.length) return "Facebook";
+    if (parts[0] === "share" || parts[0] === "sharer") return "Facebook";
+    return parts[parts.length - 1].replace(/-/g, " ");
+  } catch {
+    return "Facebook";
+  }
+}
+
+function contactLinkedInLabel(url: string) {
+  try {
+    const u = new URL(url.trim());
+    const parts = u.pathname.split("/").filter(Boolean);
+    const ci = parts.indexOf("company");
+    if (ci >= 0 && parts[ci + 1]) return parts[ci + 1].replace(/-/g, " ");
+    const ii = parts.indexOf("in");
+    if (ii >= 0 && parts[ii + 1]) return `@${parts[ii + 1]}`;
+    return "LinkedIn";
+  } catch {
+    return "LinkedIn";
+  }
+}
+
 function repeatedMarquee(items: string[], repeat = 4) {
   return Array.from({ length: repeat }).flatMap(() => items);
 }
@@ -2832,17 +2869,56 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                     </a>
                   </div>
                   <div className="mb_20">
-                    <div className="text-title mb_8">Instagram:</div>
-                    <p className="text-secondary mb_0">
+                    <div className="text-title mb_8">Social</div>
+                    <div className="sarjan-contact-socials d-flex flex-wrap align-items-center">
                       <a
-                        href={settings.instagramUrl ?? instagramProfileUrl}
+                        href={(settings.facebookUrl ?? "#").trim() || "#"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="link"
+                        className="link d-inline-flex align-items-center gap-8 sarjan-contact-social-link"
                       >
-                        @sarjantextiles
+                        <i className="icon icon-fb" aria-hidden />
+                        <span>
+                          {contactFacebookLabel(
+                            settings.facebookUrl ?? "https://www.facebook.com/",
+                          )}
+                        </span>
                       </a>
-                    </p>
+                      <a
+                        href={
+                          settings.instagramUrl?.trim() || instagramProfileUrl
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link d-inline-flex align-items-center gap-8 sarjan-contact-social-link"
+                      >
+                        <i className="icon icon-instagram" aria-hidden />
+                        <span>
+                          {contactInstagramHandle(
+                            settings.instagramUrl ?? instagramProfileUrl,
+                          )}
+                        </span>
+                      </a>
+                      <a
+                        href={(settings.linkedinUrl ?? "#").trim() || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link d-inline-flex align-items-center gap-8 sarjan-contact-social-link"
+                      >
+                        <img
+                          src="/sarjan-assets/email-icon-linkedin.svg"
+                          alt=""
+                          width={20}
+                          height={20}
+                          className="sarjan-contact-linkedin-icon"
+                        />
+                        <span>
+                          {contactLinkedInLabel(
+                            settings.linkedinUrl ?? "https://www.linkedin.com/",
+                          )}
+                        </span>
+                      </a>
+                    </div>
                   </div>
                   <div>
                     <div className="text-title mb_8">Open Time:</div>

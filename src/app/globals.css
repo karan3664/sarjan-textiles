@@ -4426,6 +4426,26 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
     url("/sarjan-assets/banner-textiles-studio.webp") center/cover;
 }
 
+.sarjan-contact-socials {
+  gap: 14px 22px;
+}
+
+.sarjan-contact-socials .sarjan-contact-social-link {
+  font-weight: 500;
+}
+
+.sarjan-contact-socials .sarjan-contact-social-link .icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sarjan-contact-socials .sarjan-contact-linkedin-icon {
+  flex-shrink: 0;
+  display: block;
+  filter: brightness(0) saturate(100%);
+  opacity: 0.88;
+}
+
 .tracking-wrap .form-login input.sarjan-tracking-input {
   display: block;
   width: 100%;
@@ -5585,6 +5605,15 @@ footer.bg-main .footer-info .sarjan-footer-phone {
 }
 footer.bg-main .footer-info .sarjan-footer-phone:hover {
   color: var(--white);
+}
+
+footer.bg-main
+  .tf-social-icon
+  .social-linkedin
+  img.sarjan-footer-linkedin-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
 }
 
 /* Checkout: guest strategy — inline text links (match “Login here” underline). */

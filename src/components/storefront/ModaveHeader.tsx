@@ -191,7 +191,12 @@ export function ModaveHeader() {
                           </p>
                         </div>
                         <div className="sub-bot">
-                          <span className="body-text-">Support</span>
+                          <Link
+                            href="/contact"
+                            className="body-text-1 link d-block"
+                          >
+                            Contact us
+                          </Link>
                         </div>
                       </>
                     )}
