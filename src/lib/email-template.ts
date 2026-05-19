@@ -68,7 +68,8 @@ type SocialLink = {
 /** White icons as hosted SVGs — many clients strip inline SVG in HTML. */
 function emailSocialIconImg(kind: SocialKind): string {
   const src = escapeHtml(absUrl(`/sarjan-assets/email-icon-${kind}.svg`));
-  return `<img src="${src}" width="20" height="20" alt="" role="presentation" border="0" style="display:block;width:20px;height:20px;margin:0;padding:0;border:0;outline:none;text-decoration:none;line-height:0;" />`;
+  // Inline-block so parent td text-align:center actually centers (block+margin:0 sticks left in Gmail/Apple Mail).
+  return `<img src="${src}" width="20" height="20" alt="" role="presentation" border="0" style="display:inline-block;width:20px;height:20px;margin:0;padding:0;border:0;outline:none;text-decoration:none;line-height:0;vertical-align:middle;" />`;
 }
 
 function socialLinks(): SocialLink[] {
@@ -103,7 +104,7 @@ function socialIconsTable(): string {
     .map((item) => {
       const inner = emailSocialIconImg(item.kind);
       const bg = escapeHtml(item.bg);
-      return `<td width="${EMAIL_SOCIAL_COL_PX}" align="center" valign="middle" style="width:${EMAIL_SOCIAL_COL_PX}px;min-width:${EMAIL_SOCIAL_COL_PX}px;max-width:${EMAIL_SOCIAL_COL_PX}px;padding:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;"><a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;line-height:0;font-size:0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="44" height="44" bgcolor="${bg}" style="width:44px;height:44px;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;border-radius:22px;background-color:${bg};"><tr><td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;padding:0;margin:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;border-radius:22px;">${inner}</td></tr></table></a></td>`;
+      return `<td width="${EMAIL_SOCIAL_COL_PX}" align="center" valign="middle" style="width:${EMAIL_SOCIAL_COL_PX}px;min-width:${EMAIL_SOCIAL_COL_PX}px;max-width:${EMAIL_SOCIAL_COL_PX}px;padding:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;"><a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;line-height:0;font-size:0;text-align:center;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="44" height="44" align="center" bgcolor="${bg}" style="width:44px;height:44px;margin:0 auto;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;border-radius:22px;background-color:${bg};"><tr><td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;padding:0;margin:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;border-radius:22px;">${inner}</td></tr></table></a></td>`;
     })
     .join("");
 
