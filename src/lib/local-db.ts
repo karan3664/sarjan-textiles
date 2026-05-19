@@ -12,6 +12,8 @@ export type LocalClient = {
   gst?: string;
   city?: string;
   phone?: string;
+  /** Public URL path or absolute URL for profile photo (moderated on upload). */
+  avatarUrl?: string;
   address?: {
     contactName?: string;
     phone?: string;
@@ -143,6 +145,10 @@ function mapClient(row: Record<string, unknown>): LocalClient {
         : undefined,
     status: (row.status as LocalClient["status"]) ?? "pending",
     createdAt: String(row.created_at ?? ""),
+    avatarUrl:
+      row.avatar_url != null && String(row.avatar_url).trim()
+        ? String(row.avatar_url).trim()
+        : undefined,
   };
 }
 
@@ -248,6 +254,7 @@ export function publicClient(client: LocalClient) {
     address: client.address,
     status: client.status,
     createdAt: client.createdAt,
+    avatarUrl: client.avatarUrl,
   };
 }
 
@@ -469,21 +476,26 @@ export async function updateClientStatus(
 export async function updateClient(
   id: string,
   input: Partial<
-    Pick<LocalClient, "companyName" | "gst" | "city" | "phone" | "address">
+    Pick<
+      LocalClient,
+      "companyName" | "gst" | "city" | "phone" | "address" | "avatarUrl"
+    >
   >,
 ) {
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
+      const updateRow: Record<string, unknown> = {};
+      if (input.companyName !== undefined)
+        updateRow.company_name = input.companyName;
+      if (input.gst !== undefined) updateRow.gst = input.gst;
+      if (input.city !== undefined) updateRow.city = input.city;
+      if (input.phone !== undefined) updateRow.phone = input.phone;
+      if (input.address !== undefined) updateRow.address = input.address;
+      if (input.avatarUrl !== undefined) updateRow.avatar_url = input.avatarUrl;
       const { data, error } = await supabase
         .from("clients")
-        .update({
-          company_name: input.companyName,
-          gst: input.gst,
-          city: input.city,
-          phone: input.phone,
-          address: input.address,
-        })
+        .update(updateRow)
         .eq("id", id)
         .select("*")
         .single();
@@ -502,6 +514,9 @@ export async function updateClient(
   client.city = input.city?.trim() || client.city;
   client.phone = input.phone?.trim() || client.phone;
   client.address = { ...(client.address ?? {}), ...(input.address ?? {}) };
+  if (input.avatarUrl !== undefined) {
+    client.avatarUrl = input.avatarUrl?.trim() || undefined;
+  }
 
   await writeLocalDb(db);
   return client;

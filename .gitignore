@@ -14,3 +14,4 @@ supabase/.temp/
 tsconfig.tsbuildinfo
 products/
 public/uploads/ai-products/
+public/sarjan-assets/client-avatars/*.webp

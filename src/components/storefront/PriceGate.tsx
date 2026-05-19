@@ -1,6 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+
+function subscribeClientApproved(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("sarjan-auth-updated", onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+  return () => {
+    window.removeEventListener("sarjan-auth-updated", onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+}
 
 /** Same rule as PriceGate: only approved B2B clients see numeric prices. */
 export function clientHasApprovedPricing(): boolean {
@@ -8,11 +18,27 @@ export function clientHasApprovedPricing(): boolean {
   try {
     const client = JSON.parse(
       window.localStorage.getItem("sarjan-client") ?? "null",
-    ) as { status?: string } | null;
-    return client?.status === "approved";
+    ) as { status?: unknown } | null;
+    const raw = client?.status;
+    const s = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+    return s === "approved";
   } catch {
     return false;
   }
+}
+
+/** True when a client JWT is stored (same signal the header uses for “logged in”). */
+function readClientB2BTokenPresent(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(localStorage.getItem("sarjan-client-token")?.trim());
+}
+
+export function useClientHasB2BToken(): boolean {
+  return useSyncExternalStore(
+    subscribeClientApproved,
+    readClientB2BTokenPresent,
+    () => false,
+  );
 }
 
 export function PriceGate({

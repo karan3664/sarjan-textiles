@@ -12,7 +12,7 @@ import {
   writeCart,
 } from "@/lib/cart-client";
 import { productSetPrice } from "@/lib/product-pricing";
-import { PriceGate } from "./PriceGate";
+import { PriceGate, useClientHasB2BToken } from "./PriceGate";
 
 type CartLine = StoredCartItem & {
   product: Product;
@@ -24,6 +24,7 @@ export function CartPageClient() {
   const [cart, setCart] = useState<StoredCartItem[]>([]);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasB2BSession = useClientHasB2BToken();
 
   useEffect(() => {
     const sync = () => {
@@ -340,20 +341,22 @@ export function CartPageClient() {
                           <a href="/term-of-use">terms and conditions</a>
                         </label>
                       </fieldset>
-                      <div className="d-grid gap-2 mb_12">
-                        <Link
-                          href="/login"
-                          className="tf-btn btn-fill radius-4"
-                        >
-                          <span className="text">Login</span>
-                        </Link>
-                        <Link
-                          href="/register"
-                          className="tf-btn btn-reset radius-4"
-                        >
-                          <span className="text">Sign Up</span>
-                        </Link>
-                      </div>
+                      {!hasB2BSession ? (
+                        <div className="d-grid gap-2 mb_12">
+                          <Link
+                            href="/login"
+                            className="tf-btn btn-fill radius-4"
+                          >
+                            <span className="text">Login</span>
+                          </Link>
+                          <Link
+                            href="/register"
+                            className="tf-btn btn-reset radius-4"
+                          >
+                            <span className="text">Sign Up</span>
+                          </Link>
+                        </div>
+                      ) : null}
                       <a href="/checkout" className="tf-btn btn-reset">
                         Process To Checkout
                       </a>
@@ -372,12 +375,16 @@ export function CartPageClient() {
                 Add products to create an order request.
               </p>
               <div className="d-flex gap10 flex-wrap justify-content-center mt_24">
-                <Link href="/login" className="tf-btn btn-reset radius-4">
-                  <span className="text">Login</span>
-                </Link>
-                <Link href="/register" className="tf-btn btn-fill radius-4">
-                  <span className="text">Sign Up</span>
-                </Link>
+                {!hasB2BSession ? (
+                  <>
+                    <Link href="/login" className="tf-btn btn-reset radius-4">
+                      <span className="text">Login</span>
+                    </Link>
+                    <Link href="/register" className="tf-btn btn-fill radius-4">
+                      <span className="text">Sign Up</span>
+                    </Link>
+                  </>
+                ) : null}
                 <Link href="/products" className="tf-btn btn-fill radius-4">
                   <span className="text">Browse Products</span>
                 </Link>

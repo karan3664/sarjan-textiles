@@ -2803,8 +2803,14 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                   </div>
                   <div className="mb_20">
                     <div className="text-title mb_8">Email:</div>
-                    <p className="text-secondary">{settings.salesEmail}</p>
-                    <p className="text-secondary">{settings.ordersEmail}</p>
+                    <p className="text-secondary mb_0">
+                      <a
+                        href={`mailto:${(settings.ordersEmail || settings.email).trim()}`}
+                        className="link"
+                      >
+                        {(settings.ordersEmail || settings.email).trim()}
+                      </a>
+                    </p>
                   </div>
                   <div className="mb_20">
                     <div className="text-title mb_8">Address:</div>
@@ -2813,7 +2819,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                       href={directionsHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="tf-btn-default style-white fw-6 mt_12 d-inline-flex align-items-center gap-8"
+                      className="link fw-6 mt_12 d-inline-flex align-items-center gap-8"
                     >
                       Get directions
                       <i className="icon-arrowUpRight" />

@@ -11,6 +11,7 @@ type Client = {
   city?: string;
   phone?: string;
   address?: Address;
+  avatarUrl?: string;
 };
 
 type Address = {
@@ -69,6 +70,17 @@ function readClient() {
   } catch {
     return null;
   }
+}
+
+function clientAuthJsonHeaders(): HeadersInit {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("sarjan-client-token")?.trim()
+      : "";
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 function useClientAndOrders() {
@@ -150,8 +162,11 @@ function AccountFrame({
                 <div className="account-avatar">
                   <div className="image">
                     <img
-                      src="/template/storefront/images/avatar/user-account.jpg"
-                      alt="account"
+                      src={
+                        client?.avatarUrl?.trim() ||
+                        "/template/storefront/images/avatar/user-account.jpg"
+                      }
+                      alt=""
                     />
                   </div>
                   <h6 className="mb_4">
@@ -205,6 +220,8 @@ export function AccountDashboardPage() {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState("");
   useEffect(() => {
     if (!client) return;
     setForm({
@@ -230,7 +247,7 @@ export function AccountDashboardPage() {
 
     const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: clientAuthJsonHeaders(),
       body: JSON.stringify({
         companyName: form.companyName,
         phone: form.phone,
@@ -274,7 +291,7 @@ export function AccountDashboardPage() {
       `/api/clients/${encodeURIComponent(client.id)}`,
       {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: clientAuthJsonHeaders(),
         body: JSON.stringify({
           currentPassword: password.currentPassword,
           newPassword: password.newPassword,
@@ -294,6 +311,41 @@ export function AccountDashboardPage() {
     }, 700);
   };
 
+  const uploadAvatar = async (file: File) => {
+    if (!client?.id) return;
+    setAvatarUploading(true);
+    setAvatarMessage("");
+    const token = localStorage.getItem("sarjan-client-token")?.trim();
+    const formData = new FormData();
+    formData.set("file", file);
+    try {
+      const res = await fetch(
+        `/api/clients/${encodeURIComponent(client.id)}/avatar`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        },
+      );
+      const data = (await res.json()) as { client?: Client; error?: string };
+      if (!res.ok) {
+        setAvatarMessage(data.error ?? "Upload failed.");
+        return;
+      }
+      if (data.client) {
+        setClient(data.client);
+        localStorage.setItem("sarjan-client", JSON.stringify(data.client));
+        window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+        setAvatarMessage("Photo updated.");
+        window.setTimeout(() => setAvatarMessage(""), 4000);
+      }
+    } catch {
+      setAvatarMessage("Upload failed.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   return (
     <AccountFrame active="/my-account" title="My Account">
       <div className="account-details">
@@ -304,6 +356,65 @@ export function AccountDashboardPage() {
             <form className="form-account-details" onSubmit={saveProfile}>
               <div className="account-info">
                 <h5 className="title">Information</h5>
+                <div className="sarjan-profile-avatar-block mb_24">
+                  <div className="text-title mb_8">Profile photo</div>
+                  <p className="text-secondary text-caption-1 mb_16">
+                    JPG, PNG, or WebP · max 4MB. Use a professional headshot or
+                    company logo only — adult or explicit images are blocked
+                    automatically.
+                  </p>
+                  <div className="d-flex align-items-center gap-20 flex-wrap">
+                    <div className="sarjan-profile-avatar-thumb">
+                      <img
+                        src={
+                          client.avatarUrl?.trim() ||
+                          "/template/storefront/images/avatar/user-account.jpg"
+                        }
+                        alt=""
+                        width={100}
+                        height={100}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        id="sarjan-profile-avatar-input"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                        className="d-none"
+                        disabled={avatarUploading}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) void uploadAvatar(file);
+                          event.target.value = "";
+                        }}
+                      />
+                      <label
+                        htmlFor="sarjan-profile-avatar-input"
+                        className="tf-btn btn-white has-border radius-4"
+                      >
+                        <span className="text">
+                          {avatarUploading ? "Uploading…" : "Choose photo"}
+                        </span>
+                      </label>
+                      {avatarMessage ? (
+                        <p
+                          className={
+                            avatarMessage.includes("failed") ||
+                            avatarMessage.includes("blocked") ||
+                            avatarMessage.includes("Could not") ||
+                            avatarMessage.includes("adult") ||
+                            avatarMessage.includes("explicit") ||
+                            avatarMessage.includes("not verify")
+                              ? "text-danger text-caption-1 mt_8 mb_0"
+                              : "text-success text-caption-1 mt_8 mb_0"
+                          }
+                        >
+                          {avatarMessage}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
                 <div className="cols mb_20">
                   <fieldset>
                     <input
@@ -606,7 +717,7 @@ export function AccountAddressPage() {
     }
     const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: clientAuthJsonHeaders(),
       body: JSON.stringify({
         address,
         city: address.city,
@@ -632,7 +743,7 @@ export function AccountAddressPage() {
     const emptyAddress = {};
     const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: clientAuthJsonHeaders(),
       body: JSON.stringify({ address: emptyAddress }),
     });
     const data = await res.json();

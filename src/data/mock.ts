@@ -64,7 +64,8 @@ export const siteSettings = {
   logoIcon: asset("sarjan-logo-icon.png"),
   favicon: asset("sarjan-favicon-192.png"),
   email: "info@sarjantextiles.com",
-  salesEmail: "sales@sarjantextiles.com",
+  /** Deprecated on storefront contact; kept for CMS / older snapshots. */
+  salesEmail: "",
   ordersEmail: "info@sarjantextiles.com",
   phone: "+91 7567428100",
   address: sarjanRegisteredAddress,

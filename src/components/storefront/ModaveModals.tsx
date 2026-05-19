@@ -18,7 +18,11 @@ import {
   toggleWishlist,
   writeWishlist,
 } from "@/lib/wishlist-client";
-import { PriceGate, clientHasApprovedPricing } from "./PriceGate";
+import {
+  PriceGate,
+  clientHasApprovedPricing,
+  useClientHasB2BToken,
+} from "./PriceGate";
 
 type HydratedCartItem = StoredCartItem & {
   product: Product;
@@ -134,6 +138,7 @@ export function ModaveModals() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSearchItems, setVisibleSearchItems] = useState(4);
+  const hasB2BSession = useClientHasB2BToken();
 
   useEffect(() => {
     const sync = () => {
@@ -685,24 +690,28 @@ export function ModaveModals() {
                               Add products to create an order request.
                             </p>
                             <div className="sarjan-mini-cart-empty-actions mt_12">
-                              <button
-                                type="button"
-                                className="tf-btn btn-white radius-4 has-border"
-                                onClick={() =>
-                                  goFromModal("shoppingCart", "/login")
-                                }
-                              >
-                                <span className="text">Login</span>
-                              </button>
-                              <button
-                                type="button"
-                                className="tf-btn btn-fill radius-4"
-                                onClick={() =>
-                                  goFromModal("shoppingCart", "/register")
-                                }
-                              >
-                                <span className="text">Sign Up</span>
-                              </button>
+                              {!hasB2BSession ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="tf-btn btn-white radius-4 has-border"
+                                    onClick={() =>
+                                      goFromModal("shoppingCart", "/login")
+                                    }
+                                  >
+                                    <span className="text">Login</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="tf-btn btn-fill radius-4"
+                                    onClick={() =>
+                                      goFromModal("shoppingCart", "/register")
+                                    }
+                                  >
+                                    <span className="text">Sign Up</span>
+                                  </button>
+                                </>
+                              ) : null}
                               <button
                                 type="button"
                                 className="tf-btn btn-fill radius-4"
@@ -749,24 +758,28 @@ export function ModaveModals() {
                           </label>
                         </div>
                         <div className="tf-mini-cart-view-checkout">
-                          <button
-                            type="button"
-                            className="tf-btn w-100 btn-white radius-4 has-border"
-                            onClick={() =>
-                              goFromModal("shoppingCart", "/login")
-                            }
-                          >
-                            <span className="text">Login</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tf-btn w-100 btn-white radius-4 has-border"
-                            onClick={() =>
-                              goFromModal("shoppingCart", "/register")
-                            }
-                          >
-                            <span className="text">Sign Up</span>
-                          </button>
+                          {!hasB2BSession ? (
+                            <>
+                              <button
+                                type="button"
+                                className="tf-btn w-100 btn-white radius-4 has-border"
+                                onClick={() =>
+                                  goFromModal("shoppingCart", "/login")
+                                }
+                              >
+                                <span className="text">Login</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="tf-btn w-100 btn-white radius-4 has-border"
+                                onClick={() =>
+                                  goFromModal("shoppingCart", "/register")
+                                }
+                              >
+                                <span className="text">Sign Up</span>
+                              </button>
+                            </>
+                          ) : null}
                           <button
                             type="button"
                             className="tf-btn w-100 btn-white radius-4 has-border"
