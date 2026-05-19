@@ -404,6 +404,48 @@ export async function updateClient(id: string, input: Partial<Pick<LocalClient, 
   return client;
 }
 
+export async function deleteClientIfAllowed(id: string) {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    try {
+      const { data: orders, error: ordersError } = await supabase.from("orders").select("*").eq("client_id", id);
+      if (ordersError) throw new Error(ordersError.message);
+      const openOrders = (orders ?? []).map(mapOrder).filter((order) => order.status !== "Delivered");
+      if (openOrders.length) {
+        throw new Error(`Cannot delete customer. Pending orders found: ${openOrders.map((order) => `${order.id} (${order.status})`).join(", ")}. Delete allowed only when all orders are Delivered.`);
+      }
+
+      if ((orders ?? []).length) {
+        const { error: orderDeleteError } = await supabase.from("orders").delete().eq("client_id", id);
+        if (orderDeleteError) throw new Error(orderDeleteError.message);
+      }
+
+      const { data, error } = await supabase.from("clients").delete().eq("id", id).select("*").single();
+      if (error) throw new Error(error.message);
+      return mapClient(data);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Cannot delete customer.")) throw error;
+      // Fall through to JSON fallback.
+    }
+  }
+
+  const db = await readLocalDb();
+  const client = db.clients.find((item) => item.id === id);
+  if (!client) throw new Error("Client not found");
+
+  const clientOrders = db.orders.filter((order) => order.clientId === id);
+  const openOrders = clientOrders.filter((order) => order.status !== "Delivered");
+  if (openOrders.length) {
+    throw new Error(`Cannot delete customer. Pending orders found: ${openOrders.map((order) => `${order.id} (${order.status})`).join(", ")}. Delete allowed only when all orders are Delivered.`);
+  }
+
+  db.clients = db.clients.filter((item) => item.id !== id);
+  db.orders = db.orders.filter((order) => order.clientId !== id);
+  delete db.carts[id];
+  await writeLocalDb(db);
+  return client;
+}
+
 export async function updateClientPassword(id: string, currentPassword: string, newPassword: string) {
   const db = await readLocalDb();
   const client = db.clients.find((item) => item.id === id);

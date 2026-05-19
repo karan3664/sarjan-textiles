@@ -40,7 +40,7 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "seo" | "audit" | "reports" | "roles" | "backups";
+type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "studio" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "seo" | "audit" | "reports" | "roles" | "backups";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -67,6 +67,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
             <MenuItem href="/admin" icon="icon-house" label="Dashboard" active={active === "dashboard"} />
             <MenuItem href="/admin/customers" icon="icon-users" label="Client Management" active={active === "customers"} />
             <MenuItem href="/admin/products-list" icon="icon-package" label="Products" active={active === "products"} />
+            <MenuItem href="/admin/ai-product-studio" icon="icon-camera" label="AI Product Studio" active={active === "studio"} />
             <MenuItem href="/admin/product-filters" icon="icon-chart-bar" label="Product Filters" active={active === "filters"} />
             <MenuItem href="/admin/products-low" icon="icon-basket" label="Inventory" active={active === "inventory"} />
             <MenuItem href="/admin/orders" icon="icon-dollar" label="Orders" active={active === "orders"} />

@@ -2,7 +2,7 @@ import { getAdminCustomers } from "@/lib/admin-customers";
 import { orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
 import { verifyAdminToken } from "@/lib/admin-token";
-import { createAdminClient, updateClientStatus, updateOrderStatus, type LocalClient } from "@/lib/local-db";
+import { createAdminClient, deleteClientIfAllowed, updateClientStatus, updateOrderStatus, type LocalClient } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { cookies } from "next/headers";
 import { after } from "next/server";
@@ -68,5 +68,27 @@ export async function PATCH(request: Request) {
     return Response.json({ error: "Unsupported update type" }, { status: 400 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Customer update failed" }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
+    if (!session) return Response.json({ error: "Admin login required" }, { status: 401 });
+    if (!["super_admin", "admin", "sales"].includes(session.role)) return Response.json({ error: "Permission denied" }, { status: 403 });
+
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Customer id required" }, { status: 400 });
+
+    const before = (await getAdminCustomers()).find((customer) => customer.id === id);
+    if (!before) return Response.json({ error: "Customer not found" }, { status: 404 });
+    if (before.source !== "local") return Response.json({ error: "Demo customers cannot be deleted." }, { status: 400 });
+
+    const deleted = await deleteClientIfAllowed(id);
+    const customers = await getAdminCustomers();
+    appendAuditLog({ actor: session.email, role: session.role, action: "delete_client_account", entity: "client", entityId: id, before, after: deleted }).catch(() => null);
+    return Response.json({ customers, deleted });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "Customer delete failed" }, { status: 400 });
   }
 }

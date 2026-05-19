@@ -11,3 +11,6 @@ Archive.zip
 supabase-migration-core.generated.sql
 supabase/.temp/
 .vercel
+tsconfig.tsbuildinfo
+products/
+public/uploads/ai-products/

@@ -1197,6 +1197,37 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   max-width: 320px;
 }
 
+.sarjan-client-create-grid fieldset {
+  margin: 0;
+}
+
+.sarjan-client-create-grid input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px !important;
+  border: 1px solid #cfcfcf !important;
+  border-radius: 8px;
+  background: #fff !important;
+  color: #181818;
+  box-shadow: inset 0 1px 0 rgba(24, 24, 24, 0.03);
+}
+
+.sarjan-client-create-grid input::placeholder {
+  color: #9a9a9a;
+  opacity: 1;
+}
+
+.sarjan-client-create-grid input:focus {
+  border-color: var(--sarjan-accent) !important;
+  box-shadow: 0 0 0 4px rgba(139, 30, 45, 0.08);
+}
+
+.sarjan-client-create-grid input.sarjan-input-error {
+  border-color: #b42318 !important;
+  background: #fff7f7 !important;
+  box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.08);
+}
+
 .sarjan-customer-cards {
   display: grid;
   gap: 12px;
@@ -1311,6 +1342,17 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   border-bottom: 1px solid var(--line);
 }
 
+.sarjan-danger-button {
+  border-color: #b42318 !important;
+  background: #fff5f5 !important;
+  color: #b42318 !important;
+}
+
+.sarjan-danger-button:hover {
+  background: #b42318 !important;
+  color: #fff !important;
+}
+
 .sarjan-customer-orders-head {
   margin: 22px 0 14px;
 }
@@ -1343,7 +1385,8 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   gap: 6px;
 }
 
-.sarjan-order-flow span {
+.sarjan-order-flow span,
+.sarjan-order-flow button {
   min-height: 34px;
   padding: 7px 8px;
   border: 1px solid var(--line);
@@ -1356,7 +1399,17 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   text-align: center;
 }
 
-.sarjan-order-flow span.done {
+.sarjan-order-flow button {
+  cursor: pointer;
+}
+
+.sarjan-order-flow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.sarjan-order-flow span.done,
+.sarjan-order-flow button.done {
   border-color: rgba(47, 184, 108, 0.28);
   color: #2fb86c;
   background: rgba(47, 184, 108, 0.08);
@@ -4405,6 +4458,335 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   padding-left: 12px;
   padding-right: 12px;
   white-space: nowrap;
+}
+
+.sarjan-ai-studio {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.sarjan-ai-studio-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.sarjan-ai-studio-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.75fr);
+  gap: 24px;
+}
+
+.sarjan-ai-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sarjan-ai-form-grid select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--White);
+}
+
+.sarjan-ai-dropzone {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 132px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px dashed rgba(139, 30, 45, 0.38);
+  border-radius: 8px;
+  background: #fffaf6;
+}
+
+.sarjan-ai-upload-actions,
+.sarjan-ai-action-row,
+.sarjan-ai-filters,
+.sarjan-ai-output-links,
+.sarjan-ai-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.sarjan-ai-action-row {
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.sarjan-ai-action-row .body-text {
+  margin-right: auto;
+}
+
+.sarjan-ai-rules {
+  display: grid;
+  gap: 12px;
+}
+
+.sarjan-ai-rules div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.sarjan-ai-rules i {
+  color: var(--success);
+}
+
+.sarjan-ai-prompt {
+  width: 100%;
+  min-height: 260px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-table);
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.sarjan-ai-filter-top {
+  align-items: center;
+}
+
+.sarjan-ai-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-table);
+}
+
+.sarjan-ai-pagination select {
+  min-width: 130px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--White);
+}
+
+.sarjan-ai-page-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sarjan-ai-filters select {
+  min-width: 170px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--White);
+}
+
+.sarjan-ai-queue {
+  display: grid;
+  gap: 18px;
+}
+
+.sarjan-ai-card {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.4fr);
+  gap: 20px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--White);
+}
+
+.sarjan-ai-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sarjan-ai-compare figure {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f5f5f5;
+  aspect-ratio: 4 / 5;
+}
+
+.sarjan-ai-compare img,
+.sarjan-ai-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.sarjan-ai-compare img {
+  display: block;
+  object-fit: contain;
+}
+
+.sarjan-ai-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  color: var(--secondary);
+  text-align: center;
+}
+
+.sarjan-ai-compare figcaption {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(24, 24, 24, 0.72);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sarjan-ai-card-body,
+.sarjan-ai-card-head {
+  display: grid;
+  gap: 14px;
+}
+
+.sarjan-ai-card-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.sarjan-ai-card-head h6 {
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.sarjan-ai-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sarjan-ai-meta-grid span,
+.sarjan-ai-tags span {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-table);
+  color: var(--secondary);
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.sarjan-ai-output-links a {
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--main);
+  font-weight: 700;
+}
+
+.sarjan-ai-cms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.sarjan-ai-cms-grid > div {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-table);
+}
+
+.sarjan-ai-public-url {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+  color: var(--main);
+  background: var(--bg-table);
+}
+
+.sarjan-ai-note {
+  padding: 10px 12px;
+  border: 1px solid rgba(139, 30, 45, 0.16);
+  border-radius: 8px;
+  background: #fff8f4;
+}
+
+.sarjan-ai-qa {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) repeat(5, auto);
+  gap: 10px;
+  align-items: center;
+}
+
+.sarjan-ai-qa input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+}
+
+.sarjan-ai-replace {
+  margin: 0;
+  cursor: pointer;
+}
+
+.sarjan-ai-model-btn {
+  border-color: #1565c0 !important;
+  background: #eaf3ff !important;
+  color: #0d47a1 !important;
+}
+
+.sarjan-ai-empty {
+  padding: 28px 0 4px;
+  text-align: center;
+}
+
+@media (max-width: 1199px) {
+  .sarjan-ai-studio-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sarjan-ai-studio-layout,
+  .sarjan-ai-card,
+  .sarjan-ai-cms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-ai-qa {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .sarjan-ai-studio-kpis,
+  .sarjan-ai-form-grid,
+  .sarjan-ai-compare,
+  .sarjan-ai-meta-grid,
+  .sarjan-ai-qa {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-ai-dropzone {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 575px) {

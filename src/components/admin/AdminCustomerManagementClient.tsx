@@ -50,6 +50,7 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
   const [selectedId, setSelectedId] = useState(initialCustomers[0]?.id ?? "");
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
+  const [createAttempted, setCreateAttempted] = useState(false);
   const [newClient, setNewClient] = useState({ companyName: "", email: "", phone: "", city: "", gst: "", password: "" });
   const selected = customers.find((customer) => customer.id === selectedId) ?? customers[0];
 
@@ -64,14 +65,26 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
 
   const updateCustomers = async (body: Record<string, string>) => {
     setSaving(body.id ?? "saving");
-    setNotice("");
+    setNotice(body.type === "order" ? "Updating order status..." : "");
+    const previousCustomers = customers;
+    if (body.type === "order") {
+      setCustomers((current) =>
+        current.map((customer) =>
+          customer.source === "local"
+            ? {
+                ...customer,
+                orders: customer.orders.map((order) => (order.id === body.id ? { ...order, status: body.status as OrderStatus } : order)),
+              }
+            : customer,
+        ),
+      );
+    }
     try {
       const res = await fetch("/api/admin/customers", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(12000),
       });
       const data = (await res.json().catch(() => ({}))) as { customers?: AdminCustomer[]; error?: string };
       if (!res.ok) throw new Error(data.error || "Update failed");
@@ -80,13 +93,30 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
       setSelectedId(body.type === "client" ? body.id : selectedId);
       setNotice("Customer data updated.");
     } catch (error) {
-      setNotice(error instanceof Error && error.name === "TimeoutError" ? "Customer update timed out. Please retry." : error instanceof Error ? error.message : "Customer update failed");
+      if (body.type === "order") setCustomers(previousCustomers);
+      setNotice(error instanceof Error ? error.message : "Customer update failed");
     } finally {
       setSaving("");
     }
   };
 
   const createClient = async () => {
+    setCreateAttempted(true);
+    const companyName = newClient.companyName.trim();
+    const email = newClient.email.trim().toLowerCase();
+    if (!companyName) {
+      setNotice("Company name required.");
+      return;
+    }
+    if (!email) {
+      setNotice("Email required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setNotice("Valid email required.");
+      return;
+    }
+
     setSaving("new-client");
     setNotice("");
     try {
@@ -94,16 +124,46 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-        body: JSON.stringify(newClient),
+        body: JSON.stringify({ ...newClient, companyName, email }),
       });
       const data = (await res.json().catch(() => ({}))) as { customers?: AdminCustomer[]; client?: AdminCustomer; error?: string };
       if (!res.ok || !data.customers) throw new Error(data.error || "Client create failed");
       setCustomers(data.customers);
       if (data.client?.id) setSelectedId(data.client.id);
       setNewClient({ companyName: "", email: "", phone: "", city: "", gst: "", password: "" });
+      setCreateAttempted(false);
       setNotice("Custom client account created.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Client create failed");
+    } finally {
+      setSaving("");
+    }
+  };
+
+  const deleteCustomer = async (customer: AdminCustomer) => {
+    const openOrders = customer.orders.filter((order) => order.status !== "Delivered");
+    if (openOrders.length) {
+      setNotice(`Cannot delete ${customer.companyName}. Pending orders: ${openOrders.map((order) => `${order.id} (${order.status})`).join(", ")}. Delete allowed only after all orders are Delivered.`);
+      return;
+    }
+
+    const orderNote = customer.orders.length ? ` This also removes ${customer.orders.length} delivered order record(s).` : "";
+    if (!window.confirm(`Delete ${customer.companyName}?${orderNote}`)) return;
+
+    setSaving(customer.id);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/admin/customers?id=${encodeURIComponent(customer.id)}`, {
+        method: "DELETE",
+        cache: "no-store",
+      });
+      const data = (await res.json().catch(() => ({}))) as { customers?: AdminCustomer[]; error?: string };
+      if (!res.ok || !data.customers) throw new Error(data.error || "Customer delete failed");
+      setCustomers(data.customers);
+      setSelectedId(data.customers[0]?.id ?? "");
+      setNotice(`${customer.companyName} deleted.`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Customer delete failed");
     } finally {
       setSaving("");
     }
@@ -138,18 +198,19 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
             <h5>Create Custom Client Account</h5>
             <div className="body-text text-secondary">Admin-created clients are approved by default and can place orders immediately.</div>
           </div>
-          <button type="button" className="tf-button style-1" disabled={saving === "new-client" || !newClient.companyName || !newClient.email} onClick={createClient}>
+          <button type="button" className="tf-button style-1" disabled={saving === "new-client"} onClick={createClient}>
             {saving === "new-client" ? "Creating..." : "Create Client"}
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <fieldset><div className="body-title mb-10">Company Name</div><input value={newClient.companyName} onChange={(event) => setNewClient((current) => ({ ...current, companyName: event.target.value }))} /></fieldset>
-          <fieldset><div className="body-title mb-10">Email</div><input type="email" value={newClient.email} onChange={(event) => setNewClient((current) => ({ ...current, email: event.target.value }))} /></fieldset>
+        <div className="sarjan-client-create-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+          <fieldset><div className="body-title mb-10">Company Name</div><input className={createAttempted && !newClient.companyName.trim() ? "sarjan-input-error" : ""} value={newClient.companyName} onChange={(event) => setNewClient((current) => ({ ...current, companyName: event.target.value }))} /></fieldset>
+          <fieldset><div className="body-title mb-10">Email</div><input className={createAttempted && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newClient.email.trim()) ? "sarjan-input-error" : ""} type="email" value={newClient.email} onChange={(event) => setNewClient((current) => ({ ...current, email: event.target.value }))} /></fieldset>
           <fieldset><div className="body-title mb-10">Password</div><input value={newClient.password} placeholder="Auto default if blank" onChange={(event) => setNewClient((current) => ({ ...current, password: event.target.value }))} /></fieldset>
           <fieldset><div className="body-title mb-10">Phone</div><input value={newClient.phone} onChange={(event) => setNewClient((current) => ({ ...current, phone: event.target.value }))} /></fieldset>
           <fieldset><div className="body-title mb-10">City</div><input value={newClient.city} onChange={(event) => setNewClient((current) => ({ ...current, city: event.target.value }))} /></fieldset>
           <fieldset><div className="body-title mb-10">GST</div><input value={newClient.gst} onChange={(event) => setNewClient((current) => ({ ...current, gst: event.target.value }))} /></fieldset>
         </div>
+        {notice ? <div className="sarjan-mail-notice mt-20">{notice}</div> : null}
       </div>
 
       <div className="sarjan-customer-layout">
@@ -232,6 +293,14 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
                     {status === "approved" ? "Approve Customer" : status === "rejected" ? "Reject" : "Deactivate"}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  className="tf-button style-2 sarjan-danger-button"
+                  disabled={!localOnly(selected) || saving === selected.id}
+                  onClick={() => deleteCustomer(selected)}
+                >
+                  Delete Customer
+                </button>
                 {!localOnly(selected) ? <span className="text-caption-1 text-secondary">Demo customers read-only. Registered customers can be approved here.</span> : null}
               </div>
 
@@ -256,7 +325,17 @@ export function AdminCustomerManagementClient({ initialCustomers }: { initialCus
                     <div className="sarjan-order-flow">
                       {orderFlow.map((step) => {
                         const done = orderFlow.indexOf(step) <= orderFlow.indexOf(order.status) && order.status !== "Rejected";
-                        return <span className={done ? "done" : ""} key={step}>{step}</span>;
+                        return (
+                          <button
+                            type="button"
+                            className={done ? "done" : ""}
+                            key={step}
+                            disabled={selected.source !== "local" || saving === order.id}
+                            onClick={() => updateCustomers({ type: "order", id: order.id, status: step })}
+                          >
+                            {step}
+                          </button>
+                        );
                       })}
                     </div>
                     <div className="sarjan-customer-order-actions">
