@@ -68,7 +68,7 @@ type SocialLink = {
 /** White icons as hosted SVGs — many clients strip inline SVG in HTML. */
 function emailSocialIconImg(kind: SocialKind): string {
   const src = escapeHtml(absUrl(`/sarjan-assets/email-icon-${kind}.svg`));
-  return `<img src="${src}" width="20" height="20" alt="" role="presentation" border="0" style="display:block;margin:0 auto;width:20px;height:20px;line-height:0;" />`;
+  return `<img src="${src}" width="20" height="20" alt="" role="presentation" border="0" style="display:block;width:20px;height:20px;margin:0;padding:0;border:0;outline:none;text-decoration:none;line-height:0;" />`;
 }
 
 function socialLinks(): SocialLink[] {
@@ -97,11 +97,16 @@ function socialIconsTable(): string {
   const cells = links
     .map((item) => {
       const inner = emailSocialIconImg(item.kind);
-      return `
-      <td style="padding:0 8px;">
-        <a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer"
-          style="display:inline-block;width:44px;height:44px;line-height:44px;border-radius:50%;background:${item.bg};text-align:center;text-decoration:none;font-family:Arial,Helvetica,sans-serif;">
-          <span style="display:inline-block;vertical-align:middle;line-height:0;padding-top:12px;">${inner}</span>
+      const bg = escapeHtml(item.bg);
+      return `<td align="center" valign="middle" style="padding:0 8px;font-size:0;line-height:0;vertical-align:middle;">
+        <a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="44" height="44" bgcolor="${bg}" style="width:44px;height:44px;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;border-radius:22px;background-color:${bg};">
+            <tr>
+              <td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;padding:0;margin:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;border-radius:22px;">
+                ${inner}
+              </td>
+            </tr>
+          </table>
         </a>
       </td>`;
     })
