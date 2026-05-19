@@ -188,8 +188,13 @@ async function verifyGstinViaConfiguredLookup(
       gstin,
       legalName,
       tradeName:
-        typeof flat.tradeName === "string" ? flat.tradeName.trim() : undefined,
-      status: typeof flat.status === "string" ? flat.status.trim() : undefined,
+        flat && typeof flat.tradeName === "string"
+          ? flat.tradeName.trim()
+          : undefined,
+      status:
+        flat && typeof flat.status === "string"
+          ? flat.status.trim()
+          : undefined,
     };
   }
 
