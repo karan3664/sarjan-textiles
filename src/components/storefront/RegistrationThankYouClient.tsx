@@ -118,17 +118,14 @@ export function RegistrationThankYouClient() {
               </p>
             )}
 
-            <div className="d-flex flex-wrap gap10 justify-content-center">
-              <Link href="/products" className="tf-btn btn-fill radius-4">
+            <div className="sarjan-registration-thankyou-actions">
+              <Link href="/products" className="tf-btn btn-fill">
                 <span className="text">Browse products</span>
               </Link>
-              <Link href="/" className="tf-btn btn-white radius-4 has-border">
+              <Link href="/" className="tf-btn btn-white has-border">
                 <span className="text">Back to home</span>
               </Link>
-              <Link
-                href="/contact"
-                className="tf-btn btn-white radius-4 has-border"
-              >
+              <Link href="/contact" className="tf-btn btn-white has-border">
                 <span className="text">Contact us</span>
               </Link>
             </div>

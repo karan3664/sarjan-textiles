@@ -5074,3 +5074,28 @@ footer.bg-main .footer-info .sarjan-footer-phone:hover {
   cursor: default;
   text-decoration: none;
 }
+
+/* Post-registration thank-you: spaced, equally rounded CTAs (storefront has gap-10 not gap10) */
+.sarjan-registration-thankyou-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+  justify-content: center;
+  align-items: center;
+}
+
+.sarjan-registration-thankyou-actions > a.tf-btn {
+  flex: 1 1 148px;
+  max-width: 240px;
+  justify-content: center;
+  border-radius: 10px !important;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+@media (max-width: 575.98px) {
+  .sarjan-registration-thankyou-actions > a.tf-btn {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}

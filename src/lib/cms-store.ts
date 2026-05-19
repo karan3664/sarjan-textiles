@@ -628,6 +628,16 @@ function migrateSiteSettings(merged: CmsSiteSettings): CmsSiteSettings {
     next.instagramUrl = defaultSiteSettings.instagramUrl;
   }
 
+  const facebook = merged.facebookUrl?.trim();
+  if (!facebook || facebook === "#") {
+    next.facebookUrl = defaultSiteSettings.facebookUrl;
+  }
+
+  const linkedin = merged.linkedinUrl?.trim();
+  if (!linkedin || linkedin === "#") {
+    next.linkedinUrl = defaultSiteSettings.linkedinUrl;
+  }
+
   if (
     merged.ordersEmail?.trim().toLowerCase() === "orders@sarjantextiles.com"
   ) {

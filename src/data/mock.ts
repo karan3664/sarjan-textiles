@@ -81,9 +81,9 @@ export const siteSettings = {
   footerNewsletterText:
     "B2B ordering with admin approval, MOQ planning, and dispatch tracking.",
   footerCredit: "Designed & Developed by Karan Digital Labs",
-  facebookUrl: "#",
+  facebookUrl: "https://www.facebook.com/share/1CbPStUvKP/",
   instagramUrl: "https://www.instagram.com/sarjantextiles/",
-  pinterestUrl: "#",
+  linkedinUrl: "https://www.linkedin.com/company/sarjantextiles/",
   seo: {
     title: "Sarjan Textiles | B2B Textile Ordering Platform",
     description:

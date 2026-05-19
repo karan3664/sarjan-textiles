@@ -651,11 +651,11 @@ export function AdminCmsClient() {
             />
           </fieldset>
           <fieldset>
-            <div className="body-title mb-10">Pinterest URL</div>
+            <div className="body-title mb-10">LinkedIn URL</div>
             <input
-              value={cms.siteSettings.pinterestUrl ?? ""}
+              value={cms.siteSettings.linkedinUrl ?? ""}
               onChange={(event) =>
-                setSettings("pinterestUrl", event.target.value)
+                setSettings("linkedinUrl", event.target.value)
               }
             />
           </fieldset>
