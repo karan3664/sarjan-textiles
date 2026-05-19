@@ -18,16 +18,18 @@ B2B textile ordering platform built from the provided Modave storefront/admin HT
 Node.js is required. This machine did not have `node`, `npm`, or `npx` available in PATH when the project was generated.
 
 ```bash
-cd /Users/karanbrahmaxatriya/Desktop/CodeWithKaran/Projects/sarjan-textiles
+cd sarjan-textiles
 npm install
 npm run dev
 ```
 
+Production deploy (Supabase, Vercel, Railway): see **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
 Open:
 
-- Storefront: `http://localhost:3000`
-- Admin: `http://localhost:3000/admin`
-- Mock products API: `http://localhost:3000/api/mock/products`
+- Storefront: `http://localhost:3001`
+- Admin: `http://localhost:3001/admin`
+- Mock products API: `http://localhost:3001/api/mock/products`
 
 ## Supabase
 

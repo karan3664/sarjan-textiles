@@ -1,0 +1,9 @@
+# Railway: deploy this repo as a Node web service.
+# Set the same environment variables as in docs/DEPLOY.md (Supabase, secrets, SMTP, etc.).
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm run start"
+restartPolicyType = "on_failure"
