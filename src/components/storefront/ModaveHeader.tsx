@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigation, siteSettings } from "@/data/site";
 
@@ -100,13 +101,13 @@ export function ModaveHeader() {
               </a>
             </div>
             <div className="col-xl-2 col-md-4 col-6 text-center">
-              <a href="/" className="logo-header">
+              <Link href="/" className="logo-header">
                 <img
                   src={siteSettings.logo}
                   alt={siteSettings.brandName}
                   className="logo"
                 />
-              </a>
+              </Link>
             </div>
             <div className="col-xl-5 col-md-4 col-3">
               <ul className="nav-icon d-flex justify-content-end align-items-center">
@@ -215,21 +216,24 @@ export function ModaveHeader() {
                         className={`menu-item position-relative${categoriesMenuActive ? " active" : ""}`}
                         key="nav-categories"
                       >
-                        <a href="/categories" className="item-link">
+                        <Link href="/categories" className="item-link">
                           Categories
-                        </a>
+                        </Link>
                         <div className="sub-menu sarjan-nav-categories-dropdown">
                           <div className="menu-heading">Browse</div>
                           <ul className="menu-list mb_8">
                             <li>
-                              <a href="/categories" className="menu-link-text">
+                              <Link
+                                href="/categories"
+                                className="menu-link-text"
+                              >
                                 All category hubs
-                              </a>
+                              </Link>
                             </li>
                             <li>
-                              <a href="/products" className="menu-link-text">
+                              <Link href="/products" className="menu-link-text">
                                 Full catalog
-                              </a>
+                              </Link>
                             </li>
                           </ul>
                           {hubs.length ? (
@@ -330,13 +334,13 @@ export function ModaveHeader() {
                 <li
                   className={`nav-mb-item${categoriesMenuActive ? " active" : ""}`}
                 >
-                  <a
+                  <Link
                     href="/categories"
                     className="mb-menu-link fw-6"
                     data-bs-dismiss="offcanvas"
                   >
                     <span>Category hubs</span>
-                  </a>
+                  </Link>
                 </li>
                 {hubs.map((hub) => (
                   <li className="nav-mb-item" key={`hub-${hub.slug}`}>

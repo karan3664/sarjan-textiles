@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
     },
     middlewareClientMaxBodySize: "80mb",
   },
+  async redirects() {
+    return [
+      {
+        source: "/forget-password",
+        destination: "/forgot-password",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

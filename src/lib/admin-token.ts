@@ -221,12 +221,25 @@ export async function verifyAdminToken(
   }
 }
 
+/**
+ * Returns true when `pathname` is allowed for `role`.
+ * For non–super roles, the prefix `/admin` only matches the dashboard (`/admin`),
+ * not every child route — otherwise `/admin` would incorrectly allow all admin pages.
+ */
 export function roleCanAccess(role: AdminRole, pathname: string) {
-  return (
-    roleAccess[role]?.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-    ) ?? false
-  );
+  const prefixes = roleAccess[role];
+  if (!prefixes?.length) return false;
+
+  return prefixes.some((prefix) => {
+    if (pathname === prefix) return true;
+    if (prefix === "/admin" && role !== "super_admin" && role !== "admin") {
+      return false;
+    }
+    if (prefix === "/api/admin" && role !== "super_admin" && role !== "admin") {
+      return false;
+    }
+    return pathname.startsWith(`${prefix}/`);
+  });
 }
 
 export function roleLabel(role: AdminRole) {
