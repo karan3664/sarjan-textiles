@@ -72,11 +72,13 @@ export const roleAccess: Record<AdminRole, string[]> = {
     "/admin/testimonials",
     "/admin/contact-inquiries",
     "/admin/seo",
+    "/admin/blog-comments",
     "/api/admin/dashboard",
     "/api/admin/cms",
     "/api/admin/uploads",
     "/api/admin/testimonials",
     "/api/admin/inquiries",
+    "/api/admin/blog-comments",
   ],
 };
 
@@ -131,6 +133,11 @@ export const roleModules = [
     key: "reports",
     label: "Reports / Exports",
     roles: ["super_admin", "admin", "sales", "dispatch", "accounts"],
+  },
+  {
+    key: "commerce",
+    label: "Commerce control tower",
+    roles: ["super_admin", "admin"],
   },
   { key: "audit", label: "Audit Logs", roles: ["super_admin", "admin"] },
   { key: "backup", label: "DB Backup / Restore", roles: ["super_admin"] },

@@ -28,6 +28,9 @@ import {
   instagramProfileUrl,
   type InstagramPost,
 } from "@/lib/instagram";
+import { siteUrl } from "@/lib/seo";
+import { BlogShareBar } from "./BlogShareBar";
+import { BlogCommentsBlock } from "./BlogCommentsBlock";
 
 function repeatedMarquee(items: string[], repeat = 4) {
   return Array.from({ length: repeat }).flatMap(() => items);
@@ -159,10 +162,12 @@ function ProductFeature({ product }: { product: Product }) {
                     </div>
                   </div>
                   <div className="tf-product-info-price">
-                    <h4
-                      className="price-on-sale"
+                    <span
+                      className="d-none price-on-sale"
+                      aria-hidden
                       data-base-price={product.price}
-                    >
+                    />
+                    <h4 className="font-2">
                       <PriceGate amount={product.price} suffix=" / piece" />
                     </h4>
                   </div>
@@ -193,35 +198,6 @@ function ProductFeature({ product }: { product: Product }) {
                             }
                           />
                           <span className="tooltip">{color}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="variant-picker-item">
-                    <div className="d-flex justify-content-between mb_12">
-                      <div className="variant-picker-label">
-                        Size:
-                        <span className="text-title variant-picker-label-value">
-                          {sizeRun[0]}
-                        </span>
-                      </div>
-                      <a
-                        href="#size-guide"
-                        data-bs-toggle="modal"
-                        data-bs-target="#size-guide"
-                        className="size-guide text-caption-1 text-primary"
-                      >
-                        Size Guide
-                      </a>
-                    </div>
-                    <div className="variant-picker-values">
-                      {sizeRun.map((size, index) => (
-                        <span
-                          className={`style-text size-btn${index === 0 ? " active" : ""}`}
-                          data-value={size}
-                          key={size}
-                        >
-                          <span className="text-title">{size}</span>
                         </span>
                       ))}
                     </div>
@@ -274,7 +250,8 @@ function ProductFeature({ product }: { product: Product }) {
                             </span>
                           </a>
                           <a
-                            href="/wishlist"
+                            href="#"
+                            role="button"
                             className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={product.slug}
@@ -297,7 +274,9 @@ function ProductFeature({ product }: { product: Product }) {
                             data-product-color={product.colors[0]}
                             data-set-price={setPrice}
                           >
-                            <span>Add 1 set</span>
+                            <span className="sarjan-add-set-label">
+                              Add 1 set
+                            </span>
                           </a>
                           <a
                             href="#shoppingCart"
@@ -326,7 +305,8 @@ function ProductFeature({ product }: { product: Product }) {
                             </span>
                           </a>
                           <a
-                            href="/wishlist"
+                            href="#"
+                            role="button"
                             className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={product.slug}
@@ -1060,7 +1040,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
               </Link>
             </div>
             <div className="text-caption-1 text-secondary-2">
-              {product.colors[0]}, {sizeRun[0]}, {product.fabric}
+              {product.colors[0]} · full set · {product.fabric}
             </div>
             <div className="text-title">
               <PriceGate amount={setPrice} suffix=" / set" compact />
@@ -1159,10 +1139,12 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                       <div className="tf-product-info-desc">
                         <div className="tf-product-info-price">
-                          <h5
-                            className="price-on-sale font-2"
+                          <span
+                            className="d-none price-on-sale"
+                            aria-hidden
                             data-base-price={product.price}
-                          >
+                          />
+                          <h5 className="font-2">
                             <PriceGate
                               amount={product.price}
                               suffix=" / piece"
@@ -1205,43 +1187,6 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                   }
                                 />
                                 <span className="tooltip">{color}</span>
-                              </label>
-                            </Fragment>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="variant-picker-item">
-                        <div className="d-flex justify-content-between mb_12">
-                          <div className="variant-picker-label">
-                            Size:
-                            <span className="text-title variant-picker-label-value">
-                              {sizeRun[0]}
-                            </span>
-                          </div>
-                          <a
-                            href="#size-guide"
-                            data-bs-toggle="modal"
-                            data-bs-target="#size-guide"
-                            className="size-guide text-title link"
-                          >
-                            Size Guide
-                          </a>
-                        </div>
-                        <div className="variant-picker-values gap12">
-                          {sizeRun.map((size, index) => (
-                            <Fragment key={size}>
-                              <input
-                                type="radio"
-                                name="size1"
-                                id={`product-size-${index}`}
-                                defaultChecked={index === 0}
-                              />
-                              <label
-                                className="style-text size-btn"
-                                htmlFor={`product-size-${index}`}
-                                data-value={size}
-                              >
-                                <span className="text-title">{size}</span>
                               </label>
                             </Fragment>
                           ))}
@@ -1298,7 +1243,9 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                 data-product-color={product.colors[0]}
                                 data-set-price={setPrice}
                               >
-                                <span>Add 1 set</span>
+                                <span className="sarjan-add-set-label">
+                                  Add 1 set
+                                </span>
                               </a>
                               <a
                                 href="#shoppingCart"
@@ -1327,7 +1274,8 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                 </span>
                               </a>
                               <a
-                                href="/wishlist"
+                                href="#"
+                                role="button"
                                 className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
                                 data-wishlist-toggle
                                 data-product-slug={product.slug}
@@ -1504,7 +1452,9 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         </div>
                         <ul className="list-text type-disc mb_12 gap-6">
                           <li className="font-2">Fabric: {product.fabric}</li>
-                          <li className="font-2">Designed in Surat, Gujarat</li>
+                          <li className="font-2">
+                            Designed in Bhuj, Kutch, Gujarat
+                          </li>
                           <li className="font-2">MOQ: {product.moq} pieces</li>
                           {product.care ? (
                             <li className="font-2">Care: {product.care}</li>
@@ -1643,7 +1593,13 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                   </a>
                 </p>
                 <p className="text-paragraph mb-0">
-                  Phone: {siteSettings.phone}
+                  Phone:{" "}
+                  <a
+                    href={`tel:${siteSettings.phone.replace(/\s/g, "")}`}
+                    className="link"
+                  >
+                    {siteSettings.phone}
+                  </a>
                 </p>
               </div>
             </div>
@@ -2032,16 +1988,6 @@ function ProductListCard({ product }: { product: Product }) {
               </li>
             ))}
           </ul>
-          <div className="size-box list-product-btn">
-            {sizeRun.map((size, index) => (
-              <span
-                className={`size-item box-icon${index === 0 ? " active" : ""}`}
-                key={size}
-              >
-                {size}
-              </span>
-            ))}
-          </div>
           <div className="list-product-btn">
             {soldOut ? (
               <span
@@ -2065,7 +2011,8 @@ function ProductListCard({ product }: { product: Product }) {
               </a>
             )}
             <a
-              href="/wishlist"
+              href="#"
+              role="button"
               className="box-icon wishlist btn-icon-action"
               data-wishlist-toggle
               data-product-slug={product.slug}
@@ -2722,30 +2669,13 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                 </a>
               </li>
             </ul>
-            <div className="d-flex align-items-center justify-content-between gap-16">
+            <div className="d-flex align-items-center justify-content-between gap-16 sarjan-blog-share-row">
               <p>Share this post:</p>
-              <ul className="tf-social-icon style-1">
-                <li>
-                  <a href="/contact" className="social-facebook">
-                    <i className="icon icon-fb" />
-                  </a>
-                </li>
-                <li>
-                  <a href="/contact" className="social-twiter">
-                    <i className="icon icon-x" />
-                  </a>
-                </li>
-                <li>
-                  <a href="/contact" className="social-pinterest">
-                    <i className="icon icon-pinterest" />
-                  </a>
-                </li>
-                <li>
-                  <a href="/contact" className="social-instagram">
-                    <i className="icon icon-instagram" />
-                  </a>
-                </li>
-              </ul>
+              <BlogShareBar
+                shareUrl={new URL(`/blog/${blog.slug}`, siteUrl).toString()}
+                title={blog.title}
+                description={blog.excerpt}
+              />
             </div>
           </div>
           <div className="related-post">
@@ -2770,91 +2700,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
               </h6>
             </div>
           </div>
-          <div className="reply-comment">
-            <h4 className="reply-comment-heading">03 Comments</h4>
-            <div className="reply-comment-wrap">
-              <div className="reply-comment-item">
-                <div className="image">
-                  <img
-                    src="/template/storefront/images/avatar/user-1.jpg"
-                    alt="buyer"
-                  />
-                </div>
-                <div className="content">
-                  <div>
-                    <h6>
-                      <a href="/contact" className="link">
-                        Aarav Ethnic Studio
-                      </a>
-                    </h6>
-                    <div className="day text-caption-1">May 08, 2026</div>
-                  </div>
-                  <p>
-                    Helpful planning note for building seasonal print
-                    assortments.
-                  </p>
-                  <div>
-                    <a className="text-button" href="/contact">
-                      Reply
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div className="reply-comment-item type-reply">
-                <div className="image">
-                  <img
-                    src="/template/storefront/images/avatar/user-2.jpg"
-                    alt="buyer"
-                  />
-                </div>
-                <div className="content">
-                  <div>
-                    <div className="d-flex gap-12 align-items-center">
-                      <h6>
-                        <a href="/contact" className="link">
-                          Nayra Boutique
-                        </a>
-                      </h6>
-                      <div className="box-check">✓</div>
-                    </div>
-                    <div className="day text-caption-1">May 09, 2026</div>
-                  </div>
-                  <p>MOQ and dispatch context makes repeat buying clearer.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="leave-comment">
-            <h4 className="leave-comment-heading">Leave A Comment</h4>
-            <form className="form-leave-comment">
-              <div className="wrap">
-                <div className="cols">
-                  <fieldset>
-                    <input
-                      type="text"
-                      placeholder="Your Name*"
-                      name="name"
-                      required
-                    />
-                  </fieldset>
-                  <fieldset>
-                    <input
-                      type="email"
-                      placeholder="Your Email*"
-                      name="email"
-                      required
-                    />
-                  </fieldset>
-                </div>
-                <fieldset>
-                  <textarea rows={4} placeholder="Your Message*" required />
-                </fieldset>
-              </div>
-              <div className="button-submit">
-                <button type="button">Submit Review</button>
-              </div>
-            </form>
-          </div>
+          <BlogCommentsBlock slug={blog.slug} />
         </div>
       </div>
       <CustomContentSections sections={blogSections} products={products} />
@@ -2908,6 +2754,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
   const cms = await getCachedCmsSnapshot();
   const page = cms.pages[type];
   const settings = cms.siteSettings;
+  const directionsHref =
+    settings.directionsUrl?.trim() ||
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
   const isContact = type === "contact";
   const pageSections = (page as typeof page & { sections?: CmsCustomSection[] })
     .sections;
@@ -2943,7 +2792,14 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                   <h4>Information</h4>
                   <div className="mb_20">
                     <div className="text-title mb_8">Phone:</div>
-                    <p className="text-secondary">{settings.phone}</p>
+                    <p className="text-secondary mb_0">
+                      <a
+                        href={`tel:${settings.phone.replace(/\s/g, "")}`}
+                        className="link"
+                      >
+                        {settings.phone}
+                      </a>
+                    </p>
                   </div>
                   <div className="mb_20">
                     <div className="text-title mb_8">Email:</div>
@@ -2953,6 +2809,28 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                   <div className="mb_20">
                     <div className="text-title mb_8">Address:</div>
                     <p className="text-secondary">{settings.address}</p>
+                    <a
+                      href={directionsHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tf-btn-default style-white fw-6 mt_12 d-inline-flex align-items-center gap-8"
+                    >
+                      Get directions
+                      <i className="icon-arrowUpRight" />
+                    </a>
+                  </div>
+                  <div className="mb_20">
+                    <div className="text-title mb_8">Instagram:</div>
+                    <p className="text-secondary mb_0">
+                      <a
+                        href={settings.instagramUrl ?? instagramProfileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link"
+                      >
+                        @sarjantextiles
+                      </a>
+                    </p>
                   </div>
                   <div>
                     <div className="text-title mb_8">Open Time:</div>

@@ -10,6 +10,11 @@ import {
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import {
+  guestCheckoutMarketingEnabled,
+  tdsDisplayNote,
+} from "@/lib/commerce-config";
+import { computeTcsOnTaxableSale, formatInr } from "@/lib/gst-display";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
@@ -104,6 +109,8 @@ export function CheckoutPageClient() {
     [lines],
   );
 
+  const tcs = useMemo(() => computeTcsOnTaxableSale(subtotal), [subtotal]);
+
   const submitOrder = async () => {
     const client = JSON.parse(
       localStorage.getItem("sarjan-client") ?? "null",
@@ -189,6 +196,36 @@ export function CheckoutPageClient() {
             <div className="row">
               <div className="col-xl-6">
                 <div className="flat-spacing tf-page-checkout">
+                  {!client?.id && guestCheckoutMarketingEnabled() ? (
+                    <div className="wrap mb_24">
+                      <h5 className="title">Guest checkout strategy</h5>
+                      <p className="text-secondary text-caption-1">
+                        Browse and build a cart without logging in. To{" "}
+                        <strong>submit a B2B order request</strong> you need an
+                        approved client login (GST, credit, and dispatch data
+                        are tied to your account). Start with a wholesale
+                        inquiry or register for approval.
+                      </p>
+                      <p className="text-secondary text-caption-1 mt_16 mb_0 sarjan-guest-checkout-links">
+                        <span className="text-secondary">Next steps: </span>
+                        <Link href="/inquiry" className="text-button">
+                          Send inquiry
+                        </Link>
+                        <span className="text-secondary"> · </span>
+                        <Link href="/register" className="text-button">
+                          Register
+                        </Link>
+                        <span className="text-secondary"> · </span>
+                        <Link href="/refund-policy" className="text-button">
+                          Refund policy
+                        </Link>
+                        <span className="text-secondary"> · </span>
+                        <Link href="/shipping-policy" className="text-button">
+                          Shipping policy
+                        </Link>
+                      </p>
+                    </div>
+                  ) : null}
                   {!client?.id ? (
                     <div className="wrap">
                       <div className="title-login">
@@ -416,7 +453,21 @@ export function CheckoutPageClient() {
                           <span>Discounts</span>
                           <PriceGate amount={0} compact />
                         </div>
+                        {tcs.amount > 0 ? (
+                          <div className="item d-flex align-items-center justify-content-between text-button">
+                            <span>TCS (indicative)</span>
+                            <span>
+                              {formatInr(tcs.amount)}{" "}
+                              <span className="text-caption-1 text-secondary">
+                                ({(tcs.rate * 100).toFixed(3)}%)
+                              </span>
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
+                      <p className="text-caption-1 text-secondary mt_8 mb_0">
+                        {tdsDisplayNote()}
+                      </p>
                       <div className="bottom">
                         <h5 className="d-flex justify-content-between">
                           <span>Total</span>

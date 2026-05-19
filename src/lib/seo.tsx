@@ -174,6 +174,7 @@ export function seoPageJsonLd(page: CmsSeoPage) {
 }
 
 export function productJsonLd(product: Product) {
+  const returnPolicyUrl = absoluteUrl("/refund-policy");
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -184,6 +185,11 @@ export function productJsonLd(product: Product) {
     brand: { "@type": "Brand", name: siteSettings.brandName },
     category: product.category,
     material: product.fabric,
+    seller: {
+      "@type": "Organization",
+      name: siteSettings.brandName,
+      url: siteUrl,
+    },
     offers: {
       "@type": "Offer",
       url: absoluteUrl(`/products/${product.slug}`),
@@ -193,6 +199,11 @@ export function productJsonLd(product: Product) {
         product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "IN",
+        returnPolicyUrl,
+      },
     },
   };
 }

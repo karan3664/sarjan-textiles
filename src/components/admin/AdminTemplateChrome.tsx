@@ -76,7 +76,9 @@ type AdminActiveSection =
   | "roles"
   | "backups"
   | "categoryPages"
-  | "customPages";
+  | "customPages"
+  | "commerceHub"
+  | "blogComments";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -114,6 +116,12 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
               icon="icon-house"
               label="Dashboard"
               active={active === "dashboard"}
+            />
+            <MenuItem
+              href="/admin/commerce-hub"
+              icon="icon-chart-bar"
+              label="Commerce hub"
+              active={active === "commerceHub"}
             />
             <MenuItem
               href="/admin/customers"
@@ -216,6 +224,12 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
               icon="icon-message"
               label="Testimonials"
               active={active === "testimonials"}
+            />
+            <MenuItem
+              href="/admin/blog-comments"
+              icon="icon-message"
+              label="Blog comments"
+              active={active === "blogComments"}
             />
             <MenuItem
               href="/admin/seo"

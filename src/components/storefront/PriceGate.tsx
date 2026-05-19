@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-function approvedClient() {
+/** Same rule as PriceGate: only approved B2B clients see numeric prices. */
+export function clientHasApprovedPricing(): boolean {
+  if (typeof window === "undefined") return false;
   try {
-    const client = JSON.parse(window.localStorage.getItem("sarjan-client") ?? "null") as { status?: string } | null;
+    const client = JSON.parse(
+      window.localStorage.getItem("sarjan-client") ?? "null",
+    ) as { status?: string } | null;
     return client?.status === "approved";
   } catch {
     return false;
@@ -25,7 +29,7 @@ export function PriceGate({
   const [approved, setApproved] = useState(false);
 
   useEffect(() => {
-    const sync = () => setApproved(approvedClient());
+    const sync = () => setApproved(clientHasApprovedPricing());
     sync();
     window.addEventListener("sarjan-auth-updated", sync);
     window.addEventListener("storage", sync);
@@ -36,12 +40,19 @@ export function PriceGate({
   }, []);
 
   if (approved) {
-    return <span className={className}>₹{amount.toLocaleString("en-IN")}{suffix}</span>;
+    return (
+      <span className={className}>
+        ₹{amount.toLocaleString("en-IN")}
+        {suffix}
+      </span>
+    );
   }
 
   return (
     <span className="sarjan-price-locked">
-      {compact ? "Login for price" : "Create account for price. Price visible after admin approval."}
+      {compact
+        ? "Login for price"
+        : "Create account for price. Price visible after admin approval."}
     </span>
   );
 }

@@ -407,9 +407,10 @@ export function ModaveHeader() {
                   <span>{client ? "Account" : "Login"}</span>
                 </a>
                 <a
-                  href="/wishlist"
+                  href="#wishlist"
                   className="site-nav-icon"
                   data-bs-dismiss="offcanvas"
+                  data-bs-toggle="modal"
                 >
                   <i className="icon icon-heart" />
                   <span>Wishlist</span>

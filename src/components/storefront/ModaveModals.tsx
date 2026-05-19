@@ -18,7 +18,7 @@ import {
   toggleWishlist,
   writeWishlist,
 } from "@/lib/wishlist-client";
-import { PriceGate } from "./PriceGate";
+import { PriceGate, clientHasApprovedPricing } from "./PriceGate";
 
 type HydratedCartItem = StoredCartItem & {
   product: Product;
@@ -28,6 +28,100 @@ type HydratedCartItem = StoredCartItem & {
 
 function productSizeRun(product: Product) {
   return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+}
+
+type BootstrapModalCtor = {
+  new (element: Element): { show: () => void };
+  getInstance?: (element: Element) => { show: () => void } | null;
+  getOrCreateInstance?: (element: Element) => { show: () => void };
+};
+
+function showWishlistModal() {
+  const el = document.getElementById("wishlist");
+  if (!el) return;
+
+  const win = window as unknown as {
+    bootstrap?: { Modal?: BootstrapModalCtor };
+    jQuery?: (sel: string | Element) => { modal: (action?: string) => unknown };
+  };
+
+  try {
+    const Modal = win.bootstrap?.Modal;
+    if (Modal) {
+      if (typeof Modal.getInstance === "function") {
+        const existing = Modal.getInstance(el);
+        (existing ?? new Modal(el)).show();
+        return;
+      }
+      if (typeof Modal.getOrCreateInstance === "function") {
+        Modal.getOrCreateInstance(el).show();
+        return;
+      }
+      new Modal(el).show();
+      return;
+    }
+  } catch {
+    /* try jQuery / manual */
+  }
+
+  try {
+    if (win.jQuery) {
+      win.jQuery("#wishlist").modal("show");
+      return;
+    }
+  } catch {
+    /* manual */
+  }
+
+  el.classList.add("show");
+  el.style.display = "block";
+  el.removeAttribute("aria-hidden");
+  el.setAttribute("aria-modal", "true");
+  el.setAttribute("role", "dialog");
+  document.body.classList.add("modal-open");
+  if (!document.body.querySelector(".modal-backdrop")) {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop fade show";
+    document.body.appendChild(backdrop);
+  }
+}
+
+/** Sync "Add N set(s)" label and optional price on product / quick-view blocks. */
+function syncAddSetLabel(scope: Element) {
+  const button = scope.querySelector<HTMLElement>(
+    ".btn-add-to-cart[data-set-price]",
+  );
+  const price = Number(button?.dataset.setPrice);
+  if (!button || !Number.isFinite(price)) return;
+
+  const quantity = Math.max(
+    1,
+    Number(
+      scope.querySelector<HTMLInputElement>(".quantity-product")?.value ?? 1,
+    ) || 1,
+  );
+  const total = price * quantity;
+  const money = `₹${total.toLocaleString("en-IN")}`;
+  const showMoney = clientHasApprovedPricing();
+  const label =
+    button.querySelector<HTMLElement>(".sarjan-add-set-label") ??
+    button.querySelector<HTMLElement>(":scope > span");
+  const totalNode = button.querySelector<HTMLElement>(
+    ".tf-qty-price, .total-price",
+  );
+  const word = quantity === 1 ? "set" : "sets";
+  if (label) {
+    if (showMoney) {
+      label.textContent = totalNode
+        ? `Add ${quantity} ${word}`
+        : `Add ${quantity} ${word} · ${money}`;
+    } else {
+      label.textContent = `Add ${quantity} ${word}`;
+    }
+  }
+  if (totalNode) {
+    totalNode.textContent = showMoney ? money : "";
+  }
 }
 
 export function ModaveModals() {
@@ -63,27 +157,13 @@ export function ModaveModals() {
         ".tf-product-info-list, .tf-quick-view-info",
       );
       if (!scope) return;
-      const button = scope.querySelector<HTMLElement>(
-        ".btn-add-to-cart[data-set-price]",
-      );
-      const price = Number(button?.dataset.setPrice);
-      if (!button || !Number.isFinite(price)) return;
+      syncAddSetLabel(scope);
+    };
 
-      const quantity = Math.max(
-        1,
-        Number(
-          scope.querySelector<HTMLInputElement>(".quantity-product")?.value ??
-            1,
-        ) || 1,
-      );
-      const total = price * quantity;
-      const label = button.querySelector("span:first-child");
-      const totalNode = button.querySelector<HTMLElement>(
-        ".tf-qty-price, .total-price",
-      );
-      if (label) label.textContent = `Add ${quantity} set -\u00a0`;
-      if (totalNode)
-        totalNode.textContent = `₹${total.toLocaleString("en-IN")}`;
+    const syncAllSetButtons = () => {
+      document
+        .querySelectorAll(".tf-product-info-list, .tf-quick-view-info")
+        .forEach((scope) => syncAddSetLabel(scope));
     };
 
     const onClick = (event: Event) => {
@@ -97,13 +177,28 @@ export function ModaveModals() {
     };
     const onInput = (event: Event) => updateSetPrice(event.target);
 
+    syncAllSetButtons();
     document.addEventListener("click", onClick);
     document.addEventListener("input", onInput);
+    const onAuth = () => syncAllSetButtons();
+    window.addEventListener("sarjan-auth-updated", onAuth);
+    window.addEventListener("storage", onAuth);
     return () => {
       document.removeEventListener("click", onClick);
       document.removeEventListener("input", onInput);
+      window.removeEventListener("sarjan-auth-updated", onAuth);
+      window.removeEventListener("storage", onAuth);
     };
   }, []);
+
+  useEffect(() => {
+    if (!quickProduct) return;
+    window.requestAnimationFrame(() => {
+      document
+        .querySelectorAll(".tf-quick-view-info")
+        .forEach((scope) => syncAddSetLabel(scope));
+    });
+  }, [quickProduct]);
 
   useEffect(() => {
     fetch("/api/catalog/products?limit=6&sort=best-selling")
@@ -215,23 +310,25 @@ export function ModaveModals() {
     };
 
     const onWishlist = (event: Event) => {
+      if (!(event instanceof MouseEvent) || event.button !== 0) return;
       const target = (event.target as HTMLElement).closest<HTMLElement>(
         "[data-wishlist-toggle]",
       );
       if (!target) return;
-      const slug = target.dataset.productSlug;
-      if (!slug) return;
       event.preventDefault();
-      toggleWishlist(slug);
+      event.stopPropagation();
+      const slug = target.dataset.productSlug?.trim();
+      if (slug) toggleWishlist(slug);
       syncWishlistButtons();
+      showWishlistModal();
     };
 
     syncWishlistButtons();
-    document.addEventListener("click", onWishlist);
+    document.addEventListener("click", onWishlist, true);
     window.addEventListener("sarjan-wishlist-updated", syncWishlistButtons);
     window.addEventListener("storage", syncWishlistButtons);
     return () => {
-      document.removeEventListener("click", onWishlist);
+      document.removeEventListener("click", onWishlist, true);
       window.removeEventListener(
         "sarjan-wishlist-updated",
         syncWishlistButtons,
@@ -862,7 +959,12 @@ export function ModaveModals() {
                       </div>
                     </div>
                     <div className="tf-product-info-price">
-                      <h4 className="price-on-sale">
+                      <span
+                        className="d-none price-on-sale"
+                        aria-hidden
+                        data-base-price={quickProduct.price}
+                      />
+                      <h4 className="font-2">
                         <PriceGate
                           amount={quickProduct.price}
                           suffix=" / piece"
@@ -901,36 +1003,8 @@ export function ModaveModals() {
                         ))}
                       </div>
                     </div>
-                    <div className="variant-picker-item">
-                      <div className="d-flex justify-content-between mb_12">
-                        <div className="variant-picker-label">
-                          Size:
-                          <span className="text-title variant-picker-label-value">
-                            {productSizeRun(quickProduct)[0]}
-                          </span>
-                        </div>
-                        <a
-                          href="#size-guide"
-                          data-bs-toggle="modal"
-                          className="size-guide text-caption-1 text-primary"
-                        >
-                          Size Guide
-                        </a>
-                      </div>
-                      <div className="variant-picker-values">
-                        {productSizeRun(quickProduct).map((size, index) => (
-                          <span
-                            className={`style-text size-btn${index === 0 ? " active" : ""}`}
-                            data-value={size}
-                            key={size}
-                          >
-                            <span className="text-title">{size}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
                     <div className="tf-product-info-quantity">
-                      <div className="title mb_12">Quantity:</div>
+                      <div className="title mb_12">Sets:</div>
                       <div className="wg-quantity">
                         <span className="btn-quantity btn-decrease">-</span>
                         <input
@@ -973,7 +1047,8 @@ export function ModaveModals() {
                             </span>
                           </a>
                           <a
-                            href="/wishlist"
+                            href="#"
+                            role="button"
                             className="box-icon hover-tooltip wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={quickProduct.slug}
@@ -1002,7 +1077,9 @@ export function ModaveModals() {
                               productSizeRun(quickProduct),
                             )}
                           >
-                            <span>Add 1 set</span>
+                            <span className="sarjan-add-set-label">
+                              Add 1 set
+                            </span>
                           </a>
                           <a
                             href="#shoppingCart"
@@ -1033,7 +1110,8 @@ export function ModaveModals() {
                             </span>
                           </a>
                           <a
-                            href="/wishlist"
+                            href="#"
+                            role="button"
                             className="box-icon hover-tooltip wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={quickProduct.slug}

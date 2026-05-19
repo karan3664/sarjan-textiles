@@ -455,6 +455,28 @@ export const defaultSeoPages: CmsSeoPage[] = [
     image: "/sarjan-assets/banner-textiles-studio.webp",
     imageAlt: "Sarjan Textiles terms",
   },
+  {
+    id: "refund-policy",
+    label: "Refund Policy",
+    path: "/refund-policy",
+    metaTitle: "Refund Policy",
+    metaDescription:
+      "Refund, return, and cancellation rules for Sarjan Textiles B2B wholesale orders (subject to final admin approval).",
+    keywords: "refund policy, B2B returns, textile wholesale returns",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles refund policy",
+  },
+  {
+    id: "shipping-policy",
+    label: "Shipping Policy",
+    path: "/shipping-policy",
+    metaTitle: "Shipping Policy",
+    metaDescription:
+      "Dispatch timelines, freight modes, and delivery expectations for Sarjan Textiles B2B orders across India.",
+    keywords: "shipping policy, textile dispatch, B2B delivery India",
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: "Sarjan Textiles shipping policy",
+  },
 ];
 
 function optimizedMediaPath(value: string) {
@@ -578,6 +600,47 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   updatedAt: new Date(0).toISOString(),
 };
 
+/** Replace stale seeded CMS contact lines so storefront footer stays correct. */
+function migrateSiteSettings(merged: CmsSiteSettings): CmsSiteSettings {
+  const next = { ...merged };
+  const addr = merged.address?.trim() ?? "";
+  const addrNorm = addr.toLowerCase().replace(/\s+/g, " ");
+  const legacySurat = addrNorm === "surat, gujarat, india";
+
+  if (!addr || legacySurat) {
+    next.address = defaultSiteSettings.address;
+    next.directionsUrl = defaultSiteSettings.directionsUrl;
+  } else if (!merged.directionsUrl?.trim()) {
+    next.directionsUrl = defaultSiteSettings.directionsUrl;
+  }
+
+  if (!merged.phone?.trim()) {
+    next.phone = defaultSiteSettings.phone;
+  } else {
+    const digits = merged.phone?.replace(/\D/g, "") ?? "";
+    if (digits === "919876543210" || digits === "9876543210") {
+      next.phone = defaultSiteSettings.phone;
+    }
+  }
+
+  const instagram = merged.instagramUrl?.trim();
+  if (!instagram || instagram === "#") {
+    next.instagramUrl = defaultSiteSettings.instagramUrl;
+  }
+
+  if (
+    merged.ordersEmail?.trim().toLowerCase() === "orders@sarjantextiles.com"
+  ) {
+    next.ordersEmail = defaultSiteSettings.ordersEmail;
+  }
+
+  if (!merged.gstin?.trim()) {
+    next.gstin = defaultSiteSettings.gstin;
+  }
+
+  return next;
+}
+
 function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
   const inputSeoPages = Array.isArray(input.seoPages) ? input.seoPages : [];
   const seoPages = defaultSeoPages.map((page) => ({
@@ -589,10 +652,10 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
   }
 
   return optimizeMedia({
-    siteSettings: {
+    siteSettings: migrateSiteSettings({
       ...defaultCmsSnapshot.siteSettings,
       ...(input.siteSettings ?? {}),
-    },
+    }),
     home: { ...defaultCmsSnapshot.home, ...(input.home ?? {}) },
     products:
       Array.isArray(input.products) && input.products.length

@@ -1,6 +1,10 @@
 import { getAdminOrders, orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
 import { verifyAdminToken, type AdminRole } from "@/lib/admin-token";
+import {
+  notifyEInvoiceOrderCreated,
+  notifyEWayDispatchUpdate,
+} from "@/lib/compliance-webhooks";
 import { createAdminOrder, updateOrderAdmin } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { cookies } from "next/headers";
@@ -161,6 +165,7 @@ export async function POST(request: Request) {
       entityId: order.id,
       after: order,
     }).catch(() => null);
+    after(() => notifyEInvoiceOrderCreated(order));
     return Response.json({ orders: await getAdminOrders(), order });
   } catch (error) {
     return Response.json(
@@ -249,6 +254,11 @@ export async function PATCH(request: Request) {
           console.error("Order status email failed", error),
         ),
       );
+      if (
+        ["Dispatched", "Ready for Dispatch"].includes(String(updated.status))
+      ) {
+        after(() => notifyEWayDispatchUpdate(updated));
+      }
     }
     const updatedOrder = (await getAdminOrders()).find(
       (order) => order.id === String(body.id),

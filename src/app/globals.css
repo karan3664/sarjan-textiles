@@ -4953,3 +4953,124 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-custom-cards-block .sarjan-hub-subcard .content {
   padding: 16px 0 0;
 }
+
+/* Dark footer: phone must match body text (global `a` / `.link` can wash out). */
+footer.bg-main .footer-info .sarjan-footer-phone {
+  color: var(--secondary-2);
+  text-decoration: none;
+}
+footer.bg-main .footer-info .sarjan-footer-phone:hover {
+  color: var(--white);
+}
+
+/* Checkout: guest strategy — inline text links (match “Login here” underline). */
+.sarjan-guest-checkout-links {
+  line-height: 1.65;
+}
+
+.tf-page-checkout .sarjan-guest-checkout-links a.text-button {
+  font-weight: 600;
+  color: var(--main, #141414);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+
+.sarjan-cookie-consent {
+  position: fixed;
+  z-index: 99998;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px;
+  background: rgba(20, 20, 20, 0.92);
+  color: #fbfaf7;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sarjan-cookie-consent-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.sarjan-cookie-consent .link {
+  text-decoration: underline;
+}
+
+/* Blog post: share row + comments (Modave + Sarjan) */
+.sarjan-blog-share-row {
+  flex-wrap: wrap;
+}
+
+.tf-social-icon.style-1 .sarjan-blog-share-native {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: inherit;
+  line-height: 0;
+}
+
+.sarjan-blog-comment-notice.is-ok {
+  color: #1b5e20;
+}
+
+.sarjan-blog-comment-notice.is-err {
+  color: #b71c1c;
+}
+
+.sarjan-blog-comments-empty {
+  padding: 12px 0;
+  color: var(--sarjan-muted, #6f6a64);
+}
+
+.sarjan-blog-comment-stack + .sarjan-blog-comment-stack {
+  margin-top: 8px;
+}
+
+.sarjan-blog-comment-avatar {
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  background: #f0ebe4;
+}
+
+.sarjan-blog-comment-avatar-guest {
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+}
+
+.sarjan-blog-comment-initials {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--sarjan-ink, #141414);
+}
+
+.sarjan-blog-comment-avatar-brand {
+  background: #fff;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+}
+
+.sarjan-blog-comment-avatar-brand img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.sarjan-blog-admin-reply .content {
+  border-left: 3px solid var(--sarjan-accent, #8b1e2d);
+  padding-left: 12px;
+}
+
+.sarjan-blog-comment-author {
+  cursor: default;
+  text-decoration: none;
+}

@@ -4,6 +4,16 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const visitorKey = "sarjan_visitor_id";
+const CONSENT_KEY = "sarjan-cookie-consent";
+
+function marketingConsentGranted() {
+  if (process.env.NEXT_PUBLIC_COOKIE_CONSENT !== "true") return true;
+  try {
+    return window.localStorage.getItem(CONSENT_KEY) === "accepted";
+  } catch {
+    return false;
+  }
+}
 
 function makeVisitorId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -30,18 +40,29 @@ export function AnalyticsTracker() {
   useEffect(() => {
     if (!pathname || pathname.startsWith("/admin")) return;
 
-    const payload = {
-      visitorId: getVisitorId(),
-      path: `${pathname}${window.location.search}`,
-      referrer: document.referrer,
+    const send = () => {
+      if (!marketingConsentGranted()) return;
+      const payload = {
+        visitorId: getVisitorId(),
+        path: `${pathname}${window.location.search}`,
+        referrer: document.referrer,
+      };
+
+      fetch("/api/analytics/visit", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {});
     };
 
-    fetch("/api/analytics/visit", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    }).catch(() => {});
+    send();
+    window.addEventListener("sarjan-cookie-consent-changed", send);
+    window.addEventListener("storage", send);
+    return () => {
+      window.removeEventListener("sarjan-cookie-consent-changed", send);
+      window.removeEventListener("storage", send);
+    };
   }, [pathname]);
 
   return null;

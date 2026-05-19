@@ -48,7 +48,15 @@ const asset = (file: string) => {
   return `/sarjan-assets/${keepOriginal ? file : file.replace(/\.(png|jpg|jpeg)$/i, ".webp")}`;
 };
 
+/** Single-line HQ for footer, contact, JSON-LD, and map “directions” fallback. */
+export const sarjanRegisteredAddress =
+  "Sarjan Textiles, First Floor, Jyoti Chambers - Rajniketan, New Station Rd, Dharanagar Kodki, Old Dhatia Falia, Bhuj, Gujarat 370001";
+
+export const sarjanDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(sarjanRegisteredAddress)}`;
+
 export const siteSettings = {
+  /** India GST identification number (invoices / compliance). */
+  gstin: "24JXPPK2159M2ZQ",
   domain: "sarjantextiles.com",
   brandName: "Sarjan Textiles",
   legalName: "Sarjan Textiles",
@@ -57,9 +65,11 @@ export const siteSettings = {
   favicon: asset("sarjan-favicon-192.png"),
   email: "info@sarjantextiles.com",
   salesEmail: "sales@sarjantextiles.com",
-  ordersEmail: "orders@sarjantextiles.com",
-  phone: "+91 98765 43210",
-  address: "Surat, Gujarat, India",
+  ordersEmail: "info@sarjantextiles.com",
+  phone: "+91 7567428100",
+  address: sarjanRegisteredAddress,
+  /** Google Maps “Directions” deep link (editable in Admin → Home CMS). */
+  directionsUrl: sarjanDirectionsUrl,
   openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
   openTimeSunday: "Sunday: By appointment",
   creditTermDays: 90,
@@ -72,7 +82,7 @@ export const siteSettings = {
     "B2B ordering with admin approval, MOQ planning, and dispatch tracking.",
   footerCredit: "Designed & Developed by Karan Digital Labs",
   facebookUrl: "#",
-  instagramUrl: "#",
+  instagramUrl: "https://www.instagram.com/sarjantextiles/",
   pinterestUrl: "#",
   seo: {
     title: "Sarjan Textiles | B2B Textile Ordering Platform",

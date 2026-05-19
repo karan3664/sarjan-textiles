@@ -1,4 +1,5 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
+import { notifyEInvoiceOrderCreated } from "@/lib/compliance-webhooks";
 import { createOrder, readLocalDb } from "@/lib/local-db";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
 import { after } from "next/server";
@@ -14,8 +15,12 @@ export async function GET(request: Request) {
         const requested = orderId.toLowerCase();
         const fullId = order.id.toLowerCase();
         const numericId = fullId.replace(/^st-/, "");
-        const matchesOrder = fullId === requested || numericId === requested || fullId.includes(requested);
-        const matchesEmail = !email || order.clientEmail.toLowerCase() === email;
+        const matchesOrder =
+          fullId === requested ||
+          numericId === requested ||
+          fullId.includes(requested);
+        const matchesEmail =
+          !email || order.clientEmail.toLowerCase() === email;
         return matchesOrder && matchesEmail;
       })
     : clientId
@@ -27,13 +32,29 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body.clientId || !body.items?.length) return Response.json({ error: "Client and items required" }, { status: 400 });
+    if (!body.clientId || !body.items?.length)
+      return Response.json(
+        { error: "Client and items required" },
+        { status: 400 },
+      );
     const session = verifyClientToken(bearerToken(request));
-    if (!session || session.clientId !== body.clientId) return Response.json({ error: "Valid client token required" }, { status: 401 });
+    if (!session || session.clientId !== body.clientId)
+      return Response.json(
+        { error: "Valid client token required" },
+        { status: 401 },
+      );
     const order = await createOrder(body);
-    after(() => sendOrderPlacedEmail(order).catch((error) => console.error("Order placed email failed", error)));
+    after(() =>
+      sendOrderPlacedEmail(order).catch((error) =>
+        console.error("Order placed email failed", error),
+      ),
+    );
+    after(() => notifyEInvoiceOrderCreated(order));
     return Response.json({ order });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Order failed" }, { status: 400 });
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Order failed" },
+      { status: 400 },
+    );
   }
 }

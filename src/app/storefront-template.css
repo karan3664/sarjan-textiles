@@ -1,12 +1,7 @@
-/* Storefront vendor styles live under /public/template — @import keeps Next.js
- * from using forbidden <link rel="stylesheet"> tags in layout.tsx while preserving URLs.
+/**
+ * Storefront (Modave) vendor CSS is loaded in `src/app/layout.tsx` via
+ * `STOREFRONT_TEMPLATE_STYLESHEETS` from `@/lib/storefront-template-styles`
+ * so `/public/template/...` URLs are not lost during Next.js CSS processing.
+ *
+ * This file is intentionally not imported; kept as documentation only.
  */
-@import url("/template/storefront/fonts/fonts.css");
-@import url("/template/storefront/fonts/font-icons.css");
-@import url("/template/storefront/css/bootstrap.min.css");
-@import url("/template/storefront/css/swiper-bundle.min.css");
-@import url("/template/storefront/css/bootstrap-select.min.css");
-@import url("/template/storefront/css/photoswipe.css");
-@import url("/template/storefront/css/drift-basic.min.css");
-@import url("/template/storefront/css/animate.css");
-@import url("/template/storefront/css/styles.css");

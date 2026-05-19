@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
-import "./storefront-template.css";
 import { siteSettings } from "@/data/mock";
+import { STOREFRONT_TEMPLATE_STYLESHEETS } from "@/lib/storefront-template-styles";
 import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
+import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner";
+import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
 import { pageMetadata } from "@/lib/seo";
-
-const googleAnalyticsId = "G-L5JB54GCZ8";
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -38,21 +37,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <head />
+      <head>
+        {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
+          <link key={href} rel="stylesheet" href={href} />
+        ))}
+      </head>
       <body className="preload-wrapper">
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
-          strategy="afterInteractive"
-        />
-        <Script id="sarjan-google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${googleAnalyticsId}');
-          `}
-        </Script>
+        <SiteAnalytics />
         <AnalyticsTracker />
+        <CookieConsentBanner />
         {children}
       </body>
     </html>

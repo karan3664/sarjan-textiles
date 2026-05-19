@@ -1,8 +1,14 @@
 import { siteSettings } from "@/data/mock";
+import { buildSarjanEmailHtml, escapeHtml } from "@/lib/email-template";
 import type { LocalOrder } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
 
-type EmailKind = "placed" | "approved" | "production" | "dispatched" | "delivered";
+type EmailKind =
+  | "placed"
+  | "approved"
+  | "production"
+  | "dispatched"
+  | "delivered";
 
 const statusEmailKind: Partial<Record<LocalOrder["status"], EmailKind>> = {
   Approved: "approved",
@@ -11,11 +17,15 @@ const statusEmailKind: Partial<Record<LocalOrder["status"], EmailKind>> = {
   Delivered: "delivered",
 };
 
-const emailCopy: Record<EmailKind, { subject: string; title: string; intro: string; next: string }> = {
+const emailCopy: Record<
+  EmailKind,
+  { subject: string; title: string; intro: string; next: string }
+> = {
   placed: {
     subject: "Order placed successfully",
     title: "Order placed successfully",
-    intro: "Thank you for placing your B2B order with Sarjan Textiles. Our team will review stock, MOQ, and production details shortly.",
+    intro:
+      "Thank you for placing your B2B order with Sarjan Textiles. Our team will review stock, MOQ, and production details shortly.",
     next: "You will receive another email once your order is approved.",
   },
   approved: {
@@ -50,36 +60,40 @@ function formatInr(value: number) {
 
 function formatDate(value?: string) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
-}
-
-function escapeHtml(value: string | number | undefined) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function orderRows(order: LocalOrder) {
   if (!order.items.length) {
-    return "<tr><td colspan=\"4\" style=\"padding:12px;border:1px solid #eadfdb;color:#6f6a64;\">Item details pending.</td></tr>";
+    return '<tr><td colspan="4" style="padding:12px;border:1px solid #e8e2d9;color:#6f6a64;font-size:14px;">Item details pending.</td></tr>';
   }
 
-  return order.items.map((item) => `
+  return order.items
+    .map(
+      (item) => `
     <tr>
-      <td style="padding:12px;border:1px solid #eadfdb;">${escapeHtml(item.name)}<br><span style="color:#6f6a64;font-size:12px;">${escapeHtml(item.color)} / ${escapeHtml(item.sizes.join(", "))}</span></td>
-      <td style="padding:12px;border:1px solid #eadfdb;text-align:center;">${escapeHtml(item.setQuantity)}</td>
-      <td style="padding:12px;border:1px solid #eadfdb;text-align:right;">${formatInr(item.unitPrice)}</td>
-      <td style="padding:12px;border:1px solid #eadfdb;text-align:right;">${formatInr(item.lineTotal)}</td>
+      <td style="padding:12px;border:1px solid #e8e2d9;font-size:14px;">${escapeHtml(item.name)}<br><span style="color:#6f6a64;font-size:12px;">${escapeHtml(item.color)} / ${escapeHtml(item.sizes.join(", "))}</span></td>
+      <td style="padding:12px;border:1px solid #e8e2d9;text-align:center;font-size:14px;">${escapeHtml(item.setQuantity)}</td>
+      <td style="padding:12px;border:1px solid #e8e2d9;text-align:right;font-size:14px;">${formatInr(item.unitPrice)}</td>
+      <td style="padding:12px;border:1px solid #e8e2d9;text-align:right;font-size:14px;">${formatInr(item.lineTotal)}</td>
     </tr>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
   const items = order.items.length
-    ? order.items.map((item) => `- ${item.name} / ${item.color} / ${item.sizes.join(", ")}: ${item.setQuantity} sets, ${formatInr(item.lineTotal)}`).join("\n")
+    ? order.items
+        .map(
+          (item) =>
+            `- ${item.name} / ${item.color} / ${item.sizes.join(", ")}: ${item.setQuantity} sets, ${formatInr(item.lineTotal)}`,
+        )
+        .join("\n")
     : "- Item details pending";
 
   return [
@@ -91,9 +105,13 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     `Status: ${order.status}`,
     `Order Date: ${formatDate(order.createdAt)}`,
     `Total: ${formatInr(order.subtotal)}`,
-    order.dispatchDate ? `Dispatch Date: ${formatDate(order.dispatchDate)}` : "",
+    order.dispatchDate
+      ? `Dispatch Date: ${formatDate(order.dispatchDate)}`
+      : "",
     order.lrNumber ? `LR Number: ${order.lrNumber}` : "",
-    order.transportDetails || order.courierDetails ? `Transport: ${order.transportDetails || order.courierDetails}` : "",
+    order.transportDetails || order.courierDetails
+      ? `Transport: ${order.transportDetails || order.courierDetails}`
+      : "",
     "",
     "Order Items:",
     items,
@@ -102,7 +120,9 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     "",
     `${siteSettings.brandName}`,
     `${siteSettings.ordersEmail}`,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
@@ -111,52 +131,52 @@ function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     ["Status", order.status],
     ["Order Date", formatDate(order.createdAt)],
     ["Total", formatInr(order.subtotal)],
-    order.dispatchDate ? ["Dispatch Date", formatDate(order.dispatchDate)] : null,
+    order.dispatchDate
+      ? ["Dispatch Date", formatDate(order.dispatchDate)]
+      : null,
     order.lrNumber ? ["LR Number", order.lrNumber] : null,
-    order.transportDetails || order.courierDetails ? ["Transport", order.transportDetails || order.courierDetails] : null,
+    order.transportDetails || order.courierDetails
+      ? ["Transport", order.transportDetails || order.courierDetails]
+      : null,
   ].filter(Boolean) as string[][];
 
-  return `
-    <div style="margin:0;padding:0;background:#fbfaf7;font-family:Arial,Helvetica,sans-serif;color:#181818;">
-      <div style="max-width:680px;margin:0 auto;padding:28px 16px;">
-        <div style="padding:24px;border:1px solid #eadfdb;border-radius:10px;background:#ffffff;">
-          <div style="margin-bottom:18px;">
-            <div style="font-size:13px;color:#8b1e2d;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">${escapeHtml(siteSettings.brandName)}</div>
-            <h2 style="margin:8px 0 0;font-size:24px;line-height:1.25;">${escapeHtml(copy.title)}</h2>
-          </div>
-          <p style="margin:0 0 18px;color:#4d4843;line-height:1.6;">${escapeHtml(copy.intro)}</p>
-          <table style="width:100%;border-collapse:collapse;margin:18px 0;background:#fff;">
-            <tbody>
-              ${details.map(([label, value]) => `
-                <tr>
-                  <td style="width:36%;padding:10px 12px;border:1px solid #eadfdb;background:#fbfaf7;color:#6f6a64;">${escapeHtml(label)}</td>
-                  <td style="padding:10px 12px;border:1px solid #eadfdb;font-weight:700;">${escapeHtml(value)}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-          <h3 style="margin:22px 0 10px;font-size:16px;">Order Items</h3>
-          <table style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th style="padding:10px 12px;border:1px solid #eadfdb;background:#8b1e2d;color:#fff;text-align:left;">Product</th>
-                <th style="padding:10px 12px;border:1px solid #eadfdb;background:#8b1e2d;color:#fff;text-align:center;">Sets</th>
-                <th style="padding:10px 12px;border:1px solid #eadfdb;background:#8b1e2d;color:#fff;text-align:right;">Unit</th>
-                <th style="padding:10px 12px;border:1px solid #eadfdb;background:#8b1e2d;color:#fff;text-align:right;">Total</th>
-              </tr>
-            </thead>
-            <tbody>${orderRows(order)}</tbody>
-          </table>
-          <p style="margin:20px 0 0;color:#4d4843;line-height:1.6;">${escapeHtml(copy.next)}</p>
-          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eadfdb;color:#6f6a64;font-size:13px;line-height:1.5;">
-            <strong style="color:#181818;">${escapeHtml(siteSettings.brandName)}</strong><br>
-            ${escapeHtml(siteSettings.ordersEmail)}<br>
-            ${escapeHtml(siteSettings.phone)}
-          </div>
-        </div>
-      </div>
-    </div>
+  const innerHtml = `
+    <p style="margin:0 0 18px;color:#4d4843;line-height:1.6;">${escapeHtml(copy.intro)}</p>
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:18px 0;background:#fff;">
+      <tbody>
+        ${details
+          .map(
+            ([label, value]) => `
+          <tr>
+            <td style="width:36%;padding:10px 12px;border:1px solid #e8e2d9;background:#fbfaf7;color:#6f6a64;font-size:14px;">${escapeHtml(label)}</td>
+            <td style="padding:10px 12px;border:1px solid #e8e2d9;font-weight:700;font-size:14px;color:#141414;">${escapeHtml(value)}</td>
+          </tr>
+        `,
+          )
+          .join("")}
+      </tbody>
+    </table>
+    <h2 style="margin:22px 0 10px;font-size:16px;color:#141414;">Order items</h2>
+    <table role="presentation" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:10px 12px;border:1px solid #e8e2d9;background:#8b1e2d;color:#fff;text-align:left;font-size:13px;">Product</th>
+          <th style="padding:10px 12px;border:1px solid #e8e2d9;background:#8b1e2d;color:#fff;text-align:center;font-size:13px;">Sets</th>
+          <th style="padding:10px 12px;border:1px solid #e8e2d9;background:#8b1e2d;color:#fff;text-align:right;font-size:13px;">Unit</th>
+          <th style="padding:10px 12px;border:1px solid #e8e2d9;background:#8b1e2d;color:#fff;text-align:right;font-size:13px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>${orderRows(order)}</tbody>
+    </table>
+    <p style="margin:20px 0 0;color:#4d4843;line-height:1.6;">${escapeHtml(copy.next)}</p>
   `;
+
+  return buildSarjanEmailHtml({
+    preheader: `${copy.title} — ${order.id}`,
+    eyebrow: "Order update",
+    heading: copy.title,
+    innerHtml,
+  });
 }
 
 async function sendOrderEmail(order: LocalOrder, kind: EmailKind) {
