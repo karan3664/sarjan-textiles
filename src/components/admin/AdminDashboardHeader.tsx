@@ -219,35 +219,38 @@ export function AdminDashboardHeader() {
                   {error ? (
                     <li className="px-3 py-2 text-danger small">{error}</li>
                   ) : null}
-                  {loading ? (
-                    <li className="px-3 py-3 text-caption-1">Loading…</li>
-                  ) : items.length === 0 ? (
-                    <li className="px-3 py-3 text-caption-1 text-muted">
-                      No recent activity for your role.
-                    </li>
-                  ) : (
-                    items.map((n) => (
-                      <li key={n.id}>
-                        <Link
-                          href={n.href}
-                          className={`dropdown-item sarjan-admin-notif-item${n.unread ? " fw-semibold" : ""}`}
-                        >
-                          <div className="notifications-item item-2">
-                            <div className="image">
-                              <i className={iconFor(n.kind)} />
-                            </div>
-                            <div>
-                              <div className="text-title">{n.title}</div>
-                              <div className="text-caption-1">{n.body}</div>
-                              <div className="text-caption-2 text-muted mt-1">
-                                {fmt(n.createdAt)}
+                  <li className="sarjan-admin-notif-menu-scroll-wrap">
+                    <div className="sarjan-admin-notif-menu-scroll">
+                      {loading ? (
+                        <div className="py-3 text-caption-1">Loading…</div>
+                      ) : items.length === 0 ? (
+                        <div className="py-3 text-caption-1 text-muted">
+                          No recent activity for your role.
+                        </div>
+                      ) : (
+                        items.map((n) => (
+                          <Link
+                            key={n.id}
+                            href={n.href}
+                            className={`dropdown-item sarjan-admin-notif-item${n.unread ? " fw-semibold" : ""}`}
+                          >
+                            <div className="notifications-item item-2">
+                              <div className="image">
+                                <i className={iconFor(n.kind)} />
+                              </div>
+                              <div>
+                                <div className="text-title">{n.title}</div>
+                                <div className="text-caption-1">{n.body}</div>
+                                <div className="text-caption-2 text-muted mt-1">
+                                  {fmt(n.createdAt)}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Link>
-                      </li>
-                    ))
-                  )}
+                          </Link>
+                        ))
+                      )}
+                    </div>
+                  </li>
                 </ul>
               </div>
             </div>
