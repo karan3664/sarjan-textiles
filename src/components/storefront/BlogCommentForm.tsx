@@ -18,7 +18,8 @@ export function BlogCommentForm({ slug }: { slug: string }) {
     setBusy(true);
     setNotice(null);
     try {
-      const res = await fetch("/api/blog/comments", {
+      const url = new URL("/api/blog/comments", window.location.origin).href;
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -27,8 +28,25 @@ export function BlogCommentForm({ slug }: { slug: string }) {
           authorEmail: email,
           body,
         }),
+        credentials: "same-origin",
       });
-      const data = (await res.json()) as { error?: string; message?: string };
+      const raw = await res.text();
+      let data = {} as { error?: string; message?: string };
+      try {
+        data = raw.trim()
+          ? (JSON.parse(raw) as { error?: string; message?: string })
+          : {};
+      } catch {
+        setNotice({
+          type: "err",
+          text: res.ok
+            ? "Unexpected server response."
+            : raw.trim().length > 0
+              ? `Server error (${res.status}). Please try again.`
+              : `Server error (${res.status}) with no details. If this persists, redeploy the site or check Vercel function logs.`,
+        });
+        return;
+      }
       if (!res.ok) {
         setNotice({
           type: "err",
@@ -43,8 +61,14 @@ export function BlogCommentForm({ slug }: { slug: string }) {
           "Thanks! Your comment was submitted and will appear after moderation.",
       });
       setBody("");
-    } catch {
-      setNotice({ type: "err", text: "Network error. Please try again." });
+    } catch (e) {
+      const msg =
+        e instanceof TypeError
+          ? "Could not reach the server (connection blocked or offline). If you use a VPN, ad blocker, or strict privacy mode, try turning it off for this site."
+          : e instanceof Error
+            ? e.message
+            : "Network error. Please try again.";
+      setNotice({ type: "err", text: msg });
     } finally {
       setBusy(false);
     }
