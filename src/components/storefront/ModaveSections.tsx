@@ -2547,7 +2547,11 @@ export function WishlistDynamic({ page = 1 }: { page?: number }) {
 }
 
 export async function BlogDetailDynamic({ slug }: { slug: string }) {
-  const { blogs, products } = await getCachedCmsSnapshot();
+  const {
+    blogs,
+    products,
+    siteSettings: cmsSiteSettings,
+  } = await getCachedCmsSnapshot();
   const blog = blogs.find((item) => item.slug === slug) ?? blogs[0];
   const otherBlogs = blogs.filter((item) => item.slug !== blog.slug);
   const previous = otherBlogs[0] ?? blog;
@@ -2669,12 +2673,13 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                 </a>
               </li>
             </ul>
-            <div className="d-flex align-items-center justify-content-between gap-16 sarjan-blog-share-row">
-              <p>Share this post:</p>
+            <div className="d-flex align-items-center flex-wrap gap-12 sarjan-blog-share-row">
+              <p className="mb-0 body-text-1">Share this post:</p>
               <BlogShareBar
                 shareUrl={new URL(`/blog/${blog.slug}`, siteUrl).toString()}
-                title={blog.title}
-                description={blog.excerpt}
+                instagramUrl={
+                  cmsSiteSettings.instagramUrl?.trim() || instagramProfileUrl
+                }
               />
             </div>
           </div>

@@ -56,6 +56,29 @@ export function plainTextToEmailHtml(text: string): string {
   return escapeHtml(text).replaceAll("\r\n", "\n").replaceAll("\n", "<br>\n");
 }
 
+/** Subscriber-facing confirmation body (uses Sarjan email layout wrapper). */
+export function newsletterSubscriberConfirmationInnerHtml(
+  subscriberEmail: string,
+): string {
+  const e = escapeHtml(subscriberEmail);
+  return `<p style="margin:0 0 16px;color:#4d4843;line-height:1.65;">Thank you for subscribing to the <strong>${escapeHtml(siteSettings.brandName)}</strong> newsletter.</p>
+<p style="margin:0 0 10px;color:#4d4843;font-size:14px;">We saved this address for updates:</p>
+<p style="margin:0;padding:14px 16px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;font-size:15px;line-height:1.5;color:#141414;"><strong>${e}</strong></p>
+<p style="margin:18px 0 0;color:#6f6a64;font-size:14px;line-height:1.6;">We share occasional notes on collections, MOQ-friendly programs, and B2B order workflows. You can reply to this email if you need the team.</p>`;
+}
+
+/** Internal notification body for orders inbox. */
+export function newsletterAdminNotificationInnerHtml(
+  subscriberEmail: string,
+): string {
+  const e = escapeHtml(subscriberEmail);
+  return `<p style="margin:0 0 12px;color:#4d4843;line-height:1.65;">New footer newsletter signup on the website.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:14px 16px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;">
+  <tr><td style="font-size:15px;line-height:1.5;color:#141414;"><strong>Subscriber email</strong><br /><a href="mailto:${e}" style="color:#8b1e2d;text-decoration:none;">${e}</a></td></tr>
+</table>
+<p style="margin:16px 0 0;color:#6f6a64;font-size:13px;line-height:1.5;">Reply-To is set to the subscriber so you can respond directly from your inbox.</p>`;
+}
+
 type SocialKind = "facebook" | "instagram" | "linkedin";
 
 type SocialLink = {

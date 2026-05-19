@@ -226,8 +226,99 @@ footer .footer-body {
   padding: 72px 0 64px !important;
 }
 
-footer .footer-newsletter .subscribe-content input {
-  background: transparent;
+footer .footer-body .row {
+  align-items: flex-start;
+}
+
+/* Split link columns share one .footer-menu each; avoid horizontal flex gap on single block */
+footer .footer-menu-sarjan-split {
+  display: block;
+}
+
+footer .footer-newsletter .tf-collapse-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+footer .footer-newsletter .tf-collapse-content > p:first-of-type {
+  margin-bottom: 0.35rem;
+}
+
+footer .footer-newsletter .sarjan-footer-newsletter-form {
+  margin-top: 0.5rem;
+}
+
+/* Pill + arrow: match control height and vertically center the button */
+footer .footer-newsletter .subscribe-content {
+  position: relative;
+}
+
+/* Softer pill on dark footer; normal case for email addresses */
+footer .footer-newsletter .form-newsletter.style-black input.subscribe-email,
+footer .footer-newsletter .subscribe-content input.subscribe-email {
+  height: 50px !important;
+  min-height: 50px;
+  padding-right: 54px !important;
+  line-height: 1.3;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  text-transform: none !important;
+}
+
+footer
+  .footer-newsletter
+  .form-newsletter.style-black
+  input.subscribe-email::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: none;
+}
+
+footer .footer-newsletter .form-newsletter.style-black .subscribe-button,
+footer .footer-newsletter .form-newsletter .subscribe-button {
+  top: 50% !important;
+  right: 5px !important;
+  transform: translateY(-50%) !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px;
+  min-height: 40px;
+  font-size: 18px !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+footer
+  .footer-newsletter
+  .form-newsletter.style-black
+  .subscribe-button:hover:not(:disabled) {
+  background-color: #fff !important;
+  border-color: #fff !important;
+  color: var(--main) !important;
+  transform: translateY(-50%) !important;
+}
+
+footer .footer-newsletter .sarjan-footer-newsletter-notice {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.875rem;
+  line-height: 1.45;
+}
+
+footer .footer-newsletter .tf-collapse-content > p.text-caption-1:last-of-type {
+  margin-top: 0.125rem;
+}
+
+footer .sarjan-footer-top > [class*="col-"] {
+  min-width: 0;
+}
+
+footer .footer-newsletter .sarjan-footer-newsletter-notice.is-ok {
+  color: rgba(200, 230, 200, 0.95);
+}
+
+footer .footer-newsletter .sarjan-footer-newsletter-notice.is-err {
+  color: #ffb4b4;
 }
 
 footer.bg-main .footer-bottom-wrap .sarjan-footer-credit,
@@ -5084,20 +5175,24 @@ footer.bg-main .footer-info .sarjan-footer-phone:hover {
 /* Blog post: share row + comments (Modave + Sarjan) */
 .sarjan-blog-share-row {
   flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
 }
 
-.tf-social-icon.style-1 .sarjan-blog-share-native {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0;
+.sarjan-blog-share-icons {
   margin: 0;
+  padding: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: inherit;
-  line-height: 0;
+  gap: 10px;
+  list-style: none;
+}
+
+.sarjan-blog-share-icons li {
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 .sarjan-blog-comment-notice.is-ok {
