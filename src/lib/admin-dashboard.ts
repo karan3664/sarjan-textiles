@@ -22,16 +22,25 @@ function lastSixMonthLabels() {
   return labels;
 }
 
-function statusCount<T extends { status?: string }>(items: T[], status: string) {
+function statusCount<T extends { status?: string }>(
+  items: T[],
+  status: string,
+) {
   return items.filter((item) => item.status === status).length;
 }
 
 function isDispatchPending(status: string) {
-  return ["Approved", "In Production", "Packed", "Ready for Dispatch"].includes(status);
+  return ["Approved", "In Production", "Packed", "Ready for Dispatch"].includes(
+    status,
+  );
 }
 
 export async function getAdminDashboardData() {
-  const [cms, db, analytics] = await Promise.all([getCmsSnapshot(), readLocalDb(), getWebsiteAnalytics()]);
+  const [cms, db, analytics] = await Promise.all([
+    getCmsSnapshot(),
+    readLocalDb(),
+    getWebsiteAnalytics(),
+  ]);
   const products = cms.products;
   const orders = db.orders;
   const clients = db.clients;
@@ -39,20 +48,41 @@ export async function getAdminDashboardData() {
   const monthLabels = lastSixMonthLabels();
 
   const pendingOrders = statusCount(orders, "Pending approval");
-  const approvedOrders = orders.filter((order) => ["Approved", "In Production", "Packed", "Ready for Dispatch"].includes(order.status)).length;
+  const approvedOrders = orders.filter((order) =>
+    ["Approved", "In Production", "Packed", "Ready for Dispatch"].includes(
+      order.status,
+    ),
+  ).length;
   const completedOrders = statusCount(orders, "Delivered");
-  const dispatchPending = orders.filter((order) => isDispatchPending(order.status)).length;
-  const outstanding = orders.reduce((sum, order) => sum + Math.max(0, order.subtotal - (order.paidAmount ?? 0)), 0);
+  const dispatchPending = orders.filter((order) =>
+    isDispatchPending(order.status),
+  ).length;
+  const outstanding = orders.reduce(
+    (sum, order) => sum + Math.max(0, order.subtotal - (order.paidAmount ?? 0)),
+    0,
+  );
   const overdue = orders.reduce((sum, order) => {
     const due = new Date(order.createdAt);
     due.setDate(due.getDate() + order.creditDays);
-    return due.getTime() < Date.now() && order.paymentStatus !== "Paid" ? sum + Math.max(0, order.subtotal - (order.paidAmount ?? 0)) : sum;
+    return due.getTime() < Date.now() && order.paymentStatus !== "Paid"
+      ? sum + Math.max(0, order.subtotal - (order.paidAmount ?? 0))
+      : sum;
   }, 0);
   const monthlyRevenue = orders
-    .filter((order) => monthKey(order.createdAt) === monthKey(new Date().toISOString()) && order.paymentStatus === "Paid")
+    .filter(
+      (order) =>
+        monthKey(order.createdAt) === monthKey(new Date().toISOString()) &&
+        order.paymentStatus === "Paid",
+    )
     .reduce((sum, order) => sum + order.subtotal, 0);
-  const reservedStock = products.reduce((sum, product) => sum + (product.reserved ?? 0), 0);
-  const lowStock = products.filter((product) => product.stock > 0 && product.stock <= Math.max(product.moq, 50)).length;
+  const reservedStock = products.reduce(
+    (sum, product) => sum + (product.reserved ?? 0),
+    0,
+  );
+  const lowStock = products.filter(
+    (product) =>
+      product.stock > 0 && product.stock <= Math.max(product.moq, 50),
+  ).length;
   const outOfStock = products.filter((product) => product.stock <= 0).length;
 
   const monthlyOrders = monthLabels.map((label) => ({
@@ -63,35 +93,68 @@ export async function getAdminDashboardData() {
   const productDemandMap = new Map<string, number>();
   for (const order of orders) {
     for (const item of order.items) {
-      productDemandMap.set(item.name, (productDemandMap.get(item.name) ?? 0) + item.setQuantity);
+      productDemandMap.set(
+        item.name,
+        (productDemandMap.get(item.name) ?? 0) + item.setQuantity,
+      );
     }
   }
   const productDemand = Array.from(productDemandMap.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
-    .map(([label, value]) => ({ label: label.length > 18 ? `${label.slice(0, 18)}...` : label, value }));
+    .map(([label, value]) => ({
+      label: label.length > 18 ? `${label.slice(0, 18)}...` : label,
+      value,
+    }));
 
   const clientActivity = clients.slice(0, 6).map((client) => ({
-    label: client.companyName.length > 18 ? `${client.companyName.slice(0, 18)}...` : client.companyName,
+    label:
+      client.companyName.length > 18
+        ? `${client.companyName.slice(0, 18)}...`
+        : client.companyName,
     value: orders.filter((order) => order.clientId === client.id).length,
   }));
 
   const dispatchTrend = monthLabels.map((label) => ({
     label,
-    value: orders.filter((order) => monthKey(order.createdAt) === label && ["Dispatched", "Delivered"].includes(order.status)).length,
+    value: orders.filter(
+      (order) =>
+        monthKey(order.createdAt) === label &&
+        ["Dispatched", "Delivered"].includes(order.status),
+    ).length,
   }));
 
   return {
     summary: [
-      { label: "Total Orders", value: orders.length, icon: "icon-shopping-cart", note: `${pendingOrders} pending` },
-      { label: "Total Clients", value: clients.length, icon: "icon-users", note: `${statusCount(clients, "pending")} pending approval` },
-      { label: "Low Stock", value: lowStock, icon: "icon-basket", note: `${outOfStock} out of stock` },
-      { label: "Outstanding", value: money(outstanding), icon: "icon-hand-coins", note: `${money(overdue)} overdue` },
+      {
+        label: "Total Orders",
+        value: orders.length,
+        icon: "icon-dollar",
+        note: `${pendingOrders} pending`,
+      },
+      {
+        label: "Total Clients",
+        value: clients.length,
+        icon: "icon-users",
+        note: `${statusCount(clients, "pending")} pending approval`,
+      },
+      {
+        label: "Low Stock",
+        value: lowStock,
+        icon: "icon-basket",
+        note: `${outOfStock} out of stock`,
+      },
+      {
+        label: "Outstanding",
+        value: money(outstanding),
+        icon: "icon-hand-coins",
+        note: `${money(overdue)} overdue`,
+      },
     ],
     groups: [
       {
         title: "Orders",
-        icon: "icon-shopping-cart",
+        icon: "icon-dollar",
         items: [
           { label: "Total Orders", value: orders.length },
           { label: "Pending Orders", value: pendingOrders },
@@ -106,7 +169,10 @@ export async function getAdminDashboardData() {
         items: [
           { label: "Total Clients", value: clients.length },
           { label: "Active Clients", value: statusCount(clients, "approved") },
-          { label: "Pending Approval Clients", value: statusCount(clients, "pending") },
+          {
+            label: "Pending Approval Clients",
+            value: statusCount(clients, "pending"),
+          },
         ],
       },
       {
@@ -131,22 +197,41 @@ export async function getAdminDashboardData() {
         title: "Website",
         icon: "icon-chart-bar",
         items: [
-          { label: "Total Visitors", value: analytics.totalVisitors.toLocaleString("en-IN") },
-          { label: "Page Views", value: analytics.pageViews.toLocaleString("en-IN") },
+          {
+            label: "Total Visitors",
+            value: analytics.totalVisitors.toLocaleString("en-IN"),
+          },
+          {
+            label: "Page Views",
+            value: analytics.pageViews.toLocaleString("en-IN"),
+          },
           { label: "Inquiry Count", value: feedbacks.length },
-          { label: "Contact Requests", value: feedbacks.filter((item) => item.status !== "replied").length },
+          {
+            label: "Contact Requests",
+            value: feedbacks.filter((item) => item.status !== "replied").length,
+          },
         ],
       },
     ],
     charts: {
       monthlyOrders,
-      productDemand: productDemand.length ? productDemand : products.slice(0, 6).map((product) => ({ label: product.name.length > 18 ? `${product.name.slice(0, 18)}...` : product.name, value: product.sold ?? 0 })),
+      productDemand: productDemand.length
+        ? productDemand
+        : products.slice(0, 6).map((product) => ({
+            label:
+              product.name.length > 18
+                ? `${product.name.slice(0, 18)}...`
+                : product.name,
+            value: product.sold ?? 0,
+          })),
       clientActivity,
       dispatchTrend,
     },
     recentOrders: orders.slice(0, 8).map((order) => ({
       id: order.id,
-      client: clients.find((client) => client.id === order.clientId)?.companyName ?? order.clientEmail,
+      client:
+        clients.find((client) => client.id === order.clientId)?.companyName ??
+        order.clientEmail,
       date: new Date(order.createdAt).toLocaleDateString("en-IN"),
       total: money(order.subtotal),
       paymentStatus: order.paymentStatus ?? "Pending",
@@ -154,10 +239,22 @@ export async function getAdminDashboardData() {
       approvalStatus: order.status,
     })),
     alerts: [
-      { label: "Pending Client Approvals", detail: `${statusCount(clients, "pending")} client registration requests need review.` },
-      { label: "Pending Orders", detail: `${pendingOrders} orders waiting for admin approval.` },
-      { label: "Inventory Alerts", detail: `${lowStock} products low stock and ${outOfStock} out of stock.` },
-      { label: "Contact Requests", detail: `${feedbacks.filter((item) => item.status !== "replied").length} inquiries waiting for reply.` },
+      {
+        label: "Pending Client Approvals",
+        detail: `${statusCount(clients, "pending")} client registration requests need review.`,
+      },
+      {
+        label: "Pending Orders",
+        detail: `${pendingOrders} orders waiting for admin approval.`,
+      },
+      {
+        label: "Inventory Alerts",
+        detail: `${lowStock} products low stock and ${outOfStock} out of stock.`,
+      },
+      {
+        label: "Contact Requests",
+        detail: `${feedbacks.filter((item) => item.status !== "replied").length} inquiries waiting for reply.`,
+      },
     ],
   };
 }

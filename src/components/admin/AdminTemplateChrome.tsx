@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import type { ReactNode } from "react";
+import { AdminDashboardHeader } from "./AdminDashboardHeader";
 import { AdminSidebarController } from "./AdminSidebarController";
 import { AdminGlobalLoader } from "./AdminGlobalLoader";
 
@@ -78,7 +79,173 @@ type AdminActiveSection =
   | "categoryPages"
   | "customPages"
   | "commerceHub"
-  | "blogComments";
+  | "blogComments"
+  | "account";
+
+type SidebarNavItem = {
+  href: string;
+  icon: string;
+  label: string;
+  /** Which `active` section highlights this row; omit for links that never show as current (e.g. storefront). */
+  section?: AdminActiveSection;
+};
+
+const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
+  {
+    href: "/admin/about",
+    icon: "icon-edit",
+    label: "About Us",
+    section: "about",
+  },
+  {
+    href: "/admin/account",
+    icon: "icon-user-circle",
+    label: "Account & security",
+    section: "account",
+  },
+  {
+    href: "/admin/ai-product-studio",
+    icon: "icon-camera",
+    label: "AI Product Studio",
+    section: "studio",
+  },
+  {
+    href: "/admin/audit",
+    icon: "icon-clipboard-text",
+    label: "Audit Logs",
+    section: "audit",
+  },
+  {
+    href: "/admin/blog-comments",
+    icon: "icon-message",
+    label: "Blog comments",
+    section: "blogComments",
+  },
+  {
+    href: "/admin/blogs-list",
+    icon: "icon-edit",
+    label: "Blogs",
+    section: "blogs",
+  },
+  {
+    href: "/admin/category-pages",
+    icon: "icon-chart-bar",
+    label: "Category pages",
+    section: "categoryPages",
+  },
+  {
+    href: "/admin/customers",
+    icon: "icon-users",
+    label: "Client Management",
+    section: "customers",
+  },
+  {
+    href: "/admin/pricing",
+    icon: "icon-dollar",
+    label: "Client Pricing",
+    section: "pricing",
+  },
+  {
+    href: "/admin/home",
+    icon: "icon-edit",
+    label: "CMS / Home Page",
+    section: "home",
+  },
+  {
+    href: "/admin/commerce-hub",
+    icon: "icon-chart-bar",
+    label: "Commerce hub",
+    section: "commerceHub",
+  },
+  {
+    href: "/admin/contact-inquiries",
+    icon: "icon-message",
+    label: "Contact Inquiries",
+    section: "inquiries",
+  },
+  {
+    href: "/admin/contact",
+    icon: "icon-edit",
+    label: "Contact Us",
+    section: "contact",
+  },
+  {
+    href: "/admin/custom-pages",
+    icon: "icon-edit",
+    label: "Custom site pages",
+    section: "customPages",
+  },
+  {
+    href: "/admin",
+    icon: "icon-house",
+    label: "Dashboard",
+    section: "dashboard",
+  },
+  {
+    href: "/admin/backups",
+    icon: "icon-database",
+    label: "DB Backup / Restore",
+    section: "backups",
+  },
+  {
+    href: "/admin/dispatch",
+    icon: "icon-send",
+    label: "Dispatch",
+    section: "dispatch",
+  },
+  { href: "/", icon: "icon-sign-out", label: "Front Store" },
+  {
+    href: "/admin/products-low",
+    icon: "icon-basket",
+    label: "Inventory",
+    section: "inventory",
+  },
+  {
+    href: "/admin/orders",
+    icon: "icon-dollar",
+    label: "Orders",
+    section: "orders",
+  },
+  {
+    href: "/admin/payments",
+    icon: "icon-hand-coins",
+    label: "Payments & Credit",
+    section: "payments",
+  },
+  {
+    href: "/admin/product-filters",
+    icon: "icon-chart-bar",
+    label: "Product Filters",
+    section: "filters",
+  },
+  {
+    href: "/admin/products-list",
+    icon: "icon-package",
+    label: "Products",
+    section: "products",
+  },
+  {
+    href: "/admin/reports",
+    icon: "icon-chart-bar",
+    label: "Reports",
+    section: "reports",
+  },
+  {
+    href: "/admin/roles",
+    icon: "icon-users",
+    label: "Roles & Permissions",
+    section: "roles",
+  },
+  { href: "/admin/seo", icon: "icon-chart-bar", label: "SEO", section: "seo" },
+  {
+    href: "/admin/testimonials",
+    icon: "icon-message",
+    label: "Testimonials",
+    section: "testimonials",
+  },
+].sort((a, b) =>
+  a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+);
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -111,157 +278,15 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
       <div className="section-menu-left-wrap">
         <div className="center">
           <ul>
-            <MenuItem
-              href="/admin"
-              icon="icon-house"
-              label="Dashboard"
-              active={active === "dashboard"}
-            />
-            <MenuItem
-              href="/admin/commerce-hub"
-              icon="icon-chart-bar"
-              label="Commerce hub"
-              active={active === "commerceHub"}
-            />
-            <MenuItem
-              href="/admin/customers"
-              icon="icon-users"
-              label="Client Management"
-              active={active === "customers"}
-            />
-            <MenuItem
-              href="/admin/products-list"
-              icon="icon-package"
-              label="Products"
-              active={active === "products"}
-            />
-            <MenuItem
-              href="/admin/ai-product-studio"
-              icon="icon-camera"
-              label="AI Product Studio"
-              active={active === "studio"}
-            />
-            <MenuItem
-              href="/admin/product-filters"
-              icon="icon-chart-bar"
-              label="Product Filters"
-              active={active === "filters"}
-            />
-            <MenuItem
-              href="/admin/products-low"
-              icon="icon-basket"
-              label="Inventory"
-              active={active === "inventory"}
-            />
-            <MenuItem
-              href="/admin/orders"
-              icon="icon-dollar"
-              label="Orders"
-              active={active === "orders"}
-            />
-            <MenuItem
-              href="/admin/dispatch"
-              icon="icon-send"
-              label="Dispatch"
-              active={active === "dispatch"}
-            />
-            <MenuItem
-              href="/admin/payments"
-              icon="icon-hand-coins"
-              label="Payments & Credit"
-              active={active === "payments"}
-            />
-            <MenuItem
-              href="/admin/pricing"
-              icon="icon-dollar"
-              label="Client Pricing"
-              active={active === "pricing"}
-            />
-            <MenuItem
-              href="/admin/home"
-              icon="icon-edit"
-              label="CMS / Home Page"
-              active={active === "home"}
-            />
-            <MenuItem
-              href="/admin/category-pages"
-              icon="icon-chart-bar"
-              label="Category pages"
-              active={active === "categoryPages"}
-            />
-            <MenuItem
-              href="/admin/custom-pages"
-              icon="icon-edit"
-              label="Custom site pages"
-              active={active === "customPages"}
-            />
-            <MenuItem
-              href="/admin/about"
-              icon="icon-edit"
-              label="About Us"
-              active={active === "about"}
-            />
-            <MenuItem
-              href="/admin/contact"
-              icon="icon-edit"
-              label="Contact Us"
-              active={active === "contact"}
-            />
-            <MenuItem
-              href="/admin/contact-inquiries"
-              icon="icon-message"
-              label="Contact Inquiries"
-              active={active === "inquiries"}
-            />
-            <MenuItem
-              href="/admin/blogs-list"
-              icon="icon-edit"
-              label="Blogs"
-              active={active === "blogs"}
-            />
-            <MenuItem
-              href="/admin/testimonials"
-              icon="icon-message"
-              label="Testimonials"
-              active={active === "testimonials"}
-            />
-            <MenuItem
-              href="/admin/blog-comments"
-              icon="icon-message"
-              label="Blog comments"
-              active={active === "blogComments"}
-            />
-            <MenuItem
-              href="/admin/seo"
-              icon="icon-chart-bar"
-              label="SEO"
-              active={active === "seo"}
-            />
-            <MenuItem
-              href="/admin/reports"
-              icon="icon-chart-bar"
-              label="Reports"
-              active={active === "reports"}
-            />
-            <MenuItem
-              href="/admin/audit"
-              icon="icon-clipboard-text"
-              label="Audit Logs"
-              active={active === "audit"}
-            />
-            <MenuItem
-              href="/admin/roles"
-              icon="icon-users"
-              label="Roles & Permissions"
-              active={active === "roles"}
-            />
-            <MenuItem
-              href="/admin/backups"
-              icon="icon-database"
-              label="DB Backup / Restore"
-              active={active === "backups"}
-            />
-            <MenuItem href="/" icon="icon-sign-out" label="Front Store" />
+            {SIDEBAR_NAV_ITEMS.map((item) => (
+              <MenuItem
+                key={item.href + item.label}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={item.section != null && active === item.section}
+              />
+            ))}
           </ul>
         </div>
       </div>
@@ -270,116 +295,7 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
 }
 
 function Header() {
-  return (
-    <div className="header-dashboard">
-      <div className="wrap">
-        <div className="header-left">
-          <button
-            type="button"
-            className="sarjan-admin-toggle sarjan-admin-toggle-open"
-            data-admin-menu-toggle
-            aria-label="Toggle sidebar"
-          >
-            <i className="icon-chevron-right" />
-          </button>
-          <form className="form-search flex-grow">
-            <fieldset className="name">
-              <input
-                type="text"
-                placeholder="Enter your e-mail"
-                className="show-search style-1"
-                name="name"
-                tabIndex={2}
-                value=""
-                aria-required="true"
-                required
-                readOnly
-              />
-            </fieldset>
-            <div className="button-submit">
-              <button className="" type="submit">
-                <i className="icon-search" />
-              </button>
-            </div>
-          </form>
-        </div>
-        <div className="header-grid">
-          <div className="header-btn">
-            <div className="popup-wrap noti type-header">
-              <div className="dropdown">
-                <button
-                  className="btn btn-secondary dropdown-toggle"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <span className="header-item has-dot">
-                    <i className="icon-bell" />
-                  </span>
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end has-content">
-                  <li>
-                    <h6>Notifications</h6>
-                  </li>
-                  <li>
-                    <div className="notifications-item item-2">
-                      <div className="image">
-                        <i className="icon-edit" />
-                      </div>
-                      <div>
-                        <div className="text-title">Home CMS ready</div>
-                        <div className="text-caption-1">
-                          Frontend pulls content from admin API.
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="line1" />
-          <div className="popup-wrap user type-header">
-            <div className="dropdown">
-              <button
-                className="btn btn-secondary dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <span className="header-user wg-user">
-                  <span className="image">
-                    <img
-                      className="lazyload"
-                      data-src="/template/admin/images/avatar/user-1.jpg"
-                      src="/template/admin/images/avatar/user-1.jpg"
-                      alt=""
-                    />
-                  </span>
-                  <span className="content">
-                    <span className="text-button name">Super Admin</span>
-                  </span>
-                  <i className="icon icon-arrow-down" />
-                </span>
-              </button>
-              <ul className="dropdown-menu dropdown-menu-end has-content">
-                <li>
-                  <Link href="/admin/user-profile" className="user-item link">
-                    <div className="text-title">Account</div>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/" className="user-item link">
-                    <div className="text-title">Front Store</div>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <AdminDashboardHeader />;
 }
 
 export function AdminTemplateChrome({

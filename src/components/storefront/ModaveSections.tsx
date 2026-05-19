@@ -2773,6 +2773,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
     imageAlt?: string;
     sections?: CmsCustomSection[];
   };
+  const showAboutHeroImage = Boolean(String(page.image ?? "").trim());
 
   return (
     <>
@@ -2878,17 +2879,19 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
           <section className="flat-spacing about-us-main pb_0">
             <div className="container">
               <div className="row">
-                <div className="col-md-6">
-                  <div className="about-us-features wow fadeInLeft">
-                    <img
-                      className="lazyload"
-                      data-src={page.image}
-                      src={page.image}
-                      alt={about.imageAlt || page.title}
-                    />
+                {showAboutHeroImage ? (
+                  <div className="col-md-6">
+                    <div className="about-us-features wow fadeInLeft">
+                      <img
+                        className="lazyload"
+                        data-src={page.image}
+                        src={page.image}
+                        alt={about.imageAlt || page.title}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="col-md-6">
+                ) : null}
+                <div className={showAboutHeroImage ? "col-md-6" : "col-md-12"}>
                   <div className="about-us-content">
                     <h3 className="title wow fadeInUp">{page.title}</h3>
                     <div className="widget-tabs style-3">

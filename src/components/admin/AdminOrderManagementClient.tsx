@@ -145,11 +145,11 @@ export function AdminOrderManagementClient({
   );
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
-  const approvedClients = clients.filter(
-    (client) => client.status === "approved" && client.source === "local",
+  const selectableClients = clients.filter(
+    (client) => client.source === "local",
   );
   const [customOrder, setCustomOrder] = useState({
-    clientId: approvedClients[0]?.id ?? "",
+    clientId: selectableClients[0]?.id ?? "",
     productSlug: products[0]?.slug ?? "",
     setQuantity: "1",
     unitPrice: String(products[0]?.price ?? 0),
@@ -558,10 +558,11 @@ export function AdminOrderManagementClient({
               {saving === "custom-order" ? "Creating..." : "Create Order"}
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sarjan-admin-custom-order-form">
             <fieldset>
               <div className="body-title mb-10">Client</div>
               <select
+                className="sarjan-admin-custom-order-client"
                 value={customOrder.clientId}
                 onChange={(event) =>
                   setCustomOrder((current) => ({
@@ -570,11 +571,20 @@ export function AdminOrderManagementClient({
                   }))
                 }
               >
-                {approvedClients.map((client) => (
-                  <option value={client.id} key={client.id}>
-                    {client.companyName}
+                {selectableClients.length === 0 ? (
+                  <option value="">
+                    No registered clients — add one in Client Management
                   </option>
-                ))}
+                ) : (
+                  selectableClients.map((client) => (
+                    <option value={client.id} key={client.id}>
+                      {client.companyName}
+                      {client.status === "approved"
+                        ? ""
+                        : " (pending approval)"}
+                    </option>
+                  ))
+                )}
               </select>
             </fieldset>
             <fieldset>

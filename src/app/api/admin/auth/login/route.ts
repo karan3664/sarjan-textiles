@@ -1,4 +1,5 @@
 import { configuredAdmins, createAdminToken } from "@/lib/admin-token";
+import { mergedConfiguredAdmins } from "@/lib/admin-profile-override";
 import { isPlausiblePasswordHash, verifyPassword } from "@/lib/local-db";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -26,7 +27,8 @@ export async function POST(request: Request) {
       60_000,
     );
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
-    const admin = configuredAdmins().find(
+    const admins = await mergedConfiguredAdmins(configuredAdmins());
+    const admin = admins.find(
       (item) =>
         item.email.toLowerCase() === email && passwordMatches(item, password),
     );

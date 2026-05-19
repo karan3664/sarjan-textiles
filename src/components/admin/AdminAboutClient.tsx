@@ -19,9 +19,17 @@ type AboutPage = CmsPages["about"] & {
   sections?: CmsCustomSection[];
 };
 
-export function AdminAboutClient({ initialPages, products }: { initialPages: CmsPages; products: Product[] }) {
+export function AdminAboutClient({
+  initialPages,
+  products,
+}: {
+  initialPages: CmsPages;
+  products: Product[];
+}) {
   const [pages, setPages] = useState(initialPages);
-  const [about, setAbout] = useState<AboutPage>(initialPages.about as AboutPage);
+  const [about, setAbout] = useState<AboutPage>(
+    initialPages.about as AboutPage,
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -72,15 +80,27 @@ export function AdminAboutClient({ initialPages, products }: { initialPages: Cms
   };
 
   return (
-    <form className="form-products-create form-type-2 sarjan-product-create" onSubmit={saveAbout}>
+    <form
+      className="form-products-create form-type-2 sarjan-product-create"
+      onSubmit={saveAbout}
+    >
       <div className="flex flex-wrap justify-between gap14 items-center mb-30">
-        <div className="body-text text-secondary">Manage website About Us content, main image, and company history sections.</div>
-        <button type="submit" className="tf-button text-btn-uppercase" disabled={saving}>
+        <div className="body-text text-secondary">
+          Manage website About Us content, main image, and company history
+          sections.
+        </div>
+        <button
+          type="submit"
+          className="tf-button text-btn-uppercase"
+          disabled={saving}
+        >
           {saving ? "Saving..." : "Save About Page"}
         </button>
       </div>
 
-      {message ? <div className="sarjan-admin-message mb-20">{message}</div> : null}
+      {message ? (
+        <div className="sarjan-admin-message mb-20">{message}</div>
+      ) : null}
 
       <div className="wg-box p-40 sarjan-product-create-box">
         <div className="form-wrap">
@@ -89,13 +109,49 @@ export function AdminAboutClient({ initialPages, products }: { initialPages: Cms
               <h6 className="mb-20">About Image</h6>
               <div className="upload-image sarjan-product-main-upload sarjan-about-main-upload">
                 <div className="upload-img">
-                  {about.image ? <img src={about.image} alt={about.title} /> : <div className="sarjan-product-upload-placeholder"><i className="icon-image" /><span>No image selected</span></div>}
+                  {about.image ? (
+                    <img src={about.image} alt={about.title} />
+                  ) : (
+                    <div className="sarjan-product-upload-placeholder">
+                      <i className="icon-image" />
+                      <span>No image selected</span>
+                    </div>
+                  )}
                 </div>
                 <label className="uploadfile">
-                  <input type="file" accept="image/*" onChange={(event) => uploadImage(event.target.files?.[0] ?? null)} />
-                  <div className="upload-btn text-button font-instrument fw-6">{uploading ? "Uploading..." : "Choose File"}</div>
-                  <div className="text-caption-1 font-instrument text-secondary">Upload JPG, PNG, WEBP.</div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      uploadImage(event.target.files?.[0] ?? null)
+                    }
+                  />
+                  <div className="upload-btn text-button font-instrument fw-6">
+                    {uploading ? "Uploading..." : "Choose File"}
+                  </div>
+                  <div className="text-caption-1 font-instrument text-secondary">
+                    Upload JPG, PNG, WEBP.
+                  </div>
                 </label>
+                <div className="mt-12 d-flex flex-wrap gap-8 align-items-center">
+                  <button
+                    type="button"
+                    className="tf-button style-2 text-btn-uppercase"
+                    disabled={!about.image}
+                    onClick={() => {
+                      update("image", "");
+                      setMessage(
+                        "Hero image cleared. Save to show text-only About on the site.",
+                      );
+                    }}
+                  >
+                    Remove image (text only)
+                  </button>
+                  <span className="text-caption-1 font-instrument text-secondary">
+                    Hides the large image on the public About page; tabs and
+                    copy stay full width.
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -104,51 +160,113 @@ export function AdminAboutClient({ initialPages, products }: { initialPages: Cms
             <div className="d-flex flex-column gap20">
               <div>
                 <h6 className="mb-4">About Content</h6>
-                <p className="text-secondary">Shown on frontend About Us page.</p>
+                <p className="text-secondary">
+                  Shown on frontend About Us page.
+                </p>
               </div>
               <fieldset>
-                <div className="text-button font-instrument fw-6 mb-8">Page Title<span className="text-primary">*</span></div>
-                <input type="text" value={about.title} onChange={(event) => update("title", event.target.value)} required />
+                <div className="text-button font-instrument fw-6 mb-8">
+                  Page Title<span className="text-primary">*</span>
+                </div>
+                <input
+                  type="text"
+                  value={about.title}
+                  onChange={(event) => update("title", event.target.value)}
+                  required
+                />
               </fieldset>
               <fieldset>
-                <div className="text-title mb-8">Introduction<span className="text-primary">*</span></div>
-                <textarea value={about.body} onChange={(event) => update("body", event.target.value)} required />
+                <div className="text-title mb-8">
+                  Introduction<span className="text-primary">*</span>
+                </div>
+                <textarea
+                  value={about.body}
+                  onChange={(event) => update("body", event.target.value)}
+                  required
+                />
               </fieldset>
               <div className="sarjan-seo-panel">
                 <h6>About Page SEO</h6>
-                <p className="text-secondary">Page-wise SEO metadata and main image alt text.</p>
+                <p className="text-secondary">
+                  Page-wise SEO metadata and main image alt text.
+                </p>
                 <fieldset>
-                  <div className="text-button font-instrument fw-6 mb-8">Image Alt Text</div>
-                  <input value={about.imageAlt ?? ""} onChange={(event) => update("imageAlt", event.target.value)} placeholder="Sarjan Textiles company and textile infrastructure" />
+                  <div className="text-button font-instrument fw-6 mb-8">
+                    Image Alt Text
+                  </div>
+                  <input
+                    value={about.imageAlt ?? ""}
+                    onChange={(event) => update("imageAlt", event.target.value)}
+                    placeholder="Sarjan Textiles company and textile infrastructure"
+                  />
                 </fieldset>
                 <fieldset>
-                  <div className="text-button font-instrument fw-6 mb-8">Meta Title</div>
-                  <input value={about.metaTitle ?? ""} onChange={(event) => update("metaTitle", event.target.value)} maxLength={70} placeholder="About Sarjan Textiles" />
+                  <div className="text-button font-instrument fw-6 mb-8">
+                    Meta Title
+                  </div>
+                  <input
+                    value={about.metaTitle ?? ""}
+                    onChange={(event) =>
+                      update("metaTitle", event.target.value)
+                    }
+                    maxLength={70}
+                    placeholder="About Sarjan Textiles"
+                  />
                 </fieldset>
                 <fieldset>
-                  <div className="text-button font-instrument fw-6 mb-8">Meta Description</div>
-                  <textarea rows={3} value={about.metaDescription ?? ""} onChange={(event) => update("metaDescription", event.target.value)} maxLength={170} placeholder="Search result description" />
+                  <div className="text-button font-instrument fw-6 mb-8">
+                    Meta Description
+                  </div>
+                  <textarea
+                    rows={3}
+                    value={about.metaDescription ?? ""}
+                    onChange={(event) =>
+                      update("metaDescription", event.target.value)
+                    }
+                    maxLength={170}
+                    placeholder="Search result description"
+                  />
                 </fieldset>
                 <fieldset>
-                  <div className="text-button font-instrument fw-6 mb-8">Keywords</div>
-                  <input value={about.keywords ?? ""} onChange={(event) => update("keywords", event.target.value)} placeholder="Sarjan Textiles, textile manufacturer, B2B textiles" />
+                  <div className="text-button font-instrument fw-6 mb-8">
+                    Keywords
+                  </div>
+                  <input
+                    value={about.keywords ?? ""}
+                    onChange={(event) => update("keywords", event.target.value)}
+                    placeholder="Sarjan Textiles, textile manufacturer, B2B textiles"
+                  />
                 </fieldset>
               </div>
               <fieldset>
                 <div className="text-title mb-8">Company History</div>
-                <textarea value={about.history ?? ""} onChange={(event) => update("history", event.target.value)} />
+                <textarea
+                  value={about.history ?? ""}
+                  onChange={(event) => update("history", event.target.value)}
+                />
               </fieldset>
               <fieldset>
                 <div className="text-title mb-8">Mission</div>
-                <textarea value={about.mission ?? ""} onChange={(event) => update("mission", event.target.value)} />
+                <textarea
+                  value={about.mission ?? ""}
+                  onChange={(event) => update("mission", event.target.value)}
+                />
               </fieldset>
               <fieldset>
                 <div className="text-title mb-8">Vision</div>
-                <textarea value={about.vision ?? ""} onChange={(event) => update("vision", event.target.value)} />
+                <textarea
+                  value={about.vision ?? ""}
+                  onChange={(event) => update("vision", event.target.value)}
+                />
               </fieldset>
               <fieldset>
                 <div className="text-title mb-8">Infrastructure</div>
-                <textarea value={about.infrastructure ?? ""} onChange={(event) => update("infrastructure", event.target.value)} />
+                <textarea
+                  value={about.infrastructure ?? ""}
+                  onChange={(event) =>
+                    update("infrastructure", event.target.value)
+                  }
+                />
               </fieldset>
             </div>
           </div>
@@ -159,7 +277,9 @@ export function AdminAboutClient({ initialPages, products }: { initialPages: Cms
         title="About Page Custom Sections"
         description="Client can add any About section: image, banner, text, button, or product block."
         sections={about.sections ?? []}
-        onChange={(sections) => setAbout((current) => ({ ...current, sections }))}
+        onChange={(sections) =>
+          setAbout((current) => ({ ...current, sections }))
+        }
         products={products}
       />
     </form>
