@@ -4288,6 +4288,41 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   height: 50px;
 }
 
+.sarjan-gst-captcha-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sarjan-gst-captcha-panel .sarjan-gst-captcha-img {
+  height: 50px;
+  width: auto;
+  max-width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  image-rendering: pixelated;
+  background: #fff;
+}
+
+.sarjan-gst-captcha-panel .sarjan-gst-captcha-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sarjan-gst-captcha-panel .sarjan-gst-captcha-refresh {
+  min-width: 120px;
+  height: 44px;
+}
+
+.sarjan-gst-captcha-hint {
+  font-size: 12px;
+  color: var(--Secondary2, #6b7280);
+  margin: 0 0 8px;
+}
+
 .form-search-result,
 .form-order-tracking {
   display: flex;

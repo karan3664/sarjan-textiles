@@ -43,21 +43,36 @@ export async function POST(request: Request) {
           { error: "Invalid GST number format" },
           { status: 400 },
         );
+      const manualCompany = String(body.companyName ?? "").trim();
+      const manualOwner = String(body.ownerLegalName ?? "").trim();
       try {
         const verified = await verifyGstinFromPortal(body.gst);
-        body.companyName = verified.legalName;
+        body.companyName =
+          verified.tradeName?.trim() || verified.legalName.trim();
+        body.ownerLegalName = verified.legalName.trim();
       } catch (error) {
-        if (!String(body.companyName ?? "").trim()) {
+        if (!manualCompany) {
           return Response.json(
             {
               error:
                 error instanceof Error && /invalid/i.test(error.message)
                   ? error.message
-                  : "GST portal unavailable. Enter company name manually; admin will verify GST during approval.",
+                  : "GST portal unavailable. Enter trade name and legal name manually; admin will verify GST during approval.",
             },
             { status: 400 },
           );
         }
+        if (!manualOwner) {
+          return Response.json(
+            {
+              error:
+                "Legal / proprietor full name (as on GST certificate) is required when verifying manually.",
+            },
+            { status: 400 },
+          );
+        }
+        body.companyName = manualCompany;
+        body.ownerLegalName = manualOwner;
       }
     } else {
       body.gst = "";
@@ -68,7 +83,16 @@ export async function POST(request: Request) {
         );
     }
 
-    await createClient(body);
+    await createClient({
+      email: String(body.email),
+      password: String(body.password),
+      companyName: String(body.companyName ?? "").trim(),
+      gst: hasGst ? String(body.gst) : undefined,
+      city: body.city != null ? String(body.city) : undefined,
+      ownerLegalName: hasGst
+        ? String(body.ownerLegalName ?? "").trim() || undefined
+        : undefined,
+    });
     return Response.json({
       ok: true,
       pendingApproval: true,

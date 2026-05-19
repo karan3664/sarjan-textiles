@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import Script from "next/script";
 import DOMPurify from "isomorphic-dompurify";
+
+import { OrderedVendorScripts } from "@/components/shared/OrderedVendorScripts";
 import { getCartItems, mockApi } from "@/lib/mock-api";
 import type { Product } from "@/data/mock";
 
@@ -445,13 +446,11 @@ export function ExactTemplatePage({
         />
       ))}
       <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
-      {scriptMap[kind].map((script) => (
-        <Script
-          key={`${kind}-${script}`}
-          src={`${scriptBase}/${script}`}
-          strategy="afterInteractive"
-        />
-      ))}
+      <OrderedVendorScripts
+        scope={`exact-${kind}`}
+        basePath={scriptBase}
+        files={scriptMap[kind]}
+      />
     </>
   );
 }

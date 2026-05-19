@@ -38,13 +38,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     if (!body.email || !body.companyName)
       return Response.json(
-        { error: "Company name and email required" },
+        { error: "Trade / business name and email required" },
         { status: 400 },
       );
     const client = await createAdminClient({
       email: body.email,
       password: body.password,
       companyName: body.companyName,
+      ownerLegalName: body.ownerLegalName,
       gst: body.gst,
       city: body.city,
       phone: body.phone,

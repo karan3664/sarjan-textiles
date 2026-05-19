@@ -1,6 +1,7 @@
 import Link from "next/link";
-import Script from "next/script";
 import type { ReactNode } from "react";
+
+import { OrderedVendorScripts } from "@/components/shared/OrderedVendorScripts";
 import { AdminDashboardHeader } from "./AdminDashboardHeader";
 import { AdminSidebarController } from "./AdminSidebarController";
 import { AdminGlobalLoader } from "./AdminGlobalLoader";
@@ -348,13 +349,11 @@ export function AdminTemplateChrome({
           </div>
         </div>
       </div>
-      {adminScripts.map((script) => (
-        <Script
-          key={script}
-          src={`/template/admin/js/${script}`}
-          strategy="afterInteractive"
-        />
-      ))}
+      <OrderedVendorScripts
+        scope="admin"
+        basePath="/template/admin/js"
+        files={adminScripts}
+      />
     </>
   );
 }

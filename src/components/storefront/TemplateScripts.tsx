@@ -3,6 +3,8 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 
+import { OrderedVendorScripts } from "@/components/shared/OrderedVendorScripts";
+
 const baseScripts = [
   "jquery.min.js",
   "bootstrap.min.js",
@@ -142,13 +144,12 @@ export function TemplateScripts() {
           }, true);
         `}
       </Script>
-      {scripts.map((script) => (
-        <Script
-          key={script}
-          src={`/template/storefront/js/${script}?v=${templateVersion}`}
-          strategy="afterInteractive"
-        />
-      ))}
+      <OrderedVendorScripts
+        scope="storefront"
+        basePath="/template/storefront/js"
+        files={scripts}
+        version={templateVersion}
+      />
     </>
   );
 }

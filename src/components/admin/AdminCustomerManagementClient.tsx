@@ -71,6 +71,7 @@ export function AdminCustomerManagementClient({
   const [createAttempted, setCreateAttempted] = useState(false);
   const [newClient, setNewClient] = useState({
     companyName: "",
+    ownerLegalName: "",
     email: "",
     phone: "",
     city: "",
@@ -87,11 +88,12 @@ export function AdminCustomerManagementClient({
         !normalized ||
         [
           customer.companyName,
+          customer.ownerLegalName,
           customer.email,
           customer.city,
           customer.gst,
           customer.id,
-        ].some((value) => value.toLowerCase().includes(normalized));
+        ].some((value) => String(value).toLowerCase().includes(normalized));
       const matchesFilter = filter === "all" || customer.status === filter;
       return matchesQuery && matchesFilter;
     });
@@ -148,7 +150,7 @@ export function AdminCustomerManagementClient({
     const companyName = newClient.companyName.trim();
     const email = newClient.email.trim().toLowerCase();
     if (!companyName) {
-      setNotice("Company name required.");
+      setNotice("Trade / business name required.");
       return;
     }
     if (!email) {
@@ -180,6 +182,7 @@ export function AdminCustomerManagementClient({
       if (data.client?.id) setSelectedId(data.client.id);
       setNewClient({
         companyName: "",
+        ownerLegalName: "",
         email: "",
         phone: "",
         city: "",
@@ -303,7 +306,10 @@ export function AdminCustomerManagementClient({
         </div>
         <div className="sarjan-client-create-grid grid grid-cols-1 md:grid-cols-3 gap-4">
           <fieldset>
-            <div className="body-title mb-10">Company Name</div>
+            <div className="body-title mb-10">Trade / business name</div>
+            <div className="text-caption-1 text-secondary mb-8">
+              Stored as company name (same as GST tradeNam on registration).
+            </div>
             <input
               className={
                 createAttempted && !newClient.companyName.trim()
@@ -315,6 +321,22 @@ export function AdminCustomerManagementClient({
                 setNewClient((current) => ({
                   ...current,
                   companyName: event.target.value,
+                }))
+              }
+            />
+          </fieldset>
+          <fieldset>
+            <div className="body-title mb-10">Legal / proprietor name</div>
+            <div className="text-caption-1 text-secondary mb-8">
+              Optional; saved in client address (same as GST lgnm on
+              registration).
+            </div>
+            <input
+              value={newClient.ownerLegalName}
+              onChange={(event) =>
+                setNewClient((current) => ({
+                  ...current,
+                  ownerLegalName: event.target.value,
                 }))
               }
             />
@@ -506,6 +528,12 @@ export function AdminCustomerManagementClient({
                   <span>GST</span>
                   <strong>{selected.gst || "-"}</strong>
                 </div>
+                {selected.ownerLegalName ? (
+                  <div>
+                    <span>Legal / proprietor</span>
+                    <strong>{selected.ownerLegalName}</strong>
+                  </div>
+                ) : null}
                 <div>
                   <span>Outstanding</span>
                   <strong>{formatInr(selected.outstanding)}</strong>

@@ -24,6 +24,8 @@ export type LocalClient = {
     pincode?: string;
     gst?: string;
     transport?: string;
+    /** Legal / proprietor full name as on GST certificate (lgnm). */
+    ownerLegalName?: string;
   };
   status: "pending" | "approved" | "rejected" | "inactive";
   createdAt: string;
@@ -325,10 +327,17 @@ export async function createClient(input: {
   companyName: string;
   gst?: string;
   city?: string;
+  /** GST legal / proprietor name (lgnm); stored in address JSON. */
+  ownerLegalName?: string;
 }) {
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
+      const addressPayload =
+        input.ownerLegalName?.trim() != null &&
+        input.ownerLegalName.trim() !== ""
+          ? { ownerLegalName: input.ownerLegalName.trim() }
+          : {};
       const row = {
         email: input.email.trim().toLowerCase(),
         password_hash: hashPassword(input.password),
@@ -336,6 +345,7 @@ export async function createClient(input: {
         gst: input.gst?.trim(),
         city: input.city?.trim(),
         status: "pending",
+        address: addressPayload,
       };
       const { data, error } = await supabase
         .from("clients")
@@ -360,6 +370,9 @@ export async function createClient(input: {
     companyName: input.companyName.trim(),
     gst: input.gst?.trim(),
     city: input.city?.trim(),
+    address: input.ownerLegalName?.trim()
+      ? { ownerLegalName: input.ownerLegalName.trim() }
+      : undefined,
     status: "pending",
     createdAt: new Date().toISOString(),
   };
@@ -376,6 +389,7 @@ export async function createAdminClient(input: {
   gst?: string;
   city?: string;
   phone?: string;
+  ownerLegalName?: string;
   status?: LocalClient["status"];
 }) {
   const email = input.email.trim().toLowerCase();
@@ -387,11 +401,17 @@ export async function createAdminClient(input: {
     companyName: input.companyName,
     gst: input.gst,
     city: input.city,
+    ownerLegalName: input.ownerLegalName,
   };
 
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
+      const addressPayload =
+        input.ownerLegalName?.trim() != null &&
+        input.ownerLegalName.trim() !== ""
+          ? { ownerLegalName: input.ownerLegalName.trim() }
+          : {};
       const row = {
         email,
         password_hash: hashPassword(password),
@@ -400,6 +420,7 @@ export async function createAdminClient(input: {
         city: input.city?.trim(),
         phone: input.phone?.trim(),
         status: input.status ?? "approved",
+        address: addressPayload,
       };
       const { data, error } = await supabase
         .from("clients")
