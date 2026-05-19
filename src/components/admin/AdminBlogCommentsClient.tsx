@@ -35,17 +35,20 @@ export function AdminBlogCommentsClient({
   );
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState("");
+  const [busyReplyKey, setBusyReplyKey] = useState("");
   const [notice, setNotice] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return comments.filter((c) => {
       const okStatus = statusFilter === "all" || c.status === statusFilter;
+      const replyHay = (c.adminReplies ?? []).map((r) => r.body).join(" ");
       const hay = [
         c.blogSlug,
         c.authorName,
         c.authorEmail,
         c.body,
+        replyHay,
         c.adminReply,
       ]
         .filter(Boolean)
@@ -56,9 +59,17 @@ export function AdminBlogCommentsClient({
     });
   }, [comments, query, statusFilter]);
 
+  const rowBusy = (id: string) =>
+    busyId === id || busyReplyKey.startsWith(`${id}:`);
+
   const patchComment = async (
     id: string,
-    patch: { status?: BlogCommentStatus; adminReply?: string },
+    patch: {
+      status?: BlogCommentStatus;
+      adminReply?: string;
+      appendAdminReply?: string;
+      deleteAdminReplyId?: string;
+    },
   ) => {
     setBusyId(id);
     setNotice("");
@@ -80,6 +91,9 @@ export function AdminBlogCommentsClient({
         setComments((prev) =>
           prev.map((c) => (c.id === data.comment!.id ? data.comment! : c)),
         );
+        if (patch.appendAdminReply !== undefined) {
+          setReplyDrafts((prev) => ({ ...prev, [id]: "" }));
+        }
       }
     } catch {
       setNotice("Network error");
@@ -88,7 +102,77 @@ export function AdminBlogCommentsClient({
     }
   };
 
-  const replyFor = (c: BlogComment) => replyDrafts[c.id] ?? c.adminReply ?? "";
+  const deleteReply = async (commentId: string, replyId: string) => {
+    if (
+      !window.confirm(
+        "Delete this official reply? It will disappear from the storefront for approved comments.",
+      )
+    ) {
+      return;
+    }
+    setBusyReplyKey(`${commentId}:${replyId}`);
+    setNotice("");
+    try {
+      const res = await fetch("/api/admin/blog-comments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: commentId, deleteAdminReplyId: replyId }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        comment?: BlogComment;
+      };
+      if (!res.ok) {
+        setNotice(data.error ?? "Could not delete reply");
+        return;
+      }
+      if (data.comment) {
+        setComments((prev) =>
+          prev.map((c) => (c.id === data.comment!.id ? data.comment! : c)),
+        );
+      }
+    } catch {
+      setNotice("Network error");
+    } finally {
+      setBusyReplyKey("");
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (
+      !window.confirm(
+        "Permanently delete this visitor comment and all official replies? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    setBusyId(commentId);
+    setNotice("");
+    try {
+      const res = await fetch(
+        `/api/admin/blog-comments?id=${encodeURIComponent(commentId)}`,
+        { method: "DELETE" },
+      );
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setNotice(data.error ?? "Delete failed");
+        return;
+      }
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      setReplyDrafts((prev) => {
+        const next = { ...prev };
+        delete next[commentId];
+        return next;
+      });
+    } catch {
+      setNotice("Network error");
+    } finally {
+      setBusyId("");
+    }
+  };
+
+  /** Draft only — saved replies stay in `adminReplies`; box clears after each save. */
+  const replyFor = (c: BlogComment) => replyDrafts[c.id] ?? "";
 
   return (
     <div className="wg-box sarjan-admin-blog-comments">
@@ -153,37 +237,70 @@ export function AdminBlogCommentsClient({
                 <td>
                   <span className={statusBadge(c.status)}>{c.status}</span>
                 </td>
-                <td style={{ minWidth: 240 }}>
-                  <textarea
-                    className="form-control mb_8"
-                    rows={3}
-                    placeholder="Official reply (shown with Sarjan Textiles logo)"
-                    value={replyFor(c)}
-                    onChange={(e) =>
-                      setReplyDrafts((prev) => ({
-                        ...prev,
-                        [c.id]: e.target.value,
-                      }))
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="tf-btn btn-sm btn-fill"
-                    disabled={busyId === c.id}
-                    onClick={() =>
-                      patchComment(c.id, { adminReply: replyFor(c) })
-                    }
-                  >
-                    {busyId === c.id ? "Saving…" : "Save reply"}
-                  </button>
+                <td className="sarjan-admin-blog-comments-reply-cell">
+                  <div className="sarjan-admin-blog-comments-reply">
+                    {c.adminReplies.length > 0 ? (
+                      <ul className="sarjan-admin-blog-comments-reply-history mb_12">
+                        {c.adminReplies.map((r) => (
+                          <li key={r.id}>
+                            <div className="sarjan-admin-blog-comments-reply-head">
+                              <span className="text-caption-1 text-muted">
+                                {formatDate(r.createdAt)}
+                              </span>
+                              <button
+                                type="button"
+                                className="sarjan-admin-blog-comments-delete-reply"
+                                disabled={
+                                  busyReplyKey === `${c.id}:${r.id}` ||
+                                  rowBusy(c.id)
+                                }
+                                onClick={() => deleteReply(c.id, r.id)}
+                              >
+                                {busyReplyKey === `${c.id}:${r.id}`
+                                  ? "…"
+                                  : "Delete reply"}
+                              </button>
+                            </div>
+                            <p className="sarjan-emoji-text body-text-1 mb_0">
+                              {r.body}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <textarea
+                      className="form-control mb_12 sarjan-emoji-text"
+                      rows={3}
+                      placeholder="Type a new reply (emoji OK). Saves append to the thread."
+                      value={replyFor(c)}
+                      onChange={(e) =>
+                        setReplyDrafts((prev) => ({
+                          ...prev,
+                          [c.id]: e.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="tf-button style-1"
+                      disabled={rowBusy(c.id) || !replyFor(c).trim().length}
+                      onClick={() =>
+                        patchComment(c.id, {
+                          appendAdminReply: replyFor(c).trim(),
+                        })
+                      }
+                    >
+                      {busyId === c.id ? "Saving…" : "Save reply"}
+                    </button>
+                  </div>
                 </td>
-                <td>
-                  <div className="d-flex flex-column gap_8">
+                <td className="sarjan-admin-blog-comments-actions-cell">
+                  <div className="sarjan-admin-blog-comments-actions">
                     {c.status !== "approved" ? (
                       <button
                         type="button"
-                        className="tf-btn btn-sm btn-fill animate-hover-btn"
-                        disabled={busyId === c.id}
+                        className="tf-button style-1"
+                        disabled={rowBusy(c.id)}
                         onClick={() =>
                           patchComment(c.id, { status: "approved" })
                         }
@@ -194,8 +311,8 @@ export function AdminBlogCommentsClient({
                     {c.status !== "rejected" ? (
                       <button
                         type="button"
-                        className="tf-btn btn-sm btn-outline animate-hover-btn"
-                        disabled={busyId === c.id}
+                        className="tf-button sarjan-danger-button"
+                        disabled={rowBusy(c.id)}
                         onClick={() =>
                           patchComment(c.id, { status: "rejected" })
                         }
@@ -206,8 +323,8 @@ export function AdminBlogCommentsClient({
                     {c.status === "rejected" || c.status === "approved" ? (
                       <button
                         type="button"
-                        className="tf-btn btn-sm btn-outline animate-hover-btn"
-                        disabled={busyId === c.id}
+                        className="tf-button"
+                        disabled={rowBusy(c.id)}
                         onClick={() =>
                           patchComment(c.id, { status: "pending" })
                         }
@@ -215,6 +332,14 @@ export function AdminBlogCommentsClient({
                         Mark pending
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      className="tf-button sarjan-danger-button"
+                      disabled={rowBusy(c.id)}
+                      onClick={() => deleteComment(c.id)}
+                    >
+                      Delete comment
+                    </button>
                   </div>
                 </td>
               </tr>

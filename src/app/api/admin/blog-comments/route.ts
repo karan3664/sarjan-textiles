@@ -2,9 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
+  deleteBlogComment,
   getAllBlogComments,
   updateBlogComment,
   type BlogCommentStatus,
+  type BlogCommentUpdatePatch,
 } from "@/lib/blog-comments-store";
 import { verifyAdminToken } from "@/lib/admin-token";
 
@@ -48,8 +50,10 @@ export async function PATCH(request: Request) {
 
   const statusRaw = o.status;
   const adminReplyRaw = o.adminReply;
+  const appendReplyRaw = o.appendAdminReply;
+  const deleteReplyRaw = o.deleteAdminReplyId;
 
-  const patch: Parameters<typeof updateBlogComment>[1] = {};
+  const patch: BlogCommentUpdatePatch = {};
 
   if (statusRaw !== undefined) {
     const s = String(statusRaw).trim() as BlogCommentStatus;
@@ -59,7 +63,28 @@ export async function PATCH(request: Request) {
     patch.status = s;
   }
 
-  if (adminReplyRaw !== undefined) {
+  if (deleteReplyRaw !== undefined) {
+    const rid = String(deleteReplyRaw).trim();
+    if (!rid) {
+      return NextResponse.json(
+        { error: "deleteAdminReplyId cannot be empty" },
+        { status: 400 },
+      );
+    }
+    patch.deleteAdminReplyId = rid;
+  }
+
+  if (appendReplyRaw !== undefined) {
+    const reply = String(appendReplyRaw)
+      .replace(/<[^>]*>/g, "")
+      .trim();
+    if (reply.length > 4000) {
+      return NextResponse.json({ error: "Reply too long" }, { status: 400 });
+    }
+    patch.appendAdminReply = reply;
+  }
+
+  if (adminReplyRaw !== undefined && appendReplyRaw === undefined) {
     const reply = String(adminReplyRaw)
       .replace(/<[^>]*>/g, "")
       .trim();
@@ -70,9 +95,17 @@ export async function PATCH(request: Request) {
     patch.adminRepliedAt = reply ? new Date().toISOString() : undefined;
   }
 
-  if (Object.keys(patch).length === 0) {
+  const hasAppendText =
+    patch.appendAdminReply !== undefined && patch.appendAdminReply.length > 0;
+  const hasLegacyReply = patch.adminReply !== undefined;
+  const hasStatus = patch.status !== undefined;
+  const hasDeleteReply = patch.deleteAdminReplyId !== undefined;
+  if (!hasStatus && !hasAppendText && !hasLegacyReply && !hasDeleteReply) {
     return NextResponse.json(
-      { error: "Nothing to update (status or adminReply)" },
+      {
+        error:
+          "Nothing to update. Send status, appendAdminReply, adminReply (legacy), or deleteAdminReplyId.",
+      },
       { status: 400 },
     );
   }
@@ -83,4 +116,29 @@ export async function PATCH(request: Request) {
   }
   revalidatePath(`/blog/${updated.blogSlug}`);
   return NextResponse.json({ ok: true, comment: updated });
+}
+
+export async function DELETE(request: Request) {
+  const session = await verifyAdminToken(
+    (await cookies()).get("sarjan-admin-session")?.value,
+  );
+  if (!session || !canModerate(session.role)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = (searchParams.get("id") ?? "").trim();
+  if (!id) {
+    return NextResponse.json(
+      { error: "id query parameter required" },
+      { status: 400 },
+    );
+  }
+
+  const blogSlug = await deleteBlogComment(id);
+  if (!blogSlug) {
+    return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+  }
+  revalidatePath(`/blog/${blogSlug}`);
+  return NextResponse.json({ ok: true, deletedId: id });
 }

@@ -7,6 +7,12 @@ const COMMENTS_FILE = path.join(process.cwd(), "data", "blog-comments.json");
 
 export type BlogCommentStatus = "pending" | "approved" | "rejected";
 
+export type BlogAdminReply = {
+  id: string;
+  body: string;
+  createdAt: string;
+};
+
 export type BlogComment = {
   id: string;
   blogSlug: string;
@@ -15,8 +21,23 @@ export type BlogComment = {
   body: string;
   status: BlogCommentStatus;
   createdAt: string;
+  /** Thread of official replies (newest last). */
+  adminReplies: BlogAdminReply[];
+  /** Last reply body (mirrors DB legacy columns). */
+  adminReply?: string;
+  /** Last reply time (mirrors DB legacy columns). */
+  adminRepliedAt?: string;
+};
+
+export type BlogCommentUpdatePatch = {
+  status?: BlogCommentStatus;
+  /** Replaces entire reply thread (legacy). */
   adminReply?: string;
   adminRepliedAt?: string;
+  /** Appends one official reply (UTF-8 / emoji safe). */
+  appendAdminReply?: string;
+  /** Removes one saved official reply by its `id`. */
+  deleteAdminReplyId?: string;
 };
 
 type CommentsFile = { items: BlogComment[] };
@@ -41,7 +62,63 @@ function parseStatus(s: string): BlogCommentStatus {
   return "pending";
 }
 
+function stripHtmlTags(s: string): string {
+  return s.replace(/<[^>]*>/g, "");
+}
+
+function parseAdminRepliesFromJson(value: unknown): BlogAdminReply[] {
+  if (!Array.isArray(value)) return [];
+  const out: BlogAdminReply[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") continue;
+    const e = entry as Record<string, unknown>;
+    const body = String(e.body ?? "").trim();
+    if (!body) continue;
+    const id =
+      typeof e.id === "string" && e.id.trim().length > 0
+        ? e.id.trim()
+        : randomUUID();
+    const createdAtRaw = e.createdAt ?? e.created_at;
+    const createdAt =
+      typeof createdAtRaw === "string" && createdAtRaw.trim().length > 0
+        ? createdAtRaw.trim()
+        : new Date().toISOString();
+    out.push({ id, body, createdAt });
+  }
+  return out;
+}
+
+export function normalizeBlogComment(raw: BlogComment): BlogComment {
+  let adminReplies = parseAdminRepliesFromJson(raw.adminReplies as unknown);
+
+  if (adminReplies.length === 0) {
+    const legacy = raw.adminReply?.trim();
+    if (legacy) {
+      const createdAt =
+        raw.adminRepliedAt?.trim() && raw.adminRepliedAt.trim().length > 0
+          ? raw.adminRepliedAt.trim()
+          : raw.createdAt;
+      adminReplies = [{ id: "legacy", body: legacy, createdAt }];
+    }
+  }
+
+  const last = adminReplies[adminReplies.length - 1];
+  return {
+    ...raw,
+    adminReplies,
+    adminReply: last?.body,
+    adminRepliedAt: last?.createdAt,
+  };
+}
+
 function mapFromRow(row: Record<string, unknown>): BlogComment {
+  let adminReplies = parseAdminRepliesFromJson(row.admin_replies);
+  const legacy = String(row.admin_reply ?? "").trim();
+  if (adminReplies.length === 0 && legacy) {
+    const at = String(row.admin_replied_at ?? row.created_at ?? "");
+    adminReplies = [{ id: "legacy", body: legacy, createdAt: at }];
+  }
+  const last = adminReplies[adminReplies.length - 1];
   return {
     id: String(row.id ?? ""),
     blogSlug: String(row.blog_slug ?? ""),
@@ -50,14 +127,9 @@ function mapFromRow(row: Record<string, unknown>): BlogComment {
     body: String(row.body ?? ""),
     status: parseStatus(String(row.status ?? "pending")),
     createdAt: String(row.created_at ?? ""),
-    adminReply:
-      row.admin_reply != null && String(row.admin_reply).trim()
-        ? String(row.admin_reply)
-        : undefined,
-    adminRepliedAt:
-      row.admin_replied_at != null && String(row.admin_replied_at).trim()
-        ? String(row.admin_replied_at)
-        : undefined,
+    adminReplies,
+    adminReply: last?.body,
+    adminRepliedAt: last?.createdAt,
   };
 }
 
@@ -65,7 +137,8 @@ async function readAllFromFile(): Promise<BlogComment[]> {
   try {
     const raw = await readFile(COMMENTS_FILE, "utf8");
     const parsed = JSON.parse(raw) as CommentsFile;
-    return Array.isArray(parsed.items) ? parsed.items : [];
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    return items.map((item) => normalizeBlogComment(item as BlogComment));
   } catch {
     return [];
   }
@@ -95,6 +168,21 @@ async function readAll(): Promise<BlogComment[]> {
   const fromDb = await readAllFromSupabase();
   if (fromDb !== null) return fromDb;
   return readAllFromFile();
+}
+
+async function getBlogCommentById(id: string): Promise<BlogComment | null> {
+  const sb = supabaseDb();
+  if (sb) {
+    const { data, error } = await sb
+      .from("blog_comments")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return mapFromRow(data as Record<string, unknown>);
+  }
+  const all = await readAllFromFile();
+  return all.find((c) => c.id === id) ?? null;
 }
 
 export async function getApprovedBlogComments(
@@ -137,6 +225,9 @@ export async function createBlogComment(input: {
         author_email: input.authorEmail.trim().toLowerCase(),
         body: input.body.trim(),
         status: "pending",
+        admin_replies: [],
+        admin_reply: null,
+        admin_replied_at: null,
       })
       .select("*")
       .single();
@@ -157,7 +248,7 @@ export async function createBlogComment(input: {
 
   const all = await readAllFromFile();
   const now = new Date().toISOString();
-  const row: BlogComment = {
+  const row: BlogComment = normalizeBlogComment({
     id: randomUUID(),
     blogSlug: input.blogSlug.trim(),
     authorName: input.authorName.trim(),
@@ -165,7 +256,8 @@ export async function createBlogComment(input: {
     body: input.body.trim(),
     status: "pending",
     createdAt: now,
-  };
+    adminReplies: [],
+  });
   all.push(row);
   await writeAllToFile(all);
   return row;
@@ -173,22 +265,63 @@ export async function createBlogComment(input: {
 
 export async function updateBlogComment(
   id: string,
-  patch: Partial<Pick<BlogComment, "status" | "adminReply" | "adminRepliedAt">>,
+  patch: BlogCommentUpdatePatch,
 ): Promise<BlogComment | null> {
+  const cur = await getBlogCommentById(id);
+  if (!cur) return null;
+
+  let nextStatus = cur.status;
+  if (patch.status !== undefined) nextStatus = patch.status;
+
+  let adminReplies = [...cur.adminReplies];
+
+  if (patch.deleteAdminReplyId !== undefined) {
+    const rid = patch.deleteAdminReplyId.trim();
+    if (rid.length > 0) {
+      adminReplies = adminReplies.filter((r) => r.id !== rid);
+    }
+  }
+
+  if (patch.appendAdminReply !== undefined) {
+    const t = stripHtmlTags(patch.appendAdminReply).trim();
+    if (t.length > 4000) {
+      console.error("[blog-comments] append reply too long");
+      return null;
+    }
+    if (t.length > 0) {
+      adminReplies.push({
+        id: randomUUID(),
+        body: t,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  } else if (patch.adminReply !== undefined) {
+    const t = stripHtmlTags(patch.adminReply).trim();
+    adminReplies = t
+      ? [
+          {
+            id: randomUUID(),
+            body: t,
+            createdAt: patch.adminRepliedAt ?? new Date().toISOString(),
+          },
+        ]
+      : [];
+  }
+
+  const last = adminReplies[adminReplies.length - 1];
+  const legacyReply = last?.body ?? null;
+  const legacyAt = last?.createdAt ?? null;
+
   const sb = supabaseDb();
   if (sb) {
-    const patchRow: Record<string, unknown> = {};
-    if (patch.status !== undefined) patchRow.status = patch.status;
-    if (patch.adminReply !== undefined) {
-      patchRow.admin_reply = patch.adminReply.trim() || null;
-      patchRow.admin_replied_at =
-        patch.adminReply.trim().length > 0
-          ? (patch.adminRepliedAt ?? new Date().toISOString())
-          : null;
-    }
     const { data, error } = await sb
       .from("blog_comments")
-      .update(patchRow)
+      .update({
+        status: nextStatus,
+        admin_replies: adminReplies,
+        admin_reply: legacyReply,
+        admin_replied_at: legacyAt,
+      })
       .eq("id", id)
       .select("*")
       .single();
@@ -196,22 +329,46 @@ export async function updateBlogComment(
       console.error("[blog-comments] supabase update:", error.message);
       return null;
     }
+    if (data == null || typeof data !== "object") return null;
     return mapFromRow(data as Record<string, unknown>);
   }
 
   const all = await readAllFromFile();
   const idx = all.findIndex((c) => c.id === id);
   if (idx < 0) return null;
-  const cur = all[idx];
-  if (patch.status !== undefined) cur.status = patch.status;
-  if (patch.adminReply !== undefined) {
-    cur.adminReply = patch.adminReply.trim() || undefined;
-    cur.adminRepliedAt =
-      cur.adminReply && cur.adminReply.length > 0
-        ? (patch.adminRepliedAt ?? new Date().toISOString())
-        : undefined;
-  }
-  all[idx] = cur;
+  const merged = normalizeBlogComment({
+    ...all[idx]!,
+    status: nextStatus,
+    adminReplies,
+    adminReply: last?.body,
+    adminRepliedAt: last?.createdAt,
+  });
+  all[idx] = merged;
   await writeAllToFile(all);
-  return cur;
+  return merged;
+}
+
+/**
+ * Permanently remove a comment. Returns the blog slug for cache revalidation, or null if missing.
+ */
+export async function deleteBlogComment(id: string): Promise<string | null> {
+  const cur = await getBlogCommentById(id);
+  if (!cur) return null;
+  const blogSlug = cur.blogSlug;
+
+  const sb = supabaseDb();
+  if (sb) {
+    const { error } = await sb.from("blog_comments").delete().eq("id", id);
+    if (error) {
+      console.error("[blog-comments] supabase delete:", error.message);
+      return null;
+    }
+    return blogSlug;
+  }
+
+  const all = await readAllFromFile();
+  const next = all.filter((c) => c.id !== id);
+  if (next.length === all.length) return null;
+  await writeAllToFile(next);
+  return blogSlug;
 }

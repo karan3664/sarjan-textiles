@@ -6,28 +6,36 @@ import { useState } from "react";
 export function BlogCommentForm({ slug }: { slug: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [body, setBody] = useState("");
+  /** Comment text (not named `body` — avoids confusion with `fetch({ body: ... })`). */
+  const [commentBody, setCommentBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{
     type: "ok" | "err";
     text: string;
   } | null>(null);
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
     setNotice(null);
     try {
+      const form = event.currentTarget;
+      const fd = new FormData(form);
+      const nameVal = String(fd.get("name") ?? "").trim();
+      const emailVal = String(fd.get("email") ?? "").trim();
+      const messageVal = String(fd.get("message") ?? "").trim();
+
       const url = new URL("/api/blog/comments", window.location.origin).href;
+      const payload = {
+        blogSlug: slug,
+        authorName: nameVal,
+        authorEmail: emailVal,
+        body: messageVal,
+      };
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          blogSlug: slug,
-          authorName: name,
-          authorEmail: email,
-          body,
-        }),
+        body: JSON.stringify(payload),
         credentials: "same-origin",
       });
       const raw = await res.text();
@@ -60,14 +68,20 @@ export function BlogCommentForm({ slug }: { slug: string }) {
           data.message ??
           "Thanks! Your comment was submitted and will appear after moderation.",
       });
-      setBody("");
+      setName("");
+      setEmail("");
+      setCommentBody("");
     } catch (e) {
-      const msg =
-        e instanceof TypeError
-          ? "Could not reach the server (connection blocked or offline). If you use a VPN, ad blocker, or strict privacy mode, try turning it off for this site."
-          : e instanceof Error
+      let msg = "Network error. Please try again.";
+      if (e instanceof TypeError) {
+        msg =
+          "Could not reach the server (connection blocked or offline). If you use a VPN, ad blocker, or strict privacy mode, try turning it off for this site.";
+      } else if (e instanceof Error) {
+        msg =
+          e.message && !e.message.includes("[object ")
             ? e.message
-            : "Network error. Please try again.";
+            : "Something went wrong while sending the comment. Please try again.";
+      }
       setNotice({ type: "err", text: msg });
     } finally {
       setBusy(false);
@@ -117,8 +131,9 @@ export function BlogCommentForm({ slug }: { slug: string }) {
               placeholder="Your Message*"
               name="message"
               required
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
+              value={commentBody}
+              onChange={(event) => setCommentBody(event.target.value)}
+              autoComplete="off"
             />
           </fieldset>
         </div>

@@ -3097,6 +3097,91 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   gap: 10px;
 }
 
+/* Admin blog comments: use tf-button (admin), not storefront tf-btn */
+.sarjan-admin-blog-comments .table tbody td {
+  vertical-align: top;
+}
+
+.sarjan-admin-blog-comments-reply textarea.form-control {
+  height: auto !important;
+  min-height: 5.5rem;
+  max-width: 100%;
+  resize: vertical;
+}
+
+.sarjan-admin-blog-comments-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sarjan-admin-blog-comments-actions .tf-button {
+  white-space: nowrap;
+}
+
+.sarjan-admin-blog-comments-actions .tf-button.sarjan-danger-button {
+  border: 1px solid #b42318;
+}
+
+.sarjan-admin-blog-comments-actions .tf-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.sarjan-admin-blog-comments-reply-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sarjan-admin-blog-comments-reply-history li {
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e8e8e8);
+  border-radius: 8px;
+  background: var(--surface-2, #fafafa);
+}
+
+.sarjan-admin-blog-comments-reply-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.sarjan-admin-blog-comments-delete-reply {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  border-radius: 6px;
+  border: 1px solid #b42318;
+  background: #fff5f5;
+  color: #b42318;
+  cursor: pointer;
+}
+
+.sarjan-admin-blog-comments-delete-reply:hover:not(:disabled) {
+  background: #b42318;
+  color: #fff;
+}
+
+.sarjan-admin-blog-comments-delete-reply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Emoji + ZWJ sequences render reliably in comments / replies */
+.sarjan-emoji-text {
+  font-variant-emoji: emoji;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 1199px) {
   .sarjan-admin-section-grid,
   .sarjan-admin-chart-grid {

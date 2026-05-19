@@ -51,11 +51,14 @@ function ApprovedCommentItem({ comment }: { comment: BlogComment }) {
               {formatCommentDate(comment.createdAt)}
             </div>
           </div>
-          <p>{comment.body}</p>
+          <p className="sarjan-emoji-text">{comment.body}</p>
         </div>
       </div>
-      {comment.adminReply && comment.adminReply.trim().length > 0 ? (
-        <div className="reply-comment-item type-reply sarjan-blog-admin-reply">
+      {comment.adminReplies.map((reply) => (
+        <div
+          key={reply.id}
+          className="reply-comment-item type-reply sarjan-blog-admin-reply"
+        >
           <div className="image sarjan-blog-comment-avatar sarjan-blog-comment-avatar-brand">
             <img
               src={SARJAN_LOGO}
@@ -74,16 +77,16 @@ function ApprovedCommentItem({ comment }: { comment: BlogComment }) {
                   ✓
                 </div>
               </div>
-              {comment.adminRepliedAt ? (
+              {reply.createdAt ? (
                 <div className="day text-caption-1">
-                  {formatCommentDate(comment.adminRepliedAt)}
+                  {formatCommentDate(reply.createdAt)}
                 </div>
               ) : null}
             </div>
-            <p>{comment.adminReply}</p>
+            <p className="sarjan-emoji-text">{reply.body}</p>
           </div>
         </div>
-      ) : null}
+      ))}
     </div>
   );
 }
