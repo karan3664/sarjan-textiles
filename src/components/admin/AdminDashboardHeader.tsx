@@ -74,21 +74,30 @@ export function AdminDashboardHeader() {
     }
   }, []);
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const res = await fetch("/api/admin/auth/me", {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = (await res.json()) as Me;
-          if (data.admin?.name) setName(data.admin.name);
-          if (data.admin?.email) setEmail(data.admin.email);
-        }
-      } catch {
-        /* ignore */
+  const loadAdminSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/auth/me", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = (await res.json()) as Me;
+        if (data.admin?.name) setName(data.admin.name);
+        if (data.admin?.email) setEmail(data.admin.email);
       }
-    })();
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAdminSession();
+    const onSession = () => void loadAdminSession();
+    window.addEventListener("sarjan-admin-session-updated", onSession);
+    return () =>
+      window.removeEventListener("sarjan-admin-session-updated", onSession);
+  }, [loadAdminSession]);
+
+  useEffect(() => {
     void loadNotifications();
     const t = window.setInterval(() => void loadNotifications(), 30_000);
     return () => window.clearInterval(t);

@@ -46,12 +46,38 @@ type DashboardData = {
   alerts: Array<{ label: string; detail: string }>;
 };
 
-function statusClass(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized.includes("approved") || normalized.includes("delivered"))
-    return "type-completed";
-  if (normalized.includes("ready") || normalized.includes("production"))
+type StatusCol = "payment" | "dispatch" | "approval";
+
+function statusClass(status: string, col: StatusCol) {
+  const n = status.toLowerCase().trim();
+  if (col === "approval") {
+    if (n.includes("pending approval")) return "type-pending";
+    if (n.includes("rejected")) return "type-pending";
+    if (n === "approved") return "type-completed";
+    return "type-pending";
+  }
+  if (col === "payment") {
+    if (n === "paid") return "type-completed";
+    if (n === "partial") return "type-delivery";
+    if (n.includes("overdue")) return "type-pending";
+    if (n === "pending") return "type-pending";
+    return "type-pending";
+  }
+  /* dispatch */
+  if (n === "—" || n === "-") return "type-pending";
+  if (n.includes("rejected") || n.includes("pending approval")) {
+    return "type-pending";
+  }
+  if (n.includes("delivered")) return "type-completed";
+  if (n.includes("dispatched")) return "type-delivery";
+  if (
+    n === "approved" ||
+    n.includes("production") ||
+    n.includes("packed") ||
+    n.includes("ready for dispatch")
+  ) {
     return "type-delivery";
+  }
   return "type-pending";
 }
 
@@ -216,21 +242,21 @@ export function AdminDashboardClient() {
                     <td>{order.total}</td>
                     <td>
                       <div
-                        className={`box-status w-100 text-button ${statusClass(order.paymentStatus)}`}
+                        className={`box-status text-button ${statusClass(order.paymentStatus, "payment")}`}
                       >
                         {order.paymentStatus}
                       </div>
                     </td>
                     <td>
                       <div
-                        className={`box-status w-100 text-button ${statusClass(order.dispatchStatus)}`}
+                        className={`box-status text-button ${statusClass(order.dispatchStatus, "dispatch")}`}
                       >
                         {order.dispatchStatus}
                       </div>
                     </td>
                     <td>
                       <div
-                        className={`box-status w-100 text-button ${statusClass(order.approvalStatus)}`}
+                        className={`box-status text-button ${statusClass(order.approvalStatus, "approval")}`}
                       >
                         {order.approvalStatus}
                       </div>

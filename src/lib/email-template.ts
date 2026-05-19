@@ -79,6 +79,134 @@ export function newsletterAdminNotificationInnerHtml(
 <p style="margin:16px 0 0;color:#6f6a64;font-size:13px;line-height:1.5;">Reply-To is set to the subscriber so you can respond directly from your inbox.</p>`;
 }
 
+function formatInquiryEmailDate(iso?: string): string | undefined {
+  if (!iso?.trim()) return undefined;
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(iso));
+  } catch {
+    return undefined;
+  }
+}
+
+export type ContactInquiryReplyEmailFields = {
+  greetingName: string;
+  companyName: string;
+  subject: string;
+  replyMessagePlain: string;
+  submittedAtIso?: string;
+  requirement?: string;
+  orderId?: string;
+};
+
+/**
+ * Inner HTML for admin “Contact Inquiries” replies — matches order/account mail
+ * styling (greeting, key-value reference table, subject + message cards).
+ */
+export function contactInquiryReplyInnerHtml(
+  fields: ContactInquiryReplyEmailFields,
+): string {
+  const brand = escapeHtml(siteSettings.brandName);
+  const greeting = escapeHtml(
+    fields.greetingName.trim() || fields.companyName.trim() || "there",
+  );
+  const company = escapeHtml(fields.companyName.trim() || "—");
+  const subject = escapeHtml(fields.subject.trim());
+  const replyHtml = plainTextToEmailHtml(fields.replyMessagePlain);
+
+  const submitted = formatInquiryEmailDate(fields.submittedAtIso);
+  const rows: [string, string][] = [["Company", company]];
+  if (submitted) rows.push(["Inquiry received", escapeHtml(submitted)]);
+  if (fields.requirement?.trim()) {
+    rows.push(["Requirement", escapeHtml(fields.requirement.trim())]);
+  }
+  if (fields.orderId?.trim()) {
+    rows.push(["Order reference", escapeHtml(fields.orderId.trim())]);
+  }
+
+  const refTable = `<table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 22px;background:#fff;">
+      <tbody>
+        ${rows
+          .map(
+            ([label, value]) => `
+        <tr>
+          <td style="width:38%;padding:10px 12px;border:1px solid #e8e2d9;background:#fbfaf7;color:#6f6a64;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${label}</td>
+          <td style="padding:10px 12px;border:1px solid #e8e2d9;font-size:14px;color:#141414;line-height:1.45;font-family:Arial,Helvetica,sans-serif;">${value}</td>
+        </tr>`,
+          )
+          .join("")}
+      </tbody>
+    </table>`;
+
+  return `
+    <p style="margin:0 0 14px;color:#4d4843;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">
+      Hello <strong style="color:#141414;">${greeting}</strong>,
+    </p>
+    <p style="margin:0 0 20px;color:#4d4843;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">
+      Thank you for contacting <strong>${brand}</strong>. Below is our team&rsquo;s response regarding your website inquiry.
+    </p>
+    ${refTable}
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#6f6a64;font-weight:700;font-family:Arial,Helvetica,sans-serif;">Subject</p>
+    <p style="margin:0 0 18px;padding:14px 16px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;font-size:15px;line-height:1.45;color:#141414;font-family:Arial,Helvetica,sans-serif;">
+      ${subject}
+    </p>
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#6f6a64;font-weight:700;font-family:Arial,Helvetica,sans-serif;">Message</p>
+    <div style="padding:18px 16px;background:#ffffff;border-radius:10px;border:1px solid #e8e2d9;font-size:15px;line-height:1.65;color:#141414;font-family:Arial,Helvetica,sans-serif;">
+      ${replyHtml}
+    </div>
+    <p style="margin:22px 0 0;color:#6f6a64;font-size:14px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">
+      If you need anything else, reply directly to this email or use the phone and email in the footer below.
+    </p>
+    <p style="margin:14px 0 0;color:#4d4843;font-size:14px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">
+      Best regards,<br />
+      <strong style="color:#141414;">${brand} team</strong>
+    </p>
+  `;
+}
+
+/** Plain-text body for inquiry replies (non-HTML clients). */
+export function contactInquiryReplyPlainText(fields: {
+  greetingName: string;
+  companyName: string;
+  subject: string;
+  replyMessagePlain: string;
+  submittedAtIso?: string;
+  requirement?: string;
+  orderId?: string;
+}): string {
+  const brand = siteSettings.brandName;
+  const origin = emailSiteOrigin();
+  const greet =
+    fields.greetingName.trim() || fields.companyName.trim() || "there";
+  const submitted = formatInquiryEmailDate(fields.submittedAtIso);
+  const lines = [
+    `${brand}`,
+    "",
+    `Hello ${greet},`,
+    "",
+    "Thank you for contacting us. Here is our team's message regarding your inquiry:",
+    "",
+    `Subject: ${fields.subject.trim()}`,
+    "",
+    fields.replyMessagePlain.trim(),
+    "",
+    "---",
+    `Company: ${fields.companyName.trim() || "—"}`,
+  ];
+  if (submitted) lines.push(`Inquiry received: ${submitted}`);
+  if (fields.requirement?.trim()) {
+    lines.push(`Requirement: ${fields.requirement.trim()}`);
+  }
+  if (fields.orderId?.trim()) {
+    lines.push(`Order reference: ${fields.orderId.trim()}`);
+  }
+  lines.push("", `Website: ${origin}/`, "", `Best regards,`, `${brand} team`);
+  return lines.join("\n");
+}
+
 type SocialKind = "facebook" | "instagram" | "linkedin";
 
 type SocialLink = {

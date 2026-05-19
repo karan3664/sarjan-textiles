@@ -1,8 +1,8 @@
 import { getFeedbacks, markFeedbackReplied } from "@/lib/local-db";
 import {
   buildSarjanEmailHtml,
-  escapeHtml,
-  plainTextToEmailHtml,
+  contactInquiryReplyInnerHtml,
+  contactInquiryReplyPlainText,
 } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
 
@@ -30,35 +30,54 @@ export async function POST(request: Request) {
       );
     }
 
+    const inquiries = await getFeedbacks();
+    const inquiry = inquiries.find((item) => item.id === String(body.id));
+    if (!inquiry) {
+      return Response.json({ error: "Inquiry not found" }, { status: 404 });
+    }
+
     const subject = String(body.subject);
     const message = String(body.message);
+    const to = String(body.to).trim().toLowerCase();
+    if (to !== inquiry.email.trim().toLowerCase()) {
+      return Response.json(
+        { error: "Recipient must match the inquiry email address" },
+        { status: 400 },
+      );
+    }
+
+    const greetingName =
+      inquiry.contactPerson?.trim() || inquiry.companyName?.trim() || "there";
+
+    const mailFields = {
+      greetingName,
+      companyName: inquiry.companyName,
+      subject,
+      replyMessagePlain: message,
+      submittedAtIso: inquiry.createdAt,
+      requirement: inquiry.requirement,
+      orderId: inquiry.orderId,
+    };
 
     await sendDomainMail({
       to: String(body.to),
       subject,
-      text: message,
+      text: contactInquiryReplyPlainText(mailFields),
       html: buildSarjanEmailHtml({
-        preheader: subject,
-        eyebrow: "Sarjan Textiles",
-        heading: "Message from our team",
-        innerHtml: `
-          <p style="margin:0 0 10px;font-size:13px;color:#6f6a64;line-height:1.5;">
-            <strong style="color:#141414;">Subject:</strong> ${escapeHtml(subject)}
-          </p>
-          <div style="padding:18px 16px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;font-size:15px;line-height:1.65;color:#141414;">
-            ${plainTextToEmailHtml(message)}
-          </div>
-        `,
+        preheader: `${subject} — ${inquiry.companyName}`,
+        eyebrow: "Contact inquiry",
+        heading: "Response to your inquiry",
+        innerHtml: contactInquiryReplyInnerHtml(mailFields),
       }),
     });
 
-    const inquiry = await markFeedbackReplied(String(body.id), {
+    const updated = await markFeedbackReplied(String(body.id), {
       subject: String(body.subject),
       message: String(body.message),
     });
 
     return Response.json({
-      inquiry,
+      inquiry: updated,
       inquiries: await getFeedbacks(),
       sent: true,
     });

@@ -1,5 +1,5 @@
 import { getCmsSnapshot } from "@/lib/cms-store";
-import { readLocalDb } from "@/lib/local-db";
+import { readLocalDb, type LocalOrder } from "@/lib/local-db";
 import { getWebsiteAnalytics } from "@/lib/analytics-store";
 
 function money(value: number) {
@@ -33,6 +33,19 @@ function isDispatchPending(status: string) {
   return ["Approved", "In Production", "Packed", "Ready for Dispatch"].includes(
     status,
   );
+}
+
+/** Dashboard “Approval” column — distinct from fulfilment / dispatch status. */
+function dashboardApprovalLabel(status: LocalOrder["status"]): string {
+  if (status === "Pending approval") return "Pending approval";
+  if (status === "Rejected") return "Rejected";
+  return "Approved";
+}
+
+/** Dashboard “Dispatch” column — progress after approval; not yet in pipeline → em dash. */
+function dashboardDispatchLabel(status: LocalOrder["status"]): string {
+  if (status === "Pending approval" || status === "Rejected") return "—";
+  return status;
 }
 
 export async function getAdminDashboardData() {
@@ -235,8 +248,8 @@ export async function getAdminDashboardData() {
       date: new Date(order.createdAt).toLocaleDateString("en-IN"),
       total: money(order.subtotal),
       paymentStatus: order.paymentStatus ?? "Pending",
-      dispatchStatus: order.status,
-      approvalStatus: order.status,
+      dispatchStatus: dashboardDispatchLabel(order.status),
+      approvalStatus: dashboardApprovalLabel(order.status),
     })),
     alerts: [
       {

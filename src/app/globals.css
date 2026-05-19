@@ -1338,79 +1338,101 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   flex: 0 0 auto;
 }
 
+/* Blog admin list: Modave .wg-table uses flex on tr/th/td — reset to real table so columns line up */
 .wg-table.sarjan-blogs-table {
   width: 100% !important;
   overflow-x: hidden !important;
   padding-top: 2px;
 }
 
-.wg-table.sarjan-blogs-table table {
+.wg-table.sarjan-blogs-table > table {
+  display: table !important;
   width: 100% !important;
   min-width: 0 !important;
   table-layout: fixed !important;
-  border-collapse: collapse;
+  border-collapse: collapse !important;
 }
 
-.wg-table.sarjan-blogs-table table tr {
+.wg-table.sarjan-blogs-table > table > thead {
+  display: table-header-group !important;
+}
+
+.wg-table.sarjan-blogs-table > table > tbody {
+  display: table-row-group !important;
+}
+
+.wg-table.sarjan-blogs-table > table > thead > tr,
+.wg-table.sarjan-blogs-table > table > tbody > tr {
   display: table-row !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  border-bottom: none !important;
 }
 
-.wg-table.sarjan-blogs-table th,
-.wg-table.sarjan-blogs-table td {
+.wg-table.sarjan-blogs-table > table > thead > tr > th,
+.wg-table.sarjan-blogs-table > table > tbody > tr > td {
   display: table-cell !important;
-  vertical-align: middle;
-  white-space: normal;
-  word-break: normal;
+  flex: unset !important;
+  flex-shrink: unset !important;
+  place-content: unset !important;
+  justify-content: unset !important;
+  align-items: unset !important;
+  vertical-align: middle !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  box-sizing: border-box !important;
 }
 
-.wg-table.sarjan-blogs-table th {
-  padding: 14px 16px;
+.wg-table.sarjan-blogs-table > table > thead > tr > th {
+  padding: 16px 14px;
   color: var(--text-2);
   background: #f7f7f7;
   font-weight: 600;
 }
 
-.wg-table.sarjan-blogs-table td {
-  padding: 18px 16px;
+.wg-table.sarjan-blogs-table > table > tbody > tr > td {
+  padding: 16px 14px;
   border-bottom: 1px solid var(--line);
 }
 
-.wg-table.sarjan-blogs-table tbody tr:last-child td {
+.wg-table.sarjan-blogs-table > table > tbody > tr:last-child > td {
   border-bottom: 0;
 }
 
-.wg-table.sarjan-blogs-table th:nth-child(1) {
-  width: 92px;
+.wg-table.sarjan-blogs-table > table > thead > tr > th:nth-child(1),
+.wg-table.sarjan-blogs-table > table > tbody > tr > td:nth-child(1) {
+  width: 100px;
+  padding-right: 10px;
 }
 
-.wg-table.sarjan-blogs-table td:nth-child(1) {
-  width: 92px;
-  padding-right: 8px;
+.wg-table.sarjan-blogs-table > table > thead > tr > th:nth-child(2),
+.wg-table.sarjan-blogs-table > table > tbody > tr > td:nth-child(2) {
+  width: auto;
+  min-width: 0;
 }
 
-.wg-table.sarjan-blogs-table th:nth-child(2),
-.wg-table.sarjan-blogs-table td:nth-child(2) {
-  width: 47%;
+.wg-table.sarjan-blogs-table > table > thead > tr > th:nth-child(3),
+.wg-table.sarjan-blogs-table > table > tbody > tr > td:nth-child(3) {
+  width: 18%;
+  min-width: 0;
 }
 
-.wg-table.sarjan-blogs-table th:nth-child(3),
-.wg-table.sarjan-blogs-table td:nth-child(3) {
-  width: 20%;
-}
-
-.wg-table.sarjan-blogs-table th:nth-child(4),
-.wg-table.sarjan-blogs-table td:nth-child(4) {
-  width: 122px;
-}
-
-.wg-table.sarjan-blogs-table th:nth-child(5),
-.wg-table.sarjan-blogs-table td:nth-child(5) {
+.wg-table.sarjan-blogs-table > table > thead > tr > th:nth-child(4),
+.wg-table.sarjan-blogs-table > table > tbody > tr > td:nth-child(4) {
   width: 118px;
 }
 
-.wg-table.sarjan-blogs-table th:nth-child(6),
-.wg-table.sarjan-blogs-table td:nth-child(6) {
-  width: 144px;
+.wg-table.sarjan-blogs-table > table > thead > tr > th:nth-child(5),
+.wg-table.sarjan-blogs-table > table > tbody > tr > td:nth-child(5) {
+  width: 112px;
+}
+
+.wg-table.sarjan-blogs-table > table > thead > tr > th:nth-child(6),
+.wg-table.sarjan-blogs-table > table > tbody > tr > td:nth-child(6) {
+  width: 132px;
+  text-align: right;
 }
 
 .sarjan-blog-table-image {
@@ -1443,6 +1465,7 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   font-size: 14px;
   line-height: 20px;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .sarjan-blog-table-date {
@@ -1453,6 +1476,7 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-blog-table-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   flex-wrap: nowrap;
 }
@@ -1482,6 +1506,57 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-customer-list-box .form-search-2 {
   max-width: 320px;
+}
+
+/* Admin Account & security: unify .form-control height/border (Bootstrap + theme mix made fields mismatched) */
+.sarjan-admin-account-page .sarjan-admin-account-field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.sarjan-admin-account-page .wg-box input.form-control {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 50px;
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--main, #181818);
+  box-shadow: none;
+  appearance: auto;
+}
+
+.sarjan-admin-account-page .wg-box input.form-control:hover:not(:disabled) {
+  border-color: #c4c4c4;
+}
+
+.sarjan-admin-account-page .wg-box input.form-control:focus {
+  border-color: #181818;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
+}
+
+.sarjan-admin-account-page .wg-box input.form-control:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: #f4f4f4;
+  color: var(--secondary, #6c757d);
+}
+
+/* Keep invalid/required styling subtle so empty fields don’t look like a different control */
+.sarjan-admin-account-page .wg-box input.form-control:invalid {
+  border-color: #d8d8d8;
+  box-shadow: none;
+}
+
+.sarjan-admin-account-page .wg-box input.form-control:invalid:focus {
+  border-color: #181818;
+  box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
 }
 
 .sarjan-client-create-grid fieldset {
@@ -2251,67 +2326,154 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-inquiry-list {
   display: grid;
-  gap: 16px;
+  gap: 20px;
 }
 
 .sarjan-inquiry-card {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 16px;
+  padding: 22px 22px 20px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff;
+  box-shadow: 0 10px 28px rgba(24, 24, 24, 0.04);
 }
 
 .sarjan-inquiry-head,
 .sarjan-inquiry-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.sarjan-inquiry-head h6 {
-  margin: 0 0 4px;
+.sarjan-inquiry-title {
+  min-width: 0;
+  flex: 1 1 220px;
 }
 
-.sarjan-inquiry-head p,
-.sarjan-inquiry-card p {
+.sarjan-inquiry-head h6 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--main);
+}
+
+.sarjan-inquiry-contact-line {
   margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--secondary);
+}
+
+.sarjan-inquiry-sep {
+  margin: 0 6px;
+  color: var(--secondary-2);
+  user-select: none;
+}
+
+.sarjan-inquiry-mailto {
+  color: var(--sarjan-accent);
+  font-weight: 600;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.sarjan-inquiry-mailto:hover {
+  text-decoration: underline;
+}
+
+.sarjan-inquiry-body {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface, #fbfaf7);
+}
+
+.sarjan-inquiry-body-label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.sarjan-inquiry-body-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--main);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .sarjan-inquiry-meta {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .sarjan-inquiry-meta span {
-  padding: 6px 10px;
+  padding: 6px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--text-2);
+  color: var(--sarjan-muted);
   background: #f8f8f8;
   font-size: 13px;
 }
 
 .sarjan-mail-notice {
-  padding: 12px 14px;
-  border: 1px solid rgba(160, 31, 50, 0.18);
-  border-radius: 8px;
-  color: var(--sarjan-accent);
-  background: rgba(160, 31, 50, 0.06);
+  padding: 12px 16px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.sarjan-mail-notice--danger {
+  border: 1px solid rgba(180, 35, 24, 0.35);
+  color: #991b1b;
+  background: rgba(240, 62, 62, 0.08);
+}
+
+.sarjan-mail-notice--success {
+  border: 1px solid rgba(22, 101, 63, 0.35);
+  color: #16653f;
+  background: rgba(66, 206, 143, 0.12);
 }
 
 .sarjan-mail-draft {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 16px;
+  padding: 20px 20px 18px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fbfaf8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(139, 30, 45, 0.06);
+  border-left: 4px solid var(--sarjan-accent);
+}
+
+.sarjan-mail-draft-head {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+
+.sarjan-mail-draft-hint strong {
+  color: var(--main);
+  font-weight: 700;
+}
+
+.sarjan-mail-field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sarjan-muted);
 }
 
 .sarjan-mail-draft fieldset {
@@ -2321,15 +2483,36 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-mail-draft input,
 .sarjan-mail-draft textarea {
   width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--White);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--main);
+}
+
+.sarjan-mail-draft input:read-only {
+  background: #f4f4f4;
+  color: var(--secondary);
 }
 
 .sarjan-mail-draft textarea {
   min-height: 180px;
   padding: 12px 14px;
   resize: vertical;
+}
+
+.sarjan-inquiry-actions {
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.sarjan-inquiry-actions .tf-button.style-1 {
+  min-width: 132px;
 }
 
 .sarjan-products-pagination {
@@ -5154,6 +5337,114 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-dashboard-orders-table.wg-table > table > thead > tr > th,
 .sarjan-dashboard-orders-table.wg-table > table > tbody > tr > td {
   max-width: none;
+}
+
+/* Dashboard Recent Orders: Modave .table-recent-orders pins 7 cols (last 60px) — too tight for status pills; use real widths + fixed layout inside the dashboard card */
+.wg-table.sarjan-dashboard-orders-table > table {
+  width: 100% !important;
+  min-width: 1040px !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th,
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td {
+  place-content: unset !important;
+  flex: unset !important;
+  flex-shrink: unset !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  padding: 14px 16px !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th {
+  padding: 16px 16px 14px !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr,
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr {
+  border-bottom: none !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th {
+  background: #f7f7f7 !important;
+  color: var(--sarjan-muted) !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td {
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+/* Order ID: single line */
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(1),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(1) {
+  width: 15%;
+  min-width: 176px;
+  max-width: 260px;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+/* Client: prefer one line; ellipsis only if very long */
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(2),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(2) {
+  width: 24%;
+  min-width: 200px;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(3),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(3) {
+  width: 9%;
+  min-width: 90px;
+  white-space: nowrap !important;
+}
+
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(4),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(4) {
+  width: 11%;
+  min-width: 104px;
+  white-space: nowrap !important;
+}
+
+/* Status columns: center pills; min width fits “Pending approval” / “Dispatched” on one line */
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(5),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(5),
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(6),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(6),
+.wg-table.sarjan-dashboard-orders-table > table > thead > tr > th:nth-child(7),
+.wg-table.sarjan-dashboard-orders-table > table > tbody > tr > td:nth-child(7) {
+  width: 13.666%;
+  min-width: 138px;
+  text-align: center !important;
+}
+
+/* Pills: shrink-wrap text — do not stretch to full cell (was w-100 + white-space:normal → broken “Dispatched”) */
+.wg-table.sarjan-dashboard-orders-table .box-status {
+  display: inline-flex !important;
+  width: max-content !important;
+  max-width: 100%;
+  margin: 0 auto;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .sarjan-inventory-table.wg-table > table > thead > tr > th,

@@ -46,6 +46,9 @@ export function AdminAccountClient() {
         return;
       }
       setMsg({ type: "ok", text: "Display name updated. Session refreshed." });
+      queueMicrotask(() => {
+        window.dispatchEvent(new Event("sarjan-admin-session-updated"));
+      });
     } catch {
       setMsg({ type: "err", text: "Network error." });
     } finally {
@@ -90,6 +93,9 @@ export function AdminAccountClient() {
         type: "ok",
         text: "Password updated. Keep this tab secure.",
       });
+      queueMicrotask(() => {
+        window.dispatchEvent(new Event("sarjan-admin-session-updated"));
+      });
     } catch {
       setMsg({ type: "err", text: "Network error." });
     } finally {
@@ -98,7 +104,7 @@ export function AdminAccountClient() {
   };
 
   return (
-    <div className="row g-4">
+    <div className="row g-4 sarjan-admin-account-page">
       <div className="col-12 col-lg-6">
         <div className="wg-box">
           <h5 className="mb-3">Profile</h5>
@@ -112,10 +118,17 @@ export function AdminAccountClient() {
             ) : null}
           </p>
           <form onSubmit={saveProfile} className="d-grid gap-3">
-            <fieldset>
-              <label className="body-title-2 d-block mb-1">Display name</label>
+            <fieldset className="sarjan-admin-account-field">
+              <label
+                className="body-title-2 d-block mb-1"
+                htmlFor="admin-display-name"
+              >
+                Display name
+              </label>
               <input
+                id="admin-display-name"
                 className="form-control"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={80}
@@ -125,7 +138,7 @@ export function AdminAccountClient() {
             </fieldset>
             <button
               type="submit"
-              className="tf-btn btn-primary"
+              className="tf-button style-1 w-100"
               disabled={busy}
             >
               Save name
@@ -142,11 +155,15 @@ export function AdminAccountClient() {
             <code>data/admin-profile-overrides.json</code> (gitignored).
           </p>
           <form onSubmit={savePassword} className="d-grid gap-3">
-            <fieldset>
-              <label className="body-title-2 d-block mb-1">
+            <fieldset className="sarjan-admin-account-field">
+              <label
+                className="body-title-2 d-block mb-1"
+                htmlFor="admin-current-password"
+              >
                 Current password
               </label>
               <input
+                id="admin-current-password"
                 type="password"
                 className="form-control"
                 autoComplete="current-password"
@@ -156,9 +173,15 @@ export function AdminAccountClient() {
                 disabled={busy}
               />
             </fieldset>
-            <fieldset>
-              <label className="body-title-2 d-block mb-1">New password</label>
+            <fieldset className="sarjan-admin-account-field">
+              <label
+                className="body-title-2 d-block mb-1"
+                htmlFor="admin-new-password"
+              >
+                New password
+              </label>
               <input
+                id="admin-new-password"
                 type="password"
                 className="form-control"
                 autoComplete="new-password"
@@ -169,11 +192,15 @@ export function AdminAccountClient() {
                 disabled={busy}
               />
             </fieldset>
-            <fieldset>
-              <label className="body-title-2 d-block mb-1">
+            <fieldset className="sarjan-admin-account-field">
+              <label
+                className="body-title-2 d-block mb-1"
+                htmlFor="admin-confirm-password"
+              >
                 Confirm new password
               </label>
               <input
+                id="admin-confirm-password"
                 type="password"
                 className="form-control"
                 autoComplete="new-password"
@@ -186,7 +213,7 @@ export function AdminAccountClient() {
             </fieldset>
             <button
               type="submit"
-              className="tf-btn btn-primary"
+              className="tf-button style-1 w-100"
               disabled={busy}
             >
               Update password
