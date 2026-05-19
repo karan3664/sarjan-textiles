@@ -46,6 +46,11 @@ export function ModaveHeader() {
   useEffect(() => {
     const sync = () => {
       try {
+        const token = localStorage.getItem("sarjan-client-token")?.trim();
+        if (!token) {
+          setClient(null);
+          return;
+        }
         setClient(JSON.parse(localStorage.getItem("sarjan-client") ?? "null"));
       } catch {
         setClient(null);

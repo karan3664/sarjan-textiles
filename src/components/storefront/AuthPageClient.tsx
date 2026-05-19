@@ -142,6 +142,11 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       return;
     }
 
+    if (isRegister && res.ok) {
+      window.location.assign("/registration-thank-you");
+      return;
+    }
+
     setMessage(
       isForgot
         ? (data.message ?? "Password reset email sent.")

@@ -78,11 +78,15 @@ function useClientAndOrders() {
 
   useEffect(() => {
     const stored = readClient();
-    setClient(stored);
-    if (!stored?.id) {
+    const token = localStorage.getItem("sarjan-client-token")?.trim();
+    if (!stored?.id || !token) {
+      setClient(null);
       setLoading(false);
+      window.location.assign("/login");
       return;
     }
+
+    setClient(stored);
 
     Promise.all([
       fetch(`/api/clients/${encodeURIComponent(stored.id)}`)

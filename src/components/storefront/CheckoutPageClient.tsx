@@ -50,6 +50,11 @@ export function CheckoutPageClient() {
     const sync = () => setCart(readCart());
     const syncClient = () => {
       try {
+        const token = localStorage.getItem("sarjan-client-token")?.trim();
+        if (!token) {
+          setClient(null);
+          return;
+        }
         setClient(JSON.parse(localStorage.getItem("sarjan-client") ?? "null"));
       } catch {
         setClient(null);

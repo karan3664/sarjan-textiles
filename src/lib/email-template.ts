@@ -1,10 +1,37 @@
 import { siteSettings } from "@/data/mock";
 
-/** Public site origin for absolute image / link URLs in HTML mail. */
+const productionEmailOrigin = `https://${siteSettings.domain}`.replace(
+  /\/$/,
+  "",
+);
+
+function isNonProductionEmailHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === "localhost" ||
+    h.endsWith(".local") ||
+    h.endsWith(".vercel.app") ||
+    /^(\d{1,3}\.){3}\d{1,3}$/.test(h)
+  );
+}
+
+/**
+ * Public site origin for absolute image / link URLs in HTML mail.
+ * Uses the live domain (not Vercel preview / localhost) so logos load in inboxes
+ * and footer links match https://sarjantextiles.com/ even when the app runs on a preview URL.
+ */
 export function emailSiteOrigin(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (fromEnv && /^https?:\/\//i.test(fromEnv)) return fromEnv;
-  return `https://${siteSettings.domain}`;
+  if (fromEnv && /^https?:\/\//i.test(fromEnv)) {
+    try {
+      const host = new URL(fromEnv).hostname;
+      if (isNonProductionEmailHost(host)) return productionEmailOrigin;
+      return fromEnv;
+    } catch {
+      return productionEmailOrigin;
+    }
+  }
+  return productionEmailOrigin;
 }
 
 function absUrl(path: string): string {
@@ -29,24 +56,35 @@ export function plainTextToEmailHtml(text: string): string {
   return escapeHtml(text).replaceAll("\r\n", "\n").replaceAll("\n", "<br>\n");
 }
 
-type SocialLink = { href: string; bg: string; letter: string; title: string };
+type SocialLink = {
+  href: string;
+  bg: string;
+  title: string;
+  /** "instagram" uses inline SVG; others use a single letter. */
+  kind: "instagram" | "facebook" | "pinterest";
+};
+
+/** White Instagram mark on gradient circle (no remote image; works in most mail apps). */
+const instagramGlyphSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" role="img" aria-hidden="true" style="display:block;margin:0 auto;">
+<path fill="#ffffff" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.052.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 11-2.881 0 1.44 1.44 0 012.881 0z"/>
+</svg>`;
 
 function socialLinks(): SocialLink[] {
   const out: SocialLink[] = [];
   const push = (
     href: string | undefined,
     bg: string,
-    letter: string,
+    kind: SocialLink["kind"],
     title: string,
   ) => {
     const h = href?.trim() ?? "";
     if (h.startsWith("http://") || h.startsWith("https://")) {
-      out.push({ href: h, bg, letter, title });
+      out.push({ href: h, bg, kind, title });
     }
   };
-  push(siteSettings.facebookUrl, "#1877F2", "f", "Facebook");
-  push(siteSettings.instagramUrl, "#E4405F", "I", "Instagram");
-  push(siteSettings.pinterestUrl, "#BD081C", "P", "Pinterest");
+  push(siteSettings.facebookUrl, "#1877F2", "facebook", "Facebook");
+  push(siteSettings.instagramUrl, "#E4405F", "instagram", "Instagram");
+  push(siteSettings.pinterestUrl, "#BD081C", "pinterest", "Pinterest");
   return out;
 }
 
@@ -55,15 +93,19 @@ function socialIconsTable(): string {
   if (!links.length) return "";
 
   const cells = links
-    .map(
-      (item) => `
+    .map((item) => {
+      const inner =
+        item.kind === "instagram"
+          ? instagramGlyphSvg
+          : escapeHtml(item.kind === "facebook" ? "f" : "P");
+      return `
       <td style="padding:0 6px;">
         <a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer"
           style="display:inline-block;width:40px;height:40px;line-height:40px;border-radius:50%;background:${item.bg};color:#ffffff;text-align:center;text-decoration:none;font-weight:700;font-size:15px;font-family:Arial,Helvetica,sans-serif;">
-          ${escapeHtml(item.letter)}
+          <span style="display:inline-block;vertical-align:middle;line-height:0;padding-top:9px;">${inner}</span>
         </a>
-      </td>`,
-    )
+      </td>`;
+    })
     .join("");
 
   return `
@@ -87,7 +129,9 @@ function footerBlock(): string {
   const email = escapeHtml(siteSettings.email);
   const gst = escapeHtml(siteSettings.gstin);
   const telHref = escapeHtml(siteSettings.phone.replace(/\s/g, ""));
-  const site = escapeHtml(emailSiteOrigin());
+  const origin = emailSiteOrigin();
+  const siteHref = escapeHtml(`${origin}/`);
+  const siteLabel = escapeHtml(`${origin}/`);
 
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background:#fbfaf7;border-top:1px solid #e8e2d9;">
@@ -111,7 +155,7 @@ function footerBlock(): string {
           </p>
           ${socialIconsTable()}
           <p style="margin:20px 0 0;font-size:11px;line-height:1.5;color:#a39e98;font-family:Arial,Helvetica,sans-serif;">
-            <a href="${site}" style="color:#8b1e2d;text-decoration:underline;">${site}</a>
+            <a href="${siteHref}" style="color:#8b1e2d;text-decoration:underline;">${siteLabel}</a>
             &nbsp;·&nbsp;B2B textile sourcing &amp; order management
           </p>
         </td>

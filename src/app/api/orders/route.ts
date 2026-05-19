@@ -1,4 +1,4 @@
-import { bearerToken, verifyClientToken } from "@/lib/client-token";
+import { requireApprovedClientRequest } from "@/lib/client-approved-session";
 import { notifyEInvoiceOrderCreated } from "@/lib/compliance-webhooks";
 import { createOrder, readLocalDb } from "@/lib/local-db";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
@@ -37,8 +37,10 @@ export async function POST(request: Request) {
         { error: "Client and items required" },
         { status: 400 },
       );
-    const session = verifyClientToken(bearerToken(request));
-    if (!session || session.clientId !== body.clientId)
+    const sessionCheck = await requireApprovedClientRequest(request);
+    if (sessionCheck instanceof Response) return sessionCheck;
+    const session = sessionCheck.session;
+    if (session.clientId !== body.clientId)
       return Response.json(
         { error: "Valid client token required" },
         { status: 401 },

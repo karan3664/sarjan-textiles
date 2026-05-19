@@ -1,9 +1,12 @@
-import { bearerToken, verifyClientToken } from "@/lib/client-token";
+import { requireApprovedClientRequest } from "@/lib/client-approved-session";
 import { readLocalDb } from "@/lib/local-db";
 
 export async function GET(request: Request) {
-  const session = verifyClientToken(bearerToken(request));
-  if (!session) return Response.json({ error: "Client token required" }, { status: 401 });
+  const auth = await requireApprovedClientRequest(request);
+  if (auth instanceof Response) return auth;
+  const { session } = auth;
   const db = await readLocalDb();
-  return Response.json({ orders: db.orders.filter((order) => order.clientId === session.clientId) });
+  return Response.json({
+    orders: db.orders.filter((order) => order.clientId === session.clientId),
+  });
 }
