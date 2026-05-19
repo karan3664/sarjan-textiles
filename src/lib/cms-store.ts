@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import {
   blogs as defaultBlogs,
@@ -703,6 +703,7 @@ export async function saveCmsSnapshot(
         );
       if (error) throw new Error(error.message);
       revalidateTag("cms-snapshot");
+      revalidatePath("/", "layout");
       return next;
     } catch (error) {
       if (process.env.VERCEL) {
@@ -718,6 +719,7 @@ export async function saveCmsSnapshot(
   await mkdir(path.dirname(cmsPath), { recursive: true });
   await writeFile(cmsPath, JSON.stringify(next, null, 2));
   revalidateTag("cms-snapshot");
+  revalidatePath("/", "layout");
   return next;
 }
 

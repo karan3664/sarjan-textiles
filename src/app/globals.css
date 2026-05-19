@@ -4883,6 +4883,11 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   letter-spacing: 0.05em;
 }
 
+/* Template hover images use z-index; keep OOS ribbon above product image stack */
+.card-product .card-product-wrapper > .sarjan-oos-ribbon {
+  z-index: 25;
+}
+
 .sarjan-oos-pill {
   display: inline-block;
   padding: 10px 16px;
@@ -4923,6 +4928,21 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-breadcrumb a {
   text-decoration: underline;
+}
+
+/* Header: Categories dropdown (scroll when many CMS categories) */
+.sarjan-nav-categories-dropdown {
+  max-height: min(420px, 72vh);
+  overflow-y: auto;
+  min-width: 260px;
+}
+
+.sarjan-nav-categories-dropdown .menu-link-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
 }
 
 .mx_8 {

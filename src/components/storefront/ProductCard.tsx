@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Product } from "@/data/mock";
+import { isProductSoldOut } from "@/lib/product-availability";
 import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
   const altText = product.imageAlt || `${product.name} ${product.category}`;
-  const soldOut = product.stock <= 0;
+  const soldOut = isProductSoldOut(product);
 
   return (
     <article className="sarjan-card h-100">

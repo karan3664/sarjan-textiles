@@ -4,7 +4,8 @@ import { getCmsProductBySlug } from "@/lib/cms-store";
 import { JsonLd, productJsonLd, productMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 
-export const revalidate = 300;
+/** Keep PDP stock/OOS in sync with CMS (same issue as listing ISR cache). */
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return [];

@@ -3,14 +3,41 @@ import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
 import { JsonLd } from "@/lib/seo";
 
-export const revalidate = 300;
+/** Stock ribbons must match live CMS; avoid stale ISR HTML for catalog. */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return cmsSeoMetadata("products");
 }
 
-export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ page?: string; sort?: string; q?: string; category?: string; fabric?: string; color?: string; size?: string; stock?: string; minPrice?: string; maxPrice?: string }> }) {
-  const { page, sort, q, category, fabric, color, size, stock, minPrice, maxPrice } = await searchParams;
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+    sort?: string;
+    q?: string;
+    category?: string;
+    fabric?: string;
+    color?: string;
+    size?: string;
+    stock?: string;
+    minPrice?: string;
+    maxPrice?: string;
+  }>;
+}) {
+  const {
+    page,
+    sort,
+    q,
+    category,
+    fabric,
+    color,
+    size,
+    stock,
+    minPrice,
+    maxPrice,
+  } = await searchParams;
 
   return (
     <ModaveShell>

@@ -1,6 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import {
+  isProductSoldOut,
+  productStockOnHand,
+} from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
@@ -106,15 +110,23 @@ export function ComparePageClient({
     ["MOQ", (product: Product) => <span>{product.moq} pcs</span>],
     [
       "Stock",
-      (product: Product) => (
-        <span
-          className={
-            product.stock <= 0 ? "sarjan-stock-unavailable" : undefined
-          }
-        >
-          {product.stock > 0 ? `${product.stock} available` : "Sold out"}
-        </span>
-      ),
+      (product: Product) => {
+        const qty = productStockOnHand(product);
+        const soldOut = isProductSoldOut(product);
+        const label =
+          qty !== undefined
+            ? qty > 0
+              ? `${qty} available`
+              : "Sold out"
+            : Number(product.stock) > 0
+              ? `${product.stock} available`
+              : "Sold out";
+        return (
+          <span className={soldOut ? "sarjan-stock-unavailable" : undefined}>
+            {label}
+          </span>
+        );
+      },
     ],
   ] as const;
 
@@ -137,7 +149,7 @@ export function ComparePageClient({
                         className="tf-compare-image position-relative d-inline-block"
                         href={`/products/${product.slug}`}
                       >
-                        {product.stock <= 0 ? (
+                        {isProductSoldOut(product) ? (
                           <div
                             className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
                             role="status"
@@ -191,7 +203,7 @@ export function ComparePageClient({
                     className="tf-compare-col tf-compare-field tf-compare-viewcart text-center"
                     key={`${product.slug}-cart`}
                   >
-                    {product.stock <= 0 ? (
+                    {isProductSoldOut(product) ? (
                       <span
                         className="btn-view-cart sarjan-stock-unavailable"
                         style={{ opacity: 0.55, cursor: "not-allowed" }}

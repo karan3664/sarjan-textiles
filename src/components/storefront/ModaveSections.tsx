@@ -6,9 +6,14 @@ import { getCatalogProducts, type CatalogFilters } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import {
   getCachedCmsSnapshot,
+  getCmsSnapshot,
   type CmsProductFilterGroup,
 } from "@/lib/cms-store";
 import { productSetPrice } from "@/lib/product-pricing";
+import {
+  isProductSoldOut,
+  productStockOnHand,
+} from "@/lib/product-availability";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { HomeHeroRotator } from "./HomeHeroRotator";
@@ -56,7 +61,7 @@ function ProductFeature({ product }: { product: Product }) {
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = product.imageAlt || `${product.name} ${product.category}`;
-  const soldOut = product.stock <= 0;
+  const soldOut = isProductSoldOut(product);
 
   return (
     <section className="flat-spacing bg-surface">
@@ -607,7 +612,7 @@ function fallbackInstagramPosts(sourceProducts: Product[]): InstagramPost[] {
 }
 
 export async function HomeDynamic() {
-  const cms = await getCachedCmsSnapshot();
+  const cms = await getCmsSnapshot();
   const home = cms.home;
   const homeContent = home as typeof home & {
     topPicksTitle?: string;
@@ -970,7 +975,7 @@ export async function HomeDynamic() {
 }
 
 export async function ProductDetailDynamic({ product }: { product: Product }) {
-  const { products: catalogProducts } = await getCachedCmsSnapshot();
+  const { products: catalogProducts } = await getCmsSnapshot();
   const idx = catalogProducts.findIndex((p) => p.slug === product.slug);
   const prevProduct =
     catalogProducts.length > 0
@@ -996,7 +1001,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = product.imageAlt || `${product.name} ${product.category}`;
-  const soldOut = product.stock <= 0;
+  const soldOut = isProductSoldOut(product);
 
   return (
     <>
@@ -1944,12 +1949,14 @@ function ProductListCard({ product }: { product: Product }) {
   const hover = product.images[1] ?? product.images[0];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = product.imageAlt || `${product.name} ${product.category}`;
-  const soldOut = product.stock <= 0;
+  const soldOut = isProductSoldOut(product);
 
   return (
     <div
       className="card-product style-list"
-      data-availability={product.stock > 0 ? "In stock" : "Out of stock"}
+      data-availability={
+        isProductSoldOut(product) ? "Out of stock" : "In stock"
+      }
       data-brand={siteSettings.brandName}
     >
       <div className="card-product-wrapper position-relative">
@@ -2141,14 +2148,18 @@ function productValueCount(
       return product.colors.some((color) => filterSlugValue(color) === value);
     if (group.type === "size")
       return product.sizes.some((size) => filterSlugValue(size) === value);
-    if (group.type === "stock" && value === "in-stock")
-      return product.stock > product.moq;
-    if (group.type === "stock" && value === "low-stock")
-      return (
-        product.stock > 0 && product.stock - product.reserved <= product.moq
-      );
+    if (group.type === "stock" && value === "in-stock") {
+      const qty = productStockOnHand(product);
+      if (qty === undefined) return false;
+      return qty > product.moq;
+    }
+    if (group.type === "stock" && value === "low-stock") {
+      const qty = productStockOnHand(product);
+      if (qty === undefined) return false;
+      return qty > 0 && qty - product.reserved <= product.moq;
+    }
     if (group.type === "stock" && value === "out-of-stock")
-      return product.stock <= 0;
+      return isProductSoldOut(product);
     return true;
   }).length;
 }
@@ -3181,7 +3192,7 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
                               href={`/products/${item.product.slug}`}
                               className="img-box position-relative d-inline-block"
                             >
-                              {item.product.stock <= 0 ? (
+                              {isProductSoldOut(item.product) ? (
                                 <div
                                   className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                   role="status"
@@ -3368,7 +3379,7 @@ function CheckoutDynamic({
                             href={`/products/${item.product.slug}`}
                             className="img-product position-relative d-inline-block"
                           >
-                            {item.product.stock <= 0 ? (
+                            {isProductSoldOut(item.product) ? (
                               <div
                                 className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                 role="status"

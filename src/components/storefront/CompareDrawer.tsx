@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { isProductSoldOut } from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
@@ -173,7 +174,7 @@ export function CompareDrawer() {
                             className="image position-relative d-inline-block"
                             onClick={closeOffcanvas}
                           >
-                            {product.stock <= 0 ? (
+                            {isProductSoldOut(product) ? (
                               <div
                                 className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                 role="status"

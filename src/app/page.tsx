@@ -3,7 +3,8 @@ import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
 import { JsonLd, organizationJsonLd } from "@/lib/seo";
 
-export const revalidate = 300;
+/** Featured grids must reflect current stock/OOS ribbons. */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   return cmsSeoMetadata("home");

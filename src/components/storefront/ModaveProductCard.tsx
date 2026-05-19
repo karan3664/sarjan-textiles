@@ -1,4 +1,5 @@
 import type { Product } from "@/data/mock";
+import { isProductSoldOut } from "@/lib/product-availability";
 import { PriceGate } from "./PriceGate";
 
 export function ModaveProductCard({
@@ -14,7 +15,7 @@ export function ModaveProductCard({
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
   const altText = product.imageAlt || `${product.name} ${product.category}`;
 
-  const soldOut = product.stock <= 0;
+  const soldOut = isProductSoldOut(product);
 
   return (
     <div
@@ -22,14 +23,6 @@ export function ModaveProductCard({
       data-wow-delay={delay}
     >
       <div className="card-product-wrapper position-relative">
-        {soldOut ? (
-          <div
-            className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
-            role="status"
-          >
-            Out of stock
-          </div>
-        ) : null}
         <a href={`/products/${product.slug}`} className="product-img">
           <img
             className="lazyload img-product"
@@ -99,6 +92,14 @@ export function ModaveProductCard({
             </a>
           )}
         </div>
+        {soldOut ? (
+          <div
+            className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
+            role="status"
+          >
+            Out of stock
+          </div>
+        ) : null}
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">

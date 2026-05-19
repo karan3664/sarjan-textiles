@@ -13,6 +13,7 @@ import {
   writeCart,
 } from "@/lib/cart-client";
 import { productSetPrice } from "@/lib/product-pricing";
+import { isProductSoldOut } from "@/lib/product-availability";
 import {
   readWishlist,
   toggleWishlist,
@@ -419,7 +420,7 @@ export function ModaveModals() {
               {filteredRecommendations
                 .slice(0, visibleSearchItems)
                 .map((product) => {
-                  const soldOut = product.stock <= 0;
+                  const soldOut = isProductSoldOut(product);
                   return (
                     <div className="card-product" key={product.id}>
                       <div className="card-product-wrapper position-relative">
@@ -533,7 +534,7 @@ export function ModaveModals() {
                             >
                               <div className="tf-mini-cart-image position-relative">
                                 <a href={`/products/${item.product.slug}`}>
-                                  {item.product.stock <= 0 ? (
+                                  {isProductSoldOut(item.product) ? (
                                     <div
                                       className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                       role="status"
@@ -826,7 +827,7 @@ export function ModaveModals() {
             ) : quickProduct ? (
               <div className="tf-product-info-wrap tf-quick-view-info">
                 <div className="tf-quick-view-image position-relative">
-                  {quickProduct.stock <= 0 ? (
+                  {isProductSoldOut(quickProduct) ? (
                     <div className="sarjan-oos-ribbon" role="status">
                       Out of stock
                     </div>
@@ -852,7 +853,7 @@ export function ModaveModals() {
                         MOQ {quickProduct.moq}.{" "}
                         <span
                           className={
-                            quickProduct.stock <= 0
+                            isProductSoldOut(quickProduct)
                               ? "sarjan-stock-unavailable"
                               : undefined
                           }
@@ -943,7 +944,7 @@ export function ModaveModals() {
                       </div>
                     </div>
                     <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
-                      {quickProduct.stock <= 0 ? (
+                      {isProductSoldOut(quickProduct) ? (
                         <>
                           <span
                             className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { isProductSoldOut } from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -148,7 +149,7 @@ export function CartPageClient() {
                               href={`/products/${item.product.slug}`}
                               className="img-box position-relative d-inline-block"
                             >
-                              {item.product.stock <= 0 ? (
+                              {isProductSoldOut(item.product) ? (
                                 <div
                                   className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                   role="status"
