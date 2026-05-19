@@ -46,13 +46,20 @@ function imageUrl(image?: string) {
   return absoluteUrl(image || "/sarjan-assets/banner-textiles-studio.webp");
 }
 
-function splitKeywords(value?: string) {
-  return value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+export function splitKeywords(value?: string) {
+  return (
+    value
+      ?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean) ?? []
+  );
 }
 
 export function pageMetadata(input: SeoInput): Metadata {
   const url = absoluteUrl(input.path);
-  const title = input.title.includes(siteSettings.brandName) ? input.title : `${input.title} | ${siteSettings.brandName}`;
+  const title = input.title.includes(siteSettings.brandName)
+    ? input.title
+    : `${input.title} | ${siteSettings.brandName}`;
   const description = input.description || siteSettings.seo.description;
   const image = imageUrl(input.image);
 
@@ -61,14 +68,18 @@ export function pageMetadata(input: SeoInput): Metadata {
     description,
     keywords: input.keywords,
     alternates: { canonical: url },
-    robots: input.noIndex ? { index: false, follow: false } : { index: true, follow: true },
+    robots: input.noIndex
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
     openGraph: {
       type: input.type ?? "website",
       title,
       description,
       url,
       siteName: siteSettings.brandName,
-      images: [{ url: image, width: 1200, height: 630, alt: input.imageAlt || title }],
+      images: [
+        { url: image, width: 1200, height: 630, alt: input.imageAlt || title },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -83,11 +94,22 @@ export function productMetadata(product: Product): Metadata {
   const item = product as SeoProduct;
   return pageMetadata({
     title: item.metaTitle || product.name,
-    description: item.metaDescription || product.description || `${product.name} by ${siteSettings.brandName}. MOQ ${product.moq}.`,
+    description:
+      item.metaDescription ||
+      product.description ||
+      `${product.name} by ${siteSettings.brandName}. MOQ ${product.moq}.`,
     path: `/products/${product.slug}`,
     image: product.images[0],
     imageAlt: item.imageAlt || product.name,
-    keywords: splitKeywords(item.keywords).length ? splitKeywords(item.keywords) : [product.name, product.category, product.fabric, ...product.colors, ...product.sizes],
+    keywords: splitKeywords(item.keywords).length
+      ? splitKeywords(item.keywords)
+      : [
+          product.name,
+          product.category,
+          product.fabric,
+          ...product.colors,
+          ...product.sizes,
+        ],
   });
 }
 
@@ -104,7 +126,10 @@ export function blogMetadata(blog: CmsBlog): Metadata {
   });
 }
 
-export function cmsPageMetadata(type: keyof CmsPages, page: CmsPages[keyof CmsPages]): Metadata {
+export function cmsPageMetadata(
+  type: keyof CmsPages,
+  page: CmsPages[keyof CmsPages],
+): Metadata {
   const item = page as SeoPage;
   return pageMetadata({
     title: item.metaTitle || page.title,
@@ -164,7 +189,10 @@ export function productJsonLd(product: Product) {
       url: absoluteUrl(`/products/${product.slug}`),
       priceCurrency: "INR",
       price: product.price,
-      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
     },
   };
 }
@@ -201,5 +229,10 @@ export function organizationJsonLd() {
 }
 
 export function JsonLd({ data }: { data: unknown }) {
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
 }

@@ -28,7 +28,11 @@ body.preload-wrapper .preload.preload-container {
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at 50% 44%, rgba(160, 31, 50, 0.08), transparent 34%),
+    radial-gradient(
+      circle at 50% 44%,
+      rgba(160, 31, 50, 0.08),
+      transparent 34%
+    ),
     rgba(250, 249, 246, 0.92);
   backdrop-filter: blur(16px);
   animation: sarjanAdminLoaderFallback 0.24s ease 3s forwards;
@@ -342,7 +346,12 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-hero-rotator .wrap-slider {
   position: relative;
   z-index: 2;
-  background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.36));
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.56),
+    rgba(0, 0, 0, 0.2),
+    rgba(0, 0, 0, 0.36)
+  );
 }
 
 .sarjan-hero-slide {
@@ -353,7 +362,9 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   background-size: cover;
   opacity: 0;
   transform: scale(1.04);
-  transition: opacity 0.9s ease, transform 5s ease;
+  transition:
+    opacity 0.9s ease,
+    transform 5s ease;
 }
 
 .sarjan-hero-slide.active {
@@ -467,7 +478,12 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .layout-wrap.loader-off {
   background:
-    linear-gradient(135deg, rgba(139, 30, 45, 0.05), rgba(179, 139, 69, 0.05) 38%, rgba(255, 255, 255, 0) 72%),
+    linear-gradient(
+      135deg,
+      rgba(139, 30, 45, 0.05),
+      rgba(179, 139, 69, 0.05) 38%,
+      rgba(255, 255, 255, 0) 72%
+    ),
     #f6f5f2;
 }
 
@@ -524,7 +540,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   padding: 0;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .sarjan-admin-toggle:hover {
@@ -562,7 +581,12 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: #9b1c31;
 }
 
-.layout-wrap.full-width .header-dashboard .wrap .header-left .button-show-hide i {
+.layout-wrap.full-width
+  .header-dashboard
+  .wrap
+  .header-left
+  .button-show-hide
+  i {
   color: #111;
   font-size: 18px;
 }
@@ -800,7 +824,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .section-menu-left .menu-item .menu-item-button {
   border-radius: 8px;
   margin: 2px 10px;
-  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .section-menu-left .menu-item .menu-item-button:hover,
@@ -914,7 +941,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-admin-chart-row {
   display: grid;
-  grid-template-columns: minmax(120px, 0.9fr) minmax(140px, 1.4fr) minmax(34px, auto);
+  grid-template-columns: minmax(120px, 0.9fr) minmax(140px, 1.4fr) minmax(
+      34px,
+      auto
+    );
   align-items: center;
   gap: 12px;
 }
@@ -1018,7 +1048,9 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-filter-card.active {
   border-color: var(--sarjan-accent) !important;
-  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.1), 0 16px 34px rgba(24, 24, 24, 0.06);
+  box-shadow:
+    0 0 0 3px rgba(139, 30, 45, 0.1),
+    0 16px 34px rgba(24, 24, 24, 0.06);
 }
 
 .sarjan-testimonial-routing-card {
@@ -1243,7 +1275,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   border-radius: 8px;
   background: var(--White);
   text-align: left;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .sarjan-customer-card:hover,
@@ -2035,7 +2070,11 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   background: var(--White);
   font-size: 14px;
   font-weight: 600;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .sarjan-products-page-btn i {
@@ -2296,7 +2335,9 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   border-radius: 8px;
   background: var(--White);
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .sarjan-product-check:has(input:checked) {
@@ -2366,7 +2407,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   border-radius: 8px;
   cursor: pointer;
   background: #fffaf6;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .sarjan-upload-drop:hover {
@@ -3525,7 +3569,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: #181818 !important;
   font-size: 16px;
   line-height: 36px;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .sarjan-search-chip:hover,
@@ -3958,7 +4005,13 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   justify-content: center;
   padding: 48px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(250, 226, 211, 0.95), rgba(244, 244, 244, 0.95)), url("/sarjan-assets/banner-textiles-studio.webp") center/cover;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(250, 226, 211, 0.95),
+      rgba(244, 244, 244, 0.95)
+    ),
+    url("/sarjan-assets/banner-textiles-studio.webp") center/cover;
 }
 
 .tracking-wrap .form-login input.sarjan-tracking-input {
@@ -4794,4 +4847,80 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
     grid-template-columns: 1fr;
     max-width: 260px;
   }
+}
+
+/* Out-of-stock ribbon + labels (storefront product detail + cards) */
+.sarjan-oos-ribbon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 8;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--sarjan-accent);
+  border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.sarjan-oos-ribbon--card {
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  padding: 5px 10px;
+}
+
+.sarjan-oos-pill {
+  display: inline-block;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--sarjan-accent);
+  border-radius: 4px;
+}
+
+.sarjan-stock-unavailable {
+  color: var(--sarjan-accent);
+  font-weight: 600;
+}
+
+/* Category hub + custom site pages */
+.sarjan-hub-hero-banner img {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.sarjan-hub-main-card .image img,
+.sarjan-hub-subcard .image img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.sarjan-hub-main-card,
+.sarjan-hub-subcard {
+  text-decoration: none;
+  color: inherit;
+}
+
+.sarjan-breadcrumb a {
+  text-decoration: underline;
+}
+
+.mx_8 {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.sarjan-custom-cards-block .sarjan-hub-subcard .content {
+  padding: 16px 0 0;
 }

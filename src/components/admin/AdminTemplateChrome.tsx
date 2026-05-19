@@ -27,10 +27,23 @@ const adminScripts = [
   "main.js",
 ];
 
-function MenuItem({ href, icon, label, active = false }: { href: string; icon: string; label: string; active?: boolean }) {
+function MenuItem({
+  href,
+  icon,
+  label,
+  active = false,
+}: {
+  href: string;
+  icon: string;
+  label: string;
+  active?: boolean;
+}) {
   return (
     <li className="menu-item">
-      <Link href={href} className={`menu-item-button${active ? " active" : ""}`}>
+      <Link
+        href={href}
+        className={`menu-item-button${active ? " active" : ""}`}
+      >
         <div className="icon">
           <i className={icon} />
         </div>
@@ -40,14 +53,41 @@ function MenuItem({ href, icon, label, active = false }: { href: string; icon: s
   );
 }
 
-type AdminActiveSection = "dashboard" | "customers" | "orders" | "dispatch" | "payments" | "inventory" | "pricing" | "home" | "testimonials" | "products" | "studio" | "filters" | "blogs" | "about" | "contact" | "inquiries" | "seo" | "audit" | "reports" | "roles" | "backups";
+type AdminActiveSection =
+  | "dashboard"
+  | "customers"
+  | "orders"
+  | "dispatch"
+  | "payments"
+  | "inventory"
+  | "pricing"
+  | "home"
+  | "testimonials"
+  | "products"
+  | "studio"
+  | "filters"
+  | "blogs"
+  | "about"
+  | "contact"
+  | "inquiries"
+  | "seo"
+  | "audit"
+  | "reports"
+  | "roles"
+  | "backups"
+  | "categoryPages"
+  | "customPages";
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
     <div className="section-menu-left">
       <div className="menu-backdrop" />
       <div className="box-logo">
-        <Link href="/admin" id="site-logo-inner" className="sarjan-admin-sidebar-logo">
+        <Link
+          href="/admin"
+          id="site-logo-inner"
+          className="sarjan-admin-sidebar-logo"
+        >
           <img
             id="logo_header"
             alt="Sarjan Textiles"
@@ -57,34 +97,156 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
           />
           <span>Sarjan Textiles</span>
         </Link>
-        <button type="button" className="sarjan-admin-toggle sarjan-admin-toggle-close" data-admin-menu-close aria-label="Hide sidebar">
+        <button
+          type="button"
+          className="sarjan-admin-toggle sarjan-admin-toggle-close"
+          data-admin-menu-close
+          aria-label="Hide sidebar"
+        >
           <i className="icon-chevron-left" />
         </button>
       </div>
       <div className="section-menu-left-wrap">
         <div className="center">
           <ul>
-            <MenuItem href="/admin" icon="icon-house" label="Dashboard" active={active === "dashboard"} />
-            <MenuItem href="/admin/customers" icon="icon-users" label="Client Management" active={active === "customers"} />
-            <MenuItem href="/admin/products-list" icon="icon-package" label="Products" active={active === "products"} />
-            <MenuItem href="/admin/ai-product-studio" icon="icon-camera" label="AI Product Studio" active={active === "studio"} />
-            <MenuItem href="/admin/product-filters" icon="icon-chart-bar" label="Product Filters" active={active === "filters"} />
-            <MenuItem href="/admin/products-low" icon="icon-basket" label="Inventory" active={active === "inventory"} />
-            <MenuItem href="/admin/orders" icon="icon-dollar" label="Orders" active={active === "orders"} />
-            <MenuItem href="/admin/dispatch" icon="icon-send" label="Dispatch" active={active === "dispatch"} />
-            <MenuItem href="/admin/payments" icon="icon-hand-coins" label="Payments & Credit" active={active === "payments"} />
-            <MenuItem href="/admin/pricing" icon="icon-dollar" label="Client Pricing" active={active === "pricing"} />
-            <MenuItem href="/admin/home" icon="icon-edit" label="CMS / Home Page" active={active === "home"} />
-            <MenuItem href="/admin/about" icon="icon-edit" label="About Us" active={active === "about"} />
-            <MenuItem href="/admin/contact" icon="icon-edit" label="Contact Us" active={active === "contact"} />
-            <MenuItem href="/admin/contact-inquiries" icon="icon-message" label="Contact Inquiries" active={active === "inquiries"} />
-            <MenuItem href="/admin/blogs-list" icon="icon-edit" label="Blogs" active={active === "blogs"} />
-            <MenuItem href="/admin/testimonials" icon="icon-message" label="Testimonials" active={active === "testimonials"} />
-            <MenuItem href="/admin/seo" icon="icon-chart-bar" label="SEO" active={active === "seo"} />
-            <MenuItem href="/admin/reports" icon="icon-chart-bar" label="Reports" active={active === "reports"} />
-            <MenuItem href="/admin/audit" icon="icon-clipboard-text" label="Audit Logs" active={active === "audit"} />
-            <MenuItem href="/admin/roles" icon="icon-users" label="Roles & Permissions" active={active === "roles"} />
-            <MenuItem href="/admin/backups" icon="icon-database" label="DB Backup / Restore" active={active === "backups"} />
+            <MenuItem
+              href="/admin"
+              icon="icon-house"
+              label="Dashboard"
+              active={active === "dashboard"}
+            />
+            <MenuItem
+              href="/admin/customers"
+              icon="icon-users"
+              label="Client Management"
+              active={active === "customers"}
+            />
+            <MenuItem
+              href="/admin/products-list"
+              icon="icon-package"
+              label="Products"
+              active={active === "products"}
+            />
+            <MenuItem
+              href="/admin/ai-product-studio"
+              icon="icon-camera"
+              label="AI Product Studio"
+              active={active === "studio"}
+            />
+            <MenuItem
+              href="/admin/product-filters"
+              icon="icon-chart-bar"
+              label="Product Filters"
+              active={active === "filters"}
+            />
+            <MenuItem
+              href="/admin/products-low"
+              icon="icon-basket"
+              label="Inventory"
+              active={active === "inventory"}
+            />
+            <MenuItem
+              href="/admin/orders"
+              icon="icon-dollar"
+              label="Orders"
+              active={active === "orders"}
+            />
+            <MenuItem
+              href="/admin/dispatch"
+              icon="icon-send"
+              label="Dispatch"
+              active={active === "dispatch"}
+            />
+            <MenuItem
+              href="/admin/payments"
+              icon="icon-hand-coins"
+              label="Payments & Credit"
+              active={active === "payments"}
+            />
+            <MenuItem
+              href="/admin/pricing"
+              icon="icon-dollar"
+              label="Client Pricing"
+              active={active === "pricing"}
+            />
+            <MenuItem
+              href="/admin/home"
+              icon="icon-edit"
+              label="CMS / Home Page"
+              active={active === "home"}
+            />
+            <MenuItem
+              href="/admin/category-pages"
+              icon="icon-chart-bar"
+              label="Category pages"
+              active={active === "categoryPages"}
+            />
+            <MenuItem
+              href="/admin/custom-pages"
+              icon="icon-edit"
+              label="Custom site pages"
+              active={active === "customPages"}
+            />
+            <MenuItem
+              href="/admin/about"
+              icon="icon-edit"
+              label="About Us"
+              active={active === "about"}
+            />
+            <MenuItem
+              href="/admin/contact"
+              icon="icon-edit"
+              label="Contact Us"
+              active={active === "contact"}
+            />
+            <MenuItem
+              href="/admin/contact-inquiries"
+              icon="icon-message"
+              label="Contact Inquiries"
+              active={active === "inquiries"}
+            />
+            <MenuItem
+              href="/admin/blogs-list"
+              icon="icon-edit"
+              label="Blogs"
+              active={active === "blogs"}
+            />
+            <MenuItem
+              href="/admin/testimonials"
+              icon="icon-message"
+              label="Testimonials"
+              active={active === "testimonials"}
+            />
+            <MenuItem
+              href="/admin/seo"
+              icon="icon-chart-bar"
+              label="SEO"
+              active={active === "seo"}
+            />
+            <MenuItem
+              href="/admin/reports"
+              icon="icon-chart-bar"
+              label="Reports"
+              active={active === "reports"}
+            />
+            <MenuItem
+              href="/admin/audit"
+              icon="icon-clipboard-text"
+              label="Audit Logs"
+              active={active === "audit"}
+            />
+            <MenuItem
+              href="/admin/roles"
+              icon="icon-users"
+              label="Roles & Permissions"
+              active={active === "roles"}
+            />
+            <MenuItem
+              href="/admin/backups"
+              icon="icon-database"
+              label="DB Backup / Restore"
+              active={active === "backups"}
+            />
             <MenuItem href="/" icon="icon-sign-out" label="Front Store" />
           </ul>
         </div>
@@ -98,12 +260,27 @@ function Header() {
     <div className="header-dashboard">
       <div className="wrap">
         <div className="header-left">
-          <button type="button" className="sarjan-admin-toggle sarjan-admin-toggle-open" data-admin-menu-toggle aria-label="Toggle sidebar">
+          <button
+            type="button"
+            className="sarjan-admin-toggle sarjan-admin-toggle-open"
+            data-admin-menu-toggle
+            aria-label="Toggle sidebar"
+          >
             <i className="icon-chevron-right" />
           </button>
           <form className="form-search flex-grow">
             <fieldset className="name">
-              <input type="text" placeholder="Enter your e-mail" className="show-search style-1" name="name" tabIndex={2} value="" aria-required="true" required readOnly />
+              <input
+                type="text"
+                placeholder="Enter your e-mail"
+                className="show-search style-1"
+                name="name"
+                tabIndex={2}
+                value=""
+                aria-required="true"
+                required
+                readOnly
+              />
             </fieldset>
             <div className="button-submit">
               <button className="" type="submit">
@@ -116,7 +293,12 @@ function Header() {
           <div className="header-btn">
             <div className="popup-wrap noti type-header">
               <div className="dropdown">
-                <button className="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button
+                  className="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
                   <span className="header-item has-dot">
                     <i className="icon-bell" />
                   </span>
@@ -132,7 +314,9 @@ function Header() {
                       </div>
                       <div>
                         <div className="text-title">Home CMS ready</div>
-                        <div className="text-caption-1">Frontend pulls content from admin API.</div>
+                        <div className="text-caption-1">
+                          Frontend pulls content from admin API.
+                        </div>
                       </div>
                     </div>
                   </li>
@@ -143,10 +327,20 @@ function Header() {
           <div className="line1" />
           <div className="popup-wrap user type-header">
             <div className="dropdown">
-              <button className="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <button
+                className="btn btn-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
                 <span className="header-user wg-user">
                   <span className="image">
-                    <img className="lazyload" data-src="/template/admin/images/avatar/user-1.jpg" src="/template/admin/images/avatar/user-1.jpg" alt="" />
+                    <img
+                      className="lazyload"
+                      data-src="/template/admin/images/avatar/user-1.jpg"
+                      src="/template/admin/images/avatar/user-1.jpg"
+                      alt=""
+                    />
                   </span>
                   <span className="content">
                     <span className="text-button name">Super Admin</span>
@@ -200,13 +394,22 @@ export function AdminTemplateChrome({
                 <div className="main-content-inner">
                   <div className="flex flex-wrap justify-between gap14 items-center">
                     <h4 className="heading">{title}</h4>
-                    <div className="text-caption-1 text-secondary">Sarjan Textiles CMS</div>
+                    <div className="text-caption-1 text-secondary">
+                      Sarjan Textiles CMS
+                    </div>
                   </div>
                   {children}
                 </div>
                 <div className="bottom-page">
-                  <div className="body-text">Copyright © 2026 Sarjan Textiles.</div>
-                  <a href="https://karandigitallabs.com" target="_blank" rel="noreferrer" className="body-text sarjan-admin-footer-credit">
+                  <div className="body-text">
+                    Copyright © 2026 Sarjan Textiles.
+                  </div>
+                  <a
+                    href="https://karandigitallabs.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="body-text sarjan-admin-footer-credit"
+                  >
                     Designed & Developed by Karan Digital Labs
                   </a>
                 </div>
@@ -216,7 +419,11 @@ export function AdminTemplateChrome({
         </div>
       </div>
       {adminScripts.map((script) => (
-        <Script key={script} src={`/template/admin/js/${script}`} strategy="afterInteractive" />
+        <Script
+          key={script}
+          src={`/template/admin/js/${script}`}
+          strategy="afterInteractive"
+        />
       ))}
     </>
   );

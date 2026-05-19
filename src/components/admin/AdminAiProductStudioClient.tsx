@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type StudioStatus = "queued" | "processing" | "processed" | "approved" | "rejected" | "failed";
+type StudioStatus =
+  | "queued"
+  | "processing"
+  | "processed"
+  | "approved"
+  | "rejected"
+  | "failed";
 type StudioShootStyle = "current-style";
 
 type StudioRecord = {
@@ -73,25 +79,42 @@ const initialForm: UploadForm = {
   shootStyle: "current-style",
 };
 
-const statuses: Array<StudioStatus | "all"> = ["all", "queued", "processed", "approved", "rejected", "failed"];
+const statuses: Array<StudioStatus | "all"> = [
+  "all",
+  "queued",
+  "processed",
+  "approved",
+  "rejected",
+  "failed",
+];
 const pageSizes = [10, 25, 50];
 
 async function readApiJson<T>(response: Response): Promise<T> {
   const text = await response.text();
 
   if (!text) {
-    throw new Error(response.ok ? "API returned empty response" : `Request failed with ${response.status}`);
+    throw new Error(
+      response.ok
+        ? "API returned empty response"
+        : `Request failed with ${response.status}`,
+    );
   }
 
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error(response.ok ? "API returned invalid JSON" : text.slice(0, 160) || `Request failed with ${response.status}`);
+    throw new Error(
+      response.ok
+        ? "API returned invalid JSON"
+        : text.slice(0, 160) || `Request failed with ${response.status}`,
+    );
   }
 }
 
 function outputUrl(path?: string) {
-  return path ? `/api/admin/ai-studio/file?path=${encodeURIComponent(path)}` : "";
+  return path
+    ? `/api/admin/ai-studio/file?path=${encodeURIComponent(path)}`
+    : "";
 }
 
 function statusClass(status: StudioStatus) {
@@ -127,7 +150,10 @@ function PaginationControls({
       <div className="body-text text-secondary">
         Showing {start}-{end} of {total}
       </div>
-      <select value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
+      <select
+        value={pageSize}
+        onChange={(event) => onPageSizeChange(Number(event.target.value))}
+      >
         {pageSizes.map((size) => (
           <option key={size} value={size}>
             {size} per page
@@ -135,13 +161,23 @@ function PaginationControls({
         ))}
       </select>
       <div className="sarjan-ai-page-buttons">
-        <button type="button" className="tf-button style-1" onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage <= 1}>
+        <button
+          type="button"
+          className="tf-button style-1"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage <= 1}
+        >
           Prev
         </button>
         <span className="text-title">
           {currentPage} / {totalPages}
         </span>
-        <button type="button" className="tf-button style-1" onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages}>
+        <button
+          type="button"
+          className="tf-button style-1"
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage >= totalPages}
+        >
           Next
         </button>
       </div>
@@ -153,7 +189,9 @@ export function AdminAiProductStudioClient() {
   const [snapshot, setSnapshot] = useState<StudioSnapshot | null>(null);
   const [form, setForm] = useState<UploadForm>(initialForm);
   const [files, setFiles] = useState<File[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<StudioStatus | "all">("all");
+  const [selectedStatus, setSelectedStatus] = useState<StudioStatus | "all">(
+    "all",
+  );
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -168,26 +206,42 @@ export function AdminAiProductStudioClient() {
 
   const refresh = async () => {
     const response = await fetch("/api/admin/ai-studio", { cache: "no-store" });
-    const data = await readApiJson<StudioSnapshot | { error?: string }>(response);
-    if (!response.ok) throw new Error("error" in data && data.error ? data.error : "AI studio API failed");
+    const data = await readApiJson<StudioSnapshot | { error?: string }>(
+      response,
+    );
+    if (!response.ok) {
+      throw new Error(
+        "error" in data && data.error
+          ? String(data.error)
+          : `AI studio API failed (${response.status})`,
+      );
+    }
     const snapshotData = data as StudioSnapshot;
     setSnapshot(snapshotData);
     setPromptDraft(snapshotData.promptTemplate);
   };
 
   useEffect(() => {
-    refresh().catch(() => setMessage("AI studio snapshot failed."));
+    refresh().catch((error) => {
+      setMessage(
+        error instanceof Error ? error.message : "AI studio snapshot failed.",
+      );
+    });
   }, []);
 
   const categories = useMemo(() => {
-    const names = snapshot?.records.map((record) => record.metadata.category) ?? [];
+    const names =
+      snapshot?.records.map((record) => record.metadata.category) ?? [];
     return ["all", ...Array.from(new Set(names)).sort()];
   }, [snapshot]);
 
   const filteredRecords = useMemo(() => {
     return (snapshot?.records ?? []).filter((record) => {
-      const statusMatch = selectedStatus === "all" || record.status === selectedStatus;
-      const categoryMatch = selectedCategory === "all" || record.metadata.category === selectedCategory;
+      const statusMatch =
+        selectedStatus === "all" || record.status === selectedStatus;
+      const categoryMatch =
+        selectedCategory === "all" ||
+        record.metadata.category === selectedCategory;
       return statusMatch && categoryMatch;
     });
   }, [selectedCategory, selectedStatus, snapshot]);
@@ -195,16 +249,25 @@ export function AdminAiProductStudioClient() {
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageStart = (currentPage - 1) * pageSize;
-  const paginatedRecords = filteredRecords.slice(pageStart, pageStart + pageSize);
+  const paginatedRecords = filteredRecords.slice(
+    pageStart,
+    pageStart + pageSize,
+  );
 
   useEffect(() => {
     setPage(1);
   }, [selectedCategory, selectedStatus, pageSize]);
 
   const handleFiles = (nextFiles: FileList | File[]) => {
-    const imageFiles = Array.from(nextFiles).filter((file) => /image\/|\.jpe?g$|\.png$|\.webp$/i.test(file.type || file.name));
+    const imageFiles = Array.from(nextFiles).filter((file) =>
+      /image\/|\.jpe?g$|\.png$|\.webp$/i.test(file.type || file.name),
+    );
     setFiles(imageFiles);
-    setMessage(imageFiles.length ? `${imageFiles.length} image(s) ready.` : "No supported images selected.");
+    setMessage(
+      imageFiles.length
+        ? `${imageFiles.length} image(s) ready.`
+        : "No supported images selected.",
+    );
   };
 
   const upload = async () => {
@@ -221,13 +284,22 @@ export function AdminAiProductStudioClient() {
     Object.entries(form).forEach(([key, value]) => formData.append(key, value));
 
     try {
-      const response = await fetch("/api/admin/ai-studio/upload", { method: "POST", body: formData });
-      const data = await readApiJson<{ added: StudioRecord[]; skipped?: string[]; error?: string }>(response);
+      const response = await fetch("/api/admin/ai-studio/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await readApiJson<{
+        added: StudioRecord[];
+        skipped?: string[];
+        error?: string;
+      }>(response);
       if (!response.ok) throw new Error(data.error || "Upload failed");
       setFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (folderInputRef.current) folderInputRef.current.value = "";
-      setMessage(`${data.added.length} raw image(s) queued. ${data.skipped?.length ?? 0} duplicate image(s) skipped.`);
+      setMessage(
+        `${data.added.length} raw image(s) queued. ${data.skipped?.length ?? 0} duplicate image(s) skipped.`,
+      );
       await refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Upload failed.");
@@ -238,12 +310,18 @@ export function AdminAiProductStudioClient() {
 
   const runProcess = async (ids?: string[]) => {
     if (processing) {
-      setMessage("AI processing already running. Wait for current image batch to finish.");
+      setMessage(
+        "AI processing already running. Wait for current image batch to finish.",
+      );
       return;
     }
 
     setProcessing(true);
-    setMessage(ids?.length ? "Processing selected image. Mannequin AI cleanup can take 60-120 seconds..." : "Running batch processor. AI cleanup can take time...");
+    setMessage(
+      ids?.length
+        ? "Processing selected image. Mannequin AI cleanup can take 60-120 seconds..."
+        : "Running batch processor. AI cleanup can take time...",
+    );
 
     try {
       const response = await fetch("/api/admin/ai-studio/process", {
@@ -251,9 +329,15 @@ export function AdminAiProductStudioClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids, limit: 3 }),
       });
-      const data = await readApiJson<{ processed: StudioRecord[]; remaining?: number; error?: string }>(response);
+      const data = await readApiJson<{
+        processed: StudioRecord[];
+        remaining?: number;
+        error?: string;
+      }>(response);
       if (!response.ok) throw new Error(data.error || "Processing failed");
-      setMessage(`${data.processed.length} image(s) processed. ${data.remaining ?? 0} remaining in queue.`);
+      setMessage(
+        `${data.processed.length} image(s) processed. ${data.remaining ?? 0} remaining in queue.`,
+      );
       await refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Processing failed.");
@@ -267,10 +351,18 @@ export function AdminAiProductStudioClient() {
     setMessage("Scanning products/raw folder...");
 
     try {
-      const response = await fetch("/api/admin/ai-studio/scan", { method: "POST" });
-      const data = await readApiJson<{ added: StudioRecord[]; skipped?: string[]; error?: string }>(response);
+      const response = await fetch("/api/admin/ai-studio/scan", {
+        method: "POST",
+      });
+      const data = await readApiJson<{
+        added: StudioRecord[];
+        skipped?: string[];
+        error?: string;
+      }>(response);
       if (!response.ok) throw new Error(data.error || "Scan failed");
-      setMessage(`${data.added.length} raw folder image(s) detected. ${data.skipped?.length ?? 0} existing image(s) skipped.`);
+      setMessage(
+        `${data.added.length} raw folder image(s) detected. ${data.skipped?.length ?? 0} existing image(s) skipped.`,
+      );
       await refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Scan failed.");
@@ -289,26 +381,40 @@ export function AdminAiProductStudioClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ promptTemplate: promptDraft }),
       });
-      const data = await readApiJson<{ promptTemplate: string; error?: string }>(response);
+      const data = await readApiJson<{
+        promptTemplate: string;
+        error?: string;
+      }>(response);
       if (!response.ok) throw new Error(data.error || "Prompt save failed");
       setPromptDraft(data.promptTemplate);
       setMessage("Prompt saved. New queued images inherit this prompt.");
       await refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Prompt save failed.");
+      setMessage(
+        error instanceof Error ? error.message : "Prompt save failed.",
+      );
     } finally {
       setBusy(false);
     }
   };
 
-  const recordAction = async (record: StudioRecord, action: "approve" | "reject" | "reprocess" | "delete" | "catalog_shoot") => {
-    if (action === "delete" && !window.confirm(`Delete ${record.originalName}? Raw, processed, and final files will be removed.`)) return;
+  const recordAction = async (
+    record: StudioRecord,
+    action: "approve" | "reject" | "reprocess" | "delete" | "catalog_shoot",
+  ) => {
+    if (
+      action === "delete" &&
+      !window.confirm(
+        `Delete ${record.originalName}? Raw, processed, and final files will be removed.`,
+      )
+    )
+      return;
 
     setBusy(true);
     setMessage(
       action === "catalog_shoot"
-          ? `Queued CATALOG style for ${record.originalName}. Now click Reprocess.`
-          : `${action} ${record.originalName}...`,
+        ? `Queued CATALOG style for ${record.originalName}. Now click Reprocess.`
+        : `${action} ${record.originalName}...`,
     );
 
     try {
@@ -322,7 +428,9 @@ export function AdminAiProductStudioClient() {
           note: noteById[record.id],
         }),
       });
-      const data = await readApiJson<{ record: StudioRecord; error?: string }>(response);
+      const data = await readApiJson<{ record: StudioRecord; error?: string }>(
+        response,
+      );
       if (!response.ok) throw new Error(data.error || "Action failed");
       setMessage(
         action === "approve"
@@ -330,8 +438,8 @@ export function AdminAiProductStudioClient() {
           : action === "delete"
             ? `${record.originalName} deleted.`
             : action === "catalog_shoot"
-                ? `${record.originalName} converted to CATALOG style. Click Reprocess.`
-                : `${record.originalName} updated.`,
+              ? `${record.originalName} converted to CATALOG style. Click Reprocess.`
+              : `${record.originalName} updated.`,
       );
       await refresh();
     } catch (error) {
@@ -352,8 +460,13 @@ export function AdminAiProductStudioClient() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("/api/admin/ai-studio/replace", { method: "POST", body: formData });
-      const data = await readApiJson<{ record: StudioRecord; error?: string }>(response);
+      const response = await fetch("/api/admin/ai-studio/replace", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await readApiJson<{ record: StudioRecord; error?: string }>(
+        response,
+      );
       if (!response.ok) throw new Error(data.error || "Replace failed");
       setMessage(`${data.record.originalName} queued. Run process again.`);
       await refresh();
@@ -367,17 +480,53 @@ export function AdminAiProductStudioClient() {
   if (!snapshot) {
     return (
       <div className="wg-box mt-24">
-        <div className="body-text">Loading AI Product Studio...</div>
+        <div className="body-text">
+          {message || "Loading AI Product Studio..."}
+        </div>
+        {message ? (
+          <button
+            type="button"
+            className="tf-button style-1 mt-16"
+            onClick={() => {
+              setMessage("");
+              refresh().catch((error) => {
+                setMessage(
+                  error instanceof Error
+                    ? error.message
+                    : "AI studio snapshot failed.",
+                );
+              });
+            }}
+          >
+            Retry
+          </button>
+        ) : null}
       </div>
     );
   }
 
   const summaryCards = [
-    { label: "Total Images", value: snapshot.summary.total, icon: "icon-package" },
+    {
+      label: "Total Images",
+      value: snapshot.summary.total,
+      icon: "icon-package",
+    },
     { label: "Queued", value: snapshot.summary.queued, icon: "icon-clock" },
-    { label: "Pending QA", value: snapshot.summary.pendingQa, icon: "icon-clipboard-text" },
-    { label: "Approved Final", value: snapshot.summary.approved, icon: "icon-check" },
-    { label: "Failed", value: snapshot.summary.failed, icon: "icon-alert-circle" },
+    {
+      label: "Pending QA",
+      value: snapshot.summary.pendingQa,
+      icon: "icon-clipboard-text",
+    },
+    {
+      label: "Approved Final",
+      value: snapshot.summary.approved,
+      icon: "icon-check",
+    },
+    {
+      label: "Failed",
+      value: snapshot.summary.failed,
+      icon: "icon-alert-circle",
+    },
   ];
 
   return (
@@ -389,7 +538,9 @@ export function AdminAiProductStudioClient() {
               <div className="title text-secondary">{card.label}</div>
               <div className="number">
                 <h4>{card.value}</h4>
-                <div className="time text-caption-1 text-secondary">AI studio queue</div>
+                <div className="time text-caption-1 text-secondary">
+                  AI studio queue
+                </div>
               </div>
             </div>
             <div className="icon">
@@ -403,29 +554,54 @@ export function AdminAiProductStudioClient() {
         <div className="wg-box">
           <div className="box-top">
             <h5 className="box-title">RAW Upload System</h5>
-            <button className="tf-button style-1" type="button" onClick={scanRaw} disabled={busy}>
+            <button
+              className="tf-button style-1"
+              type="button"
+              onClick={scanRaw}
+              disabled={busy}
+            >
               Scan Raw Folder
             </button>
           </div>
 
           <div className="sarjan-ai-form-grid">
-            {([
-              ["category", "Category"],
-              ["collection", "Design / Fabric / Collection"],
-              ["attributeType", "Attribute Type"],
-              ["attributeValue", "Attribute Value"],
-            ] as Array<[keyof UploadForm, string]>).map(([key, label]) => (
+            {(
+              [
+                ["category", "Category"],
+                ["collection", "Design / Fabric / Collection"],
+                ["attributeType", "Attribute Type"],
+                ["attributeValue", "Attribute Value"],
+              ] as Array<[keyof UploadForm, string]>
+            ).map(([key, label]) => (
               <fieldset className="name" key={key}>
                 <div className="body-title mb-10">{label}</div>
-                <input value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} />
+                <input
+                  value={form[key]}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      [key]: event.target.value,
+                    }))
+                  }
+                />
               </fieldset>
             ))}
             <fieldset className="name">
               <div className="body-title mb-10">Shoot Style</div>
-              <select value={form.shootStyle} onChange={(event) => setForm((current) => ({ ...current, shootStyle: event.target.value as StudioShootStyle }))}>
+              <select
+                value={form.shootStyle}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    shootStyle: event.target.value as StudioShootStyle,
+                  }))
+                }
+              >
                 <option value="current-style">Current catalog style</option>
               </select>
-              <div className="text-caption-1 text-secondary mt-8">Flat-lay catalog cleanup only.</div>
+              <div className="text-caption-1 text-secondary mt-8">
+                Flat-lay catalog cleanup only.
+              </div>
             </fieldset>
           </div>
 
@@ -442,57 +618,115 @@ export function AdminAiProductStudioClient() {
             </div>
             <div>
               <div className="text-title">Drop JPG, PNG, WEBP files</div>
-              <div className="text-caption-1 text-secondary">Target: products/raw/{form.category}/{form.collection}/{form.attributeType}/{form.attributeValue}</div>
+              <div className="text-caption-1 text-secondary">
+                Target: products/raw/{form.category}/{form.collection}/
+                {form.attributeType}/{form.attributeValue}
+              </div>
             </div>
             <div className="sarjan-ai-upload-actions">
-              <button className="tf-button" type="button" onClick={() => fileInputRef.current?.click()} disabled={busy}>
+              <button
+                className="tf-button"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={busy}
+              >
                 Select Images
               </button>
-              <button className="tf-button style-1" type="button" onClick={() => folderInputRef.current?.click()} disabled={busy}>
+              <button
+                className="tf-button style-1"
+                type="button"
+                onClick={() => folderInputRef.current?.click()}
+                disabled={busy}
+              >
                 Select Folder
               </button>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(event) => event.target.files && handleFiles(event.target.files)} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              hidden
+              onChange={(event) =>
+                event.target.files && handleFiles(event.target.files)
+              }
+            />
             <input
               ref={folderInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
               hidden
-              {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
-              onChange={(event) => event.target.files && handleFiles(event.target.files)}
+              {...({ webkitdirectory: "", directory: "" } as Record<
+                string,
+                string
+              >)}
+              onChange={(event) =>
+                event.target.files && handleFiles(event.target.files)
+              }
             />
           </div>
 
           <div className="sarjan-ai-action-row">
-            <div className="body-text text-secondary">{files.length ? `${files.length} selected image(s)` : "No pending local selection"}</div>
-            <button className="tf-button" type="button" onClick={upload} disabled={busy || !files.length}>
+            <div className="body-text text-secondary">
+              {files.length
+                ? `${files.length} selected image(s)`
+                : "No pending local selection"}
+            </div>
+            <button
+              className="tf-button"
+              type="button"
+              onClick={upload}
+              disabled={busy || !files.length}
+            >
               Queue Upload
             </button>
-            <button className="tf-button style-1" type="button" onClick={() => runProcess()} disabled={busy || processing}>
+            <button
+              className="tf-button style-1"
+              type="button"
+              onClick={() => runProcess()}
+              disabled={busy || processing}
+            >
               {processing ? "Processing..." : "Run Batch Process"}
             </button>
           </div>
 
-          {message && <div className="sarjan-admin-message mt-20">{message}</div>}
+          {message && (
+            <div className="sarjan-admin-message mt-20">{message}</div>
+          )}
         </div>
 
         <div className="wg-box">
           <div className="box-top">
             <h5 className="box-title">AI Processing Rules</h5>
-            <button className="tf-button style-1" type="button" onClick={savePrompt} disabled={busy}>
+            <button
+              className="tf-button style-1"
+              type="button"
+              onClick={savePrompt}
+              disabled={busy}
+            >
               Save Prompt
             </button>
           </div>
           <div className="sarjan-ai-rules">
-            {["Maintain original fabric", "Maintain exact color and texture", "Preserve stitching, buttons, collar, shape", "Generate white or #f5f5f5 catalog outputs", "Create web-ready, thumbnail, zoom, compressed variants"].map((rule) => (
+            {[
+              "Maintain original fabric",
+              "Maintain exact color and texture",
+              "Preserve stitching, buttons, collar, shape",
+              "Generate white or #f5f5f5 catalog outputs",
+              "Create web-ready, thumbnail, zoom, compressed variants",
+            ].map((rule) => (
               <div key={rule}>
                 <i className="icon-check" />
                 <span>{rule}</span>
               </div>
             ))}
           </div>
-          <textarea className="sarjan-ai-prompt" value={promptDraft} onChange={(event) => setPromptDraft(event.target.value)} />
+          <textarea
+            className="sarjan-ai-prompt"
+            value={promptDraft}
+            onChange={(event) => setPromptDraft(event.target.value)}
+          />
         </div>
       </div>
 
@@ -503,15 +737,24 @@ export function AdminAiProductStudioClient() {
         <div className="sarjan-ai-cms-grid">
           <div>
             <div className="text-title">Where images store</div>
-            <div className="body-text text-secondary">RAW/processed state stays in products/. Approved final images also publish to public/uploads/ai-products/ for product listing use.</div>
+            <div className="body-text text-secondary">
+              RAW/processed state stays in products/. Approved final images also
+              publish to public/uploads/ai-products/ for product listing use.
+            </div>
           </div>
           <div>
             <div className="text-title">Bulk sheet</div>
-            <div className="body-text text-secondary">Use approved public URL in image_urls column. Multiple photos: comma-separated URLs.</div>
+            <div className="body-text text-secondary">
+              Use approved public URL in image_urls column. Multiple photos:
+              comma-separated URLs.
+            </div>
           </div>
           <div>
             <div className="text-title">Single product</div>
-            <div className="body-text text-secondary">Open Products Create, paste approved public URL into Product Images field, or upload manually.</div>
+            <div className="body-text text-secondary">
+              Open Products Create, paste approved public URL into Product
+              Images field, or upload manually.
+            </div>
           </div>
         </div>
       </div>
@@ -520,14 +763,22 @@ export function AdminAiProductStudioClient() {
         <div className="box-top sarjan-ai-filter-top">
           <h5 className="box-title">Manual QA Queue</h5>
           <div className="sarjan-ai-filters">
-            <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)}>
+            <select
+              value={selectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+            >
               {categories.map((category) => (
                 <option key={category} value={category}>
                   {category === "all" ? "All categories" : category}
                 </option>
               ))}
             </select>
-            <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as StudioStatus | "all")}>
+            <select
+              value={selectedStatus}
+              onChange={(event) =>
+                setSelectedStatus(event.target.value as StudioStatus | "all")
+              }
+            >
               {statuses.map((status) => (
                 <option key={status} value={status}>
                   {status === "all" ? "All statuses" : status}
@@ -555,7 +806,14 @@ export function AdminAiProductStudioClient() {
                   <figcaption>RAW</figcaption>
                 </figure>
                 <figure>
-                  {record.outputs?.webReady ? <img src={outputUrl(record.outputs.webReady)} alt={`${record.originalName} processed`} /> : <div className="sarjan-ai-placeholder">Process needed</div>}
+                  {record.outputs?.webReady ? (
+                    <img
+                      src={outputUrl(record.outputs.webReady)}
+                      alt={`${record.originalName} processed`}
+                    />
+                  ) : (
+                    <div className="sarjan-ai-placeholder">Process needed</div>
+                  )}
                   <figcaption>Processed</figcaption>
                 </figure>
               </div>
@@ -564,15 +822,24 @@ export function AdminAiProductStudioClient() {
                 <div className="sarjan-ai-card-head">
                   <div>
                     <h6>{record.originalName}</h6>
-                    <div className="text-caption-1 text-secondary">{readablePath(record.rawPath)}</div>
+                    <div className="text-caption-1 text-secondary">
+                      {readablePath(record.rawPath)}
+                    </div>
                   </div>
-                  <div className={`box-status text-button ${statusClass(record.status)}`}>{record.status}</div>
+                  <div
+                    className={`box-status text-button ${statusClass(record.status)}`}
+                  >
+                    {record.status}
+                  </div>
                 </div>
 
                 <div className="sarjan-ai-meta-grid">
                   <span>Category: {record.metadata.category}</span>
                   <span>Collection: {record.metadata.collection}</span>
-                  <span>{record.metadata.attributeType}: {record.metadata.attributeValue}</span>
+                  <span>
+                    {record.metadata.attributeType}:{" "}
+                    {record.metadata.attributeValue}
+                  </span>
                   <span>Pattern: {record.metadata.pattern}</span>
                   <span>Shoot: current catalog</span>
                 </div>
@@ -585,42 +852,144 @@ export function AdminAiProductStudioClient() {
 
                 {record.outputs && (
                   <div className="sarjan-ai-output-links">
-                    <a href={outputUrl(record.outputs.webReady)} target="_blank" rel="noreferrer">Web</a>
-                    <a href={outputUrl(record.outputs.thumbnail)} target="_blank" rel="noreferrer">Thumb</a>
-                    <a href={outputUrl(record.outputs.zoom)} target="_blank" rel="noreferrer">Zoom</a>
-                    <a href={outputUrl(record.outputs.compressed)} target="_blank" rel="noreferrer">Compressed</a>
-                    {record.finalUrl && <a href={record.finalUrl} target="_blank" rel="noreferrer">Final</a>}
-                    {record.finalPublicUrl && <a href={record.finalPublicUrl} target="_blank" rel="noreferrer">CMS URL</a>}
+                    <a
+                      href={outputUrl(record.outputs.webReady)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Web
+                    </a>
+                    <a
+                      href={outputUrl(record.outputs.thumbnail)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Thumb
+                    </a>
+                    <a
+                      href={outputUrl(record.outputs.zoom)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Zoom
+                    </a>
+                    <a
+                      href={outputUrl(record.outputs.compressed)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Compressed
+                    </a>
+                    {record.finalUrl && (
+                      <a
+                        href={record.finalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Final
+                      </a>
+                    )}
+                    {record.finalPublicUrl && (
+                      <a
+                        href={record.finalPublicUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        CMS URL
+                      </a>
+                    )}
                   </div>
                 )}
 
                 {record.finalPublicUrl && (
-                  <input className="sarjan-ai-public-url" value={record.finalPublicUrl} readOnly onFocus={(event) => event.currentTarget.select()} aria-label="Approved public CMS image URL" />
+                  <input
+                    className="sarjan-ai-public-url"
+                    value={record.finalPublicUrl}
+                    readOnly
+                    onFocus={(event) => event.currentTarget.select()}
+                    aria-label="Approved public CMS image URL"
+                  />
                 )}
 
-                {record.error && <div className="text-danger body-text">{record.error}</div>}
-                {record.qaNote && <div className="sarjan-ai-note body-text">{record.qaNote}</div>}
+                {record.error && (
+                  <div className="text-danger body-text">{record.error}</div>
+                )}
+                {record.qaNote && (
+                  <div className="sarjan-ai-note body-text">
+                    {record.qaNote}
+                  </div>
+                )}
 
                 <div className="sarjan-ai-qa">
-                  <input placeholder="SKU for final naming" value={skuById[record.id] ?? ""} onChange={(event) => setSkuById((current) => ({ ...current, [record.id]: event.target.value }))} />
-                  <input placeholder="QA note" value={noteById[record.id] ?? ""} onChange={(event) => setNoteById((current) => ({ ...current, [record.id]: event.target.value }))} />
-                  <button className="tf-button style-1" type="button" onClick={() => runProcess([record.id])} disabled={busy || processing}>
+                  <input
+                    placeholder="SKU for final naming"
+                    value={skuById[record.id] ?? ""}
+                    onChange={(event) =>
+                      setSkuById((current) => ({
+                        ...current,
+                        [record.id]: event.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    placeholder="QA note"
+                    value={noteById[record.id] ?? ""}
+                    onChange={(event) =>
+                      setNoteById((current) => ({
+                        ...current,
+                        [record.id]: event.target.value,
+                      }))
+                    }
+                  />
+                  <button
+                    className="tf-button style-1"
+                    type="button"
+                    onClick={() => runProcess([record.id])}
+                    disabled={busy || processing}
+                  >
                     Reprocess
                   </button>
-                  <button className="tf-button style-1" type="button" onClick={() => recordAction(record, "catalog_shoot")} disabled={busy}>
+                  <button
+                    className="tf-button style-1"
+                    type="button"
+                    onClick={() => recordAction(record, "catalog_shoot")}
+                    disabled={busy}
+                  >
                     Set Catalog
                   </button>
-                  <button className="tf-button style-1" type="button" onClick={() => recordAction(record, "reject")} disabled={busy}>
+                  <button
+                    className="tf-button style-1"
+                    type="button"
+                    onClick={() => recordAction(record, "reject")}
+                    disabled={busy}
+                  >
                     Reject
                   </button>
-                  <button className="tf-button" type="button" onClick={() => recordAction(record, "approve")} disabled={busy || !record.outputs}>
+                  <button
+                    className="tf-button"
+                    type="button"
+                    onClick={() => recordAction(record, "approve")}
+                    disabled={busy || !record.outputs}
+                  >
                     Approve
                   </button>
                   <label className="tf-button style-1 sarjan-ai-replace">
                     Replace
-                    <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => replaceRaw(record, event.target.files?.[0])} />
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      hidden
+                      onChange={(event) =>
+                        replaceRaw(record, event.target.files?.[0])
+                      }
+                    />
                   </label>
-                  <button className="tf-button style-1" type="button" onClick={() => recordAction(record, "delete")} disabled={busy}>
+                  <button
+                    className="tf-button style-1"
+                    type="button"
+                    onClick={() => recordAction(record, "delete")}
+                    disabled={busy}
+                  >
                     Delete
                   </button>
                 </div>
@@ -629,7 +998,11 @@ export function AdminAiProductStudioClient() {
           ))}
         </div>
 
-        {!filteredRecords.length && <div className="sarjan-ai-empty body-text text-secondary">No images match current filters.</div>}
+        {!filteredRecords.length && (
+          <div className="sarjan-ai-empty body-text text-secondary">
+            No images match current filters.
+          </div>
+        )}
         {filteredRecords.length > pageSize && (
           <PaginationControls
             currentPage={currentPage}

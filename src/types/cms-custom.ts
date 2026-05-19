@@ -1,4 +1,17 @@
-export type CmsCustomBlockType = "text" | "image" | "button" | "product";
+export type CmsCustomCardItem = {
+  id: string;
+  title: string;
+  body?: string;
+  image?: string;
+  href: string;
+};
+
+export type CmsCustomBlockType =
+  | "text"
+  | "image"
+  | "button"
+  | "product"
+  | "cards";
 
 export type CmsCustomBlock = {
   id: string;
@@ -10,6 +23,8 @@ export type CmsCustomBlock = {
   label?: string;
   href?: string;
   productSlug?: string;
+  /** When type === "cards": row of link tiles (subcategory / promo cards). */
+  items?: CmsCustomCardItem[];
 };
 
 export type CmsCustomSection = {

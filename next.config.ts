@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-  serverExternalPackages: ["sharp"],
+  // Keep sharp + Supabase external so dev server does not emit fragile vendor-chunks
+  // (fixes intermittent "Cannot find module './vendor-chunks/@supabase.js'" after cache churn).
+  serverExternalPackages: ["sharp", "@supabase/supabase-js", "@supabase/ssr"],
   // Allow bulk phone-photo uploads through App Router route handlers.
   // Without this, Next truncates multipart bodies above 10MB in dev.
   poweredByHeader: false,
@@ -17,15 +19,30 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/sarjan-assets/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
       },
       {
         source: "/uploads/cms/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
       },
       {
         source: "/template/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
       },
     ];
   },

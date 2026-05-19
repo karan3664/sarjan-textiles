@@ -23,7 +23,9 @@ export default function AdminLoginPage() {
       setMessage(data.error ?? "Login failed");
       return;
     }
-    window.location.assign(new URLSearchParams(window.location.search).get("next") || "/admin");
+    window.location.assign(
+      new URLSearchParams(window.location.search).get("next") || "/admin",
+    );
   };
 
   return (
@@ -31,13 +33,37 @@ export default function AdminLoginPage() {
       <AdminGlobalLoader />
       <main className="sarjan-admin-login">
         <form className="sarjan-admin-login-card" onSubmit={submit}>
-          <img src="/sarjan-assets/sarjan-logo-icon.png" alt="Sarjan Textiles" />
+          <img
+            src="/sarjan-assets/sarjan-logo-icon.png"
+            alt="Sarjan Textiles"
+          />
           <h3>Admin Login</h3>
           <p>Protected Sarjan Textiles operating system.</p>
-          <input name="email" type="email" placeholder="Admin email" defaultValue="admin@sarjantextiles.com" required />
-          <input name="password" type="password" placeholder="Password" defaultValue="admin123" required />
-          {message ? <div className="sarjan-admin-login-error">{message}</div> : null}
-          <button type="submit" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
+          <input
+            name="email"
+            type="email"
+            placeholder="Admin email"
+            defaultValue="admin@sarjantextiles.com"
+            required
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            required
+          />
+          <p className="sarjan-admin-login-hint text-caption-1 text-secondary">
+            Local: use the password from{" "}
+            <code className="text-1">ADMIN_PASSWORD</code> in{" "}
+            <code className="text-1">.env.local</code>. If unset, default is{" "}
+            <code className="text-1">admin123</code>.
+          </p>
+          {message ? (
+            <div className="sarjan-admin-login-error">{message}</div>
+          ) : null}
+          <button type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Login"}
+          </button>
         </form>
       </main>
     </>

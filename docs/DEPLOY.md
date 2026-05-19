@@ -48,6 +48,11 @@ Set these on **Vercel** and/or **Railway** (same values if you use one host).
 | `CLIENT_JWT_SECRET`              | Long random string                                             |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Or `ADMIN_USERS_JSON` for multiple admins (see `.env.example`) |
 
+**Storefront URLs (CMS-driven):**
+
+- **`/categories`** — master list of category hubs. **`/categories/[slug]`** — hub with subcategory cards (edit in **Admin → Category pages**).
+- **`/site/[slug]`** — multi-purpose pages from custom sections (edit in **Admin → Custom site pages**).
+
 ### Email (orders, OTP, etc.)
 
 | Variable                                                        | Notes                |
@@ -56,10 +61,14 @@ Set these on **Vercel** and/or **Railway** (same values if you use one host).
 
 ### AI Product Studio (optional)
 
-| Variable             | Notes                                     |
-| -------------------- | ----------------------------------------- |
-| `AI_IMAGE_PROVIDER`  | `local` (no cloud), `vertex`, or `openai` |
-| Vertex / OpenAI vars | See `.env.example`                        |
+| Variable               | Notes                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `AI_IMAGE_PROVIDER`    | `local` (no cloud), `vertex`, or `openai`                                                         |
+| Vertex / OpenAI vars   | See `.env.example`                                                                                |
+| `AI_STUDIO_DATA_DIR`   | Optional absolute path for studio files (defaults to `/tmp/...` on Vercel, `./products` locally). |
+| `AI_STUDIO_PUBLIC_DIR` | Optional absolute path for approved “public” JPEGs (defaults next to tmp on Vercel).              |
+
+On **Vercel**, the app cannot write under `process.cwd()` at runtime. Studio state and uploads go to **`/tmp/sarjan-ai-studio/...`** automatically when `VERCEL` is set. Set **`NEXT_PUBLIC_SITE_URL`** to your canonical domain (e.g. `https://sarjantextiles.com`) so approved image URLs use that host for **`/api/public/ai-products/...`** (storefront-visible CMS links). Without it, URLs fall back to `VERCEL_URL` for the deployment.
 
 ### Vercel Cron (daily backup)
 

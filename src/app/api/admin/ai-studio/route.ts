@@ -4,5 +4,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return Response.json(await getStudioSnapshot());
+  try {
+    return Response.json(await getStudioSnapshot());
+  } catch (error) {
+    return Response.json(
+      {
+        error:
+          error instanceof Error ? error.message : "AI studio snapshot failed",
+      },
+      { status: 500 },
+    );
+  }
 }

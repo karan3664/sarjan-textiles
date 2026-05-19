@@ -25,7 +25,13 @@ export type Product = {
   metaTitle?: string;
   metaDescription?: string;
   keywords?: string;
-  variants?: Array<{ sku: string; color: string; size: string; price: number; stock: number }>;
+  variants?: Array<{
+    sku: string;
+    color: string;
+    size: string;
+    price: number;
+    stock: number;
+  }>;
   pricingRules?: Array<{ minQty: number; price: number }>;
   publicPrice?: number;
   effectivePrice?: number;
@@ -35,7 +41,10 @@ export type Product = {
 };
 
 const asset = (file: string) => {
-  const keepOriginal = file.startsWith("sarjan-logo") || file.startsWith("sarjan-favicon") || file.includes("Logo Final");
+  const keepOriginal =
+    file.startsWith("sarjan-logo") ||
+    file.startsWith("sarjan-favicon") ||
+    file.includes("Logo Final");
   return `/sarjan-assets/${keepOriginal ? file : file.replace(/\.(png|jpg|jpeg)$/i, ".webp")}`;
 };
 
@@ -54,11 +63,13 @@ export const siteSettings = {
   openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
   openTimeSunday: "Sunday: By appointment",
   creditTermDays: 90,
-  footerNote: "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
+  footerNote:
+    "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
   footerInfoHeading: "Information",
   footerCustomerHeading: "Customer Services",
   footerNewsletterHeading: "Newsletter",
-  footerNewsletterText: "B2B ordering with admin approval, MOQ planning, and dispatch tracking.",
+  footerNewsletterText:
+    "B2B ordering with admin approval, MOQ planning, and dispatch tracking.",
   footerCredit: "Designed & Developed by Karan Digital Labs",
   facebookUrl: "#",
   instagramUrl: "#",
@@ -73,6 +84,7 @@ export const siteSettings = {
 export const navigation = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/products" },
+  { label: "Categories", href: "/categories" },
   { label: "Collections", href: "/collections" },
   { label: "Process", href: "/process" },
   { label: "Blog", href: "/blog" },
@@ -95,7 +107,10 @@ const baseProducts: Product[] = [
     sold: 118,
     colors: ["Black", "Indigo", "Ivory"],
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: [asset("shirt-ajrak-black-studio.png"), asset("shirt-blue-block-studio.png")],
+    images: [
+      asset("shirt-ajrak-black-studio.png"),
+      asset("shirt-blue-block-studio.png"),
+    ],
     description:
       "A rich black Ajrak-inspired shirt designed for boutique and wholesale buyers who need a strong festive print story.",
     care: "Gentle wash separately. Dry in shade.",
@@ -115,7 +130,10 @@ const baseProducts: Product[] = [
     sold: 96,
     colors: ["Mustard", "Maroon", "Blue"],
     sizes: ["S", "M", "L", "XL"],
-    images: [asset("shirt-mustard-block-studio.png"), asset("shirt-ivory-red-blue-studio.png")],
+    images: [
+      asset("shirt-mustard-block-studio.png"),
+      asset("shirt-ivory-red-blue-studio.png"),
+    ],
     description:
       "A warm mustard block print shirt made for everyday retail shelves and repeat wholesale orders.",
     care: "Machine wash cold. Use mild detergent.",
@@ -135,7 +153,10 @@ const baseProducts: Product[] = [
     sold: 132,
     colors: ["Blue", "Peach", "Teal"],
     sizes: ["M", "L", "XL", "XXL"],
-    images: [asset("kurta-blue-floral-studio.png"), asset("kurta-peach-floral-studio.png")],
+    images: [
+      asset("kurta-blue-floral-studio.png"),
+      asset("kurta-peach-floral-studio.png"),
+    ],
     description:
       "A polished floral kurta range with soft handfeel, clean finishing, and high repeat demand.",
     care: "Hand wash recommended. Iron inside out.",
@@ -155,7 +176,10 @@ const baseProducts: Product[] = [
     sold: 101,
     colors: ["Teal", "Black", "Beige"],
     sizes: ["M", "L", "XL", "XXL"],
-    images: [asset("kurta-teal-star-grid-studio.png"), asset("kurta-black-star-grid-studio.png")],
+    images: [
+      asset("kurta-teal-star-grid-studio.png"),
+      asset("kurta-black-star-grid-studio.png"),
+    ],
     description:
       "A crisp geometric kurta collection suitable for festive assortments and smart casual edits.",
     care: "Wash dark colors separately.",
@@ -175,7 +199,10 @@ const baseProducts: Product[] = [
     sold: 144,
     colors: ["Red", "Maroon", "Brown"],
     sizes: ["M", "L", "XL", "XXL"],
-    images: [asset("kurta-red-medallion-studio.png"), asset("kurta-maroon-small-motif-studio.png")],
+    images: [
+      asset("kurta-red-medallion-studio.png"),
+      asset("kurta-maroon-small-motif-studio.png"),
+    ],
     description:
       "A strong medallion print kurta for high-impact display, gifting, and occasion-led buying.",
     care: "Do not bleach. Dry in shade.",
@@ -194,7 +221,10 @@ const baseProducts: Product[] = [
     sold: 87,
     colors: ["Beige", "Brown", "Teal"],
     sizes: ["M", "L", "XL"],
-    images: [asset("kurta-beige-diamond-studio.png"), asset("kurta-brown-blue-diamond-studio.png")],
+    images: [
+      asset("kurta-beige-diamond-studio.png"),
+      asset("kurta-brown-blue-diamond-studio.png"),
+    ],
     description:
       "A neutral diamond motif kurta that fits year-round core inventory and everyday wear selections.",
     care: "Steam iron on medium heat.",
@@ -229,51 +259,97 @@ const palettes = [
   ["Green", "Cream", "Charcoal"],
 ];
 
-const fabrics = ["Cotton cambric", "Cotton flex", "Rayon cotton blend", "Fine cotton", "Cotton slub", "Viscose cotton"];
-const printNames = ["Ajrak", "Bagru", "Block", "Floral", "Paisley", "Diamond", "Medallion", "Star Grid", "Buti", "Ikat"];
+const fabrics = [
+  "Cotton cambric",
+  "Cotton flex",
+  "Rayon cotton blend",
+  "Fine cotton",
+  "Cotton slub",
+  "Viscose cotton",
+];
+const printNames = [
+  "Ajrak",
+  "Bagru",
+  "Block",
+  "Floral",
+  "Paisley",
+  "Diamond",
+  "Medallion",
+  "Star Grid",
+  "Buti",
+  "Ikat",
+];
 
-const generatedProducts: Product[] = Array.from({ length: 1994 }, (_, index) => {
-  const n = index + 7;
-  const isKurta = index % 2 === 0;
-  const print = printNames[index % printNames.length];
-  const color = palettes[index % palettes.length][0];
-  const category = isKurta ? "Men's Kurtas" : "Men's Shirts";
-  const imagePool = isKurta ? kurtaImages : shirtImages;
-  const primaryImage = imagePool[index % imagePool.length];
+const generatedProducts: Product[] = Array.from(
+  { length: 1994 },
+  (_, index) => {
+    const n = index + 7;
+    const isKurta = index % 2 === 0;
+    const print = printNames[index % printNames.length];
+    const color = palettes[index % palettes.length][0];
+    const category = isKurta ? "Men's Kurtas" : "Men's Shirts";
+    const imagePool = isKurta ? kurtaImages : shirtImages;
+    const primaryImage = imagePool[index % imagePool.length];
 
-  return {
-    id: `PRD-${String(n).padStart(4, "0")}`,
-    slug: `${isKurta ? "mens-kurta" : "mens-shirt"}-${print.toLowerCase().replaceAll(" ", "-")}-${String(n).padStart(4, "0")}`,
-    name: `${color} ${print} ${isKurta ? "Men's Kurta" : "Men's Shirt"}`,
-    sku: `SAR-${isKurta ? "KU" : "SH"}-${String(n).padStart(4, "0")}`,
-    category,
-    fabric: fabrics[index % fabrics.length],
-    price: isKurta ? 720 + ((index * 17) % 480) : 520 + ((index * 13) % 360),
-    moq: isKurta ? 18 : 24,
-    stock: 80 + ((index * 29) % 920),
-    reserved: (index * 7) % 160,
-    sold: 20 + ((index * 11) % 430),
-    colors: palettes[index % palettes.length],
-    sizes: isKurta ? ["M", "L", "XL", "XXL"] : ["S", "M", "L", "XL", "XXL"],
-    images: [primaryImage, imagePool[(index + 3) % imagePool.length]],
-    description: `${category} mock catalog item for admin-managed Sarjan textile product data, MOQ ordering, stock tracking, and B2B approval flow.`,
-    care: "Gentle wash separately. Dry in shade.",
-    isFeatured: index < 10,
-  };
-});
+    return {
+      id: `PRD-${String(n).padStart(4, "0")}`,
+      slug: `${isKurta ? "mens-kurta" : "mens-shirt"}-${print.toLowerCase().replaceAll(" ", "-")}-${String(n).padStart(4, "0")}`,
+      name: `${color} ${print} ${isKurta ? "Men's Kurta" : "Men's Shirt"}`,
+      sku: `SAR-${isKurta ? "KU" : "SH"}-${String(n).padStart(4, "0")}`,
+      category,
+      fabric: fabrics[index % fabrics.length],
+      price: isKurta ? 720 + ((index * 17) % 480) : 520 + ((index * 13) % 360),
+      moq: isKurta ? 18 : 24,
+      stock: 80 + ((index * 29) % 920),
+      reserved: (index * 7) % 160,
+      sold: 20 + ((index * 11) % 430),
+      colors: palettes[index % palettes.length],
+      sizes: isKurta ? ["M", "L", "XL", "XXL"] : ["S", "M", "L", "XL", "XXL"],
+      images: [primaryImage, imagePool[(index + 3) % imagePool.length]],
+      description: `${category} mock catalog item for admin-managed Sarjan textile product data, MOQ ordering, stock tracking, and B2B approval flow.`,
+      care: "Gentle wash separately. Dry in shade.",
+      isFeatured: index < 10,
+    };
+  },
+);
 
 export const products: Product[] = [...baseProducts, ...generatedProducts];
 
 export const home = {
   sections: [
     { id: "hero", type: "hero", title: "Hero Banner", enabled: true },
-    { id: "categories", type: "categories", title: "Category Cards", enabled: true },
-    { id: "top-picks", type: "topPicks", title: "Featured Products", enabled: true },
+    {
+      id: "categories",
+      type: "categories",
+      title: "Category Cards",
+      enabled: true,
+    },
+    {
+      id: "top-picks",
+      type: "topPicks",
+      title: "Featured Products",
+      enabled: true,
+    },
     { id: "marquee", type: "marquee", title: "Marquee Text", enabled: true },
-    { id: "featured-product", type: "featuredProduct", title: "Product Feature", enabled: true },
-    { id: "trending-products", type: "trendingProducts", title: "Trending Products", enabled: true },
+    {
+      id: "featured-product",
+      type: "featuredProduct",
+      title: "Product Feature",
+      enabled: true,
+    },
+    {
+      id: "trending-products",
+      type: "trendingProducts",
+      title: "Trending Products",
+      enabled: true,
+    },
     { id: "services", type: "services", title: "Service Icons", enabled: true },
-    { id: "testimonials", type: "testimonials", title: "Testimonials", enabled: true },
+    {
+      id: "testimonials",
+      type: "testimonials",
+      title: "Testimonials",
+      enabled: true,
+    },
     { id: "gallery", type: "gallery", title: "Shop Gallery", enabled: true },
     { id: "brands", type: "brands", title: "Clients Slider", enabled: true },
   ],
@@ -302,20 +378,46 @@ export const home = {
     { name: "Kurtas", image: asset("kurta-teal-diamond-studio.png") },
     { name: "Festive Prints", image: asset("kurta-red-diamond-studio.png") },
   ],
-  marqueeTop: ["Embrace Endless Possibilities", "Simplify Your Style Statement", "Embrace New Horizons"],
-  marqueeBottom: ["Redesign Your Path", "Craft Your Own Adventure", "Welcome Limitless Opportunities"],
+  marqueeTop: [
+    "Embrace Endless Possibilities",
+    "Simplify Your Style Statement",
+    "Embrace New Horizons",
+  ],
+  marqueeBottom: [
+    "Redesign Your Path",
+    "Craft Your Own Adventure",
+    "Welcome Limitless Opportunities",
+  ],
   trendingTitle: "Top Trending",
-  trendingDescription: "Browse wholesale-ready Sarjan prints loved by retail buyers.",
+  trendingDescription:
+    "Browse wholesale-ready Sarjan prints loved by retail buyers.",
   services: [
-    { icon: "icon-return", title: "90-Day Credit", body: "Manual cheque collection after approved credit cycle." },
-    { icon: "icon-shipping", title: "Dispatch Tracking", body: "Production, packing, dispatch, and delivery status." },
-    { icon: "icon-headset", title: "Sales Support", body: "Dedicated team support for repeat B2B buyers." },
-    { icon: "icon-sealCheck", title: "Admin Approval", body: "Every client and order goes through approval workflow." },
+    {
+      icon: "icon-return",
+      title: "90-Day Credit",
+      body: "Manual cheque collection after approved credit cycle.",
+    },
+    {
+      icon: "icon-shipping",
+      title: "Dispatch Tracking",
+      body: "Production, packing, dispatch, and delivery status.",
+    },
+    {
+      icon: "icon-headset",
+      title: "Sales Support",
+      body: "Dedicated team support for repeat B2B buyers.",
+    },
+    {
+      icon: "icon-sealCheck",
+      title: "Admin Approval",
+      body: "Every client and order goes through approval workflow.",
+    },
   ],
   testimonials: [
     {
       author: "Aarav Ethnic Studio",
-      quote: "Sarjan gives us consistent prints, clear MOQ planning, and reliable dispatch updates for seasonal buying.",
+      quote:
+        "Sarjan gives us consistent prints, clear MOQ planning, and reliable dispatch updates for seasonal buying.",
       product: "Ajrak Black Printed Shirt",
       price: "₹680",
       image: asset("shirt-ajrak-black-studio.png"),
@@ -323,7 +425,8 @@ export const home = {
     },
     {
       author: "Nayra Boutique",
-      quote: "The credit workflow and order history make repeat purchasing easier for our retail calendar.",
+      quote:
+        "The credit workflow and order history make repeat purchasing easier for our retail calendar.",
       product: "Blue Floral Kurta",
       price: "₹820",
       image: asset("kurta-blue-floral-studio.png"),
@@ -349,7 +452,8 @@ export const blogs = [
   {
     slug: "how-b2b-textile-buyers-plan-seasonal-assortments",
     title: "How B2B textile buyers plan seasonal assortments",
-    excerpt: "A simple planning guide for building reliable print stories across shirts and kurtas.",
+    excerpt:
+      "A simple planning guide for building reliable print stories across shirts and kurtas.",
     image: asset("banner-textiles-studio.png"),
     date: "2026-05-08",
     content:
@@ -358,7 +462,8 @@ export const blogs = [
   {
     slug: "why-credit-workflows-matter-in-textile-orders",
     title: "Why credit workflows matter in textile orders",
-    excerpt: "A clear order, dispatch, and outstanding-payment process reduces manual follow-up.",
+    excerpt:
+      "A clear order, dispatch, and outstanding-payment process reduces manual follow-up.",
     image: asset("shirt-ajrak-black-studio.png"),
     date: "2026-05-07",
     content:
@@ -369,26 +474,46 @@ export const blogs = [
 export const pages = {
   about: {
     title: "Textile collections built for long-term B2B partners",
-    body:
-      "Sarjan Textiles supplies printed shirts, kurtas, and fabric-led collections to wholesale and retail partners. The platform is designed to make ordering, approval, dispatch, and credit tracking simple for both clients and the admin team.",
+    body: "Sarjan Textiles supplies printed shirts, kurtas, and fabric-led collections to wholesale and retail partners. The platform is designed to make ordering, approval, dispatch, and credit tracking simple for both clients and the admin team.",
     image: asset("sarjan-logo-full.png"),
-    history: "Sarjan Textiles grew from a textile-first business focused on reliable printed collections for wholesale and retail partners.",
-    mission: "Make B2B textile ordering transparent, organized, and easy to operate from catalog to credit collection.",
-    vision: "Build an ERP-ready textile business platform with strong catalog, dispatch, inventory, and client workflows.",
-    infrastructure: "Admin-managed CMS, product catalog, inventory controls, dispatch tracking, credit ledger, and future integrations.",
+    history:
+      "Sarjan Textiles grew from a textile-first business focused on reliable printed collections for wholesale and retail partners.",
+    mission:
+      "Make B2B textile ordering transparent, organized, and easy to operate from catalog to credit collection.",
+    vision:
+      "Build an ERP-ready textile business platform with strong catalog, dispatch, inventory, and client workflows.",
+    infrastructure:
+      "Admin-managed CMS, product catalog, inventory controls, dispatch tracking, credit ledger, and future integrations.",
   },
   contact: {
     title: "Connect with Sarjan Textiles",
-    body:
-      "Share your buying requirement, category interest, and preferred quantity. The Sarjan team will review your request and guide you through client approval.",
+    body: "Share your buying requirement, category interest, and preferred quantity. The Sarjan team will review your request and guide you through client approval.",
     image: asset("banner-textiles-studio.png"),
   },
 };
 
 export const clients = [
-  { id: "CL-1001", name: "Aarav Ethnic Studio", city: "Ahmedabad", status: "Approved", outstanding: 58320 },
-  { id: "CL-1002", name: "Vastra Retail Co.", city: "Surat", status: "Pending", outstanding: 0 },
-  { id: "CL-1003", name: "Nayra Boutique", city: "Rajkot", status: "Approved", outstanding: 34100 },
+  {
+    id: "CL-1001",
+    name: "Aarav Ethnic Studio",
+    city: "Ahmedabad",
+    status: "Approved",
+    outstanding: 58320,
+  },
+  {
+    id: "CL-1002",
+    name: "Vastra Retail Co.",
+    city: "Surat",
+    status: "Pending",
+    outstanding: 0,
+  },
+  {
+    id: "CL-1003",
+    name: "Nayra Boutique",
+    city: "Rajkot",
+    status: "Approved",
+    outstanding: 34100,
+  },
 ];
 
 export const orders = [
@@ -414,17 +539,47 @@ export const orders = [
 
 export const cart = {
   items: [
-    { productSlug: "ajrak-black-shirt", quantity: 24, size: "L", color: "Black" },
-    { productSlug: "blue-floral-kurta", quantity: 18, size: "XL", color: "Blue" },
+    {
+      productSlug: "ajrak-black-shirt",
+      quantity: 24,
+      size: "L",
+      color: "Black",
+    },
+    {
+      productSlug: "blue-floral-kurta",
+      quantity: 18,
+      size: "XL",
+      color: "Blue",
+    },
   ],
 };
 
 export const dashboard = {
   summary: [
-    { label: "Total Orders", value: "128", icon: "icon-clipboard-text", note: "42 this month" },
-    { label: "Total Clients", value: "34", icon: "icon-users", note: "7 pending approval" },
-    { label: "Outstanding Payments", value: "₹9.24L", icon: "icon-hand-coins", note: "90-day cheque cycle" },
-    { label: "Ready Dispatch", value: "11", icon: "icon-send", note: "Packed / ready" },
+    {
+      label: "Total Orders",
+      value: "128",
+      icon: "icon-clipboard-text",
+      note: "42 this month",
+    },
+    {
+      label: "Total Clients",
+      value: "34",
+      icon: "icon-users",
+      note: "7 pending approval",
+    },
+    {
+      label: "Outstanding Payments",
+      value: "₹9.24L",
+      icon: "icon-hand-coins",
+      note: "90-day cheque cycle",
+    },
+    {
+      label: "Ready Dispatch",
+      value: "11",
+      icon: "icon-send",
+      note: "Packed / ready",
+    },
   ],
   groups: [
     {
@@ -532,7 +687,10 @@ export const dashboard = {
     },
   ],
   alerts: [
-    { label: "Ajrak Black Printed Shirt", detail: "Low stock: 42 pcs available, 72 reserved" },
+    {
+      label: "Ajrak Black Printed Shirt",
+      detail: "Low stock: 42 pcs available, 72 reserved",
+    },
     { label: "Teal Star Grid Kurta", detail: "Out of stock in XL / XXL" },
     { label: "Cheque collection", detail: "5 invoices due within next 7 days" },
   ],

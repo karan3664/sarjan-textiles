@@ -1,4 +1,12 @@
-import { mkdir, readdir, readFile, rm, stat, writeFile, copyFile } from "fs/promises";
+import {
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+  copyFile,
+} from "fs/promises";
 import { createReadStream } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -7,7 +15,13 @@ import { GoogleAuth } from "google-auth-library";
 
 export const runtime = "nodejs";
 
-export type StudioStatus = "queued" | "processing" | "processed" | "approved" | "rejected" | "failed";
+export type StudioStatus =
+  | "queued"
+  | "processing"
+  | "processed"
+  | "approved"
+  | "rejected"
+  | "failed";
 export type StudioShootStyle = "current-style";
 
 export type StudioMetadata = {
@@ -72,11 +86,58 @@ export type StudioSnapshot = {
   };
 };
 
-const productsRoot = path.join(process.cwd(), "products");
-const publicAiRoot = path.join(process.cwd(), "public", "uploads", "ai-products");
-const stateDir = path.join(productsRoot, ".ai-studio");
-const stateFile = path.join(stateDir, "state.json");
 const allowedExtensions = new Set(["jpg", "jpeg", "png", "webp"]);
+
+/** Writable root for studio files. Vercel serverless cwd is read-only except /tmp. */
+export function resolveAiStudioProductsRoot(): string {
+  const fromEnv = process.env.AI_STUDIO_DATA_DIR?.trim();
+  if (fromEnv) {
+    return path.isAbsolute(fromEnv)
+      ? fromEnv
+      : path.join(process.cwd(), fromEnv);
+  }
+  if (process.env.VERCEL) {
+    return path.join("/tmp", "sarjan-ai-studio", "products");
+  }
+  return path.join(process.cwd(), "products");
+}
+
+function resolveAiStudioStateDir(): string {
+  return path.join(resolveAiStudioProductsRoot(), ".ai-studio");
+}
+
+function resolveAiStudioStateFile(): string {
+  return path.join(resolveAiStudioStateDir(), "state.json");
+}
+
+/** Approved CMS copies; on Vercel lives under /tmp (served via /api/public/ai-products). */
+export function resolveAiStudioPublicRoot(): string {
+  const fromEnv = process.env.AI_STUDIO_PUBLIC_DIR?.trim();
+  if (fromEnv) {
+    return path.isAbsolute(fromEnv)
+      ? fromEnv
+      : path.join(process.cwd(), fromEnv);
+  }
+  if (process.env.VERCEL) {
+    return path.join(
+      "/tmp",
+      "sarjan-ai-studio",
+      "public-uploads",
+      "ai-products",
+    );
+  }
+  return path.join(process.cwd(), "public", "uploads", "ai-products");
+}
+
+function siteOriginForAiUrls(): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(
+    /\/+$/,
+    "",
+  );
+  if (configured) return configured;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "";
+}
 
 export const productStudioPrompt = `Use the provided product image as the ONLY reference.
 
@@ -168,7 +229,10 @@ function isAllowedImage(name: string) {
 }
 
 function relativeToProducts(absolutePath: string) {
-  return path.relative(productsRoot, absolutePath).split(path.sep).join("/");
+  return path
+    .relative(resolveAiStudioProductsRoot(), absolutePath)
+    .split(path.sep)
+    .join("/");
 }
 
 function fileUrl(relativePath: string) {
@@ -176,7 +240,17 @@ function fileUrl(relativePath: string) {
 }
 
 function publicAiUrl(relativePublicPath: string) {
-  return `/uploads/ai-products/${relativePublicPath.split(path.sep).map(encodeURIComponent).join("/")}`;
+  const normalized = relativePublicPath
+    .split(/[/\\]+/)
+    .filter(Boolean)
+    .join("/");
+  if (process.env.VERCEL) {
+    const origin = siteOriginForAiUrls();
+    const encoded = normalized.split("/").map(encodeURIComponent).join("/");
+    if (origin) return `${origin}/api/public/ai-products/${encoded}`;
+    return `/api/public/ai-products/${encoded}`;
+  }
+  return `/uploads/ai-products/${normalized.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 function promptForStyle(_style: StudioShootStyle, currentPrompt: string) {
@@ -184,10 +258,12 @@ function promptForStyle(_style: StudioShootStyle, currentPrompt: string) {
 }
 
 function absoluteFromProducts(relativePath: string) {
-  const normalized = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
-  const absolute = path.join(productsRoot, normalized);
+  const normalized = path
+    .normalize(relativePath)
+    .replace(/^(\.\.(\/|\\|$))+/, "");
+  const absolute = path.join(resolveAiStudioProductsRoot(), normalized);
 
-  if (!absolute.startsWith(productsRoot)) {
+  if (!absolute.startsWith(resolveAiStudioProductsRoot())) {
     throw new Error("Invalid product file path");
   }
 
@@ -205,18 +281,34 @@ function inferPattern(collection: string) {
   return slugify(collection).split("-").at(-1) || "textile";
 }
 
-export function metadataFromParts(category: string, collection: string, attributeType: string, attributeValue: string): StudioMetadata {
+export function metadataFromParts(
+  category: string,
+  collection: string,
+  attributeType: string,
+  attributeValue: string,
+): StudioMetadata {
   const pattern = inferPattern(collection);
   const normalizedAttributeType = safeSegment(attributeType, "color");
   const normalizedAttributeValue = safeSegment(attributeValue, "uncategorized");
-  const tags = [category, collection, normalizedAttributeType, normalizedAttributeValue, pattern, "sarjan textiles", "premium ecommerce"].filter(Boolean);
+  const tags = [
+    category,
+    collection,
+    normalizedAttributeType,
+    normalizedAttributeValue,
+    pattern,
+    "sarjan textiles",
+    "premium ecommerce",
+  ].filter(Boolean);
 
   return {
     category: safeSegment(category, "uncategorized"),
     collection: safeSegment(collection, "general collection"),
     attributeType: normalizedAttributeType,
     attributeValue: normalizedAttributeValue,
-    color: normalizedAttributeType === "color" ? normalizedAttributeValue : undefined,
+    color:
+      normalizedAttributeType === "color"
+        ? normalizedAttributeValue
+        : undefined,
     pattern,
     seoTags: Array.from(new Set(tags.map(slugify).filter(Boolean))),
     cmsMapping: {
@@ -239,14 +331,37 @@ function metadataFromRawRelativePath(relativePath: string) {
 }
 
 async function ensureProductFolders() {
-  await mkdir(path.join(productsRoot, "raw"), { recursive: true });
-  await mkdir(path.join(productsRoot, "processed", "web-ready"), { recursive: true });
-  await mkdir(path.join(productsRoot, "processed", "thumbnails"), { recursive: true });
-  await mkdir(path.join(productsRoot, "processed", "zoom-images"), { recursive: true });
-  await mkdir(path.join(productsRoot, "processed", "compressed"), { recursive: true });
-  await mkdir(path.join(productsRoot, "final"), { recursive: true });
-  await mkdir(publicAiRoot, { recursive: true });
-  await mkdir(stateDir, { recursive: true });
+  await mkdir(path.join(resolveAiStudioProductsRoot(), "raw"), {
+    recursive: true,
+  });
+  await mkdir(
+    path.join(resolveAiStudioProductsRoot(), "processed", "web-ready"),
+    {
+      recursive: true,
+    },
+  );
+  await mkdir(
+    path.join(resolveAiStudioProductsRoot(), "processed", "thumbnails"),
+    {
+      recursive: true,
+    },
+  );
+  await mkdir(
+    path.join(resolveAiStudioProductsRoot(), "processed", "zoom-images"),
+    {
+      recursive: true,
+    },
+  );
+  await mkdir(
+    path.join(resolveAiStudioProductsRoot(), "processed", "compressed"),
+    {
+      recursive: true,
+    },
+  );
+  await mkdir(path.join(resolveAiStudioProductsRoot(), "final"), {
+    recursive: true,
+  });
+  await mkdir(resolveAiStudioStateDir(), { recursive: true });
 }
 
 async function readRecords() {
@@ -258,16 +373,23 @@ async function readStudioState(): Promise<StudioState> {
   await ensureProductFolders();
 
   try {
-    const data = JSON.parse(await readFile(stateFile, "utf8")) as Partial<StudioState>;
+    const data = JSON.parse(
+      await readFile(resolveAiStudioStateFile(), "utf8"),
+    ) as Partial<StudioState>;
     const promptTemplate = data.promptTemplate?.trim() || productStudioPrompt;
     return {
       promptTemplate,
       records: (data.records ?? []).map((record) => ({
         ...record,
         originalName: cleanOriginalName(record.originalName),
-        prompt: record.status === "approved" ? record.prompt?.trim() || promptTemplate : promptTemplate,
+        prompt:
+          record.status === "approved"
+            ? record.prompt?.trim() || promptTemplate
+            : promptTemplate,
         shootStyle: "current-style",
-        qaNote: record.qaNote?.toLowerCase().includes("model") ? "Strict AI flat-lay catalog prompt queued. Run process." : record.qaNote,
+        qaNote: record.qaNote?.toLowerCase().includes("model")
+          ? "Strict AI flat-lay catalog prompt queued. Run process."
+          : record.qaNote,
       })),
     };
   } catch {
@@ -285,7 +407,7 @@ async function writeRecords(records: StudioImageRecord[]) {
 
 async function writeStudioState(state: StudioState) {
   await ensureProductFolders();
-  await writeFile(stateFile, JSON.stringify(state, null, 2));
+  await writeFile(resolveAiStudioStateFile(), JSON.stringify(state, null, 2));
 }
 
 function withUrls(record: StudioImageRecord): StudioImageRecord {
@@ -293,17 +415,20 @@ function withUrls(record: StudioImageRecord): StudioImageRecord {
     ...record,
     rawUrl: fileUrl(record.rawPath),
     finalUrl: record.finalPath ? fileUrl(record.finalPath) : undefined,
-    finalPublicUrl: record.finalPublicPath ? publicAiUrl(record.finalPublicPath) : record.finalPublicUrl,
+    finalPublicUrl: record.finalPublicPath
+      ? publicAiUrl(record.finalPublicPath)
+      : record.finalPublicUrl,
   };
 }
 
 export async function getStudioSnapshot(): Promise<StudioSnapshot> {
   const state = await readStudioState();
   const records = state.records.map(withUrls);
-  const byStatus = (status: StudioStatus) => records.filter((record) => record.status === status).length;
+  const byStatus = (status: StudioStatus) =>
+    records.filter((record) => record.status === status).length;
 
   return {
-    root: productsRoot,
+    root: resolveAiStudioProductsRoot(),
     promptTemplate: state.promptTemplate,
     records: records.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     summary: {
@@ -313,7 +438,10 @@ export async function getStudioSnapshot(): Promise<StudioSnapshot> {
       approved: byStatus("approved"),
       rejected: byStatus("rejected"),
       failed: byStatus("failed"),
-      pendingQa: records.filter((record) => record.status === "processed" || record.status === "rejected").length,
+      pendingQa: records.filter(
+        (record) =>
+          record.status === "processed" || record.status === "rejected",
+      ).length,
     },
   };
 }
@@ -324,29 +452,60 @@ export async function updateStudioPrompt(promptTemplate: string) {
   await writeStudioState({
     ...state,
     promptTemplate: nextPrompt,
-    records: state.records.map((record) => (record.status === "approved" ? record : { ...record, prompt: nextPrompt, updatedAt: now() })),
+    records: state.records.map((record) =>
+      record.status === "approved"
+        ? record
+        : { ...record, prompt: nextPrompt, updatedAt: now() },
+    ),
   });
   return nextPrompt;
 }
 
-export async function saveRawUploads(files: File[], input: { category: string; collection: string; attributeType: string; attributeValue: string; shootStyle?: StudioShootStyle }) {
+export async function saveRawUploads(
+  files: File[],
+  input: {
+    category: string;
+    collection: string;
+    attributeType: string;
+    attributeValue: string;
+    shootStyle?: StudioShootStyle;
+  },
+) {
   await ensureProductFolders();
 
   const state = await readStudioState();
   const records = state.records;
   const shootStyle = input.shootStyle ?? "current-style";
-  const metadata = metadataFromParts(input.category, input.collection, input.attributeType, input.attributeValue);
-  const rawDir = path.join(productsRoot, "raw", metadata.category, metadata.collection, metadata.attributeType, metadata.attributeValue);
+  const metadata = metadataFromParts(
+    input.category,
+    input.collection,
+    input.attributeType,
+    input.attributeValue,
+  );
+  const rawDir = path.join(
+    resolveAiStudioProductsRoot(),
+    "raw",
+    metadata.category,
+    metadata.collection,
+    metadata.attributeType,
+    metadata.attributeValue,
+  );
   const rawRelativeDir = relativeToProducts(rawDir);
   await mkdir(rawDir, { recursive: true });
 
   const added: StudioImageRecord[] = [];
   const skipped: string[] = [];
-  const existingNames = new Set(records.map((record) => `${path.dirname(record.rawPath)}::${normalizedOriginalName(record.originalName)}::${record.shootStyle}`));
+  const existingNames = new Set(
+    records.map(
+      (record) =>
+        `${path.dirname(record.rawPath)}::${normalizedOriginalName(record.originalName)}::${record.shootStyle}`,
+    ),
+  );
 
   for (const file of files) {
     const originalName = cleanOriginalName(file.name);
-    if (!isAllowedImage(originalName) && !file.type.startsWith("image/")) continue;
+    if (!isAllowedImage(originalName) && !file.type.startsWith("image/"))
+      continue;
     const duplicateKey = `${rawRelativeDir}::${normalizedOriginalName(originalName)}::${shootStyle}`;
     const duplicate = existingNames.has(duplicateKey);
 
@@ -402,8 +561,15 @@ export async function scanRawFolder() {
   const state = await readStudioState();
   const records = state.records;
   const existing = new Set(records.map((record) => record.rawPath));
-  const existingByNameAndFolder = new Set(records.map((record) => `${path.dirname(record.rawPath)}::${normalizedOriginalName(record.originalName)}`));
-  const images = await walkImages(path.join(productsRoot, "raw"));
+  const existingByNameAndFolder = new Set(
+    records.map(
+      (record) =>
+        `${path.dirname(record.rawPath)}::${normalizedOriginalName(record.originalName)}`,
+    ),
+  );
+  const images = await walkImages(
+    path.join(resolveAiStudioProductsRoot(), "raw"),
+  );
   const added: StudioImageRecord[] = [];
   const skipped: string[] = [];
 
@@ -436,7 +602,11 @@ export async function scanRawFolder() {
   return { added: added.map(withUrls), skipped };
 }
 
-function processedPath(kind: keyof StudioOutputs, record: StudioImageRecord, extension: "webp" | "jpg") {
+function processedPath(
+  kind: keyof StudioOutputs,
+  record: StudioImageRecord,
+  extension: "webp" | "jpg",
+) {
   const folderByKind: Record<keyof StudioOutputs, string> = {
     webReady: "web-ready",
     thumbnail: "thumbnails",
@@ -447,20 +617,42 @@ function processedPath(kind: keyof StudioOutputs, record: StudioImageRecord, ext
   const base = path.parse(record.originalName).name || record.id;
   const filename = `${slugify(base)}-${record.id.slice(0, 8)}.${extension}`;
 
-  return path.join(productsRoot, "processed", folderByKind[kind], record.metadata.category, record.metadata.collection, record.metadata.attributeType, record.metadata.attributeValue, filename);
+  return path.join(
+    resolveAiStudioProductsRoot(),
+    "processed",
+    folderByKind[kind],
+    record.metadata.category,
+    record.metadata.collection,
+    record.metadata.attributeType,
+    record.metadata.attributeValue,
+    filename,
+  );
 }
 
-async function writeProcessedOutputs(source: sharp.Sharp, record: StudioImageRecord) {
+async function writeProcessedOutputs(
+  source: sharp.Sharp,
+  record: StudioImageRecord,
+) {
   const webReady = processedPath("webReady", record, "webp");
   const thumbnail = processedPath("thumbnail", record, "webp");
   const zoom = processedPath("zoom", record, "webp");
   const compressed = processedPath("compressed", record, "jpg");
-  await Promise.all([webReady, thumbnail, zoom, compressed].map((target) => mkdir(path.dirname(target), { recursive: true })));
+  await Promise.all(
+    [webReady, thumbnail, zoom, compressed].map((target) =>
+      mkdir(path.dirname(target), { recursive: true }),
+    ),
+  );
 
   await Promise.all([
     source
       .clone()
-      .resize({ width: 2000, height: 2500, fit: "inside", withoutEnlargement: false, background: "#f5f5f5" })
+      .resize({
+        width: 2000,
+        height: 2500,
+        fit: "inside",
+        withoutEnlargement: false,
+        background: "#f5f5f5",
+      })
       .sharpen({ sigma: 0.6, m1: 0.6, m2: 1.4 })
       .webp({ quality: 88, effort: 5 })
       .toFile(webReady),
@@ -471,13 +663,24 @@ async function writeProcessedOutputs(source: sharp.Sharp, record: StudioImageRec
       .toFile(thumbnail),
     source
       .clone()
-      .resize({ width: 4096, height: 4096, fit: "inside", withoutEnlargement: false, background: "#f5f5f5" })
+      .resize({
+        width: 4096,
+        height: 4096,
+        fit: "inside",
+        withoutEnlargement: false,
+        background: "#f5f5f5",
+      })
       .sharpen({ sigma: 0.5, m1: 0.5, m2: 1.2 })
       .webp({ quality: 92, effort: 5 })
       .toFile(zoom),
     source
       .clone()
-      .resize({ width: 1200, height: 1500, fit: "inside", background: "#f5f5f5" })
+      .resize({
+        width: 1200,
+        height: 1500,
+        fit: "inside",
+        background: "#f5f5f5",
+      })
       .jpeg({ quality: 72, mozjpeg: true })
       .toFile(compressed),
   ]);
@@ -494,19 +697,33 @@ async function generateOpenAiCatalogShoot(inputPath: string, prompt: string) {
   const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAPI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY missing in .env.local. Add key, restart dev server, then run process.");
+    throw new Error(
+      "OPENAI_API_KEY missing in .env.local. Add key, restart dev server, then run process.",
+    );
   }
 
   const inputBuffer = await sharp(inputPath)
     .rotate()
-    .resize({ width: 1536, height: 1536, fit: "inside", withoutEnlargement: true })
+    .resize({
+      width: 1536,
+      height: 1536,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
     .png()
     .toBuffer();
 
   const formData = new FormData();
-  formData.append("model", process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1");
+  formData.append(
+    "model",
+    process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1",
+  );
   formData.append("prompt", prompt);
-  formData.append("image", new Blob([new Uint8Array(inputBuffer)], { type: "image/png" }), "shirt-reference.png");
+  formData.append(
+    "image",
+    new Blob([new Uint8Array(inputBuffer)], { type: "image/png" }),
+    "shirt-reference.png",
+  );
   formData.append("size", process.env.OPENAI_IMAGE_SIZE || "1024x1536");
   formData.append("quality", process.env.OPENAI_IMAGE_QUALITY || "medium");
   formData.append("output_format", "png");
@@ -521,23 +738,36 @@ async function generateOpenAiCatalogShoot(inputPath: string, prompt: string) {
   });
 
   const text = await response.text();
-  let data: { data?: Array<{ b64_json?: string; url?: string }>; error?: { message?: string } };
+  let data: {
+    data?: Array<{ b64_json?: string; url?: string }>;
+    error?: { message?: string };
+  };
 
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(`OpenAI image edit failed: ${text.slice(0, 240) || response.statusText}`);
+    throw new Error(
+      `OpenAI image edit failed: ${text.slice(0, 240) || response.statusText}`,
+    );
   }
 
   if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI image edit failed with status ${response.status}`);
+    throw new Error(
+      data.error?.message ||
+        `OpenAI image edit failed with status ${response.status}`,
+    );
   }
 
   const image = data.data?.[0];
   if (image?.b64_json) return Buffer.from(image.b64_json, "base64");
   if (image?.url) {
-    const imageResponse = await fetch(image.url, { signal: AbortSignal.timeout(120_000) });
-    if (!imageResponse.ok) throw new Error(`OpenAI image download failed with status ${imageResponse.status}`);
+    const imageResponse = await fetch(image.url, {
+      signal: AbortSignal.timeout(120_000),
+    });
+    if (!imageResponse.ok)
+      throw new Error(
+        `OpenAI image download failed with status ${imageResponse.status}`,
+      );
     return Buffer.from(await imageResponse.arrayBuffer());
   }
 
@@ -562,23 +792,37 @@ function vertexNumberEnv(name: string, fallback: number) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-async function generateVertexImagenCatalogShoot(inputPath: string, prompt: string) {
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+async function generateVertexImagenCatalogShoot(
+  inputPath: string,
+  prompt: string,
+) {
+  const projectId =
+    process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
   const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
   const model = process.env.VERTEX_IMAGEN_MODEL || "imagen-3.0-capability-001";
 
   if (!projectId) {
-    throw new Error("GOOGLE_CLOUD_PROJECT_ID missing in .env.local. Add Google Cloud project id, restart dev server, then run process.");
+    throw new Error(
+      "GOOGLE_CLOUD_PROJECT_ID missing in .env.local. Add Google Cloud project id, restart dev server, then run process.",
+    );
   }
 
   const inputBuffer = await sharp(inputPath)
     .rotate()
-    .resize({ width: 2000, height: 2500, fit: "inside", withoutEnlargement: true, background: "#f5f5f5" })
+    .resize({
+      width: 2000,
+      height: 2500,
+      fit: "inside",
+      withoutEnlargement: true,
+      background: "#f5f5f5",
+    })
     .jpeg({ quality: 92, mozjpeg: true })
     .toBuffer();
 
   if (inputBuffer.byteLength > 10 * 1024 * 1024) {
-    throw new Error("Input image too large for Vertex Imagen background edit. Use image under 10 MB.");
+    throw new Error(
+      "Input image too large for Vertex Imagen background edit. Use image under 10 MB.",
+    );
   }
 
   const auth = new GoogleAuth({
@@ -589,7 +833,9 @@ async function generateVertexImagenCatalogShoot(inputPath: string, prompt: strin
   const accessToken = typeof token === "string" ? token : token.token;
 
   if (!accessToken) {
-    throw new Error("Google auth token unavailable. Check GOOGLE_APPLICATION_CREDENTIALS service-account JSON path.");
+    throw new Error(
+      "Google auth token unavailable. Check GOOGLE_APPLICATION_CREDENTIALS service-account JSON path.",
+    );
   }
 
   const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:predict`;
@@ -641,22 +887,38 @@ async function generateVertexImagenCatalogShoot(inputPath: string, prompt: strin
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(`Vertex Imagen edit failed: ${text.slice(0, 240) || response.statusText}`);
+    throw new Error(
+      `Vertex Imagen edit failed: ${text.slice(0, 240) || response.statusText}`,
+    );
   }
 
   if (!response.ok) {
-    throw new Error(data.error?.message || `Vertex Imagen edit failed with status ${response.status}`);
+    throw new Error(
+      data.error?.message ||
+        `Vertex Imagen edit failed with status ${response.status}`,
+    );
   }
 
-  const image = data.predictions?.find((prediction) => prediction.bytesBase64Encoded);
-  if (image?.bytesBase64Encoded) return Buffer.from(image.bytesBase64Encoded, "base64");
+  const image = data.predictions?.find(
+    (prediction) => prediction.bytesBase64Encoded,
+  );
+  if (image?.bytesBase64Encoded)
+    return Buffer.from(image.bytesBase64Encoded, "base64");
 
-  const filtered = data.predictions?.find((prediction) => prediction.raiFilteredReason)?.raiFilteredReason;
-  throw new Error(filtered ? `Vertex Imagen returned no image: ${filtered}` : "Vertex Imagen returned no image data");
+  const filtered = data.predictions?.find(
+    (prediction) => prediction.raiFilteredReason,
+  )?.raiFilteredReason;
+  throw new Error(
+    filtered
+      ? `Vertex Imagen returned no image: ${filtered}`
+      : "Vertex Imagen returned no image data",
+  );
 }
 
 async function generateAiCatalogShoot(inputPath: string, prompt: string) {
-  const provider = (process.env.AI_IMAGE_PROVIDER || "vertex").trim().toLowerCase();
+  const provider = (process.env.AI_IMAGE_PROVIDER || "vertex")
+    .trim()
+    .toLowerCase();
 
   if (provider === "vertex" || provider === "google" || provider === "imagen") {
     return generateVertexImagenCatalogShoot(inputPath, prompt);
@@ -677,12 +939,18 @@ function pixelOffset(index: number) {
   return index * 4;
 }
 
-function colorDistance(buffer: Buffer, index: number, color: { r: number; g: number; b: number }) {
+function colorDistance(
+  buffer: Buffer,
+  index: number,
+  color: { r: number; g: number; b: number },
+) {
   const offset = pixelOffset(index);
   const r = buffer[offset] ?? 0;
   const g = buffer[offset + 1] ?? 0;
   const b = buffer[offset + 2] ?? 0;
-  return Math.sqrt((r - color.r) ** 2 + (g - color.g) ** 2 + (b - color.b) ** 2);
+  return Math.sqrt(
+    (r - color.r) ** 2 + (g - color.g) ** 2 + (b - color.b) ** 2,
+  );
 }
 
 function averageEdgeColor(buffer: Buffer, width: number, height: number) {
@@ -728,7 +996,11 @@ function averageEdgeColor(buffer: Buffer, width: number, height: number) {
   };
 }
 
-function isFloodBackground(buffer: Buffer, index: number, background: { r: number; g: number; b: number }) {
+function isFloodBackground(
+  buffer: Buffer,
+  index: number,
+  background: { r: number; g: number; b: number },
+) {
   const offset = pixelOffset(index);
   const r = buffer[offset] ?? 0;
   const g = buffer[offset + 1] ?? 0;
@@ -736,12 +1008,19 @@ function isFloodBackground(buffer: Buffer, index: number, background: { r: numbe
   const alpha = buffer[offset + 3] ?? 255;
   const maxChannel = Math.max(r, g, b);
   const minChannel = Math.min(r, g, b);
-  const lightNeutral = r > 218 && g > 218 && b > 218 && maxChannel - minChannel < 34;
+  const lightNeutral =
+    r > 218 && g > 218 && b > 218 && maxChannel - minChannel < 34;
 
-  return alpha < 32 || colorDistance(buffer, index, background) < 46 || lightNeutral;
+  return (
+    alpha < 32 || colorDistance(buffer, index, background) < 46 || lightNeutral
+  );
 }
 
-function transparentEdgeBackground(buffer: Buffer, width: number, height: number) {
+function transparentEdgeBackground(
+  buffer: Buffer,
+  width: number,
+  height: number,
+) {
   const totalPixels = width * height;
   const visited = new Uint8Array(totalPixels);
   const stack = new Int32Array(totalPixels);
@@ -821,7 +1100,12 @@ async function makeShadow(productLayer: Buffer, opacity: number, blur: number) {
   const metadata = await sharp(productLayer).metadata();
   const width = metadata.width ?? 1;
   const height = metadata.height ?? 1;
-  const alpha = await sharp(productLayer).extractChannel("alpha").blur(blur).linear(opacity, 0).raw().toBuffer();
+  const alpha = await sharp(productLayer)
+    .extractChannel("alpha")
+    .blur(blur)
+    .linear(opacity, 0)
+    .raw()
+    .toBuffer();
 
   return sharp({
     create: {
@@ -837,16 +1121,32 @@ async function makeShadow(productLayer: Buffer, opacity: number, blur: number) {
 }
 
 async function generateLocalCatalogShoot(inputPath: string) {
-  const raw = await sharp(inputPath).rotate().ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const raw = await sharp(inputPath)
+    .rotate()
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
   const width = raw.info.width;
   const height = raw.info.height;
-  const { buffer, trim } = transparentEdgeBackground(Buffer.from(raw.data), width, height);
-  const product = await sharp(buffer, { raw: { width, height, channels: 4 } }).extract(trim).png().toBuffer();
+  const { buffer, trim } = transparentEdgeBackground(
+    Buffer.from(raw.data),
+    width,
+    height,
+  );
+  const product = await sharp(buffer, { raw: { width, height, channels: 4 } })
+    .extract(trim)
+    .png()
+    .toBuffer();
 
   const canvasWidth = 2000;
   const canvasHeight = 2500;
   const productLayer = await sharp(product)
-    .resize({ width: canvasWidth - 430, height: canvasHeight - 430, fit: "inside", withoutEnlargement: false })
+    .resize({
+      width: canvasWidth - 430,
+      height: canvasHeight - 430,
+      fit: "inside",
+      withoutEnlargement: false,
+    })
     .png()
     .toBuffer();
   const productMeta = await sharp(productLayer).metadata();
@@ -874,7 +1174,9 @@ async function generateLocalCatalogShoot(inputPath: string) {
     .toBuffer();
 }
 
-async function processRecord(record: StudioImageRecord): Promise<StudioImageRecord> {
+async function processRecord(
+  record: StudioImageRecord,
+): Promise<StudioImageRecord> {
   const inputPath = absoluteFromProducts(record.rawPath);
   const currentTime = now();
 
@@ -883,7 +1185,10 @@ async function processRecord(record: StudioImageRecord): Promise<StudioImageReco
 
     const prompt = record.prompt?.trim() || productStudioPrompt;
     const generated = await generateAiCatalogShoot(inputPath, prompt);
-    const source = sharp(generated).rotate().flatten({ background: "#f5f5f5" }).removeAlpha();
+    const source = sharp(generated)
+      .rotate()
+      .flatten({ background: "#f5f5f5" })
+      .removeAlpha();
 
     const outputs = await writeProcessedOutputs(source, record);
 
@@ -908,12 +1213,25 @@ async function processRecord(record: StudioImageRecord): Promise<StudioImageReco
 export async function processStudioImages(ids?: string[], limit = 5) {
   const idSet = ids?.length ? new Set(ids) : null;
   const records = await readRecords();
-  const allTargets = records.filter((record) => (idSet ? idSet.has(record.id) && record.status !== "approved" : record.status === "queued" || record.status === "failed" || record.status === "rejected"));
+  const allTargets = records.filter((record) =>
+    idSet
+      ? idSet.has(record.id) && record.status !== "approved"
+      : record.status === "queued" ||
+        record.status === "failed" ||
+        record.status === "rejected",
+  );
   const targets = allTargets.slice(0, Math.max(1, limit));
   const updated = new Map<string, StudioImageRecord>();
 
   for (const record of targets) {
-    updated.set(record.id, await processRecord({ ...record, status: "processing", updatedAt: now() }));
+    updated.set(
+      record.id,
+      await processRecord({
+        ...record,
+        status: "processing",
+        updatedAt: now(),
+      }),
+    );
   }
 
   const next = records.map((record) => updated.get(record.id) ?? record);
@@ -948,14 +1266,25 @@ async function removeRecordFiles(record: StudioImageRecord) {
     record.finalPath,
   ].filter(Boolean);
 
-  await Promise.all(paths.map((item) => rm(absoluteFromProducts(item!), { force: true }).catch(() => null)));
+  await Promise.all(
+    paths.map((item) =>
+      rm(absoluteFromProducts(item!), { force: true }).catch(() => null),
+    ),
+  );
 
   if (record.finalPublicPath) {
-    await rm(path.join(publicAiRoot, record.finalPublicPath), { force: true }).catch(() => null);
+    await rm(path.join(resolveAiStudioPublicRoot(), record.finalPublicPath), {
+      force: true,
+    }).catch(() => null);
   }
 }
 
-export async function updateStudioRecord(input: { id: string; action: "approve" | "reject" | "reprocess" | "delete" | "catalog_shoot"; sku?: string; note?: string }) {
+export async function updateStudioRecord(input: {
+  id: string;
+  action: "approve" | "reject" | "reprocess" | "delete" | "catalog_shoot";
+  sku?: string;
+  note?: string;
+}) {
   const records = await readRecords();
   const record = records.find((item) => item.id === input.id);
   if (!record) throw new Error("Studio image not found");
@@ -964,7 +1293,12 @@ export async function updateStudioRecord(input: { id: string; action: "approve" 
     await removeRecordFiles(record);
     const nextRecords = records.filter((item) => item.id !== record.id);
     await writeRecords(nextRecords);
-    return withUrls({ ...record, status: "rejected", qaNote: "Deleted", updatedAt: now() });
+    return withUrls({
+      ...record,
+      status: "rejected",
+      qaNote: "Deleted",
+      updatedAt: now(),
+    });
   }
 
   let nextRecord = record;
@@ -988,7 +1322,11 @@ export async function updateStudioRecord(input: { id: string; action: "approve" 
   }
 
   if (input.action === "reprocess") {
-    nextRecord = await processRecord({ ...record, status: "processing", updatedAt: now() });
+    nextRecord = await processRecord({
+      ...record,
+      status: "processing",
+      updatedAt: now(),
+    });
   }
 
   if (input.action === "reject") {
@@ -1001,22 +1339,53 @@ export async function updateStudioRecord(input: { id: string; action: "approve" 
   }
 
   if (input.action === "approve") {
-    if (!record.outputs?.webReady) throw new Error("Process image before approval");
+    if (!record.outputs?.webReady)
+      throw new Error("Process image before approval");
 
     const filename = finalFilename(record, input.sku || record.id.slice(0, 8));
-    const finalPath = path.join(productsRoot, "final", record.metadata.category, record.metadata.collection, record.metadata.attributeType, record.metadata.attributeValue, filename);
-    const publicRelativePath = path.join(record.metadata.category, record.metadata.collection, record.metadata.attributeType, record.metadata.attributeValue, filename);
-    const publicPath = path.join(publicAiRoot, publicRelativePath);
+    const finalPath = path.join(
+      resolveAiStudioProductsRoot(),
+      "final",
+      record.metadata.category,
+      record.metadata.collection,
+      record.metadata.attributeType,
+      record.metadata.attributeValue,
+      filename,
+    );
+    const publicRelativePath = path.join(
+      record.metadata.category,
+      record.metadata.collection,
+      record.metadata.attributeType,
+      record.metadata.attributeValue,
+      filename,
+    );
+    const publicPath = path.join(
+      resolveAiStudioPublicRoot(),
+      publicRelativePath,
+    );
     await mkdir(path.dirname(finalPath), { recursive: true });
     await mkdir(path.dirname(publicPath), { recursive: true });
-    if (record.finalPath) await rm(absoluteFromProducts(record.finalPath), { force: true }).catch(() => null);
-    if (record.finalPublicPath) await rm(path.join(publicAiRoot, record.finalPublicPath), { force: true }).catch(() => null);
+    if (record.finalPath)
+      await rm(absoluteFromProducts(record.finalPath), { force: true }).catch(
+        () => null,
+      );
+    if (record.finalPublicPath)
+      await rm(path.join(resolveAiStudioPublicRoot(), record.finalPublicPath), {
+        force: true,
+      }).catch(() => null);
 
     await sharp(absoluteFromProducts(record.outputs.webReady))
-      .resize({ width: 2000, height: 2500, fit: "inside", background: "#ffffff" })
+      .resize({
+        width: 2000,
+        height: 2500,
+        fit: "inside",
+        background: "#ffffff",
+      })
       .jpeg({ quality: 86, mozjpeg: true })
       .toFile(finalPath)
-      .catch(async () => copyFile(absoluteFromProducts(record.outputs!.webReady), finalPath));
+      .catch(async () =>
+        copyFile(absoluteFromProducts(record.outputs!.webReady), finalPath),
+      );
 
     await copyFile(finalPath, publicPath);
 
@@ -1032,7 +1401,9 @@ export async function updateStudioRecord(input: { id: string; action: "approve" 
     };
   }
 
-  const nextRecords = records.map((item) => (item.id === record.id ? nextRecord : item));
+  const nextRecords = records.map((item) =>
+    item.id === record.id ? nextRecord : item,
+  );
   await writeRecords(nextRecords);
 
   return withUrls(nextRecord);
@@ -1042,14 +1413,18 @@ export async function replaceStudioRawImage(id: string, file: File) {
   const records = await readRecords();
   const record = records.find((item) => item.id === id);
   if (!record) throw new Error("Studio image not found");
-  if (!isAllowedImage(file.name) && !file.type.startsWith("image/")) throw new Error("Only JPG, PNG, or WEBP allowed");
+  if (!isAllowedImage(file.name) && !file.type.startsWith("image/"))
+    throw new Error("Only JPG, PNG, or WEBP allowed");
 
   const rawDir = path.dirname(absoluteFromProducts(record.rawPath));
   await removeRecordFiles(record).catch(() => null);
   await mkdir(rawDir, { recursive: true });
 
   const extension = extensionFromFileName(file.name);
-  const rawPath = path.join(rawDir, `${Date.now()}-${randomUUID()}.${extension}`);
+  const rawPath = path.join(
+    rawDir,
+    `${Date.now()}-${randomUUID()}.${extension}`,
+  );
   await writeFile(rawPath, Buffer.from(await file.arrayBuffer()));
 
   const nextRecord: StudioImageRecord = {
@@ -1068,7 +1443,9 @@ export async function replaceStudioRawImage(id: string, file: File) {
     updatedAt: now(),
   };
 
-  const nextRecords = records.map((item) => (item.id === id ? nextRecord : item));
+  const nextRecords = records.map((item) =>
+    item.id === id ? nextRecord : item,
+  );
   await writeRecords(nextRecords);
   return withUrls(nextRecord);
 }
