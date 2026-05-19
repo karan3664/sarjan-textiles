@@ -858,18 +858,23 @@ export async function getAuditLogs(): Promise<AuditLog[]> {
       .order("created_at", { ascending: false })
       .limit(1000);
     if (!error && data?.length) {
-      return data.map((row: any) => ({
-        id: row.id,
-        actor: row.actor_email ?? "system",
-        role: row.actor_role ?? undefined,
-        action: row.action,
-        entity: row.entity_type,
-        entityId: row.entity_id ?? undefined,
-        before: row.metadata?.before,
-        after: row.metadata?.after,
-        note: row.metadata?.note,
-        createdAt: row.created_at,
-      }));
+      return data.map((row: Record<string, unknown>) => {
+        const metadata = row.metadata as
+          | { before?: unknown; after?: unknown; note?: string }
+          | undefined;
+        return {
+          id: String(row.id ?? ""),
+          actor: String(row.actor_email ?? "system"),
+          role: row.actor_role != null ? String(row.actor_role) : undefined,
+          action: String(row.action ?? ""),
+          entity: String(row.entity_type ?? ""),
+          entityId: row.entity_id != null ? String(row.entity_id) : undefined,
+          before: metadata?.before,
+          after: metadata?.after,
+          note: metadata?.note,
+          createdAt: String(row.created_at ?? ""),
+        };
+      });
     }
   }
   const cms = await getCmsSnapshot();

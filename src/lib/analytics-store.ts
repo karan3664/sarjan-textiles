@@ -30,10 +30,16 @@ export async function getWebsiteAnalytics() {
 
   try {
     const [{ count: pageViews }, { data }] = await Promise.all([
-      supabase.from("analytics_events").select("id", { count: "exact", head: true }),
+      supabase
+        .from("analytics_events")
+        .select("id", { count: "exact", head: true }),
       supabase.from("analytics_events").select("visitor_id").limit(10000),
     ]);
-    const uniqueVisitors = new Set((data ?? []).map((row: any) => row.visitor_id).filter(Boolean));
+    const uniqueVisitors = new Set(
+      (data ?? [])
+        .map((row: { visitor_id?: string | null }) => row.visitor_id)
+        .filter((id): id is string => Boolean(id)),
+    );
     return {
       totalVisitors: uniqueVisitors.size,
       pageViews: pageViews ?? 0,

@@ -39,7 +39,7 @@ export function ModaveProductCard({
         </a>
         <div className="list-product-btn">
           <a
-            href="#"
+            href="/wishlist"
             className="box-icon wishlist btn-icon-action"
             data-wishlist-toggle
             data-product-slug={product.slug}

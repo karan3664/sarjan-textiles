@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { isProductSoldOut } from "@/lib/product-availability";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
-import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import {
   addCompare,
   readCompare,
@@ -12,10 +11,6 @@ import {
   writeCompare,
 } from "@/lib/compare-client";
 import { PriceGate } from "./PriceGate";
-
-function sizeRun(product: Product) {
-  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-}
 
 function RepeatIcon() {
   return (
@@ -62,7 +57,6 @@ function RepeatIcon() {
 export function CompareDrawer() {
   const [slugs, setSlugs] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const slugKey = useMemo(() => slugs.join(","), [slugs]);
 
   useEffect(() => {
     const sync = () => setSlugs(readCompare());
@@ -108,7 +102,7 @@ export function CompareDrawer() {
         );
       })
       .catch(() => setProducts([]));
-  }, [slugKey]);
+  }, [slugs]);
 
   const closeOffcanvas = () => {
     const node = document.getElementById("compare");

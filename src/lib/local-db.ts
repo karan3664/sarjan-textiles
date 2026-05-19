@@ -128,49 +128,65 @@ async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
   }
 }
 
-function mapClient(row: any): LocalClient {
+function mapClient(row: Record<string, unknown>): LocalClient {
   return {
-    id: row.id,
-    email: row.email,
-    passwordHash: row.password_hash,
-    companyName: row.company_name,
-    gst: row.gst ?? undefined,
-    city: row.city ?? undefined,
-    phone: row.phone ?? undefined,
-    address: row.address ?? undefined,
-    status: row.status,
-    createdAt: row.created_at,
+    id: String(row.id ?? ""),
+    email: String(row.email ?? ""),
+    passwordHash: String(row.password_hash ?? ""),
+    companyName: String(row.company_name ?? ""),
+    gst: row.gst != null ? String(row.gst) : undefined,
+    city: row.city != null ? String(row.city) : undefined,
+    phone: row.phone != null ? String(row.phone) : undefined,
+    address:
+      row.address && typeof row.address === "object"
+        ? (row.address as LocalClient["address"])
+        : undefined,
+    status: (row.status as LocalClient["status"]) ?? "pending",
+    createdAt: String(row.created_at ?? ""),
   };
 }
 
-function mapOrder(row: any): LocalOrder {
+function mapOrder(row: Record<string, unknown>): LocalOrder {
   return {
-    id: row.id,
-    clientId: row.client_id,
-    clientEmail: row.client_email,
-    status: row.status,
-    approvalRemark: row.approval_remark ?? undefined,
-    paymentMode: row.payment_mode,
-    paymentStatus: row.payment_status,
-    creditDays: row.credit_days,
+    id: String(row.id ?? ""),
+    clientId: String(row.client_id ?? ""),
+    clientEmail: String(row.client_email ?? ""),
+    status: (row.status as LocalOrder["status"]) ?? "Pending approval",
+    approvalRemark:
+      row.approval_remark != null ? String(row.approval_remark) : undefined,
+    paymentMode: "cheque",
+    paymentStatus: row.payment_status as LocalOrder["paymentStatus"],
+    creditDays: Number(row.credit_days ?? 0),
     paidAmount: Number(row.paid_amount ?? 0),
-    chequeNumber: row.cheque_number ?? undefined,
-    chequeDate: row.cheque_date ?? undefined,
-    bankDetails: row.bank_details ?? undefined,
-    depositStatus: row.deposit_status,
-    paymentReceivedAt: row.payment_received_at ?? undefined,
+    chequeNumber:
+      row.cheque_number != null ? String(row.cheque_number) : undefined,
+    chequeDate: row.cheque_date != null ? String(row.cheque_date) : undefined,
+    bankDetails:
+      row.bank_details != null ? String(row.bank_details) : undefined,
+    depositStatus: row.deposit_status as LocalOrder["depositStatus"],
+    paymentReceivedAt:
+      row.payment_received_at != null
+        ? String(row.payment_received_at)
+        : undefined,
     subtotal: Number(row.subtotal ?? 0),
-    items: row.items ?? [],
-    dispatchAddress: row.dispatch_address ?? "",
-    dispatchDate: row.dispatch_date ?? undefined,
-    transportDetails: row.transport_details ?? undefined,
-    lrNumber: row.lr_number ?? undefined,
-    courierDetails: row.courier_details ?? undefined,
-    vehicleDetails: row.vehicle_details ?? undefined,
-    trackingNotes: row.tracking_notes ?? undefined,
-    dispatchHistory: row.dispatch_history ?? [],
-    note: row.note ?? undefined,
-    createdAt: row.created_at,
+    items: (Array.isArray(row.items) ? row.items : []) as LocalOrder["items"],
+    dispatchAddress: String(row.dispatch_address ?? ""),
+    dispatchDate:
+      row.dispatch_date != null ? String(row.dispatch_date) : undefined,
+    transportDetails:
+      row.transport_details != null ? String(row.transport_details) : undefined,
+    lrNumber: row.lr_number != null ? String(row.lr_number) : undefined,
+    courierDetails:
+      row.courier_details != null ? String(row.courier_details) : undefined,
+    vehicleDetails:
+      row.vehicle_details != null ? String(row.vehicle_details) : undefined,
+    trackingNotes:
+      row.tracking_notes != null ? String(row.tracking_notes) : undefined,
+    dispatchHistory: (Array.isArray(row.dispatch_history)
+      ? row.dispatch_history
+      : []) as LocalOrder["dispatchHistory"],
+    note: row.note != null ? String(row.note) : undefined,
+    createdAt: String(row.created_at ?? ""),
   };
 }
 
@@ -254,21 +270,30 @@ export async function readLocalDb(): Promise<LocalDb> {
         ...defaultDb,
         clients: (clientsRes.data ?? []).map(mapClient),
         orders: (ordersRes.data ?? []).map(mapOrder),
-        feedbacks: (feedbacksRes.data ?? []).map((row: any) => ({
-          id: row.id,
-          companyName: row.company_name,
-          email: row.email,
-          contactPerson: row.contact_person ?? undefined,
-          phone: row.phone ?? undefined,
-          requirement: row.requirement ?? undefined,
-          orderId: row.order_id ?? undefined,
-          message: row.message,
-          status: row.status,
-          createdAt: row.created_at,
-          repliedAt: row.replied_at ?? undefined,
-          replySubject: row.reply_subject ?? undefined,
-          replyMessage: row.reply_message ?? undefined,
-        })),
+        feedbacks: (feedbacksRes.data ?? []).map(
+          (row: Record<string, unknown>) => ({
+            id: String(row.id ?? ""),
+            companyName: String(row.company_name ?? ""),
+            email: String(row.email ?? ""),
+            contactPerson:
+              row.contact_person != null
+                ? String(row.contact_person)
+                : undefined,
+            phone: row.phone != null ? String(row.phone) : undefined,
+            requirement:
+              row.requirement != null ? String(row.requirement) : undefined,
+            orderId: row.order_id != null ? String(row.order_id) : undefined,
+            message: String(row.message ?? ""),
+            status: row.status as "new" | "replied" | undefined,
+            createdAt: String(row.created_at ?? ""),
+            repliedAt:
+              row.replied_at != null ? String(row.replied_at) : undefined,
+            replySubject:
+              row.reply_subject != null ? String(row.reply_subject) : undefined,
+            replyMessage:
+              row.reply_message != null ? String(row.reply_message) : undefined,
+          }),
+        ),
       };
     } catch {
       // Fallback keeps demo/admin usable when Supabase is unreachable locally.

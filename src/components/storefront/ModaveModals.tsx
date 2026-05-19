@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -41,7 +40,6 @@ export function ModaveModals() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSearchItems, setVisibleSearchItems] = useState(4);
-  const cartKey = useMemo(() => JSON.stringify(cart), [cart]);
 
   useEffect(() => {
     const sync = () => {
@@ -150,7 +148,7 @@ export function ModaveModals() {
         );
       })
       .catch(() => setItems([]));
-  }, [cartKey]);
+  }, [cart]);
 
   useEffect(() => {
     const onAdd = (event: Event) => {
@@ -649,7 +647,8 @@ export function ModaveModals() {
                             </div>
                           </div>
                           <label htmlFor="CartDrawer-Form_agree">
-                            I agree with <a href="#">Terms &amp; Conditions</a>
+                            I agree with{" "}
+                            <a href="/term-of-use">Terms &amp; Conditions</a>
                           </label>
                         </div>
                         <div className="tf-mini-cart-view-checkout">
@@ -974,7 +973,7 @@ export function ModaveModals() {
                             </span>
                           </a>
                           <a
-                            href="#"
+                            href="/wishlist"
                             className="box-icon hover-tooltip wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={quickProduct.slug}
@@ -1034,7 +1033,7 @@ export function ModaveModals() {
                             </span>
                           </a>
                           <a
-                            href="#"
+                            href="/wishlist"
                             className="box-icon hover-tooltip wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={quickProduct.slug}

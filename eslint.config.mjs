@@ -9,7 +9,7 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-export default [
+const sarjanEslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     ignores: [
@@ -23,7 +23,11 @@ export default [
   },
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      // Vendor Bootstrap/mod template uses plain <img> and public URLs; full
+      // next/image migration is a separate visual regression pass.
+      "@next/next/no-img-element": "off",
     },
   },
 ];
+
+export default sarjanEslintConfig;

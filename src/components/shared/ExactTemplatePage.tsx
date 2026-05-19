@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Script from "next/script";
+import DOMPurify from "isomorphic-dompurify";
 import { getCartItems, mockApi } from "@/lib/mock-api";
 import type { Product } from "@/data/mock";
 
@@ -74,21 +75,30 @@ function cycleProducts(html: string) {
   const products = mockApi.products;
 
   return html
-    .replace(/(<a[^>]*class="(?:title link|name-product link|cart-title link)"[^>]*>)([\s\S]*?)(<\/a>)/g, (match, start, _content, end) => {
-      const product = products[titleIndex % products.length];
-      titleIndex += 1;
-      return `${start}${escapeHtml(product.name)}${end}`;
-    })
-    .replace(/(<span[^>]*class="[^"]*(?:current-price|price)[^"]*"[^>]*>)\$[\d.,]+(<\/span>)/g, (match, start, end) => {
-      const product = products[priceIndex % products.length];
-      priceIndex += 1;
-      return `${start}${formatInr(product.price)}${end}`;
-    })
-    .replace(/(<div[^>]*class="[^"]*(?:cart-price|cart-total|total-price|price-on-sale)[^"]*"[^>]*>)\$[\d.,]+(<\/div>)/g, (match, start, end) => {
-      const product = products[priceIndex % products.length];
-      priceIndex += 1;
-      return `${start}${formatInr(product.price)}${end}`;
-    });
+    .replace(
+      /(<a[^>]*class="(?:title link|name-product link|cart-title link)"[^>]*>)([\s\S]*?)(<\/a>)/g,
+      (match, start, _content, end) => {
+        const product = products[titleIndex % products.length];
+        titleIndex += 1;
+        return `${start}${escapeHtml(product.name)}${end}`;
+      },
+    )
+    .replace(
+      /(<span[^>]*class="[^"]*(?:current-price|price)[^"]*"[^>]*>)\$[\d.,]+(<\/span>)/g,
+      (match, start, end) => {
+        const product = products[priceIndex % products.length];
+        priceIndex += 1;
+        return `${start}${formatInr(product.price)}${end}`;
+      },
+    )
+    .replace(
+      /(<div[^>]*class="[^"]*(?:cart-price|cart-total|total-price|price-on-sale)[^"]*"[^>]*>)\$[\d.,]+(<\/div>)/g,
+      (match, start, end) => {
+        const product = products[priceIndex % products.length];
+        priceIndex += 1;
+        return `${start}${formatInr(product.price)}${end}`;
+      },
+    );
 }
 
 function applyCommonData(html: string) {
@@ -97,15 +107,24 @@ function applyCommonData(html: string) {
   return html
     .replaceAll("Modave", escapeHtml(settings.brandName))
     .replaceAll("Themesflat", escapeHtml(settings.brandName))
-    .replaceAll("©2024 Sarjan Textiles. All Rights Reserved.", `©2026 ${escapeHtml(settings.brandName)}. All Rights Reserved.`)
+    .replaceAll(
+      "©2024 Sarjan Textiles. All Rights Reserved.",
+      `©2026 ${escapeHtml(settings.brandName)}. All Rights Reserved.`,
+    )
     .replaceAll("Enter your e-mail", settings.email)
     .replaceAll("Fashion", "Textiles")
     .replaceAll("Women", "Printed Shirts")
     .replaceAll("Men", "Kurtas")
     .replaceAll("Kids", "Festive Prints")
-    .replaceAll("Shop Printed Shirts", mockApi.home.categories[0]?.name ?? "Printed Shirts")
+    .replaceAll(
+      "Shop Printed Shirts",
+      mockApi.home.categories[0]?.name ?? "Printed Shirts",
+    )
     .replaceAll("Shop Kurtas", mockApi.home.categories[1]?.name ?? "Kurtas")
-    .replaceAll("Shop Festive Prints", mockApi.home.categories[2]?.name ?? "Festive Prints");
+    .replaceAll(
+      "Shop Festive Prints",
+      mockApi.home.categories[2]?.name ?? "Festive Prints",
+    );
 }
 
 function applyHomeData(html: string) {
@@ -113,22 +132,52 @@ function applyHomeData(html: string) {
   const title = escapeHtml(hero.title).replace(" ready ", " ready <br>");
 
   return html
-    .replace(/(<div class="heading text-white title-display[^"]*"[^>]*>)([\s\S]*?)(<\/div>)/, `$1${title}$3`)
-    .replace(/(<p class="body-text-1 subheading text-white[^"]*"[^>]*>)([\s\S]*?)(<\/p>)/, `$1${escapeHtml(hero.description)}$3`)
-    .replace(/(<span class="text">)Explore Collection(<\/span>)/, `$1${escapeHtml(hero.primaryCta.label)}$2`)
+    .replace(
+      /(<div class="heading text-white title-display[^"]*"[^>]*>)([\s\S]*?)(<\/div>)/,
+      `$1${title}$3`,
+    )
+    .replace(
+      /(<p class="body-text-1 subheading text-white[^"]*"[^>]*>)([\s\S]*?)(<\/p>)/,
+      `$1${escapeHtml(hero.description)}$3`,
+    )
+    .replace(
+      /(<span class="text">)Explore Collection(<\/span>)/,
+      `$1${escapeHtml(hero.primaryCta.label)}$2`,
+    )
     .replaceAll("New Arrivals", "Latest Textile Arrivals")
     .replaceAll("Best Seller", "Top Wholesale Demand")
     .replaceAll("Sale Off", "MOQ Ready Stock");
 }
 
-function applyProductDetailData(html: string, product: Product = mockApi.products[0]) {
+function applyProductDetailData(
+  html: string,
+  product: Product = mockApi.products[0],
+) {
   return html
-    .replace(/(<div class="text text-btn-uppercase">)([\s\S]*?)(<\/div>\s*<h3 class="name">)/, `$1${escapeHtml(product.category)}$3`)
-    .replace(/(<h3 class="name">)([\s\S]*?)(<\/h3>)/, `$1${escapeHtml(product.name)}$3`)
-    .replace(/(<h5 class="price-on-sale font-2">)\$[\d.,]+(<\/h5>)/g, `$1${formatInr(product.price)}$2`)
-    .replace(/(<div class="compare-at-price font-2">)\$[\d.,]+(<\/div>)/g, `$1${formatInr(Math.round(product.price * 1.18))}$2`)
-    .replace(/(<div class="badges-on-sale text-btn-uppercase">\s*)-[\d]+%(\s*<\/div>)/g, `$1MOQ ${product.moq}$2`)
-    .replace(/(<div class="tf-product-info-desc">[\s\S]*?<p>)([\s\S]*?)(<\/p>)/, `$1${escapeHtml(product.description)} SKU ${escapeHtml(product.sku)}. Fabric: ${escapeHtml(product.fabric)}.$3`)
+    .replace(
+      /(<div class="text text-btn-uppercase">)([\s\S]*?)(<\/div>\s*<h3 class="name">)/,
+      `$1${escapeHtml(product.category)}$3`,
+    )
+    .replace(
+      /(<h3 class="name">)([\s\S]*?)(<\/h3>)/,
+      `$1${escapeHtml(product.name)}$3`,
+    )
+    .replace(
+      /(<h5 class="price-on-sale font-2">)\$[\d.,]+(<\/h5>)/g,
+      `$1${formatInr(product.price)}$2`,
+    )
+    .replace(
+      /(<div class="compare-at-price font-2">)\$[\d.,]+(<\/div>)/g,
+      `$1${formatInr(Math.round(product.price * 1.18))}$2`,
+    )
+    .replace(
+      /(<div class="badges-on-sale text-btn-uppercase">\s*)-[\d]+%(\s*<\/div>)/g,
+      `$1MOQ ${product.moq}$2`,
+    )
+    .replace(
+      /(<div class="tf-product-info-desc">[\s\S]*?<p>)([\s\S]*?)(<\/p>)/,
+      `$1${escapeHtml(product.description)} SKU ${escapeHtml(product.sku)}. Fabric: ${escapeHtml(product.fabric)}.$3`,
+    )
     .replaceAll("Clothing", escapeHtml(product.category))
     .replaceAll("Stretch Strap Top", escapeHtml(product.name))
     .replaceAll("Gray", escapeHtml(product.colors[0] ?? "Black"))
@@ -143,15 +192,21 @@ function applyBlogListData(html: string) {
 
   return html
     .replaceAll("Blog Default", "Textile Journal")
-    .replace(/(<h4 class="title fw-5">\s*<a class="link" href="[^"]*">)([\s\S]*?)(<\/a>\s*<\/h4>)/g, (match, start, _content, end) => {
-      const blog = blogs[index % blogs.length];
-      index += 1;
-      return `${start}${escapeHtml(blog.title)}${end}`;
-    })
-    .replace(/(<div class="body-text-1">)([\s\S]*?)(<\/div>)/g, (match, start, _content, end) => {
-      const blog = blogs[(index - 1 + blogs.length) % blogs.length];
-      return `${start}${escapeHtml(blog.excerpt)}${end}`;
-    })
+    .replace(
+      /(<h4 class="title fw-5">\s*<a class="link" href="[^"]*">)([\s\S]*?)(<\/a>\s*<\/h4>)/g,
+      (match, start, _content, end) => {
+        const blog = blogs[index % blogs.length];
+        index += 1;
+        return `${start}${escapeHtml(blog.title)}${end}`;
+      },
+    )
+    .replace(
+      /(<div class="body-text-1">)([\s\S]*?)(<\/div>)/g,
+      (match, start, _content, end) => {
+        const blog = blogs[(index - 1 + blogs.length) % blogs.length];
+        return `${start}${escapeHtml(blog.excerpt)}${end}`;
+      },
+    )
     .replaceAll("February 28, 2024", blogs[0]?.date ?? "2026-05-08");
 }
 
@@ -159,9 +214,18 @@ function applyBlogDetailData(html: string) {
   const blog = mockApi.blogs[0];
 
   return html
-    .replace(/(<h3 class="fw-5">)([\s\S]*?)(<\/h3>)/, `$1${escapeHtml(blog.title)}$3`)
-    .replace(/(<p class="body-text-1">by <a class="link" href="#">)([\s\S]*?)(<\/a><\/p>)/, `$1${escapeHtml(mockApi.siteSettings.brandName)}$3`)
-    .replace(/(<div class="content">\s*<p class="body-text-1 mb_12">)([\s\S]*?)(<\/p>)/, `$1${escapeHtml(blog.content)}$3`)
+    .replace(
+      /(<h3 class="fw-5">)([\s\S]*?)(<\/h3>)/,
+      `$1${escapeHtml(blog.title)}$3`,
+    )
+    .replace(
+      /(<p class="body-text-1">by <a class="link" href="\/contact">)([\s\S]*?)(<\/a><\/p>)/,
+      `$1${escapeHtml(mockApi.siteSettings.brandName)}$3`,
+    )
+    .replace(
+      /(<div class="content">\s*<p class="body-text-1 mb_12">)([\s\S]*?)(<\/p>)/,
+      `$1${escapeHtml(blog.content)}$3`,
+    )
     .replaceAll("February 28, 2024", blog.date)
     .replaceAll("Fashion Trends", "Textile Buying")
     .replaceAll("Fashion", "Textiles")
@@ -209,7 +273,10 @@ function buildCartRows() {
 
 function applyCartData(html: string) {
   const rows = buildCartRows();
-  const total = getCartItems().reduce((sum, item) => sum + (item?.lineTotal ?? 0), 0);
+  const total = getCartItems().reduce(
+    (sum, item) => sum + (item?.lineTotal ?? 0),
+    0,
+  );
 
   return html
     .replace(/(<tbody>)([\s\S]*?)(<\/tbody>)/, `$1${rows}$3`)
@@ -221,14 +288,23 @@ function applyCartData(html: string) {
 }
 
 function applyCheckoutData(html: string) {
-  const total = getCartItems().reduce((sum, item) => sum + (item?.lineTotal ?? 0), 0);
+  const total = getCartItems().reduce(
+    (sum, item) => sum + (item?.lineTotal ?? 0),
+    0,
+  );
 
   return applyCartData(html)
     .replaceAll("Payment", "Manual Cheque Collection")
-    .replaceAll("Credit Card", `${mockApi.siteSettings.creditTermDays}-Day Credit`)
+    .replaceAll(
+      "Credit Card",
+      `${mockApi.siteSettings.creditTermDays}-Day Credit`,
+    )
     .replaceAll("Place order", "Submit Order Request")
     .replace(/\$500\.00/g, formatInr(50000))
-    .replace(/(<span class="total-price-checkout">)([\s\S]*?)(<\/span>)/, `$1${formatInr(total)}$3`);
+    .replace(
+      /(<span class="total-price-checkout">)([\s\S]*?)(<\/span>)/,
+      `$1${formatInr(total)}$3`,
+    );
 }
 
 function applyFileData(html: string, file: string) {
@@ -240,8 +316,14 @@ function applyFileData(html: string, file: string) {
   if (file === "checkout.html") return applyCheckoutData(html);
   if (file === "about-us.html") {
     return html
-      .replace(/(<h3[^>]*>)([\s\S]*?)(<\/h3>)/, `$1${escapeHtml(mockApi.pages.about.title)}$3`)
-      .replace(/(<p[^>]*>)([\s\S]*?)(<\/p>)/, `$1${escapeHtml(mockApi.pages.about.body)}$3`);
+      .replace(
+        /(<h3[^>]*>)([\s\S]*?)(<\/h3>)/,
+        `$1${escapeHtml(mockApi.pages.about.title)}$3`,
+      )
+      .replace(
+        /(<p[^>]*>)([\s\S]*?)(<\/p>)/,
+        `$1${escapeHtml(mockApi.pages.about.body)}$3`,
+      );
   }
   if (file === "contact-02.html") {
     return html
@@ -253,7 +335,8 @@ function applyFileData(html: string, file: string) {
 }
 
 function rewriteHtml(html: string, kind: TemplateKind) {
-  const base = kind === "storefront" ? "/template/storefront" : "/template/admin";
+  const base =
+    kind === "storefront" ? "/template/storefront" : "/template/admin";
   const logo = "/sarjan-assets/sarjan-logo-full.png";
   const favicon = "/sarjan-assets/sarjan-favicon-192.png";
   const banner = "/sarjan-assets/banner-textiles-studio.webp";
@@ -281,7 +364,9 @@ function rewriteHtml(html: string, kind: TemplateKind) {
 
   return applyCommonData(html)
     .replace(
-      kind === "admin" ? /(<div class="text text-title">Dashboard<\/div>\s*<\/a>\s*<\/li>)/ : /$^/,
+      kind === "admin"
+        ? /(<div class="text text-title">Dashboard<\/div>\s*<\/a>\s*<\/li>)/
+        : /$^/,
       `$1${adminHomeMenu}`,
     )
     .replaceAll("images/logo/logo.svg", logo)
@@ -293,7 +378,10 @@ function rewriteHtml(html: string, kind: TemplateKind) {
       return image;
     })
     .replace(/images\/(slider|banner|collections)\/[^"')\s]+/g, banner)
-    .replace(/(^|["'(=:\s])images\/(country|avatar|item|categories|payment|shop|logo)\//g, `$1${base}/images/$2/`)
+    .replace(
+      /(^|["'(=:\s])images\/(country|avatar|item|categories|payment|shop|logo)\//g,
+      `$1${base}/images/$2/`,
+    )
     .replaceAll('src="images/', `src="${base}/images/`)
     .replaceAll("src='images/", `src='${base}/images/`)
     .replaceAll('data-src="images/', `data-src="${base}/images/`)
@@ -303,9 +391,15 @@ function rewriteHtml(html: string, kind: TemplateKind) {
     .replaceAll('data-zoom="images/', `data-zoom="${base}/images/`)
     .replaceAll("data-zoom='images/", `data-zoom='${base}/images/`)
     .replaceAll('href="home-fashion-chicHaven.html"', 'href="/"')
-    .replaceAll('href="product-detail.html"', 'href="/products/ajrak-black-shirt"')
+    .replaceAll(
+      'href="product-detail.html"',
+      'href="/products/ajrak-black-shirt"',
+    )
     .replaceAll('href="blog-default.html"', 'href="/blog"')
-    .replaceAll('href="blog-detail.html"', 'href="/blog/how-b2b-textile-buyers-plan-seasonal-assortments"')
+    .replaceAll(
+      'href="blog-detail.html"',
+      'href="/blog/how-b2b-textile-buyers-plan-seasonal-assortments"',
+    )
     .replaceAll('href="about-us.html"', 'href="/about"')
     .replaceAll('href="contact-02.html"', 'href="/contact"')
     .replaceAll('href="login.html"', 'href="/login"')
@@ -313,27 +407,50 @@ function rewriteHtml(html: string, kind: TemplateKind) {
     .replaceAll('href="wish-list.html"', 'href="/wishlist"')
     .replaceAll('href="shopping-cart.html"', 'href="/cart"')
     .replaceAll('href="checkout.html"', 'href="/checkout"')
-    .replace(kind === "admin" ? /href="([a-z0-9-]+)\.html"/g : /$^/, (_match, page) => {
-      if (page === "index") return 'href="/admin"';
-      return `href="/admin/${page}"`;
-    })
+    .replace(
+      kind === "admin" ? /href="([a-z0-9-]+)\.html"/g : /$^/,
+      (_match, page) => {
+        if (page === "index") return 'href="/admin"';
+        return `href="/admin/${page}"`;
+      },
+    )
     .replace(kind === "admin" ? /href="\.\.\/index\.html"/g : /$^/, 'href="/"');
 }
 
-export function ExactTemplatePage({ file, kind = "storefront" }: { file: string; kind?: TemplateKind }) {
+export function ExactTemplatePage({
+  file,
+  kind = "storefront",
+}: {
+  file: string;
+  kind?: TemplateKind;
+}) {
   const folder = kind === "storefront" ? "modave" : "admin-modave";
   const filePath = path.join(process.cwd(), "reference", folder, file);
-  const html = cycleProducts(applyFileData(rewriteHtml(extractBody(fs.readFileSync(filePath, "utf8")), kind), file));
-  const scriptBase = kind === "storefront" ? "/template/storefront/js" : "/template/admin/js";
+  const html = cycleProducts(
+    applyFileData(
+      rewriteHtml(extractBody(fs.readFileSync(filePath, "utf8")), kind),
+      file,
+    ),
+  );
+  const scriptBase =
+    kind === "storefront" ? "/template/storefront/js" : "/template/admin/js";
 
   return (
     <>
       {styleMap[kind].map((style) => (
-        <link key={`${kind}-${style}`} rel="stylesheet" href={`/${kind === "storefront" ? "template/storefront" : "template/admin"}/${style}`} />
+        <link
+          key={`${kind}-${style}`}
+          rel="stylesheet"
+          href={`/${kind === "storefront" ? "template/storefront" : "template/admin"}/${style}`}
+        />
       ))}
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
       {scriptMap[kind].map((script) => (
-        <Script key={`${kind}-${script}`} src={`${scriptBase}/${script}`} strategy="afterInteractive" />
+        <Script
+          key={`${kind}-${script}`}
+          src={`${scriptBase}/${script}`}
+          strategy="afterInteractive"
+        />
       ))}
     </>
   );

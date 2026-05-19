@@ -40,7 +40,6 @@ export function CheckoutPageClient() {
   const [client, setClient] = useState<CheckoutClient | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const cartKey = useMemo(() => JSON.stringify(cart), [cart]);
 
   useEffect(() => {
     const sync = () => setCart(readCart());
@@ -98,7 +97,7 @@ export function CheckoutPageClient() {
       })
       .catch(() => setLines([]))
       .finally(() => setLoading(false));
-  }, [cartKey]);
+  }, [cart]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, item) => sum + item.lineTotal, 0),

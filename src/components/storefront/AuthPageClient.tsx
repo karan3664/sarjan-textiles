@@ -6,7 +6,9 @@ import { FormEvent, useState } from "react";
 type AuthMode = "login" | "register" | "forgot";
 
 function isErrorMessage(value: string) {
-  return /failed|invalid|required|incorrect|verify|unavailable|match/i.test(value);
+  return /failed|invalid|required|incorrect|verify|unavailable|match/i.test(
+    value,
+  );
 }
 
 const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -21,14 +23,32 @@ function isValidGstin(value: string) {
 
 function PageTitle({ title }: { title: string }) {
   return (
-    <div className="page-title" style={{ backgroundImage: "url(/template/storefront/images/section/page-title.jpg)" }}>
+    <div
+      className="page-title"
+      style={{
+        backgroundImage:
+          "url(/template/storefront/images/section/page-title.jpg)",
+      }}
+    >
       <div className="container">
         <h3 className="heading text-center">{title}</h3>
         <ul className="breadcrumbs d-flex align-items-center justify-content-center">
-          <li><Link className="link" href="/">Homepage</Link></li>
-          <li><i className="icon-arrRight" /></li>
-          <li><Link className="link" href="#">Pages</Link></li>
-          <li><i className="icon-arrRight" /></li>
+          <li>
+            <Link className="link" href="/">
+              Homepage
+            </Link>
+          </li>
+          <li>
+            <i className="icon-arrRight" />
+          </li>
+          <li>
+            <Link className="link" href="/products">
+              Pages
+            </Link>
+          </li>
+          <li>
+            <i className="icon-arrRight" />
+          </li>
           <li>{title}</li>
         </ul>
       </div>
@@ -55,7 +75,11 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [emailOtpLoading, setEmailOtpLoading] = useState(false);
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
-  const title = isRegister ? "Register" : isForgot ? "Forget Password" : "Login";
+  const title = isRegister
+    ? "Register"
+    : isForgot
+      ? "Forget Password"
+      : "Login";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -79,12 +103,23 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setMessage("Enter valid GST number or choose without GST registration");
       return;
     }
-    if (isRegister && hasGst && !gstVerified && !String(payload.companyName ?? "").trim()) {
+    if (
+      isRegister &&
+      hasGst &&
+      !gstVerified &&
+      !String(payload.companyName ?? "").trim()
+    ) {
       setLoading(false);
-      setMessage("Verify GST or enter company name manually if GST portal is unavailable");
+      setMessage(
+        "Verify GST or enter company name manually if GST portal is unavailable",
+      );
       return;
     }
-    const endpoint = isRegister ? "/api/auth/register" : isForgot ? "/api/auth/forgot" : "/api/auth/login";
+    const endpoint = isRegister
+      ? "/api/auth/register"
+      : isForgot
+        ? "/api/auth/forgot"
+        : "/api/auth/login";
 
     const res = await fetch(endpoint, {
       method: "POST",
@@ -107,7 +142,11 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       return;
     }
 
-    setMessage(isForgot ? data.message ?? "Password reset email sent." : "Password reset request saved. Admin will contact client.");
+    setMessage(
+      isForgot
+        ? (data.message ?? "Password reset email sent.")
+        : "Password reset request saved. Admin will contact client.",
+    );
   };
 
   const resetEmailOtp = (nextEmail: string) => {
@@ -141,7 +180,9 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setEmailOtpSent(true);
       setEmailOtpMessage("OTP sent. Check email inbox.");
     } catch (error) {
-      setEmailOtpMessage(error instanceof Error ? error.message : "OTP send failed");
+      setEmailOtpMessage(
+        error instanceof Error ? error.message : "OTP send failed",
+      );
     } finally {
       setEmailOtpLoading(false);
     }
@@ -166,7 +207,9 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setEmailOtpMessage("Email verified");
     } catch (error) {
       setEmailVerified(false);
-      setEmailOtpMessage(error instanceof Error ? error.message : "OTP verification failed");
+      setEmailOtpMessage(
+        error instanceof Error ? error.message : "OTP verification failed",
+      );
     } finally {
       setEmailOtpLoading(false);
     }
@@ -198,10 +241,13 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setGstVerified(true);
       setGstMessage(`Verified: ${data.gst.legalName}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "GST verification failed";
+      const message =
+        error instanceof Error ? error.message : "GST verification failed";
       if (/unavailable|blocked|try again|portal/i.test(message)) {
         setGstManualAllowed(true);
-        setGstMessage("GST portal is not responding. Enter company name manually; admin will verify GST during approval.");
+        setGstMessage(
+          "GST portal is not responding. Enter company name manually; admin will verify GST during approval.",
+        );
       } else {
         setGstManualAllowed(false);
         setGstMessage(message);
@@ -218,25 +264,43 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
         <div className="container">
           <div className="login-wrap">
             <div className="left">
-              <div className="heading"><h4>{title}</h4></div>
-              <form action="#" className="form-login form-has-password" onSubmit={submit}>
+              <div className="heading">
+                <h4>{title}</h4>
+              </div>
+              <form
+                action="#"
+                className="form-login form-has-password"
+                onSubmit={submit}
+              >
                 <div className="wrap">
                   {isRegister ? (
                     <>
                       <div className="sarjan-gst-toggle">
                         <label className="tf-cart-checkbox">
-                          <input type="checkbox" className="tf-check" checked={hasGst} onChange={(event) => {
-                            setHasGst(event.target.checked);
-                            setGstVerified(false);
-                            setGstManualAllowed(false);
-                            setGstMessage("");
-                            if (event.target.checked) setCompanyName("");
-                          }} />
+                          <input
+                            type="checkbox"
+                            className="tf-check"
+                            checked={hasGst}
+                            onChange={(event) => {
+                              setHasGst(event.target.checked);
+                              setGstVerified(false);
+                              setGstManualAllowed(false);
+                              setGstMessage("");
+                              if (event.target.checked) setCompanyName("");
+                            }}
+                          />
                           <span>Company has GST number</span>
                         </label>
-                        <p className="text-caption-1 text-secondary">If no GST, uncheck and register with company name manually.</p>
+                        <p className="text-caption-1 text-secondary">
+                          If no GST, uncheck and register with company name
+                          manually.
+                        </p>
                       </div>
-                      <input type="hidden" name="hasGst" value={hasGst ? "true" : "false"} />
+                      <input
+                        type="hidden"
+                        name="hasGst"
+                        value={hasGst ? "true" : "false"}
+                      />
                       {hasGst ? (
                         <>
                           <fieldset className="sarjan-gst-row">
@@ -253,27 +317,67 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                               }}
                               required
                             />
-                            <button type="button" className="tf-btn btn-fill" onClick={verifyGst} disabled={gstLoading || !gst.trim()}>
-                              <span className="text text-button">{gstLoading ? "Verifying..." : "Verify GST"}</span>
+                            <button
+                              type="button"
+                              className="tf-btn btn-fill"
+                              onClick={verifyGst}
+                              disabled={gstLoading || !gst.trim()}
+                            >
+                              <span className="text text-button">
+                                {gstLoading ? "Verifying..." : "Verify GST"}
+                              </span>
                             </button>
                           </fieldset>
                           <fieldset>
                             <input
                               type="text"
-                              placeholder={gstManualAllowed ? "Company name*" : "Company name from GST portal*"}
+                              placeholder={
+                                gstManualAllowed
+                                  ? "Company name*"
+                                  : "Company name from GST portal*"
+                              }
                               name="companyName"
                               value={companyName}
-                              onChange={(event) => setCompanyName(event.target.value)}
+                              onChange={(event) =>
+                                setCompanyName(event.target.value)
+                              }
                               readOnly={!gstManualAllowed && !gstVerified}
                               required
                             />
                           </fieldset>
-                          {gstMessage ? <p className={gstVerified || gstManualAllowed ? "text-success" : "text-danger"}>{gstMessage}</p> : null}
+                          {gstMessage ? (
+                            <p
+                              className={
+                                gstVerified || gstManualAllowed
+                                  ? "text-success"
+                                  : "text-danger"
+                              }
+                            >
+                              {gstMessage}
+                            </p>
+                          ) : null}
                         </>
                       ) : (
-                        <fieldset><input type="text" placeholder="Company name*" name="companyName" value={companyName} onChange={(event) => setCompanyName(event.target.value)} required /></fieldset>
+                        <fieldset>
+                          <input
+                            type="text"
+                            placeholder="Company name*"
+                            name="companyName"
+                            value={companyName}
+                            onChange={(event) =>
+                              setCompanyName(event.target.value)
+                            }
+                            required
+                          />
+                        </fieldset>
                       )}
-                      <fieldset><input type="text" placeholder="City / buying category" name="city" /></fieldset>
+                      <fieldset>
+                        <input
+                          type="text"
+                          placeholder="City / buying category"
+                          name="city"
+                        />
+                      </fieldset>
                     </>
                   ) : null}
                   <fieldset>
@@ -295,63 +399,184 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                           name="emailOtp"
                           value={emailOtp}
                           onChange={(event) => {
-                            setEmailOtp(event.target.value.replace(/\D/g, "").slice(0, 6));
+                            setEmailOtp(
+                              event.target.value.replace(/\D/g, "").slice(0, 6),
+                            );
                             setEmailVerified(false);
                           }}
                           required
                         />
-                        <button type="button" className="tf-btn btn-fill" onClick={sendEmailOtp} disabled={emailOtpLoading || !email.trim()}>
-                          <span className="text text-button">{emailOtpLoading && !emailOtpSent ? "Sending..." : emailOtpSent ? "Resend OTP" : "Send OTP"}</span>
+                        <button
+                          type="button"
+                          className="tf-btn btn-fill"
+                          onClick={sendEmailOtp}
+                          disabled={emailOtpLoading || !email.trim()}
+                        >
+                          <span className="text text-button">
+                            {emailOtpLoading && !emailOtpSent
+                              ? "Sending..."
+                              : emailOtpSent
+                                ? "Resend OTP"
+                                : "Send OTP"}
+                          </span>
                         </button>
-                        <button type="button" className="tf-btn btn-white has-border" onClick={verifyEmailOtp} disabled={emailOtpLoading || !emailOtpToken || emailOtp.length !== 6 || emailVerified}>
-                          <span className="text text-button">{emailVerified ? "Verified" : "Verify OTP"}</span>
+                        <button
+                          type="button"
+                          className="tf-btn btn-white has-border"
+                          onClick={verifyEmailOtp}
+                          disabled={
+                            emailOtpLoading ||
+                            !emailOtpToken ||
+                            emailOtp.length !== 6 ||
+                            emailVerified
+                          }
+                        >
+                          <span className="text text-button">
+                            {emailVerified ? "Verified" : "Verify OTP"}
+                          </span>
                         </button>
                       </fieldset>
-                      <input type="hidden" name="emailOtpToken" value={emailOtpToken} />
-                      {emailOtpMessage ? <p className={emailVerified || /sent/i.test(emailOtpMessage) ? "text-success" : "text-danger"}>{emailOtpMessage}</p> : null}
+                      <input
+                        type="hidden"
+                        name="emailOtpToken"
+                        value={emailOtpToken}
+                      />
+                      {emailOtpMessage ? (
+                        <p
+                          className={
+                            emailVerified || /sent/i.test(emailOtpMessage)
+                              ? "text-success"
+                              : "text-danger"
+                          }
+                        >
+                          {emailOtpMessage}
+                        </p>
+                      ) : null}
                     </>
                   ) : null}
                   {!isForgot ? (
                     <fieldset className="position-relative password-item">
-                      <input className="input-password" type="password" placeholder="Password*" name="password" required />
-                      <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
+                      <input
+                        className="input-password"
+                        type="password"
+                        placeholder="Password*"
+                        name="password"
+                        required
+                      />
+                      <span className="toggle-password unshow">
+                        <i className="icon-eye-hide-line" />
+                      </span>
                     </fieldset>
                   ) : null}
                   {isRegister ? (
                     <fieldset className="position-relative password-item">
-                      <input className="input-password" type="password" placeholder="Confirm Password*" name="confirmPassword" required />
-                      <span className="toggle-password unshow"><i className="icon-eye-hide-line" /></span>
+                      <input
+                        className="input-password"
+                        type="password"
+                        placeholder="Confirm Password*"
+                        name="confirmPassword"
+                        required
+                      />
+                      <span className="toggle-password unshow">
+                        <i className="icon-eye-hide-line" />
+                      </span>
                     </fieldset>
                   ) : null}
                   {!isRegister && !isForgot ? (
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="tf-cart-checkbox">
-                        <div className="tf-checkbox-wrapp"><input defaultChecked type="checkbox" id="login-form_agree" name="agree_checkbox" /><div><i className="icon-check" /></div></div>
+                        <div className="tf-checkbox-wrapp">
+                          <input
+                            defaultChecked
+                            type="checkbox"
+                            id="login-form_agree"
+                            name="agree_checkbox"
+                          />
+                          <div>
+                            <i className="icon-check" />
+                          </div>
+                        </div>
                         <label htmlFor="login-form_agree">Remember me</label>
                       </div>
-                      <a href="/forgot-password" className="font-2 text-button forget-password link">Forgot Your Password?</a>
+                      <a
+                        href="/forgot-password"
+                        className="font-2 text-button forget-password link"
+                      >
+                        Forgot Your Password?
+                      </a>
                     </div>
                   ) : null}
                   {isRegister ? (
                     <div className="d-flex align-items-center">
                       <div className="tf-cart-checkbox">
-                        <div className="tf-checkbox-wrapp"><input defaultChecked type="checkbox" id="register-form_agree" name="agree_checkbox" /><div><i className="icon-check" /></div></div>
-                        <label className="text-secondary-2" htmlFor="register-form_agree">I agree to the&nbsp;</label>
+                        <div className="tf-checkbox-wrapp">
+                          <input
+                            defaultChecked
+                            type="checkbox"
+                            id="register-form_agree"
+                            name="agree_checkbox"
+                          />
+                          <div>
+                            <i className="icon-check" />
+                          </div>
+                        </div>
+                        <label
+                          className="text-secondary-2"
+                          htmlFor="register-form_agree"
+                        >
+                          I agree to the&nbsp;
+                        </label>
                       </div>
-                      <a href="#" title="Terms of Service"> Terms of User</a>
+                      <a href="/term-of-use" title="Terms of Service">
+                        {" "}
+                        Terms of User
+                      </a>
                     </div>
                   ) : null}
                 </div>
-                {message ? <p className={isErrorMessage(message) ? "text-danger" : "text-success"}>{message}</p> : null}
+                {message ? (
+                  <p
+                    className={
+                      isErrorMessage(message) ? "text-danger" : "text-success"
+                    }
+                  >
+                    {message}
+                  </p>
+                ) : null}
                 <div className="button-submit">
-                  <button className="tf-btn btn-fill" type="submit" disabled={loading}><span className="text text-button">{loading ? "Please wait..." : isForgot ? "Reset Password" : title}</span></button>
+                  <button
+                    className="tf-btn btn-fill"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    <span className="text text-button">
+                      {loading
+                        ? "Please wait..."
+                        : isForgot
+                          ? "Reset Password"
+                          : title}
+                    </span>
+                  </button>
                 </div>
               </form>
             </div>
             <div className="right">
-              <h4 className="mb_8">{isRegister ? "Already have an account?" : "New Customer"}</h4>
-              <p className="text-secondary">{isRegister ? "Welcome back. Sign in to access your personalized experience, saved preferences, and more." : "Register your company to access wholesale catalog, set-wise B2B ordering, and order history."}</p>
-              <a href={isRegister ? "/login" : "/register"} className="tf-btn btn-fill"><span className="text text-button">{isRegister ? "Login" : "Register"}</span></a>
+              <h4 className="mb_8">
+                {isRegister ? "Already have an account?" : "New Customer"}
+              </h4>
+              <p className="text-secondary">
+                {isRegister
+                  ? "Welcome back. Sign in to access your personalized experience, saved preferences, and more."
+                  : "Register your company to access wholesale catalog, set-wise B2B ordering, and order history."}
+              </p>
+              <a
+                href={isRegister ? "/login" : "/register"}
+                className="tf-btn btn-fill"
+              >
+                <span className="text text-button">
+                  {isRegister ? "Login" : "Register"}
+                </span>
+              </a>
             </div>
           </div>
         </div>

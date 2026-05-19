@@ -13,10 +13,7 @@ const baseScripts = [
   "main.js",
 ];
 
-const shopScripts = [
-  "nouislider.min.js",
-  "shop.js",
-];
+const shopScripts = ["nouislider.min.js", "shop.js"];
 
 const productDetailScripts = [
   "drift.min.js",
@@ -37,7 +34,7 @@ export function TemplateScripts() {
 
   return (
     <>
-      <Script id="sarjan-template-dom-guard" strategy="beforeInteractive">
+      <Script id="sarjan-template-dom-guard" strategy="afterInteractive">
         {`
           (function () {
             if (typeof Node === "undefined" || Node.prototype.__sarjanRemoveChildGuard) return;
@@ -146,7 +143,11 @@ export function TemplateScripts() {
         `}
       </Script>
       {scripts.map((script) => (
-        <Script key={script} src={`/template/storefront/js/${script}?v=${templateVersion}`} strategy="afterInteractive" />
+        <Script
+          key={script}
+          src={`/template/storefront/js/${script}?v=${templateVersion}`}
+          strategy="afterInteractive"
+        />
       ))}
     </>
   );

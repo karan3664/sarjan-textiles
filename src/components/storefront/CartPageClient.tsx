@@ -24,7 +24,6 @@ export function CartPageClient() {
   const [cart, setCart] = useState<StoredCartItem[]>([]);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
-  const cartKey = useMemo(() => JSON.stringify(cart), [cart]);
 
   useEffect(() => {
     const sync = () => {
@@ -76,7 +75,7 @@ export function CartPageClient() {
       })
       .catch(() => setLines([]))
       .finally(() => setLoading(false));
-  }, [cartKey]);
+  }, [cart]);
 
   const subtotal = useMemo(
     () => lines.reduce((sum, item) => sum + item.lineTotal, 0),

@@ -4,6 +4,8 @@ import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigation, siteSettings } from "@/data/site";
+import { readCart } from "@/lib/cart-client";
+import { readWishlist } from "@/lib/wishlist-client";
 
 type CatalogCategory = {
   name: string;
@@ -33,6 +35,8 @@ export function ModaveHeader() {
     [],
   );
   const [hubs, setHubs] = useState<CategoryHubNav[]>([]);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -71,6 +75,22 @@ export function ModaveHeader() {
         setCatalogCategories([]);
         setHubs([]);
       });
+  }, []);
+
+  useEffect(() => {
+    const syncCounts = () => {
+      setWishlistCount(readWishlist().length);
+      setCartCount(readCart().reduce((sum, item) => sum + item.quantity, 0));
+    };
+    syncCounts();
+    window.addEventListener("sarjan-wishlist-updated", syncCounts);
+    window.addEventListener("sarjan-cart-updated", syncCounts);
+    window.addEventListener("storage", syncCounts);
+    return () => {
+      window.removeEventListener("sarjan-wishlist-updated", syncCounts);
+      window.removeEventListener("sarjan-cart-updated", syncCounts);
+      window.removeEventListener("storage", syncCounts);
+    };
   }, []);
 
   const logout = () => {
@@ -179,7 +199,7 @@ export function ModaveHeader() {
                     className="nav-icon-item"
                   >
                     <span className="icon icon-heart" />
-                    <span className="wishlist-count">0</span>
+                    <span className="wishlist-count">{wishlistCount}</span>
                   </a>
                 </li>
                 <li className="nav-cart">
@@ -189,7 +209,7 @@ export function ModaveHeader() {
                     className="nav-icon-item"
                   >
                     <span className="icon icon-ShoppingBagOpen" />
-                    <span className="count-box">0</span>
+                    <span className="count-box">{cartCount}</span>
                   </a>
                 </li>
               </ul>

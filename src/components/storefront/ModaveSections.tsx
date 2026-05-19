@@ -274,7 +274,7 @@ function ProductFeature({ product }: { product: Product }) {
                             </span>
                           </a>
                           <a
-                            href="#"
+                            href="/wishlist"
                             className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={product.slug}
@@ -326,7 +326,7 @@ function ProductFeature({ product }: { product: Product }) {
                             </span>
                           </a>
                           <a
-                            href="#"
+                            href="/wishlist"
                             className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
                             data-wishlist-toggle
                             data-product-slug={product.slug}
@@ -628,7 +628,6 @@ export async function HomeDynamic() {
       : [home.hero.image]
   ).filter(Boolean);
   const products = cms.products;
-  const blogs = cms.blogs;
   const approvedTestimonials = cms.testimonials.filter(
     (testimonial) => testimonial.status === "approved",
   );
@@ -947,9 +946,9 @@ export async function HomeDynamic() {
           <div className="swiper-wrapper">
             {home.partnerLogos.map((logo) => (
               <div className="swiper-slide" key={logo}>
-                <a href="#" className="brand-item">
+                <Link href="/products" className="brand-item">
                   <img src={logo} alt="brand" />
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -1328,7 +1327,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                 </span>
                               </a>
                               <a
-                                href="#"
+                                href="/wishlist"
                                 className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
                                 data-wishlist-toggle
                                 data-product-slug={product.slug}
@@ -1371,11 +1370,11 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         <li>
                           <p className="text-caption-1">Categories:</p>
                           <p className="text-caption-1">
-                            <a href="#" className="text-1 link">
+                            <a href="/contact" className="text-1 link">
                               {product.category}
                             </a>
                             ,{" "}
-                            <a href="#" className="text-1 link">
+                            <a href="/contact" className="text-1 link">
                               {product.fabric}
                             </a>
                           </p>
@@ -1668,27 +1667,36 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
             <div className="overflow-y-auto">
               <ul className="tf-social-icon d-flex gap-10">
                 <li>
-                  <a href="#" className="box-icon social-facebook bg_line">
+                  <a
+                    href="/contact"
+                    className="box-icon social-facebook bg_line"
+                  >
                     <i className="icon icon-fb" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="box-icon social-twiter bg_line">
+                  <a href="/contact" className="box-icon social-twiter bg_line">
                     <i className="icon icon-x" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="box-icon social-instagram bg_line">
+                  <a
+                    href="/contact"
+                    className="box-icon social-instagram bg_line"
+                  >
                     <i className="icon icon-instagram" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="box-icon social-tiktok bg_line">
+                  <a href="/contact" className="box-icon social-tiktok bg_line">
                     <i className="icon icon-tiktok" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="box-icon social-pinterest bg_line">
+                  <a
+                    href="/contact"
+                    className="box-icon social-pinterest bg_line"
+                  >
                     <i className="icon icon-pinterest" />
                   </a>
                 </li>
@@ -1753,7 +1761,7 @@ export async function BlogListDynamic() {
                           </div>
                           <p className="text-caption-1">
                             by{" "}
-                            <a className="link" href="#">
+                            <a className="link" href="/about">
                               Sarjan Admin
                             </a>
                           </p>
@@ -1776,19 +1784,28 @@ export async function BlogListDynamic() {
                       <div className="pagination-item text-button">1</div>
                     </li>
                     <li>
-                      <a href="#" className="pagination-item text-button">
+                      <Link
+                        href="/blog?page=2"
+                        className="pagination-item text-button"
+                      >
                         2
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="#" className="pagination-item text-button">
+                      <Link
+                        href="/blog?page=3"
+                        className="pagination-item text-button"
+                      >
                         3
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="#" className="pagination-item text-button">
+                      <Link
+                        href="/blog?page=2"
+                        className="pagination-item text-button"
+                      >
                         <i className="icon-arrRight" />
-                      </a>
+                      </Link>
                     </li>
                   </ul>
                 ) : null}
@@ -1861,16 +1878,6 @@ export function PageTitle({
           ))}
         </ul>
       </div>
-    </div>
-  );
-}
-
-function StarRow() {
-  return (
-    <div className="list-star">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <i className="icon icon-star" key={index} />
-      ))}
     </div>
   );
 }
@@ -2058,7 +2065,7 @@ function ProductListCard({ product }: { product: Product }) {
               </a>
             )}
             <a
-              href="#"
+              href="/wishlist"
               className="box-icon wishlist btn-icon-action"
               data-wishlist-toggle
               data-product-slug={product.slug}
@@ -2613,7 +2620,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
           <div className="heading">
             <ul className="tags list-tags has-bg justify-content-center">
               <li>
-                <a href="#" className="link">
+                <a href="/contact" className="link">
                   B2B Textile
                 </a>
               </li>
@@ -2632,7 +2639,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                 </div>
                 <p className="body-text-1">
                   by{" "}
-                  <a className="link" href="#">
+                  <a className="link" href="/contact">
                     Sarjan Admin
                   </a>
                 </p>
@@ -2705,12 +2712,12 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
             <ul className="list-tags has-bg">
               <li>Tag:</li>
               <li>
-                <a href="#" className="link">
+                <a href="/contact" className="link">
                   Textile
                 </a>
               </li>
               <li>
-                <a href="#" className="link">
+                <a href="/contact" className="link">
                   B2B
                 </a>
               </li>
@@ -2719,22 +2726,22 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
               <p>Share this post:</p>
               <ul className="tf-social-icon style-1">
                 <li>
-                  <a href="#" className="social-facebook">
+                  <a href="/contact" className="social-facebook">
                     <i className="icon icon-fb" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="social-twiter">
+                  <a href="/contact" className="social-twiter">
                     <i className="icon icon-x" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="social-pinterest">
+                  <a href="/contact" className="social-pinterest">
                     <i className="icon icon-pinterest" />
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="social-instagram">
+                  <a href="/contact" className="social-instagram">
                     <i className="icon icon-instagram" />
                   </a>
                 </li>
@@ -2776,7 +2783,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                 <div className="content">
                   <div>
                     <h6>
-                      <a href="#" className="link">
+                      <a href="/contact" className="link">
                         Aarav Ethnic Studio
                       </a>
                     </h6>
@@ -2787,7 +2794,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                     assortments.
                   </p>
                   <div>
-                    <a className="text-button" href="#">
+                    <a className="text-button" href="/contact">
                       Reply
                     </a>
                   </div>
@@ -2804,7 +2811,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                   <div>
                     <div className="d-flex gap-12 align-items-center">
                       <h6>
-                        <a href="#" className="link">
+                        <a href="/contact" className="link">
                           Nayra Boutique
                         </a>
                       </h6>
@@ -3111,7 +3118,7 @@ export function AuthDynamic({ mode }: { mode: "login" | "register" }) {
                     </label>
                   </div>
                   {!isRegister ? (
-                    <a href="#" className="text-caption-1 text-primary">
+                    <a href="/contact" className="text-caption-1 text-primary">
                       Forgot password?
                     </a>
                   ) : null}

@@ -1,7 +1,11 @@
 import { mkdir, readFile, readdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { getCmsSnapshot, saveCmsSnapshot, appendAuditLog } from "@/lib/cms-store";
+import {
+  getCmsSnapshot,
+  saveCmsSnapshot,
+  appendAuditLog,
+} from "@/lib/cms-store";
 import { readLocalDb } from "@/lib/local-db";
 
 export type AppBackup = {
@@ -34,7 +38,10 @@ function supabaseAdmin() {
 }
 
 function backupId(createdAt: string, name: string) {
-  return `${createdAt.replace(/[:.]/g, "-")}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.json`;
+  return `${createdAt.replace(/[:.]/g, "-")}-${name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}.json`;
 }
 
 function backupSize(backup: AppBackup) {
@@ -46,11 +53,17 @@ async function localBackupPath(id: string) {
   return path.join(backupDir, id);
 }
 
-export async function createAppBackup(input: { name?: string; createdBy: string; source?: "manual" | "daily" }) {
+export async function createAppBackup(input: {
+  name?: string;
+  createdBy: string;
+  source?: "manual" | "daily";
+}) {
   const createdAt = new Date().toISOString();
   const backup: AppBackup = {
     version: 1,
-    name: input.name?.trim() || `${input.source === "daily" ? "Daily" : "Manual"} backup ${createdAt.slice(0, 10)}`,
+    name:
+      input.name?.trim() ||
+      `${input.source === "daily" ? "Daily" : "Manual"} backup ${createdAt.slice(0, 10)}`,
     createdAt,
     createdBy: input.createdBy,
     source: input.source ?? "manual",
@@ -106,47 +119,64 @@ export async function listAppBackups(): Promise<BackupSummary[]> {
       .order("created_at", { ascending: false })
       .limit(60);
     if (!error && data) {
-      return data.map((row: any) => ({
-        id: row.id,
-        name: row.name,
-        source: row.source,
-        createdBy: row.created_by,
+      return data.map((row: Record<string, unknown>) => ({
+        id: String(row.id ?? ""),
+        name: String(row.name ?? ""),
+        source: row.source as BackupSummary["source"],
+        createdBy: String(row.created_by ?? ""),
         sizeBytes: Number(row.size_bytes ?? 0),
-        createdAt: row.created_at,
+        createdAt: String(row.created_at ?? ""),
       }));
     }
   }
 
   await mkdir(backupDir, { recursive: true });
-  const files = (await readdir(backupDir)).filter((file) => file.endsWith(".json"));
-  const backups = await Promise.all(files.map(async (file) => {
-    const backup = JSON.parse(await readFile(path.join(backupDir, file), "utf8")) as AppBackup;
-    return {
-      id: file,
-      name: backup.name,
-      createdAt: backup.createdAt,
-      createdBy: backup.createdBy,
-      source: backup.source,
-      sizeBytes: backupSize(backup),
-    };
-  }));
-  return backups.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const files = (await readdir(backupDir)).filter((file) =>
+    file.endsWith(".json"),
+  );
+  const backups = await Promise.all(
+    files.map(async (file) => {
+      const backup = JSON.parse(
+        await readFile(path.join(backupDir, file), "utf8"),
+      ) as AppBackup;
+      return {
+        id: file,
+        name: backup.name,
+        createdAt: backup.createdAt,
+        createdBy: backup.createdBy,
+        source: backup.source,
+        sizeBytes: backupSize(backup),
+      };
+    }),
+  );
+  return backups.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 }
 
 export async function readAppBackup(id: string): Promise<AppBackup> {
   const supabase = supabaseAdmin();
   if (supabase && !id.endsWith(".json")) {
-    const { data, error } = await supabase.from("app_backups").select("data").eq("id", id).single();
+    const { data, error } = await supabase
+      .from("app_backups")
+      .select("data")
+      .eq("id", id)
+      .single();
     if (!error && data?.data) return data.data as AppBackup;
   }
-  return JSON.parse(await readFile(await localBackupPath(id), "utf8")) as AppBackup;
+  return JSON.parse(
+    await readFile(await localBackupPath(id), "utf8"),
+  ) as AppBackup;
 }
 
 async function restoreSupabaseDb(db: AppBackup["db"]) {
   const supabase = supabaseAdmin();
   if (!supabase) {
     await mkdir(path.join(process.cwd(), "data"), { recursive: true });
-    await writeFile(path.join(process.cwd(), "data", "local-db.json"), JSON.stringify(db, null, 2));
+    await writeFile(
+      path.join(process.cwd(), "data", "local-db.json"),
+      JSON.stringify(db, null, 2),
+    );
     return;
   }
 
@@ -207,21 +237,32 @@ async function restoreSupabaseDb(db: AppBackup["db"]) {
   }));
 
   if (clientRows.length) {
-    const { error } = await supabase.from("clients").upsert(clientRows, { onConflict: "id" });
+    const { error } = await supabase
+      .from("clients")
+      .upsert(clientRows, { onConflict: "id" });
     if (error) throw new Error(error.message);
   }
   if (orderRows.length) {
-    const { error } = await supabase.from("orders").upsert(orderRows, { onConflict: "id" });
+    const { error } = await supabase
+      .from("orders")
+      .upsert(orderRows, { onConflict: "id" });
     if (error) throw new Error(error.message);
   }
   if (feedbackRows.length) {
-    const { error } = await supabase.from("feedbacks").upsert(feedbackRows, { onConflict: "id" });
+    const { error } = await supabase
+      .from("feedbacks")
+      .upsert(feedbackRows, { onConflict: "id" });
     if (error) throw new Error(error.message);
   }
 }
 
-export async function restoreAppBackup(backup: AppBackup, actor: string, entityId = backup.name) {
-  if (backup.version !== 1 || !backup.cms || !backup.db) throw new Error("Invalid backup file");
+export async function restoreAppBackup(
+  backup: AppBackup,
+  actor: string,
+  entityId = backup.name,
+) {
+  if (backup.version !== 1 || !backup.cms || !backup.db)
+    throw new Error("Invalid backup file");
   await saveCmsSnapshot(backup.cms);
   await restoreSupabaseDb(backup.db);
   await appendAuditLog({
@@ -241,5 +282,11 @@ export async function deleteAppBackup(id: string, actor: string) {
   } else {
     await unlink(await localBackupPath(id)).catch(() => null);
   }
-  await appendAuditLog({ actor, role: "super_admin", action: "delete_backup", entity: "backup", entityId: id }).catch(() => null);
+  await appendAuditLog({
+    actor,
+    role: "super_admin",
+    action: "delete_backup",
+    entity: "backup",
+    entityId: id,
+  }).catch(() => null);
 }

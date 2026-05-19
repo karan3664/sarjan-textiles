@@ -191,14 +191,6 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-function titleCase(value: string) {
-  return value
-    .split(/[\s_-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
 function safeSegment(value: string, fallback: string) {
   const clean = value
     .toLowerCase()

@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
         destination: "/forgot-password",
         permanent: true,
       },
+      {
+        source: "/terms",
+        destination: "/term-of-use",
+        permanent: true,
+      },
     ];
   },
   async headers() {
