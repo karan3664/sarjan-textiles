@@ -90,36 +90,24 @@ function socialLinks(): SocialLink[] {
   return out;
 }
 
+/** Per-icon column width: keeps three circles equal-spaced as one centered block in Gmail/Outlook. */
+const EMAIL_SOCIAL_COL_PX = 60;
+
 function socialIconsTable(): string {
   const links = socialLinks();
   if (!links.length) return "";
+
+  const rowWidth = links.length * EMAIL_SOCIAL_COL_PX;
 
   const cells = links
     .map((item) => {
       const inner = emailSocialIconImg(item.kind);
       const bg = escapeHtml(item.bg);
-      return `<td align="center" valign="middle" style="padding:0 8px;font-size:0;line-height:0;vertical-align:middle;">
-        <a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="44" height="44" bgcolor="${bg}" style="width:44px;height:44px;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;border-radius:22px;background-color:${bg};">
-            <tr>
-              <td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;padding:0;margin:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;border-radius:22px;">
-                ${inner}
-              </td>
-            </tr>
-          </table>
-        </a>
-      </td>`;
+      return `<td width="${EMAIL_SOCIAL_COL_PX}" align="center" valign="middle" style="width:${EMAIL_SOCIAL_COL_PX}px;min-width:${EMAIL_SOCIAL_COL_PX}px;max-width:${EMAIL_SOCIAL_COL_PX}px;padding:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;"><a href="${escapeHtml(item.href)}" title="${escapeHtml(item.title)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;line-height:0;font-size:0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="44" height="44" bgcolor="${bg}" style="width:44px;height:44px;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;border-radius:22px;background-color:${bg};"><tr><td align="center" valign="middle" width="44" height="44" style="width:44px;height:44px;padding:0;margin:0;font-size:0;line-height:0;vertical-align:middle;text-align:center;border-radius:22px;">${inner}</td></tr></table></a></td>`;
     })
     .join("");
 
-  return `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:18px auto 0;">
-      <tr>
-        <td align="center" style="font-size:12px;color:#6f6a64;padding-bottom:10px;">Connect with us</td>
-      </tr>
-      <tr><td align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table></td></tr>
-    </table>
-  `;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="margin:18px auto 0;width:100%;max-width:100%;border-collapse:collapse;"><tr><td align="center" style="text-align:center;font-size:12px;color:#6f6a64;padding-bottom:10px;">Connect with us</td></tr><tr><td align="center" style="text-align:center;padding:0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="${rowWidth}" style="width:${rowWidth}px;max-width:100%;margin:0 auto;border-collapse:collapse;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;"><tr>${cells}</tr></table></td></tr></table>`;
 }
 
 function footerBlock(): string {
@@ -134,17 +122,17 @@ function footerBlock(): string {
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background:#fbfaf7;border-top:1px solid #e8e2d9;">
       <tr>
-        <td style="padding:28px 24px 22px;text-align:center;">
-          <p style="margin:0 0 14px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8b1e2d;font-weight:700;font-family:Arial,Helvetica,sans-serif;">
+        <td align="center" style="padding:28px 24px 22px;text-align:center;">
+          <p align="center" style="margin:0 0 14px;text-align:center;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8b1e2d;font-weight:700;font-family:Arial,Helvetica,sans-serif;">
             ${brand}
           </p>
-          <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#4d4843;font-family:Arial,Helvetica,sans-serif;">
+          <p align="center" style="margin:0 0 18px;text-align:center;font-size:14px;line-height:1.65;color:#4d4843;font-family:Arial,Helvetica,sans-serif;">
             <a href="tel:${telHref}" style="color:#8b1e2d;text-decoration:none;font-weight:600;">${phone}</a>
             <span style="color:#c4bdb4;">&nbsp;&nbsp;·&nbsp;&nbsp;</span>
             <a href="mailto:${email}" style="color:#8b1e2d;text-decoration:none;font-weight:600;">${email}</a>
           </p>
           ${socialIconsTable()}
-          <p style="margin:22px 0 0;font-size:11px;line-height:1.5;color:#a39e98;font-family:Arial,Helvetica,sans-serif;">
+          <p align="center" style="margin:22px 0 0;text-align:center;font-size:11px;line-height:1.5;color:#a39e98;font-family:Arial,Helvetica,sans-serif;">
             <a href="${siteHref}" style="color:#8b1e2d;text-decoration:underline;">${siteLabel}</a>
             &nbsp;·&nbsp;B2B textile sourcing &amp; order management
           </p>
