@@ -48,21 +48,32 @@ type DashboardData = {
 
 function statusClass(status: string) {
   const normalized = status.toLowerCase();
-  if (normalized.includes("approved") || normalized.includes("delivered")) return "type-completed";
-  if (normalized.includes("ready") || normalized.includes("production")) return "type-delivery";
+  if (normalized.includes("approved") || normalized.includes("delivered"))
+    return "type-completed";
+  if (normalized.includes("ready") || normalized.includes("production"))
+    return "type-delivery";
   return "type-pending";
 }
 
 function MiniBarChart({ data }: { data: ChartPoint[] }) {
-  const max = useMemo(() => Math.max(...data.map((item) => item.value), 1), [data]);
+  const max = useMemo(
+    () => Math.max(...data.map((item) => item.value), 1),
+    [data],
+  );
 
   return (
     <div className="sarjan-admin-chart" role="list">
       {data.map((item) => (
-        <div className="sarjan-admin-chart-row" key={item.label} role="listitem">
+        <div
+          className="sarjan-admin-chart-row"
+          key={item.label}
+          role="listitem"
+        >
           <div className="text-caption-1 text-secondary">{item.label}</div>
           <div className="sarjan-admin-chart-track">
-            <span style={{ width: `${Math.max((item.value / max) * 100, 8)}%` }} />
+            <span
+              style={{ width: `${Math.max((item.value / max) * 100, 8)}%` }}
+            />
           </div>
           <div className="text-title">{item.value}</div>
         </div>
@@ -131,7 +142,9 @@ export function AdminDashboardClient() {
                   <div className="title text-secondary">{metric.label}</div>
                   <div className="number">
                     <h4>{metric.value}</h4>
-                    <div className="time text-caption-1 text-secondary">{metric.note}</div>
+                    <div className="time text-caption-1 text-secondary">
+                      {metric.note}
+                    </div>
                   </div>
                 </div>
                 <div className="icon">
@@ -181,7 +194,7 @@ export function AdminDashboardClient() {
           <div className="box-top">
             <h5 className="box-title">Recent Orders</h5>
           </div>
-          <div className="wg-table table-recent-orders">
+          <div className="wg-table table-recent-orders sarjan-dashboard-orders-table">
             <table>
               <thead>
                 <tr>
@@ -202,13 +215,25 @@ export function AdminDashboardClient() {
                     <td>{order.date}</td>
                     <td>{order.total}</td>
                     <td>
-                      <div className={`box-status w-100 text-button ${statusClass(order.paymentStatus)}`}>{order.paymentStatus}</div>
+                      <div
+                        className={`box-status w-100 text-button ${statusClass(order.paymentStatus)}`}
+                      >
+                        {order.paymentStatus}
+                      </div>
                     </td>
                     <td>
-                      <div className={`box-status w-100 text-button ${statusClass(order.dispatchStatus)}`}>{order.dispatchStatus}</div>
+                      <div
+                        className={`box-status w-100 text-button ${statusClass(order.dispatchStatus)}`}
+                      >
+                        {order.dispatchStatus}
+                      </div>
                     </td>
                     <td>
-                      <div className={`box-status w-100 text-button ${statusClass(order.approvalStatus)}`}>{order.approvalStatus}</div>
+                      <div
+                        className={`box-status w-100 text-button ${statusClass(order.approvalStatus)}`}
+                      >
+                        {order.approvalStatus}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -228,15 +253,22 @@ export function AdminDashboardClient() {
                   <i className="icon-bell" />
                 </div>
                 <div className="content">
-                  <div className="text-title name text-line-clamp-1">{alert.label}</div>
-                  <div className="text-caption-1 sub text-secondary">{alert.detail}</div>
+                  <div className="text-title name text-line-clamp-1">
+                    {alert.label}
+                  </div>
+                  <div className="text-caption-1 sub text-secondary">
+                    {alert.detail}
+                  </div>
                 </div>
               </li>
             ))}
           </ul>
           <div className="sarjan-admin-rule-note">
             <div className="text-title">Payment Rule</div>
-            <div className="body-text text-secondary">Dashboard reads live backend data from clients, orders, products, inventory, finance, and inquiries.</div>
+            <div className="body-text text-secondary">
+              Dashboard reads live backend data from clients, orders, products,
+              inventory, finance, and inquiries.
+            </div>
           </div>
         </div>
       </div>

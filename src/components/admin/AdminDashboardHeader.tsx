@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  playAdminNotificationChime,
+  unlockAdminNotificationAudio,
+} from "@/lib/admin-notification-sound";
 
 type Me = { admin?: { email: string; name: string; role: string } };
 type NotifItem = {
@@ -22,6 +26,33 @@ export function AdminDashboardHeader() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const skipInitialUnreadSound = useRef(true);
+  const prevUnreadRef = useRef(0);
+
+  useEffect(() => {
+    const onFirstPointer = () => unlockAdminNotificationAudio();
+    document.addEventListener("pointerdown", onFirstPointer, {
+      capture: true,
+      once: true,
+    });
+    return () =>
+      document.removeEventListener("pointerdown", onFirstPointer, {
+        capture: true,
+      });
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    if (skipInitialUnreadSound.current) {
+      skipInitialUnreadSound.current = false;
+      prevUnreadRef.current = unread;
+      return;
+    }
+    if (unread > prevUnreadRef.current) {
+      playAdminNotificationChime();
+    }
+    prevUnreadRef.current = unread;
+  }, [unread, loading]);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -59,7 +90,7 @@ export function AdminDashboardHeader() {
       }
     })();
     void loadNotifications();
-    const t = window.setInterval(() => void loadNotifications(), 60_000);
+    const t = window.setInterval(() => void loadNotifications(), 30_000);
     return () => window.clearInterval(t);
   }, [loadNotifications]);
 
@@ -143,7 +174,10 @@ export function AdminDashboardHeader() {
                   type="button"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
-                  onClick={() => void loadNotifications()}
+                  onClick={() => {
+                    unlockAdminNotificationAudio();
+                    void loadNotifications();
+                  }}
                 >
                   <span
                     className={`header-item${unread > 0 ? " has-dot" : ""}`}
@@ -155,7 +189,7 @@ export function AdminDashboardHeader() {
                   className="dropdown-menu dropdown-menu-end has-content sarjan-admin-notif-menu"
                   style={{ minWidth: "min(100vw - 24px, 360px)" }}
                 >
-                  <li className="sarjan-admin-notif-menu-head px-3 py-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <li className="sarjan-admin-notif-menu-head d-flex align-items-center justify-content-between gap-2">
                     <h6 className="mb-0">Notifications</h6>
                     <div className="d-flex flex-wrap gap-1">
                       <button

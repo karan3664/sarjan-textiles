@@ -160,7 +160,7 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
             </button>
           </div>
         </form>
-        <div className="wg-table table-product-list sarjan-report-table">
+        <div className="wg-table sarjan-report-table">
           <table>
             <thead>
               <tr>
@@ -174,9 +174,17 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
             <tbody>
               {rows.slice(0, 500).map((row, index) => (
                 <tr className="tf-table-item item-row" key={index}>
-                  {headers.map((header) => (
-                    <td key={header}>{String(row[header] ?? "-")}</td>
-                  ))}
+                  {headers.map((header) => {
+                    const text = String(row[header] ?? "-");
+                    return (
+                      <td
+                        key={header}
+                        title={text.length > 48 ? text : undefined}
+                      >
+                        {text}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
               {!rows.length ? (

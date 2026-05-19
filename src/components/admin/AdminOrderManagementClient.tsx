@@ -1258,7 +1258,7 @@ export function AdminOrderManagementClient({
               </div>
             </div>
           </div>
-          <div className="wg-table table-product-list">
+          <div className="wg-table sarjan-order-dispatch-table">
             <table>
               <thead>
                 <tr>
@@ -1354,7 +1354,7 @@ export function AdminOrderManagementClient({
                 </div>
               </div>
             </div>
-            <div className="wg-table table-product-list">
+            <div className="wg-table sarjan-order-aging-table">
               <table>
                 <thead>
                   <tr>

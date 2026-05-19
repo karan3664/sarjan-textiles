@@ -578,6 +578,20 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
     #f6f5f2;
 }
 
+/* Modave admin theme: input.tf-check uses var(--Gray) / var(--Green) but :root never defines them — toggles look like empty outlines */
+.layout-wrap input.tf-check {
+  background-color: #d9dde3 !important;
+}
+
+.layout-wrap input.tf-check:checked {
+  background-color: #22c55e !important;
+}
+
+.layout-wrap input.tf-check::after {
+  background-color: #fff !important;
+  box-shadow: 0 1px 3px rgba(24, 24, 24, 0.18);
+}
+
 .section-content-right .main-content {
   background: transparent;
 }
@@ -847,13 +861,18 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   overflow: hidden;
   border-radius: 50%;
   background: #f3f3f3;
+  box-sizing: border-box;
+  /* Inset so tall/wide logos stay inside the circular mask (square img + img { border-radius:50% } was clipping) */
+  padding: 5px;
 }
 
 .header-dashboard .wrap .wg-user .image .sarjan-admin-header-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
   display: block;
+  border-radius: 0 !important;
 }
 
 .header-dashboard .wrap .header-item {
@@ -899,6 +918,70 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   margin: 0 !important;
   line-height: 1.35 !important;
   white-space: normal !important;
+}
+
+/* Admin notifications dropdown: align title + actions; flex text must shrink so lines don’t hug the edge */
+.popup-wrap.noti .dropdown-menu.sarjan-admin-notif-menu {
+  --sarjan-notif-pad-x: 14px;
+  padding-top: 6px;
+  padding-bottom: 8px;
+}
+
+.popup-wrap.noti .sarjan-admin-notif-menu-head {
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  row-gap: 8px !important;
+  gap: 12px !important;
+  padding-left: var(--sarjan-notif-pad-x) !important;
+  padding-right: var(--sarjan-notif-pad-x) !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.popup-wrap.noti .sarjan-admin-notif-menu-head h6 {
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  font-size: 15px;
+}
+
+.popup-wrap.noti .sarjan-admin-notif-menu-head .d-flex {
+  align-items: center;
+  gap: 8px !important;
+}
+
+.popup-wrap.noti .sarjan-admin-notif-menu-head .btn {
+  line-height: 1.2;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.popup-wrap.noti
+  .sarjan-admin-notif-menu
+  > li:not(.sarjan-admin-notif-menu-head) {
+  padding-left: var(--sarjan-notif-pad-x);
+  padding-right: var(--sarjan-notif-pad-x);
+}
+
+.popup-wrap.noti .sarjan-admin-notif-item.dropdown-item {
+  padding: 12px 0 !important;
+  margin: 0 !important;
+  white-space: normal !important;
+  border-radius: 0;
+}
+
+.popup-wrap.noti .sarjan-admin-notif-item .notifications-item {
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+}
+
+.popup-wrap.noti .sarjan-admin-notif-item .notifications-item > div:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  padding-right: 2px;
 }
 
 .section-menu-left {
@@ -1217,6 +1300,22 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Action column: <td> must stay table-cell (admin table reset); flex lives on inner wrapper */
+.sarjan-products-table .sarjan-product-row-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sarjan-products-table .sarjan-product-row-actions > .tf-btn-small,
+.sarjan-products-table .sarjan-product-row-actions > a.tf-btn-small {
+  flex: 0 0 auto;
 }
 
 .wg-table.sarjan-blogs-table {
@@ -2530,7 +2629,16 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-seo-index-toggle {
-  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sarjan-seo-index-toggle .tf-check {
+  flex-shrink: 0;
 }
 
 .sarjan-product-check {
@@ -4758,12 +4866,224 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-report-table,
-.sarjan-role-table {
+.sarjan-role-table,
+.sarjan-products-table,
+.sarjan-inventory-table,
+.sarjan-inventory-history-table,
+.sarjan-dashboard-orders-table,
+.sarjan-order-dispatch-table,
+.sarjan-order-aging-table,
+.sarjan-audit-table,
+.sarjan-backups-table,
+.sarjan-pricing-history-table {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.sarjan-report-table table {
+/* Admin data tables: Modave .wg-table uses flex rows; .table-product-list pins 7 product column widths — use real <table> layout */
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table {
+  display: table;
+  width: max(100%, 960px);
   min-width: 960px;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.sarjan-report-table.wg-table > table {
+  width: max(100%, 1080px);
+  min-width: 1080px;
+}
+
+.sarjan-role-table.wg-table > table {
+  width: max(100%, 720px);
+  min-width: 720px;
+}
+
+.sarjan-inventory-table.wg-table > table,
+.sarjan-inventory-history-table.wg-table > table {
+  table-layout: fixed !important;
+}
+
+.sarjan-inventory-table.wg-table > table {
+  min-width: 900px !important;
+}
+
+.sarjan-inventory-history-table.wg-table > table {
+  min-width: 860px !important;
+}
+
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > thead {
+  display: table-header-group;
+  border-radius: 0;
+}
+
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > tbody {
+  display: table-row-group;
+}
+
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > thead
+  > tr,
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > tbody
+  > tr {
+  display: table-row !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > thead
+  > tr
+  > th,
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > tbody
+  > tr
+  > td {
+  display: table-cell !important;
+  padding: 12px 14px !important;
+  vertical-align: middle;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 96px;
+  box-sizing: border-box;
+}
+
+:is(
+    .sarjan-report-table,
+    .sarjan-role-table,
+    .sarjan-products-table,
+    .sarjan-inventory-table,
+    .sarjan-inventory-history-table,
+    .sarjan-dashboard-orders-table,
+    .sarjan-order-dispatch-table,
+    .sarjan-order-aging-table,
+    .sarjan-audit-table,
+    .sarjan-backups-table,
+    .sarjan-pricing-history-table
+  ).wg-table
+  > table
+  > thead
+  > tr
+  > th {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.sarjan-role-table.wg-table > table > tbody > tr > td:first-child {
+  max-width: min(420px, 40vw);
+}
+
+.sarjan-products-table.wg-table > table > thead > tr > th:last-child,
+.sarjan-products-table.wg-table > table > tbody > tr > td:last-child {
+  min-width: 148px;
+  max-width: none;
+}
+
+.sarjan-dashboard-orders-table.wg-table > table > thead > tr > th,
+.sarjan-dashboard-orders-table.wg-table > table > tbody > tr > td {
+  max-width: none;
+}
+
+.sarjan-inventory-table.wg-table > table > thead > tr > th,
+.sarjan-inventory-table.wg-table > table > tbody > tr > td {
+  padding: 14px 10px !important;
 }
 
 .sarjan-role-prefix-grid {

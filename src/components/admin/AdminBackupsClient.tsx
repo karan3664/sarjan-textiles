@@ -182,7 +182,7 @@ export function AdminBackupsClient({
         {message ? (
           <div className="sarjan-admin-message mb-20">{message}</div>
         ) : null}
-        <div className="wg-table table-product-list">
+        <div className="wg-table sarjan-backups-table">
           <table>
             <thead>
               <tr>

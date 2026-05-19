@@ -463,7 +463,7 @@ export function AdminPricingClient({
             {pricingHistory.length} Logs
           </div>
         </div>
-        <div className="wg-table table-product-list">
+        <div className="wg-table sarjan-pricing-history-table">
           <table>
             <thead>
               <tr>
