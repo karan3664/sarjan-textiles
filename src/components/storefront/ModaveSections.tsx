@@ -56,13 +56,19 @@ function ProductFeature({ product }: { product: Product }) {
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = product.imageAlt || `${product.name} ${product.category}`;
+  const soldOut = product.stock <= 0;
 
   return (
     <section className="flat-spacing bg-surface">
       <div className="container">
         <div className="row flat-single-home">
           <div className="col-md-6">
-            <div className="tf-product-media-wrap sticky-top">
+            <div className="tf-product-media-wrap sticky-top position-relative">
+              {soldOut ? (
+                <div className="sarjan-oos-ribbon" role="status">
+                  Out of stock
+                </div>
+              ) : null}
               <div className="thumbs-slider">
                 <div
                   dir="ltr"
@@ -137,7 +143,14 @@ function ProductFeature({ product }: { product: Product }) {
                     </div>
                     <h3 className="name">{product.name}</h3>
                     <div className="text-caption-1 text-secondary">
-                      MOQ {product.moq}. Stock {product.stock}.
+                      MOQ {product.moq}.{" "}
+                      <span
+                        className={
+                          soldOut ? "sarjan-stock-unavailable" : undefined
+                        }
+                      >
+                        Stock {product.stock}.
+                      </span>
                     </div>
                   </div>
                   <div className="tf-product-info-price">
@@ -226,63 +239,122 @@ function ProductFeature({ product }: { product: Product }) {
                   </div>
                   <div>
                     <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
-                      <a
-                        href="#shoppingCart"
-                        data-bs-toggle="modal"
-                        className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
-                        data-cart-add
-                        data-product-slug={product.slug}
-                        data-product-size-run={sizeRun.join(",")}
-                        data-product-color={product.colors[0]}
-                        data-set-price={setPrice}
-                      >
-                        <span>Add 1 set</span>
-                      </a>
-                      <a
-                        href="#shoppingCart"
-                        data-bs-toggle="modal"
-                        className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
-                        data-cart-add
-                        data-product-all-colors="true"
-                        data-product-colors={product.colors.join(",")}
-                        data-product-slug={product.slug}
-                        data-product-size-run={sizeRun.join(",")}
-                        data-product-color={product.colors[0]}
-                      >
-                        Add all colors
-                      </a>
-                      <a
-                        href="#compare"
-                        data-bs-toggle="offcanvas"
-                        aria-controls="compare"
-                        className="box-icon hover-tooltip compare btn-icon-action"
-                        data-compare-add
-                        data-product-slug={product.slug}
-                      >
-                        <span className="icon icon-gitDiff" />
-                        <span className="tooltip text-caption-2">Compare</span>
-                      </a>
-                      <a
-                        href="#"
-                        className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
-                        data-wishlist-toggle
-                        data-product-slug={product.slug}
-                      >
-                        <span className="icon icon-heart" />
-                        <span className="tooltip text-caption-2">Wishlist</span>
-                      </a>
+                      {soldOut ? (
+                        <>
+                          <span
+                            className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"
+                            style={{ opacity: 0.55, cursor: "not-allowed" }}
+                            aria-disabled="true"
+                          >
+                            Out of stock
+                          </span>
+                          <span
+                            className="btn-style-3 flex-grow-1 text-btn-uppercase"
+                            style={{ opacity: 0.55, cursor: "not-allowed" }}
+                            aria-disabled="true"
+                          >
+                            Out of stock
+                          </span>
+                          <a
+                            href="#compare"
+                            data-bs-toggle="offcanvas"
+                            aria-controls="compare"
+                            className="box-icon hover-tooltip compare btn-icon-action"
+                            data-compare-add
+                            data-product-slug={product.slug}
+                          >
+                            <span className="icon icon-gitDiff" />
+                            <span className="tooltip text-caption-2">
+                              Compare
+                            </span>
+                          </a>
+                          <a
+                            href="#"
+                            className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
+                            data-wishlist-toggle
+                            data-product-slug={product.slug}
+                          >
+                            <span className="icon icon-heart" />
+                            <span className="tooltip text-caption-2">
+                              Wishlist
+                            </span>
+                          </a>
+                        </>
+                      ) : (
+                        <>
+                          <a
+                            href="#shoppingCart"
+                            data-bs-toggle="modal"
+                            className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
+                            data-cart-add
+                            data-product-slug={product.slug}
+                            data-product-size-run={sizeRun.join(",")}
+                            data-product-color={product.colors[0]}
+                            data-set-price={setPrice}
+                          >
+                            <span>Add 1 set</span>
+                          </a>
+                          <a
+                            href="#shoppingCart"
+                            data-bs-toggle="modal"
+                            className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
+                            data-cart-add
+                            data-product-all-colors="true"
+                            data-product-colors={product.colors.join(",")}
+                            data-product-slug={product.slug}
+                            data-product-size-run={sizeRun.join(",")}
+                            data-product-color={product.colors[0]}
+                          >
+                            Add all colors
+                          </a>
+                          <a
+                            href="#compare"
+                            data-bs-toggle="offcanvas"
+                            aria-controls="compare"
+                            className="box-icon hover-tooltip compare btn-icon-action"
+                            data-compare-add
+                            data-product-slug={product.slug}
+                          >
+                            <span className="icon icon-gitDiff" />
+                            <span className="tooltip text-caption-2">
+                              Compare
+                            </span>
+                          </a>
+                          <a
+                            href="#"
+                            className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
+                            data-wishlist-toggle
+                            data-product-slug={product.slug}
+                          >
+                            <span className="icon icon-heart" />
+                            <span className="tooltip text-caption-2">
+                              Wishlist
+                            </span>
+                          </a>
+                        </>
+                      )}
                     </div>
-                    <a
-                      href="#shoppingCart"
-                      data-bs-toggle="modal"
-                      className="btn-style-3 text-btn-uppercase"
-                      data-cart-add
-                      data-product-slug={product.slug}
-                      data-product-size-run={sizeRun.join(",")}
-                      data-product-color={product.colors[0]}
-                    >
-                      Buy it now
-                    </a>
+                    {soldOut ? (
+                      <span
+                        className="btn-style-3 text-btn-uppercase d-inline-block w-100 text-center"
+                        style={{ opacity: 0.55, cursor: "not-allowed" }}
+                        aria-disabled="true"
+                      >
+                        Out of stock
+                      </span>
+                    ) : (
+                      <a
+                        href="#shoppingCart"
+                        data-bs-toggle="modal"
+                        className="btn-style-3 text-btn-uppercase"
+                        data-cart-add
+                        data-product-slug={product.slug}
+                        data-product-size-run={sizeRun.join(",")}
+                        data-product-color={product.colors[0]}
+                      >
+                        Buy it now
+                      </a>
+                    )}
                   </div>
                   <div>
                     <Link
@@ -3107,8 +3179,16 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
                           <td className="tf-cart-item_product">
                             <Link
                               href={`/products/${item.product.slug}`}
-                              className="img-box"
+                              className="img-box position-relative d-inline-block"
                             >
+                              {item.product.stock <= 0 ? (
+                                <div
+                                  className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
+                                  role="status"
+                                >
+                                  Out of stock
+                                </div>
+                              ) : null}
                               <img
                                 src={item.product.images[0]}
                                 alt={item.product.name}
@@ -3286,8 +3366,16 @@ function CheckoutDynamic({
                         >
                           <Link
                             href={`/products/${item.product.slug}`}
-                            className="img-product"
+                            className="img-product position-relative d-inline-block"
                           >
+                            {item.product.stock <= 0 ? (
+                              <div
+                                className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
+                                role="status"
+                              >
+                                Out of stock
+                              </div>
+                            ) : null}
                             <img
                               src={item.product.images[0]}
                               alt={item.product.name}

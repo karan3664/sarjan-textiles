@@ -13,11 +13,26 @@ function sizeRun(product: Product) {
 }
 
 function StarRow() {
-  return <div className="list-star">{Array.from({ length: 5 }).map((_, index) => <span className="icon icon-star" key={index} />)}</div>;
+  return (
+    <div className="list-star">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <span className="icon icon-star" key={index} />
+      ))}
+    </div>
+  );
 }
 
-export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) {
-  const [slugs, setSlugs] = useState<string[]>(initialIds.split(",").map((item) => item.trim()).filter(Boolean));
+export function ComparePageClient({
+  initialIds = "",
+}: {
+  initialIds?: string;
+}) {
+  const [slugs, setSlugs] = useState<string[]>(
+    initialIds
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  );
   const [products, setProducts] = useState<Product[]>([]);
   const slugKey = useMemo(() => slugs.join(","), [slugs]);
 
@@ -33,27 +48,82 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
     fetch(`/api/catalog/products?ids=${encodeURIComponent(slugKey)}&limit=8`)
       .then((res) => res.json())
       .then((data) => {
-        const bySlug = new Map<Product["slug"], Product>((data.items ?? []).map((product: Product) => [product.slug, product]));
-        setProducts(slugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Product[]);
+        const bySlug = new Map<Product["slug"], Product>(
+          (data.items ?? []).map((product: Product) => [product.slug, product]),
+        );
+        setProducts(
+          slugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Product[],
+        );
       })
       .catch(() => setProducts([]));
   }, [slugKey, slugs]);
 
   const rows = [
-    ["Rating", (product: Product) => <><StarRow /><span>({product.sold.toLocaleString("en-IN")})</span></>],
-    ["Price", (product: Product) => <PriceGate amount={product.price} suffix=" / piece" />],
-    ["Type", (product: Product) => <span className="type">{product.category}</span>],
+    [
+      "Rating",
+      (product: Product) => (
+        <>
+          <StarRow />
+          <span>({product.sold.toLocaleString("en-IN")})</span>
+        </>
+      ),
+    ],
+    [
+      "Price",
+      (product: Product) => (
+        <PriceGate amount={product.price} suffix=" / piece" />
+      ),
+    ],
+    [
+      "Type",
+      (product: Product) => <span className="type">{product.category}</span>,
+    ],
     ["Brand", () => <span className="brand">Sarjan Textiles</span>],
-    ["Size", (product: Product) => <span className="size">{sizeRun(product).join(", ")}</span>],
-    ["Color", (product: Product) => <div className="list-compare-color justify-content-center">{product.colors.slice(0, 5).map((color, index) => <span className={`item ${index === 0 ? "active" : ""}`} style={{ background: color.toLowerCase() }} key={color} />)}</div>],
-    ["Material", (product: Product) => <span className="size">{product.fabric}</span>],
+    [
+      "Size",
+      (product: Product) => (
+        <span className="size">{sizeRun(product).join(", ")}</span>
+      ),
+    ],
+    [
+      "Color",
+      (product: Product) => (
+        <div className="list-compare-color justify-content-center">
+          {product.colors.slice(0, 5).map((color, index) => (
+            <span
+              className={`item ${index === 0 ? "active" : ""}`}
+              style={{ background: color.toLowerCase() }}
+              key={color}
+            />
+          ))}
+        </div>
+      ),
+    ],
+    [
+      "Material",
+      (product: Product) => <span className="size">{product.fabric}</span>,
+    ],
     ["MOQ", (product: Product) => <span>{product.moq} pcs</span>],
-    ["Stock", (product: Product) => <span>{product.stock > 0 ? `${product.stock} available` : "Sold out"}</span>],
+    [
+      "Stock",
+      (product: Product) => (
+        <span
+          className={
+            product.stock <= 0 ? "sarjan-stock-unavailable" : undefined
+          }
+        >
+          {product.stock > 0 ? `${product.stock} available` : "Sold out"}
+        </span>
+      ),
+    ],
   ] as const;
 
   return (
     <>
-      <PageTitle title="Compare Products" crumbs={["Homepage", "Compare Products"]} />
+      <PageTitle
+        title="Compare Products"
+        crumbs={["Homepage", "Compare Products"]}
+      />
       <section className="flat-spacing">
         <div className="container">
           {products.length ? (
@@ -63,10 +133,35 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
                 {products.map((product) => (
                   <div className="tf-compare-col" key={product.slug}>
                     <div className="tf-compare-item">
-                      <Link className="tf-compare-image" href={`/products/${product.slug}`}><img className="lazyload" data-src={product.images[0]} src={product.images[0]} alt={product.name} /></Link>
+                      <Link
+                        className="tf-compare-image position-relative d-inline-block"
+                        href={`/products/${product.slug}`}
+                      >
+                        {product.stock <= 0 ? (
+                          <div
+                            className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
+                            role="status"
+                          >
+                            Out of stock
+                          </div>
+                        ) : null}
+                        <img
+                          className="lazyload"
+                          data-src={product.images[0]}
+                          src={product.images[0]}
+                          alt={product.name}
+                        />
+                      </Link>
                       <div className="tf-compare-content">
-                        <Link className="link text-title text-line-clamp-1" href={`/products/${product.slug}`}>{product.name}</Link>
-                        <p className="desc text-caption-1">{product.category}, {product.fabric}</p>
+                        <Link
+                          className="link text-title text-line-clamp-1"
+                          href={`/products/${product.slug}`}
+                        >
+                          {product.name}
+                        </Link>
+                        <p className="desc text-caption-1">
+                          {product.category}, {product.fabric}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -74,15 +169,49 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
               </div>
               {rows.map(([label, render]) => (
                 <div className="tf-compare-row" key={label}>
-                  <div className="tf-compare-col tf-compare-field d-md-block d-none"><h6>{label}</h6></div>
-                  {products.map((product) => <div className="tf-compare-col tf-compare-field text-center" key={`${product.slug}-${label}`}>{render(product)}</div>)}
+                  <div className="tf-compare-col tf-compare-field d-md-block d-none">
+                    <h6>{label}</h6>
+                  </div>
+                  {products.map((product) => (
+                    <div
+                      className="tf-compare-col tf-compare-field text-center"
+                      key={`${product.slug}-${label}`}
+                    >
+                      {render(product)}
+                    </div>
+                  ))}
                 </div>
               ))}
               <div className="tf-compare-row">
-                <div className="tf-compare-col tf-compare-field d-md-block d-none"><h6>Add To Cart</h6></div>
+                <div className="tf-compare-col tf-compare-field d-md-block d-none">
+                  <h6>Add To Cart</h6>
+                </div>
                 {products.map((product) => (
-                  <div className="tf-compare-col tf-compare-field tf-compare-viewcart text-center" key={`${product.slug}-cart`}>
-                    <a href="#shoppingCart" data-bs-toggle="modal" className="btn-view-cart" data-cart-add data-product-slug={product.slug} data-product-size-run={sizeRun(product).join(",")} data-product-color={product.colors[0]}>Add To Cart</a>
+                  <div
+                    className="tf-compare-col tf-compare-field tf-compare-viewcart text-center"
+                    key={`${product.slug}-cart`}
+                  >
+                    {product.stock <= 0 ? (
+                      <span
+                        className="btn-view-cart sarjan-stock-unavailable"
+                        style={{ opacity: 0.55, cursor: "not-allowed" }}
+                        aria-disabled="true"
+                      >
+                        Out of stock
+                      </span>
+                    ) : (
+                      <a
+                        href="#shoppingCart"
+                        data-bs-toggle="modal"
+                        className="btn-view-cart"
+                        data-cart-add
+                        data-product-slug={product.slug}
+                        data-product-size-run={sizeRun(product).join(",")}
+                        data-product-color={product.colors[0]}
+                      >
+                        Add To Cart
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>
@@ -90,8 +219,12 @@ export function ComparePageClient({ initialIds = "" }: { initialIds?: string }) 
           ) : (
             <div className="text-center py-5">
               <h5>No products selected</h5>
-              <p className="text-secondary mt_8">Choose compare icon from product cards.</p>
-              <Link href="/products" className="tf-btn btn-fill radius-4 mt_24"><span className="text">Browse Products</span></Link>
+              <p className="text-secondary mt_8">
+                Choose compare icon from product cards.
+              </p>
+              <Link href="/products" className="tf-btn btn-fill radius-4 mt_24">
+                <span className="text">Browse Products</span>
+              </Link>
             </div>
           )}
         </div>

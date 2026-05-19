@@ -4874,6 +4874,15 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   padding: 5px 10px;
 }
 
+.sarjan-oos-ribbon--thumb {
+  top: 6px;
+  right: 6px;
+  left: auto;
+  font-size: 8px;
+  padding: 4px 7px;
+  letter-spacing: 0.05em;
+}
+
 .sarjan-oos-pill {
   display: inline-block;
   padding: 10px 16px;

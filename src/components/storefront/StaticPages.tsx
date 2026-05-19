@@ -36,7 +36,9 @@ export function DynamicInfoPage({
               <div className="d-grid gap-16">
                 {items.map((item) => (
                   <div className="feature-with-icon" key={item.title}>
-                    <div className="box-icon w_40 round"><i className="icon icon-sealCheck" /></div>
+                    <div className="box-icon w_40 round">
+                      <i className="icon icon-sealCheck" />
+                    </div>
                     <div>
                       <h6>{item.title}</h6>
                       <p className="text-secondary mb-0">{item.body}</p>
@@ -44,7 +46,14 @@ export function DynamicInfoPage({
                   </div>
                 ))}
               </div>
-              {cta ? <Link href={cta.href} className="tf-btn btn-fill radius-4 mt_32"><span className="text">{cta.label}</span></Link> : null}
+              {cta ? (
+                <Link
+                  href={cta.href}
+                  className="tf-btn btn-fill radius-4 mt_32"
+                >
+                  <span className="text">{cta.label}</span>
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
@@ -53,7 +62,13 @@ export function DynamicInfoPage({
   );
 }
 
-export async function SearchResultPage({ q = "", page = 1 }: { q?: string; page?: number }) {
+export async function SearchResultPage({
+  q = "",
+  page = 1,
+}: {
+  q?: string;
+  page?: number;
+}) {
   const data = await getCatalogProducts({ q, page, limit: 24 });
 
   return (
@@ -62,23 +77,52 @@ export async function SearchResultPage({ q = "", page = 1 }: { q?: string; page?
       <section className="flat-spacing">
         <div className="container">
           <form className="form-search-result" action="/search-result">
-            <fieldset><input name="q" defaultValue={q} placeholder="Search SKU, fabric, category" /></fieldset>
-            <button type="submit" className="tf-btn btn-fill radius-4"><span className="text">Search</span></button>
+            <fieldset>
+              <input
+                name="q"
+                defaultValue={q}
+                placeholder="Search SKU, fabric, category"
+              />
+            </fieldset>
+            <button type="submit" className="tf-btn btn-fill radius-4">
+              <span className="text">Search</span>
+            </button>
           </form>
           <div className="heading-section text-center mt_32">
             <h4>{q ? `${data.total} result for "${q}"` : "All products"}</h4>
             <p className="text-secondary">Admin-managed Sarjan catalog.</p>
           </div>
           <div className="tf-grid-layout tf-col-2 lg-col-4 mt_32">
-            {data.items.map((product, index) => <ModaveProductCard product={product} delay={`${index * 0.03}s`} key={product.slug} />)}
+            {data.items.map((product, index) => (
+              <ModaveProductCard
+                product={product}
+                delay={`${index * 0.03}s`}
+                key={product.slug}
+              />
+            ))}
           </div>
           {data.totalPages > 1 ? (
             <ul className="wg-pagination justify-content-center mt_40">
-              {Array.from(new Set([1, Math.max(1, data.page - 1), data.page, Math.min(data.totalPages, data.page + 1), data.totalPages])).sort((a, b) => a - b).map((item) => (
-                <li className={item === data.page ? "active" : ""} key={item}>
-                  <Link className="pagination-item text-button" href={`/search-result?q=${encodeURIComponent(q)}&page=${item}`}>{item}</Link>
-                </li>
-              ))}
+              {Array.from(
+                new Set([
+                  1,
+                  Math.max(1, data.page - 1),
+                  data.page,
+                  Math.min(data.totalPages, data.page + 1),
+                  data.totalPages,
+                ]),
+              )
+                .sort((a, b) => a - b)
+                .map((item) => (
+                  <li className={item === data.page ? "active" : ""} key={item}>
+                    <Link
+                      className="pagination-item text-button"
+                      href={`/search-result?q=${encodeURIComponent(q)}&page=${item}`}
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           ) : null}
         </div>
@@ -90,17 +134,35 @@ export async function SearchResultPage({ q = "", page = 1 }: { q?: string; page?
 export function PaymentConfirmationPage({ orderId }: { orderId?: string }) {
   return (
     <>
-      <PageTitle title="Payment Confirmation" crumbs={["Homepage", "Payment Confirmation"]} />
+      <PageTitle
+        title="Payment Confirmation"
+        crumbs={["Homepage", "Payment Confirmation"]}
+      />
       <section className="flat-spacing">
         <div className="container">
           <div className="payment-confirm-wrap text-center">
-            <div className="box-icon w_80 round bg-success mx-auto"><i className="icon icon-check text-white" /></div>
+            <div className="box-icon w_80 round bg-success mx-auto">
+              <i className="icon icon-check text-white" />
+            </div>
             <h3 className="mt_24">Order request received</h3>
-            <p className="text-secondary mt_8">Order request is sent to admin for stock, MOQ, and dispatch confirmation.</p>
+            <p className="text-secondary mt_8">
+              Order request is sent to admin for stock, MOQ, and dispatch
+              confirmation.
+            </p>
             {orderId ? <h6 className="mt_16">Order ID: {orderId}</h6> : null}
             <div className="d-flex gap-12 justify-content-center mt_32">
-              <Link href="/my-account-orders" className="tf-btn btn-fill radius-4"><span className="text">View Orders</span></Link>
-              <Link href="/products" className="tf-btn btn-white has-border radius-4"><span className="text">Continue Shopping</span></Link>
+              <Link
+                href="/my-account-orders"
+                className="tf-btn btn-fill radius-4"
+              >
+                <span className="text">View Orders</span>
+              </Link>
+              <Link
+                href="/products"
+                className="tf-btn btn-white has-border radius-4"
+              >
+                <span className="text">Continue Shopping</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -112,14 +174,23 @@ export function PaymentConfirmationPage({ orderId }: { orderId?: string }) {
 export function PaymentFailurePage() {
   return (
     <>
-      <PageTitle title="Payment Failure" crumbs={["Homepage", "Payment Failure"]} />
+      <PageTitle
+        title="Payment Failure"
+        crumbs={["Homepage", "Payment Failure"]}
+      />
       <section className="flat-spacing">
         <div className="container">
           <div className="payment-confirm-wrap text-center">
-            <div className="box-icon w_80 round bg-danger mx-auto"><i className="icon icon-close text-white" /></div>
+            <div className="box-icon w_80 round bg-danger mx-auto">
+              <i className="icon icon-close text-white" />
+            </div>
             <h3 className="mt_24">Order request failed</h3>
-            <p className="text-secondary mt_8">Please retry checkout or contact Sarjan Textiles order team.</p>
-            <Link href="/checkout" className="tf-btn btn-fill radius-4 mt_32"><span className="text">Return Checkout</span></Link>
+            <p className="text-secondary mt_8">
+              Please retry checkout or contact Sarjan Textiles order team.
+            </p>
+            <Link href="/checkout" className="tf-btn btn-fill radius-4 mt_32">
+              <span className="text">Return Checkout</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -129,11 +200,26 @@ export function PaymentFailurePage() {
 
 export function TermsPage() {
   const terms = [
-    ["B2B Account Approval", "Only approved wholesale clients can place orders. Admin can approve, reject, or request more details."],
-    ["MOQ & Set Buying", `Products are ordered in full size sets. Standard set: ${FULL_SIZE_RUN.join(" / ")}.`],
-    ["Order Approval", "Every order remains pending until Sarjan admin confirms stock, MOQ, dispatch terms, and final quantity."],
-    ["Payment", "Payment terms are confirmed by Sarjan accounts team after order approval."],
-    ["Dispatch", "Dispatch stages are Pending, Approved, In Production, Packed, Ready for Dispatch, Dispatched, Delivered."],
+    [
+      "B2B Account Approval",
+      "Only approved wholesale clients can place orders. Admin can approve, reject, or request more details.",
+    ],
+    [
+      "MOQ & Set Buying",
+      `Products are ordered in full size sets. Standard set: ${FULL_SIZE_RUN.join(" / ")}.`,
+    ],
+    [
+      "Order Approval",
+      "Every order remains pending until Sarjan admin confirms stock, MOQ, dispatch terms, and final quantity.",
+    ],
+    [
+      "Payment",
+      "Payment terms are confirmed by Sarjan accounts team after order approval.",
+    ],
+    [
+      "Dispatch",
+      "Dispatch stages are Pending, Approved, In Production, Packed, Ready for Dispatch, Dispatched, Delivered.",
+    ],
   ];
 
   return (
@@ -157,10 +243,22 @@ export function TermsPage() {
 
 export function FaqPage() {
   const items = [
-    ["Can clients order single pieces?", "No. Sarjan B2B flow uses set-wise ordering by size run and color."],
-    ["How payment works?", "Payment terms are confirmed by Sarjan accounts team after order approval."],
-    ["Who approves orders?", "Admin reviews stock, MOQ, production, and dispatch before approval."],
-    ["Can ERP sync later?", "Yes. Order and invoice data are structured for Tally/AWS migration later."],
+    [
+      "Can clients order single pieces?",
+      "No. Sarjan B2B flow uses set-wise ordering by size run and color.",
+    ],
+    [
+      "How payment works?",
+      "Payment terms are confirmed by Sarjan accounts team after order approval.",
+    ],
+    [
+      "Who approves orders?",
+      "Admin reviews stock, MOQ, production, and dispatch before approval.",
+    ],
+    [
+      "Can ERP sync later?",
+      "Yes. Order and invoice data are structured for Tally/AWS migration later.",
+    ],
   ];
 
   return (
@@ -172,9 +270,27 @@ export function FaqPage() {
             {items.map(([title, text], index) => (
               <div className="accordion-item" key={title}>
                 <h2 className="accordion-header">
-                  <button className={index === 0 ? "accordion-button" : "accordion-button collapsed"} type="button" data-bs-toggle="collapse" data-bs-target={`#faq-${index}`}>{title}</button>
+                  <button
+                    className={
+                      index === 0
+                        ? "accordion-button"
+                        : "accordion-button collapsed"
+                    }
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#faq-${index}`}
+                  >
+                    {title}
+                  </button>
                 </h2>
-                <div id={`faq-${index}`} className={index === 0 ? "accordion-collapse collapse show" : "accordion-collapse collapse"}>
+                <div
+                  id={`faq-${index}`}
+                  className={
+                    index === 0
+                      ? "accordion-collapse collapse show"
+                      : "accordion-collapse collapse"
+                  }
+                >
                   <div className="accordion-body">{text}</div>
                 </div>
               </div>
@@ -189,10 +305,18 @@ export function FaqPage() {
 export function CustomerFeedbackPage() {
   return (
     <>
-      <PageTitle title="Customer Feedback" crumbs={["Homepage", "Customer Feedback"]} />
+      <PageTitle
+        title="Customer Feedback"
+        crumbs={["Homepage", "Customer Feedback"]}
+      />
       <section className="flat-spacing">
         <div className="container">
-          <div className="heading-section text-center"><h4>Customer Feedback</h4><p className="text-secondary">Wholesale client feedback saved through backend-ready form.</p></div>
+          <div className="heading-section text-center">
+            <h4>Customer Feedback</h4>
+            <p className="text-secondary">
+              Wholesale client feedback saved through backend-ready form.
+            </p>
+          </div>
           <FeedbackForm />
         </div>
       </section>
@@ -205,18 +329,38 @@ export function ProductSoldOutPage() {
 
   return (
     <>
-      <PageTitle title="Product Sold Out" crumbs={["Homepage", "Product Sold Out"]} />
+      <PageTitle
+        title="Product Sold Out"
+        crumbs={["Homepage", "Product Sold Out"]}
+      />
       <section className="flat-spacing">
         <div className="container">
           <div className="row align-items-center">
-            <div className="col-md-6"><img className="radius-16 w-100" src={product.images[0]} alt={product.name} /></div>
+            <div className="col-md-6 position-relative">
+              <div className="sarjan-oos-ribbon" role="status">
+                Out of stock
+              </div>
+              <img
+                className="radius-16 w-100"
+                src={product.images[0]}
+                alt={product.name}
+              />
+            </div>
             <div className="col-md-6">
               <div className="product-info-wrap">
                 <div className="badge bg-danger text-white mb_16">Sold Out</div>
                 <h3>{product.name}</h3>
-                <p className="text-secondary mt_8">This product is currently out of stock. Admin can enable preorder or suggest similar prints.</p>
+                <p className="text-secondary mt_8">
+                  This product is currently out of stock. Admin can enable
+                  preorder or suggest similar prints.
+                </p>
                 <p className="mt_16">Set: {FULL_SIZE_RUN.join(" / ")}</p>
-                <Link href="/products" className="tf-btn btn-fill radius-4 mt_24"><span className="text">Browse Available Products</span></Link>
+                <Link
+                  href="/products"
+                  className="tf-btn btn-fill radius-4 mt_24"
+                >
+                  <span className="text">Browse Available Products</span>
+                </Link>
               </div>
             </div>
           </div>
@@ -235,7 +379,9 @@ export function NotFoundPage() {
           <h1 className="display-2">404</h1>
           <h4 className="mt_16">Page not found</h4>
           <p className="text-secondary mt_8">Requested page does not exist.</p>
-          <Link href="/" className="tf-btn btn-fill radius-4 mt_32"><span className="text">Back Home</span></Link>
+          <Link href="/" className="tf-btn btn-fill radius-4 mt_32">
+            <span className="text">Back Home</span>
+          </Link>
         </div>
       </section>
     </>

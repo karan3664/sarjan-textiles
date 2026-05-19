@@ -4,19 +4,39 @@ import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
   const altText = product.imageAlt || `${product.name} ${product.category}`;
+  const soldOut = product.stock <= 0;
 
   return (
     <article className="sarjan-card h-100">
-      <Link href={`/products/${product.slug}`} className="sarjan-card-img d-block">
+      <Link
+        href={`/products/${product.slug}`}
+        className="sarjan-card-img d-block position-relative"
+      >
+        {soldOut ? (
+          <div
+            className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
+            role="status"
+          >
+            Out of stock
+          </div>
+        ) : null}
         <img src={product.images[0]} alt={altText} />
       </Link>
       <div className="p-3">
         <div className="d-flex justify-content-between gap-2 mb-2">
           <span className="sarjan-muted small">{product.category}</span>
-          <PriceGate amount={product.price} suffix=" / piece" className="sarjan-price" compact />
+          <PriceGate
+            amount={product.price}
+            suffix=" / piece"
+            className="sarjan-price"
+            compact
+          />
         </div>
         <h5 className="mb-2">
-          <Link href={`/products/${product.slug}`} className="text-decoration-none text-dark">
+          <Link
+            href={`/products/${product.slug}`}
+            className="text-decoration-none text-dark"
+          >
             {product.name}
           </Link>
         </h5>
@@ -24,8 +44,15 @@ export function ProductCard({ product }: { product: Product }) {
           <span className="sarjan-pill">MOQ {product.moq}</span>
           <span className="sarjan-pill">{product.fabric}</span>
         </div>
-        <button className="sarjan-btn w-100" data-bs-toggle="modal" data-bs-target="#cartModal">
-          Add to Cart
+        <button
+          className="sarjan-btn w-100"
+          type="button"
+          data-bs-toggle="modal"
+          data-bs-target="#cartModal"
+          disabled={soldOut}
+          style={soldOut ? { opacity: 0.55, cursor: "not-allowed" } : undefined}
+        >
+          {soldOut ? "Out of stock" : "Add to Cart"}
         </button>
       </div>
     </article>
