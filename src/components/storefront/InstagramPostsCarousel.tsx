@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { InstagramPost } from "@/lib/instagram";
+import { fetchInstagramPostsInBrowser } from "@/lib/instagram-parse";
+import type { InstagramPost } from "@/lib/instagram-types";
 
 type Props = {
   posts: InstagramPost[];
@@ -187,23 +188,41 @@ export function InstagramPostsCarousel({
     let cancelled = false;
     setLoading(true);
 
-    fetch("/api/instagram")
-      .then((res) => res.json())
-      .then((data: { posts?: InstagramPost[] }) => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/instagram", { cache: "no-store" });
+        const data = (await res.json()) as { posts?: InstagramPost[] };
         if (cancelled) return;
-        setPosts(data.posts ?? []);
-      })
-      .catch(() => {
+
+        if (data.posts?.length) {
+          setPosts(data.posts);
+          return;
+        }
+
+        const browserPosts = await fetchInstagramPostsInBrowser(username, 12);
+        if (cancelled) return;
+
+        if (browserPosts.length) {
+          setPosts(browserPosts);
+          void fetch("/api/instagram/cache", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ posts: browserPosts }),
+          });
+        }
+      } catch {
         if (!cancelled) setPosts([]);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
+
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [initialPosts]);
+  }, [initialPosts, username]);
 
   if (loading) {
     return (

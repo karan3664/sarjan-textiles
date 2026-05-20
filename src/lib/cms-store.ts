@@ -11,6 +11,7 @@ import {
 } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import type { CmsCustomSection } from "@/types/cms-custom";
+import type { CmsInstagramFeed } from "@/lib/instagram-types";
 import { slugifyCmsSegment } from "@/lib/slug";
 
 export type CmsBlog = (typeof defaultBlogs)[number];
@@ -187,6 +188,8 @@ export type CmsSnapshot = {
   seoPages: CmsSeoPage[];
   inventoryLogs: InventoryMovement[];
   auditLogs: AuditLog[];
+  /** Cached Instagram posts when live fetch fails on server (e.g. Vercel). */
+  instagramFeed?: CmsInstagramFeed;
   updatedAt: string;
 };
 
@@ -714,6 +717,12 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     auditLogs: Array.isArray(input.auditLogs)
       ? input.auditLogs
       : defaultCmsSnapshot.auditLogs,
+    instagramFeed:
+      input.instagramFeed &&
+      Array.isArray(input.instagramFeed.posts) &&
+      input.instagramFeed.posts.length
+        ? input.instagramFeed
+        : undefined,
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   });
 }

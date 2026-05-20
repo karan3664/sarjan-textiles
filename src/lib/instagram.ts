@@ -1,14 +1,19 @@
+import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
+import {
+  instagramWebHeaders,
+  parseWebProfilePosts,
+} from "@/lib/instagram-parse";
+
+export type { InstagramPost, CmsInstagramFeed } from "@/lib/instagram-types";
+export {
+  fetchInstagramPostsInBrowser,
+  parseWebProfilePosts,
+} from "@/lib/instagram-parse";
+
+import type { InstagramPost } from "@/lib/instagram-types";
+
 export const instagramProfileUrl = "https://www.instagram.com/sarjantextiles/";
 export const defaultInstagramUsername = "sarjantextiles";
-
-export type InstagramPost = {
-  id: string;
-  image: string;
-  alt: string;
-  href: string;
-  timestamp?: string;
-  source: "instagram" | "fallback";
-};
 
 type InstagramGraphMedia = {
   id: string;
@@ -18,17 +23,6 @@ type InstagramGraphMedia = {
   permalink?: string;
   thumbnail_url?: string;
   timestamp?: string;
-};
-
-type InstagramWebProfileNode = {
-  id: string;
-  shortcode: string;
-  display_url?: string;
-  thumbnail_src?: string;
-  thumbnail_resources?: Array<{ src: string }>;
-  edge_media_to_caption?: {
-    edges?: Array<{ node?: { text?: string } }>;
-  };
 };
 
 type GetInstagramOptions = {
@@ -96,7 +90,7 @@ function mapMedia(
 
 async function fetchGraphJson<T>(url: URL): Promise<T | null> {
   const response = await fetch(url, {
-    next: { revalidate: 1800 },
+    cache: "no-store",
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
 
@@ -166,23 +160,6 @@ async function fetchBusinessDiscovery(
   );
 }
 
-export function instagramEmbedUrl(username: string): string {
-  const handle = username.replace(/^@/, "");
-  return `https://www.instagram.com/${encodeURIComponent(handle)}/embed`;
-}
-
-const instagramWebHeaders = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  "X-IG-App-ID": "936619743392459",
-  Accept: "*/*",
-  "Accept-Language": "en-US,en;q=0.9",
-  Referer: "https://www.instagram.com/",
-  "Sec-Fetch-Dest": "empty",
-  "Sec-Fetch-Mode": "cors",
-  "Sec-Fetch-Site": "same-origin",
-};
-
 async function fetchPublicWebProfilePosts(
   username: string,
   limit: number,
@@ -190,53 +167,18 @@ async function fetchPublicWebProfilePosts(
   const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`;
   const response = await fetch(url, {
     headers: instagramWebHeaders,
-    next: { revalidate: 1800 },
+    cache: "no-store",
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
 
   if (!response?.ok) return [];
 
-  const data = (await response.json().catch(() => null)) as {
-    data?: {
-      user?: {
-        edge_owner_to_timeline_media?: {
-          edges?: Array<{ node?: InstagramWebProfileNode }>;
-        };
-      };
-    };
-  } | null;
-
-  const edges = data?.data?.user?.edge_owner_to_timeline_media?.edges ?? [];
-  const posts: InstagramPost[] = [];
-
-  for (const edge of edges) {
-    const node = edge.node;
-    if (!node?.shortcode) continue;
-
-    const image =
-      node.display_url ||
-      node.thumbnail_src ||
-      node.thumbnail_resources?.[node.thumbnail_resources.length - 1]?.src;
-    if (!image) continue;
-
-    const caption = node.edge_media_to_caption?.edges?.[0]?.node?.text?.trim();
-
-    posts.push({
-      id: node.id,
-      image,
-      alt: caption || "Sarjan Textiles Instagram post",
-      href: `https://www.instagram.com/p/${node.shortcode}/`,
-      source: "instagram",
-    });
-
-    if (posts.length >= limit) break;
-  }
-
-  return posts;
+  const data = await response.json().catch(() => null);
+  return parseWebProfilePosts(data, limit);
 }
 
-export async function getInstagramPosts(
-  limit = 6,
+async function fetchLiveInstagramPosts(
+  limit: number,
   options?: GetInstagramOptions,
 ): Promise<InstagramPost[]> {
   const username = resolveUsername(options);
@@ -274,4 +216,57 @@ export async function getInstagramPosts(
   }
 
   return fetchPublicWebProfilePosts(username, limit);
+}
+
+async function readCachedInstagramPosts(
+  limit: number,
+): Promise<InstagramPost[]> {
+  const cms = await getCmsSnapshot();
+  const cached = cms.instagramFeed?.posts;
+  if (!cached?.length) return [];
+  return cached.slice(0, limit);
+}
+
+async function writeInstagramFeedCache(posts: InstagramPost[]) {
+  if (!posts.length) return;
+  await saveCmsSnapshot({
+    instagramFeed: {
+      posts: posts.slice(0, 12),
+      updatedAt: new Date().toISOString(),
+    },
+  });
+}
+
+export function isValidInstagramPost(post: unknown): post is InstagramPost {
+  if (!post || typeof post !== "object") return false;
+  const item = post as InstagramPost;
+  if (!item.id || !item.image || !item.href) return false;
+  try {
+    const imageHost = new URL(item.image).hostname;
+    const hrefHost = new URL(item.href).hostname;
+    return (
+      (imageHost.includes("cdninstagram.com") ||
+        imageHost.includes("fbcdn.net")) &&
+      hrefHost.includes("instagram.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function getInstagramPosts(
+  limit = 12,
+  options?: GetInstagramOptions,
+): Promise<InstagramPost[]> {
+  const live = await fetchLiveInstagramPosts(limit, options);
+  if (live.length) {
+    try {
+      await writeInstagramFeedCache(live);
+    } catch {
+      // Cache write failure should not block the response.
+    }
+    return live;
+  }
+
+  return readCachedInstagramPosts(limit);
 }
