@@ -3,9 +3,17 @@ export const WISHLIST_KEY = "sarjan-wishlist";
 export function readWishlist(): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(WISHLIST_KEY) ?? "[]");
+    const parsed = JSON.parse(
+      window.localStorage.getItem(WISHLIST_KEY) ?? "[]",
+    );
     if (!Array.isArray(parsed)) return [];
-    return Array.from(new Set(parsed.filter((item): item is string => typeof item === "string" && item.length > 0)));
+    return Array.from(
+      new Set(
+        parsed.filter(
+          (item): item is string => typeof item === "string" && item.length > 0,
+        ),
+      ),
+    );
   } catch {
     return [];
   }
@@ -29,4 +37,21 @@ export function toggleWishlist(slug: string) {
     : [...current, slug];
   writeWishlist(next);
   return next.includes(slug);
+}
+
+/** Sync heart button styles with localStorage (for dynamically mounted buttons). */
+export function syncWishlistButtonStates() {
+  if (typeof window === "undefined") return;
+  const wishlisted = new Set(readWishlist());
+  document
+    .querySelectorAll<HTMLElement>("[data-wishlist-toggle][data-product-slug]")
+    .forEach((node) => {
+      const active = wishlisted.has(node.dataset.productSlug ?? "");
+      node.classList.toggle("active", active);
+      node.classList.toggle("added", active);
+      node.setAttribute("aria-pressed", String(active));
+    });
+  document.querySelectorAll(".wishlist-count").forEach((node) => {
+    node.textContent = String(wishlisted.size);
+  });
 }

@@ -13,6 +13,12 @@ import type { Product } from "@/data/mock";
 import type { CmsCustomSection } from "@/types/cms-custom";
 import type { CmsInstagramFeed } from "@/lib/instagram-types";
 import { slugifyCmsSegment } from "@/lib/slug";
+import {
+  dedupeBlogsByTitle,
+  dedupeProductsByName,
+  dedupeTestimonialsByName,
+  normalizeCatalogLabel,
+} from "@/lib/dedupe-catalog";
 
 export type CmsBlog = (typeof defaultBlogs)[number];
 export type CmsHome = typeof defaultHome;
@@ -666,43 +672,42 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     if (!seoPages.some((item) => item.id === page.id)) seoPages.push(page);
   }
 
+  const rawProducts =
+    Array.isArray(input.products) && input.products.length
+      ? input.products
+      : defaultCmsSnapshot.products;
+  const products = dedupeProductsByName(rawProducts);
+  const rawBlogs =
+    Array.isArray(input.blogs) && input.blogs.length
+      ? input.blogs
+      : defaultCmsSnapshot.blogs;
+  const blogs = dedupeBlogsByTitle(rawBlogs);
+  const rawTestimonials =
+    Array.isArray(input.testimonials) && input.testimonials.length
+      ? input.testimonials
+      : defaultCmsSnapshot.testimonials;
+  const testimonials = dedupeTestimonialsByName(rawTestimonials);
+
   return optimizeMedia({
     siteSettings: migrateSiteSettings({
       ...defaultCmsSnapshot.siteSettings,
       ...(input.siteSettings ?? {}),
     }),
     home: { ...defaultCmsSnapshot.home, ...(input.home ?? {}) },
-    products:
-      Array.isArray(input.products) && input.products.length
-        ? input.products
-        : defaultCmsSnapshot.products,
+    products,
     productFilters:
       Array.isArray(input.productFilters) && input.productFilters.length
         ? input.productFilters
-        : defaultProductFilters(
-            Array.isArray(input.products) && input.products.length
-              ? input.products
-              : defaultCmsSnapshot.products,
-          ),
-    blogs:
-      Array.isArray(input.blogs) && input.blogs.length
-        ? input.blogs
-        : defaultCmsSnapshot.blogs,
-    testimonials:
-      Array.isArray(input.testimonials) && input.testimonials.length
-        ? input.testimonials
-        : defaultCmsSnapshot.testimonials,
+        : defaultProductFilters(products),
+    blogs,
+    testimonials,
     clientPricing: Array.isArray(input.clientPricing)
       ? input.clientPricing
       : defaultCmsSnapshot.clientPricing,
     categoryMaster:
       Array.isArray(input.categoryMaster) && input.categoryMaster.length
         ? input.categoryMaster
-        : defaultCategoryMaster(
-            Array.isArray(input.products) && input.products.length
-              ? input.products
-              : defaultCmsSnapshot.products,
-          ),
+        : defaultCategoryMaster(products),
     categoryHubPages: Array.isArray(input.categoryHubPages)
       ? input.categoryHubPages
       : defaultCmsSnapshot.categoryHubPages,
@@ -809,8 +814,12 @@ export async function saveCmsSnapshot(
 
 export async function upsertCmsProduct(product: Product): Promise<CmsSnapshot> {
   const cms = await getCmsSnapshot();
+  const nameKey = normalizeCatalogLabel(product.name ?? "");
   const index = cms.products.findIndex(
-    (item) => item.slug === product.slug || item.id === product.id,
+    (item) =>
+      item.slug === product.slug ||
+      item.id === product.id ||
+      (nameKey && normalizeCatalogLabel(item.name ?? "") === nameKey),
   );
   const nextProducts = [...cms.products];
   if (index >= 0) nextProducts[index] = product;
@@ -825,11 +834,13 @@ export async function upsertCmsProducts(
   const nextProducts = [...cms.products];
 
   for (const product of products) {
+    const nameKey = normalizeCatalogLabel(product.name ?? "");
     const index = nextProducts.findIndex(
       (item) =>
         item.slug === product.slug ||
         item.id === product.id ||
-        item.sku === product.sku,
+        item.sku === product.sku ||
+        (nameKey && normalizeCatalogLabel(item.name ?? "") === nameKey),
     );
     if (index >= 0) nextProducts[index] = product;
     else nextProducts.unshift(product);
@@ -847,7 +858,12 @@ export async function deleteCmsProduct(slug: string): Promise<CmsSnapshot> {
 
 export async function upsertCmsBlog(blog: CmsBlog): Promise<CmsSnapshot> {
   const cms = await getCmsSnapshot();
-  const index = cms.blogs.findIndex((item) => item.slug === blog.slug);
+  const titleKey = normalizeCatalogLabel(blog.title ?? "");
+  const index = cms.blogs.findIndex(
+    (item) =>
+      item.slug === blog.slug ||
+      (titleKey && normalizeCatalogLabel(item.title ?? "") === titleKey),
+  );
   const nextBlogs = [...cms.blogs];
   if (index >= 0) nextBlogs[index] = blog;
   else nextBlogs.unshift(blog);

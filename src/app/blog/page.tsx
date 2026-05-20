@@ -9,11 +9,18 @@ export async function generateMetadata() {
   return cmsSeoMetadata("blog");
 }
 
-export default async function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  const pageNum = Math.max(1, Math.floor(Number(page ?? 1)) || 1);
+
   return (
     <ModaveShell>
       <JsonLd data={await cmsSeoJsonLd("blog")} />
-      <BlogListDynamic />
+      <BlogListDynamic page={pageNum} />
     </ModaveShell>
   );
 }

@@ -3,41 +3,23 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
-import { readWishlist, writeWishlist } from "@/lib/wishlist-client";
+import {
+  readWishlist,
+  syncWishlistButtonStates,
+  writeWishlist,
+} from "@/lib/wishlist-client";
 import { ModaveProductCard } from "./ModaveProductCard";
+import {
+  paginationRangeLabel,
+  StorefrontPagination,
+} from "./StorefrontPagination";
 
-function WishlistPagination({
-  page,
-  totalPages,
-}: {
-  page: number;
-  totalPages: number;
-}) {
-  if (totalPages <= 1) return null;
-  return (
-    <ul className="wg-pagination justify-content-center">
-      {Array.from({ length: totalPages }).map((_, index) => {
-        const nextPage = index + 1;
-        return (
-          <li className={nextPage === page ? "active" : ""} key={nextPage}>
-            <a
-              href={`/wishlist?page=${nextPage}`}
-              className="pagination-item text-button"
-            >
-              {nextPage}
-            </a>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
+const WISHLIST_PER_PAGE = 24;
 
 export function WishlistPageClient({ page = 1 }: { page?: number }) {
   const [slugs, setSlugs] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const perPage = 24;
 
   useEffect(() => {
     const sync = () => setSlugs(readWishlist());
@@ -74,12 +56,24 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
       .finally(() => setLoading(false));
   }, [slugs]);
 
-  const totalPages = Math.max(1, Math.ceil(products.length / perPage));
+  useEffect(() => {
+    if (!products.length) return;
+    window.requestAnimationFrame(() => syncWishlistButtonStates());
+  }, [products]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(products.length / WISHLIST_PER_PAGE),
+  );
   const currentPage = Number.isFinite(page)
     ? Math.min(Math.max(Math.floor(page), 1), totalPages)
     : 1;
   const visibleProducts = useMemo(
-    () => products.slice((currentPage - 1) * perPage, currentPage * perPage),
+    () =>
+      products.slice(
+        (currentPage - 1) * WISHLIST_PER_PAGE,
+        currentPage * WISHLIST_PER_PAGE,
+      ),
     [products, currentPage],
   );
 
@@ -122,7 +116,17 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
           />
         ))}
       </div>
-      <WishlistPagination page={currentPage} totalPages={totalPages} />
+      <StorefrontPagination
+        basePath="/wishlist"
+        page={currentPage}
+        totalPages={totalPages}
+        summary={paginationRangeLabel(
+          currentPage,
+          WISHLIST_PER_PAGE,
+          products.length,
+          "products",
+        )}
+      />
     </>
   );
 }

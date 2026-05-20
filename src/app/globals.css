@@ -4402,18 +4402,29 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   margin-top: 2px;
 }
 
-.sarjan-products-page .wg-pagination {
+/* Shared storefront listing pagination (products, wishlist, blog, search) */
+.sarjan-pagination-wrap {
   width: 100%;
-  margin-top: 56px !important;
+  margin-top: 56px;
   padding-top: 6px;
-  align-items: center;
   clear: both;
 }
 
-.sarjan-products-page .wg-pagination .pagination-item {
+.sarjan-pagination-wrap .wg-pagination,
+.sarjan-pagination-wrap .sarjan-pagination {
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.sarjan-pagination-wrap .pagination-item {
   width: 42px;
   height: 42px;
   border-radius: 8px;
+}
+
+.sarjan-pagination-summary {
+  margin-bottom: 16px;
 }
 
 .sarjan-price-filter-form {
@@ -6066,8 +6077,8 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-oos-ribbon--card {
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   font-size: 10px;
   padding: 5px 10px;
 }
@@ -6084,6 +6095,45 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 /* Template hover images use z-index; keep OOS ribbon above product image stack */
 .card-product .card-product-wrapper > .sarjan-oos-ribbon {
   z-index: 25;
+}
+
+/* Product card overlays: margin from edges + spacing between icons */
+.card-product .list-product-btn {
+  top: 10px;
+  right: 10px;
+  gap: 8px;
+}
+
+.card-product .list-btn-main {
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+}
+
+.card-product .card-product-info {
+  padding-top: 14px;
+}
+
+.card-product .card-product-info .title {
+  margin-bottom: 6px;
+}
+
+/* OOS badge sits top-right; shift action icons so heart is not hidden underneath */
+.card-product .list-product-btn--oos,
+.card-product
+  .card-product-wrapper:has(.sarjan-oos-ribbon--card)
+  .list-product-btn {
+  top: 54px;
+  right: 12px;
+  z-index: 26;
+}
+
+.card-product .list-product-btn--oos .box-icon,
+.card-product
+  .card-product-wrapper:has(.sarjan-oos-ribbon--card)
+  .list-product-btn
+  .box-icon {
+  pointer-events: auto;
 }
 
 .sarjan-oos-pill {

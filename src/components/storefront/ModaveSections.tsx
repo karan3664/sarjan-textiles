@@ -34,6 +34,10 @@ import { InstagramPostsCarousel } from "./InstagramPostsCarousel";
 import { siteUrl } from "@/lib/seo";
 import { BlogShareBar } from "./BlogShareBar";
 import { BlogCommentsBlock } from "./BlogCommentsBlock";
+import {
+  paginationRangeLabel,
+  StorefrontPagination,
+} from "./StorefrontPagination";
 
 function contactInstagramHandle(url: string, fallback = "@sarjantextiles") {
   try {
@@ -1689,17 +1693,27 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
   );
 }
 
-export async function BlogListDynamic() {
+const BLOG_PER_PAGE = 9;
+
+export async function BlogListDynamic({ page = 1 }: { page?: number }) {
   const { blogs } = await getCachedCmsSnapshot();
+  const totalPages = Math.max(1, Math.ceil(blogs.length / BLOG_PER_PAGE));
+  const currentPage = Number.isFinite(page)
+    ? Math.min(Math.max(Math.floor(page), 1), totalPages)
+    : 1;
+  const visibleBlogs = blogs.slice(
+    (currentPage - 1) * BLOG_PER_PAGE,
+    currentPage * BLOG_PER_PAGE,
+  );
   return (
     <>
       <PageTitle title="Blog Grid" crumbs={["Homepage", "Blog", "Blog Grid"]} />
-      <div className="main-content-page">
+      <div className="main-content-page sarjan-blog-page">
         <div className="container">
           <div className="row">
             <div className="col-12">
               <div className="tf-grid-layout md-col-3 sarjan-blog-grid">
-                {blogs.map((blog) => (
+                {visibleBlogs.map((blog) => (
                   <div className="wg-blog style-1 hover-image" key={blog.slug}>
                     <div className="image">
                       <Link href={`/blog/${blog.slug}`}>
@@ -1742,38 +1756,24 @@ export async function BlogListDynamic() {
                     </div>
                   </div>
                 ))}
-                {blogs.length > 20 ? (
-                  <ul className="wg-pagination justify-content-center">
-                    <li className="active">
-                      <div className="pagination-item text-button">1</div>
-                    </li>
-                    <li>
-                      <Link
-                        href="/blog?page=2"
-                        className="pagination-item text-button"
-                      >
-                        2
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/blog?page=3"
-                        className="pagination-item text-button"
-                      >
-                        3
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/blog?page=2"
-                        className="pagination-item text-button"
-                      >
-                        <i className="icon-arrRight" />
-                      </Link>
-                    </li>
-                  </ul>
-                ) : null}
               </div>
+              {blogs.length ? (
+                <StorefrontPagination
+                  basePath="/blog"
+                  page={currentPage}
+                  totalPages={totalPages}
+                  summary={paginationRangeLabel(
+                    currentPage,
+                    BLOG_PER_PAGE,
+                    blogs.length,
+                    "posts",
+                  )}
+                />
+              ) : (
+                <p className="text-secondary text-center py-5">
+                  No blog posts published yet.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -1843,76 +1843,6 @@ export function PageTitle({
         </ul>
       </div>
     </div>
-  );
-}
-
-function Pagination({
-  basePath,
-  page,
-  totalPages,
-  query = {},
-}: {
-  basePath: string;
-  page: number;
-  totalPages: number;
-  query?: Record<string, string | undefined>;
-}) {
-  if (totalPages <= 1) return null;
-
-  const hrefFor = (item: number) => {
-    const params = new URLSearchParams();
-    Object.entries(query).forEach(([key, value]) => {
-      if (value) params.set(key, value);
-    });
-    params.set("page", String(item));
-    return `${basePath}?${params.toString()}`;
-  };
-  const pages = Array.from(
-    new Set([
-      1,
-      Math.max(1, page - 1),
-      page,
-      Math.min(totalPages, page + 1),
-      totalPages,
-    ]),
-  )
-    .filter((item) => item >= 1 && item <= totalPages)
-    .sort((a, b) => a - b);
-
-  return (
-    <ul className="wg-pagination justify-content-center">
-      {pages.map((item, index) => (
-        <Fragment key={item}>
-          {index > 0 && item - pages[index - 1] > 1 ? (
-            <li>
-              <div className="pagination-item text-button">...</div>
-            </li>
-          ) : null}
-          <li className={item === page ? "active" : ""}>
-            {item === page ? (
-              <div className="pagination-item text-button">{item}</div>
-            ) : (
-              <Link
-                href={hrefFor(item)}
-                className="pagination-item text-button"
-              >
-                {item}
-              </Link>
-            )}
-          </li>
-        </Fragment>
-      ))}
-      {page < totalPages ? (
-        <li>
-          <Link
-            href={hrefFor(page + 1)}
-            className="pagination-item text-button"
-          >
-            <i className="icon-arrRight" />
-          </Link>
-        </li>
-      ) : null}
-    </ul>
   );
 }
 
@@ -2495,7 +2425,7 @@ export async function ProductsListingDynamic({
                 />
               ))}
             </div>
-            <Pagination
+            <StorefrontPagination
               basePath="/products"
               page={currentPage}
               totalPages={totalPages}
@@ -2545,7 +2475,7 @@ export function WishlistDynamic({ page = 1 }: { page?: number }) {
   return (
     <>
       <PageTitle title="Wish List" crumbs={["Homepage", "Wish List"]} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-wishlist-page">
         <div className="container">
           <WishlistPageClient page={page} />
         </div>

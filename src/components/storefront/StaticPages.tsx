@@ -4,6 +4,10 @@ import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { PageTitle } from "./PageTitle";
+import {
+  paginationRangeLabel,
+  StorefrontPagination,
+} from "./StorefrontPagination";
 import { FeedbackForm } from "./FeedbackForm";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 
@@ -75,7 +79,7 @@ export async function SearchResultPage({
   return (
     <>
       <PageTitle title="Search Result" crumbs={["Homepage", "Search Result"]} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-search-page">
         <div className="container">
           <form className="form-search-result" action="/search-result">
             <fieldset>
@@ -102,30 +106,13 @@ export async function SearchResultPage({
               />
             ))}
           </div>
-          {data.totalPages > 1 ? (
-            <ul className="wg-pagination justify-content-center mt_40">
-              {Array.from(
-                new Set([
-                  1,
-                  Math.max(1, data.page - 1),
-                  data.page,
-                  Math.min(data.totalPages, data.page + 1),
-                  data.totalPages,
-                ]),
-              )
-                .sort((a, b) => a - b)
-                .map((item) => (
-                  <li className={item === data.page ? "active" : ""} key={item}>
-                    <Link
-                      className="pagination-item text-button"
-                      href={`/search-result?q=${encodeURIComponent(q)}&page=${item}`}
-                    >
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-            </ul>
-          ) : null}
+          <StorefrontPagination
+            basePath="/search-result"
+            page={data.page}
+            totalPages={data.totalPages}
+            query={{ q: q || undefined }}
+            summary={paginationRangeLabel(data.page, 24, data.total, "results")}
+          />
         </div>
       </section>
     </>

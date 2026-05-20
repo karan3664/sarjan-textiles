@@ -37,17 +37,9 @@ export function ModaveProductCard({
             alt={`${altText} alternate view`}
           />
         </a>
-        <div className="list-product-btn">
-          <a
-            href="#"
-            role="button"
-            className="box-icon wishlist btn-icon-action"
-            data-wishlist-toggle
-            data-product-slug={product.slug}
-          >
-            <span className="icon icon-heart" />
-            <span className="tooltip">Wishlist</span>
-          </a>
+        <div
+          className={`list-product-btn${soldOut ? " list-product-btn--oos" : ""}`}
+        >
           <a
             href="#compare"
             data-bs-toggle="offcanvas"
@@ -68,6 +60,16 @@ export function ModaveProductCard({
           >
             <span className="icon icon-eye" />
             <span className="tooltip">Quick View</span>
+          </a>
+          <a
+            href="#"
+            role="button"
+            className="box-icon wishlist btn-icon-action"
+            data-wishlist-toggle
+            data-product-slug={product.slug}
+          >
+            <span className="icon icon-heart" />
+            <span className="tooltip">Wishlist</span>
           </a>
         </div>
         <div className="list-btn-main">

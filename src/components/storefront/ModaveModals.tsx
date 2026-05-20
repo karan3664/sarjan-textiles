@@ -15,6 +15,7 @@ import { productSetPrice } from "@/lib/product-pricing";
 import { isProductSoldOut } from "@/lib/product-availability";
 import {
   readWishlist,
+  syncWishlistButtonStates,
   toggleWishlist,
   writeWishlist,
 } from "@/lib/wishlist-client";
@@ -296,22 +297,8 @@ export function ModaveModals() {
 
   useEffect(() => {
     const syncWishlistButtons = () => {
-      const nextWishlist = readWishlist();
-      setWishlistSlugs(nextWishlist);
-      const wishlisted = new Set(nextWishlist);
-      document
-        .querySelectorAll<HTMLElement>(
-          "[data-wishlist-toggle][data-product-slug]",
-        )
-        .forEach((node) => {
-          const active = wishlisted.has(node.dataset.productSlug ?? "");
-          node.classList.toggle("active", active);
-          node.classList.toggle("added", active);
-          node.setAttribute("aria-pressed", String(active));
-        });
-      document.querySelectorAll(".wishlist-count").forEach((node) => {
-        node.textContent = String(wishlisted.size);
-      });
+      setWishlistSlugs(readWishlist());
+      syncWishlistButtonStates();
     };
 
     const onWishlist = (event: Event) => {
@@ -341,6 +328,11 @@ export function ModaveModals() {
       window.removeEventListener("storage", syncWishlistButtons);
     };
   }, []);
+
+  useEffect(() => {
+    if (!quickProduct) return;
+    window.requestAnimationFrame(() => syncWishlistButtonStates());
+  }, [quickProduct, wishlistSlugs]);
 
   useEffect(() => {
     if (!wishlistSlugs.length) {
@@ -395,6 +387,9 @@ export function ModaveModals() {
     [items],
   );
   const hasItems = items.length > 0;
+  const quickWishlisted = Boolean(
+    quickProduct && wishlistSlugs.includes(quickProduct.slug),
+  );
 
   const removeItem = (item: HydratedCartItem) => {
     writeCart(readCart().filter((line) => !sameCartLine(line, item)));
@@ -1062,9 +1057,10 @@ export function ModaveModals() {
                           <a
                             href="#"
                             role="button"
-                            className="box-icon hover-tooltip wishlist btn-icon-action"
+                            className={`box-icon hover-tooltip wishlist btn-icon-action${quickWishlisted ? " active added" : ""}`}
                             data-wishlist-toggle
                             data-product-slug={quickProduct.slug}
+                            aria-pressed={quickWishlisted}
                           >
                             <span className="icon icon-heart" />
                             <span className="tooltip text-caption-2">
@@ -1125,9 +1121,10 @@ export function ModaveModals() {
                           <a
                             href="#"
                             role="button"
-                            className="box-icon hover-tooltip wishlist btn-icon-action"
+                            className={`box-icon hover-tooltip wishlist btn-icon-action${quickWishlisted ? " active added" : ""}`}
                             data-wishlist-toggle
                             data-product-slug={quickProduct.slug}
+                            aria-pressed={quickWishlisted}
                           >
                             <span className="icon icon-heart" />
                             <span className="tooltip text-caption-2">
