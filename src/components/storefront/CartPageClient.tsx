@@ -270,46 +270,6 @@ export function CartPageClient() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="ip-discount-code">
-                    <input type="text" placeholder="Add voucher discount" />
-                    <button className="tf-btn" type="button">
-                      <span className="text">Apply Code</span>
-                    </button>
-                  </div>
-                  <div className="group-discount">
-                    {["SARJANMOQ", "B2BCREDIT", "TEXTILE10"].map(
-                      (code, index) => (
-                        <div
-                          className={
-                            index === 1 ? "box-discount active" : "box-discount"
-                          }
-                          key={code}
-                        >
-                          <div className="discount-top">
-                            <div className="discount-off">
-                              <div className="text-caption-1">B2B</div>
-                              <span className="sale-off text-btn-uppercase">
-                                MOQ
-                              </span>
-                            </div>
-                            <div className="discount-from">
-                              <p className="text-caption-1">
-                                For approved
-                                <br />
-                                wholesale orders
-                              </p>
-                            </div>
-                          </div>
-                          <div className="discount-bot">
-                            <span className="text-btn-uppercase">{code}</span>
-                            <button className="tf-btn" type="button">
-                              <span className="text">Apply Code</span>
-                            </button>
-                          </div>
-                        </div>
-                      ),
-                    )}
-                  </div>
                 </form>
               </div>
               <div className="col-xl-4">
@@ -374,7 +334,7 @@ export function CartPageClient() {
               <p className="text-secondary mt_8">
                 Add products to create an order request.
               </p>
-              <div className="d-flex gap10 flex-wrap justify-content-center mt_24">
+              <div className="sarjan-cart-empty-actions">
                 {!hasB2BSession ? (
                   <>
                     <Link href="/login" className="tf-btn btn-reset radius-4">

@@ -5503,6 +5503,33 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   white-space: nowrap;
 }
 
+/* Full cart page — empty state CTA row: even gaps, equal button widths */
+.sarjan-cart-empty-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 12px;
+  width: min(100%, 520px);
+  margin: 24px auto 0;
+  align-items: stretch;
+}
+
+.sarjan-cart-empty-actions > .tf-btn,
+.sarjan-cart-empty-actions > a.tf-btn {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  padding-left: 14px;
+  padding-right: 14px;
+  white-space: nowrap;
+}
+
+.sarjan-cart-empty-actions:has(> :only-child) {
+  grid-template-columns: minmax(0, 260px);
+  justify-content: center;
+}
+
 .sarjan-ai-studio {
   display: grid;
   gap: 24px;
