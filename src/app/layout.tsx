@@ -38,6 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
         {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
           <link key={href} rel="stylesheet" href={href} />
         ))}

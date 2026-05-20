@@ -14,10 +14,10 @@ This project includes **hooks and UI scaffolding**, not a certified GST portal o
 - `NEXT_PUBLIC_COOKIE_CONSENT=true` shows a consent bar and **defers Google Analytics** plus first-party `/api/analytics/visit` pings until the user accepts.
 - Optional GA id override: `NEXT_PUBLIC_GA_MEASUREMENT_ID` (defaults to the existing property id in code if unset).
 
-## TCS / TDS display
+## GST display (checkout / cart)
 
-- `NEXT_PUBLIC_TCS_RATE_ON_SALE` — decimal rate (e.g. `0.001` for 0.1%) for **display-only** TCS on the taxable subtotal at checkout.
-- `NEXT_PUBLIC_TDS_DISPLAY_NOTE` — short disclaimer next to the TCS line.
+- `NEXT_PUBLIC_GST_RATE_ON_SALE` — decimal rate (default `0.05` = 5%) on the cart subtotal.
+- The **GST line appears only** when the logged-in client account has a **GST number** saved (registration or account profile). No TDS/TCS lines on checkout.
 
 ## GSTIN lookup (registration)
 

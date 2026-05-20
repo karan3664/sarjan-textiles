@@ -4,17 +4,14 @@ import {
   createBlogComment,
   getApprovedBlogComments,
 } from "@/lib/blog-comments-store";
+import {
+  sanitizeUserText,
+  USER_TEXT_LIMITS,
+  validateUserText,
+} from "@/lib/user-text";
 
 /** Avoid Edge / odd runtimes: this route uses fs-backed fallbacks via imports. */
 export const runtime = "nodejs";
-
-const MAX_BODY = 4000;
-const MAX_NAME = 120;
-const MAX_EMAIL = 254;
-
-function sanitizeText(s: string): string {
-  return s.replace(/<[^>]*>/g, "").trim();
-}
 
 function jsonError(status: number, message: string) {
   const body = JSON.stringify({
@@ -48,32 +45,44 @@ export async function POST(request: Request) {
       return jsonError(400, "Invalid body");
     }
     const o = body as Record<string, unknown>;
-    const blogSlug = sanitizeText(String(o.blogSlug ?? ""));
-    const authorName = sanitizeText(String(o.authorName ?? ""));
-    const authorEmail = sanitizeText(String(o.authorEmail ?? ""));
-    const commentBody = sanitizeText(String(o.body ?? ""));
+    const blogSlug = sanitizeUserText(String(o.blogSlug ?? ""));
+    const authorName = sanitizeUserText(String(o.authorName ?? ""));
+    const authorEmail = sanitizeUserText(
+      String(o.authorEmail ?? ""),
+    ).toLowerCase();
+    const bodyCheck = validateUserText(String(o.body ?? ""), {
+      min: 1,
+      max: USER_TEXT_LIMITS.blogCommentBody,
+      label: "Comment",
+    });
 
     if (!blogSlug || blogSlug.length > 200) {
       return jsonError(400, "Invalid blog slug");
     }
-    if (!authorName || authorName.length > MAX_NAME) {
-      return jsonError(400, "Invalid name");
+    const nameCheck = validateUserText(authorName, {
+      min: 1,
+      max: USER_TEXT_LIMITS.blogCommentName,
+      label: "Name",
+    });
+    if (!nameCheck.ok) {
+      return jsonError(400, nameCheck.error);
     }
     if (
       !authorEmail ||
-      authorEmail.length > MAX_EMAIL ||
+      authorEmail.length > USER_TEXT_LIMITS.blogCommentEmail ||
       !authorEmail.includes("@")
     ) {
       return jsonError(400, "Invalid email");
     }
-    if (!commentBody || commentBody.length > MAX_BODY) {
-      return jsonError(400, "Invalid comment");
+    if (!bodyCheck.ok) {
+      return jsonError(400, bodyCheck.error);
     }
+    const commentBody = bodyCheck.value;
 
     try {
       const created = await createBlogComment({
         blogSlug,
-        authorName,
+        authorName: nameCheck.value,
         authorEmail,
         body: commentBody,
       });

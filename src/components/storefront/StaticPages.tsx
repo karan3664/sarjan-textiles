@@ -4,10 +4,8 @@ import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { PageTitle } from "./PageTitle";
-import {
-  paginationRangeLabel,
-  StorefrontPagination,
-} from "./StorefrontPagination";
+import { paginationRangeLabel } from "@/lib/pagination-utils";
+import { StorefrontPagination } from "./StorefrontPagination";
 import { FeedbackForm } from "./FeedbackForm";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 

@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 
 export function BlogCommentForm({ slug }: { slug: string }) {
   const [name, setName] = useState("");
@@ -126,9 +127,9 @@ export function BlogCommentForm({ slug }: { slug: string }) {
             </fieldset>
           </div>
           <fieldset>
-            <textarea
+            <EmojiTextarea
               rows={4}
-              placeholder="Your Message*"
+              placeholder="Your Message* (emoji welcome)"
               name="message"
               required
               value={commentBody}

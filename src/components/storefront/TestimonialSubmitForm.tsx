@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 import { TestimonialStarRating } from "./TestimonialStarRating";
 
 type Props = {
@@ -136,10 +137,10 @@ export function TestimonialSubmitForm({
       </div>
 
       <Field label="Your testimonial" required>
-        <textarea
+        <EmojiTextarea
           name="quote"
           rows={5}
-          placeholder="Share your experience with Sarjan Textiles…"
+          placeholder="Share your experience with Sarjan Textiles… (emoji welcome)"
           required
         />
       </Field>

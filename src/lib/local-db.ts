@@ -3,6 +3,10 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import {
+  formatClientDispatchAddress,
+  hasMeaningfulDispatchAddress,
+} from "@/lib/dispatch-address";
 
 export type LocalClient = {
   id: string;
@@ -509,11 +513,16 @@ export async function updateClient(
       const updateRow: Record<string, unknown> = {};
       if (input.companyName !== undefined)
         updateRow.company_name = input.companyName;
-      if (input.gst !== undefined) updateRow.gst = input.gst;
+      if (input.gst !== undefined)
+        updateRow.gst = input.gst.trim() ? input.gst.trim() : null;
       if (input.city !== undefined) updateRow.city = input.city;
       if (input.phone !== undefined) updateRow.phone = input.phone;
       if (input.address !== undefined) updateRow.address = input.address;
-      if (input.avatarUrl !== undefined) updateRow.avatar_url = input.avatarUrl;
+      if (input.avatarUrl !== undefined) {
+        const cleared =
+          input.avatarUrl === null || !String(input.avatarUrl).trim();
+        updateRow.avatar_url = cleared ? null : String(input.avatarUrl).trim();
+      }
       const { data, error } = await supabase
         .from("clients")
         .update(updateRow)
@@ -521,7 +530,13 @@ export async function updateClient(
         .select("*")
         .single();
       if (error) throw new Error(error.message);
-      return mapClient(data);
+      const updated = mapClient(data);
+      if (input.address !== undefined && formatClientDispatchAddress(updated)) {
+        await syncPendingOrderDispatchAddresses(id);
+        const refreshed = await getClient(id);
+        return refreshed ?? updated;
+      }
+      return updated;
     } catch {
       // Fall through to JSON fallback.
     }
@@ -530,17 +545,96 @@ export async function updateClient(
   const client = db.clients.find((item) => item.id === id);
   if (!client) throw new Error("Client not found");
 
-  client.companyName = input.companyName?.trim() || client.companyName;
-  client.gst = input.gst?.trim() || client.gst;
-  client.city = input.city?.trim() || client.city;
-  client.phone = input.phone?.trim() || client.phone;
-  client.address = { ...(client.address ?? {}), ...(input.address ?? {}) };
+  if (input.companyName !== undefined) {
+    const name = input.companyName.trim();
+    if (name) client.companyName = name;
+  }
+  if (input.gst !== undefined) {
+    const gst = input.gst.trim();
+    client.gst = gst || undefined;
+  }
+  if (input.city !== undefined) {
+    const city = input.city.trim();
+    client.city = city || undefined;
+  }
+  if (input.phone !== undefined) {
+    const phone = input.phone.trim();
+    client.phone = phone || undefined;
+  }
+  if (input.address !== undefined) {
+    const next = { ...(client.address ?? {}), ...input.address };
+    if (input.address.gst !== undefined) {
+      const gst = input.address.gst.trim();
+      next.gst = gst || undefined;
+    }
+    if (input.address.ownerLegalName !== undefined) {
+      const legal = input.address.ownerLegalName.trim();
+      next.ownerLegalName = legal || undefined;
+    }
+    client.address = next;
+  }
   if (input.avatarUrl !== undefined) {
-    client.avatarUrl = input.avatarUrl?.trim() || undefined;
+    const cleared =
+      input.avatarUrl === null || !String(input.avatarUrl ?? "").trim();
+    client.avatarUrl = cleared ? undefined : String(input.avatarUrl).trim();
   }
 
   await writeLocalDb(db);
+
+  if (input.address !== undefined && formatClientDispatchAddress(client)) {
+    await syncPendingOrderDispatchAddresses(id);
+    const refreshed = await readLocalDb();
+    return refreshed.clients.find((item) => item.id === id) ?? client;
+  }
+
   return client;
+}
+
+/** Copy default client address onto orders that still have no dispatch address. */
+export async function syncPendingOrderDispatchAddresses(clientId: string) {
+  const db = await readLocalDb();
+  const client = db.clients.find((item) => item.id === clientId);
+  if (!client) return 0;
+
+  const formatted = formatClientDispatchAddress(client);
+  if (!formatted) return 0;
+
+  let updated = 0;
+  for (const order of db.orders) {
+    if (
+      order.clientId === clientId &&
+      !hasMeaningfulDispatchAddress(order.dispatchAddress)
+    ) {
+      order.dispatchAddress = formatted;
+      updated += 1;
+    }
+  }
+
+  if (updated) {
+    await writeLocalDb(db);
+  }
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data: rows, error } = await supabase
+      .from("orders")
+      .select("id, dispatch_address")
+      .eq("client_id", clientId);
+    if (!error && rows?.length) {
+      await Promise.all(
+        rows
+          .filter((row) => !hasMeaningfulDispatchAddress(row.dispatch_address))
+          .map((row) =>
+            supabase
+              .from("orders")
+              .update({ dispatch_address: formatted })
+              .eq("id", row.id),
+          ),
+      );
+    }
+  }
+
+  return updated;
 }
 
 export async function deleteClientIfAllowed(id: string) {
@@ -744,19 +838,26 @@ export async function createOrder(
     "id" | "status" | "paymentMode" | "creditDays" | "createdAt"
   >,
 ) {
+  const dbForClient = await readLocalDb();
+  const clientRow = dbForClient.clients.find(
+    (item) => item.id === input.clientId,
+  );
+  if (!clientRow) throw new Error("Client not found");
+  const dispatchAddress = hasMeaningfulDispatchAddress(input.dispatchAddress)
+    ? input.dispatchAddress.trim()
+    : formatClientDispatchAddress(clientRow) ||
+      input.dispatchAddress?.trim() ||
+      clientRow.city ||
+      "";
+  const orderInput = { ...input, dispatchAddress };
+
   const supabase = supabaseAdmin();
   if (supabase) {
-    const { data: clientRow, error: clientError } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("id", input.clientId)
-      .single();
-    if (clientError || !clientRow) throw new Error("Client not found");
     if (clientRow.status !== "approved")
       throw new Error("Client approval required before placing orders");
     const createdAt = new Date().toISOString();
     const order: LocalOrder = {
-      ...input,
+      ...orderInput,
       id: `ST-${Date.now()}`,
       status: "Pending approval",
       paymentMode: "cheque",
@@ -794,14 +895,13 @@ export async function createOrder(
     if (error) throw new Error(error.message);
     return mapOrder(data);
   }
-  const db = await readLocalDb();
-  const client = db.clients.find((item) => item.id === input.clientId);
-  if (!client) throw new Error("Client not found");
+  const db = dbForClient;
+  const client = clientRow;
   if (client.status !== "approved")
     throw new Error("Client approval required before placing orders");
 
   const order: LocalOrder = {
-    ...input,
+    ...orderInput,
     id: `ST-${Date.now()}`,
     status: "Pending approval",
     paymentMode: "cheque",
@@ -845,8 +945,12 @@ export async function createAdminOrder(input: {
     depositStatus: "Not deposited",
     subtotal: input.items.reduce((sum, item) => sum + item.lineTotal, 0),
     items: input.items,
-    dispatchAddress:
-      input.dispatchAddress || client.city || client.address?.city || "",
+    dispatchAddress: hasMeaningfulDispatchAddress(input.dispatchAddress)
+      ? input.dispatchAddress!.trim()
+      : formatClientDispatchAddress(client) ||
+        client.city ||
+        client.address?.city ||
+        "",
     dispatchHistory: [
       {
         status: input.status ?? "Pending approval",

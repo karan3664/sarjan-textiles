@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 import type { BlogComment, BlogCommentStatus } from "@/lib/blog-comments-store";
 
 function formatDate(value: string) {
@@ -231,7 +232,10 @@ export function AdminBlogCommentsClient({
                     {c.authorEmail}
                   </div>
                 </td>
-                <td style={{ maxWidth: 280, whiteSpace: "pre-wrap" }}>
+                <td
+                  className="sarjan-emoji-text"
+                  style={{ maxWidth: 280, whiteSpace: "pre-wrap" }}
+                >
                   {c.body}
                 </td>
                 <td>
@@ -268,10 +272,11 @@ export function AdminBlogCommentsClient({
                         ))}
                       </ul>
                     ) : null}
-                    <textarea
-                      className="form-control mb_12 sarjan-emoji-text"
+                    <EmojiTextarea
+                      className="mb_12"
+                      textareaClassName="form-control"
                       rows={3}
-                      placeholder="Type a new reply (emoji OK). Saves append to the thread."
+                      placeholder="Type a new reply (emoji welcome). Saves append to the thread."
                       value={replyFor(c)}
                       onChange={(e) =>
                         setReplyDrafts((prev) => ({

@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
-  FULL_SIZE_RUN,
   parseSizeRun,
   readCart,
   sameCartLine,
@@ -15,6 +14,7 @@ import { productSetPrice } from "@/lib/product-pricing";
 import { isProductSoldOut } from "@/lib/product-availability";
 import {
   readWishlist,
+  refreshWishlistFromCatalog,
   syncWishlistButtonStates,
   toggleWishlist,
   writeWishlist,
@@ -24,16 +24,21 @@ import {
   clientHasApprovedPricing,
   useClientHasB2BToken,
 } from "./PriceGate";
+import { ModaveProductCard } from "./ModaveProductCard";
+import { QuickViewProduct } from "./QuickViewProduct";
+import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
+import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import {
+  productColorIndex,
+  productImageForColorIndex,
+  resolveSelectedColorInScope,
+} from "@/lib/product-colors";
 
 type HydratedCartItem = StoredCartItem & {
   product: Product;
   setPrice: number;
   lineTotal: number;
 };
-
-function productSizeRun(product: Product) {
-  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-}
 
 type BootstrapModalCtor = {
   new (element: Element): { show: () => void };
@@ -140,6 +145,19 @@ export function ModaveModals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSearchItems, setVisibleSearchItems] = useState(4);
   const hasB2BSession = useClientHasB2BToken();
+  const [clientGst, setClientGst] = useState("");
+
+  useEffect(() => {
+    const syncGst = () =>
+      setClientGst(storedClientGstNumber(readStoredClient()));
+    syncGst();
+    window.addEventListener("storage", syncGst);
+    window.addEventListener("sarjan-auth-updated", syncGst);
+    return () => {
+      window.removeEventListener("storage", syncGst);
+      window.removeEventListener("sarjan-auth-updated", syncGst);
+    };
+  }, []);
 
   useEffect(() => {
     const sync = () => {
@@ -278,7 +296,12 @@ export function ModaveModals() {
           : [];
       const selectedColors = colors.length
         ? colors
-        : [target.dataset.productColor || "Default"];
+        : [
+            resolveSelectedColorInScope(
+              quantityScope as HTMLElement | null,
+              target.dataset.productColor || "Default",
+            ),
+          ];
 
       const next = readCart();
       selectedColors.forEach((color) => {
@@ -297,8 +320,10 @@ export function ModaveModals() {
 
   useEffect(() => {
     const syncWishlistButtons = () => {
-      setWishlistSlugs(readWishlist());
-      syncWishlistButtonStates();
+      void refreshWishlistFromCatalog().then((valid) => {
+        setWishlistSlugs(valid);
+        syncWishlistButtonStates(valid.length);
+      });
     };
 
     const onWishlist = (event: Event) => {
@@ -348,8 +373,13 @@ export function ModaveModals() {
         const bySlug = new Map<Product["slug"], Product>(
           (data.items ?? []).map((product: Product) => [product.slug, product]),
         );
+        const validSlugs = wishlistSlugs.filter((slug) => bySlug.has(slug));
+        if (validSlugs.length !== wishlistSlugs.length) {
+          writeWishlist(validSlugs);
+          return;
+        }
         setWishlistItems(
-          wishlistSlugs
+          validSlugs
             .map((slug) => bySlug.get(slug))
             .filter(Boolean) as Product[],
         );
@@ -386,6 +416,14 @@ export function ModaveModals() {
     () => items.reduce((sum, item) => sum + item.lineTotal, 0),
     [items],
   );
+  const cartGst = useMemo(
+    () =>
+      computeGstOnSubtotal(subtotal, clientGst, {
+        b2bPricing: hasB2BSession,
+      }),
+    [subtotal, clientGst, hasB2BSession],
+  );
+  const cartGrandTotal = subtotal + (cartGst.applies ? cartGst.amount : 0);
   const hasItems = items.length > 0;
   const quickWishlisted = Boolean(
     quickProduct && wishlistSlugs.includes(quickProduct.slug),
@@ -457,6 +495,12 @@ export function ModaveModals() {
     );
   }, [recommendations, searchQuery]);
 
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      syncWishlistButtonStates();
+    });
+  }, [filteredRecommendations, visibleSearchItems]);
+
   return (
     <>
       <div className="modal fade modal-search sarjan-search-modal" id="search">
@@ -514,64 +558,14 @@ export function ModaveModals() {
             <div className="tf-grid-layout tf-col-2 lg-col-4 mt_16 sarjan-search-grid">
               {filteredRecommendations
                 .slice(0, visibleSearchItems)
-                .map((product) => {
-                  const soldOut = isProductSoldOut(product);
-                  return (
-                    <div className="card-product" key={product.id}>
-                      <div className="card-product-wrapper position-relative">
-                        {soldOut ? (
-                          <div
-                            className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
-                            role="status"
-                          >
-                            Out of stock
-                          </div>
-                        ) : null}
-                        <a
-                          href={`/products/${product.slug}`}
-                          className="product-img"
-                        >
-                          <img
-                            className="lazyload img-product"
-                            data-src={product.images[0]}
-                            src={product.images[0]}
-                            alt={product.name}
-                          />
-                        </a>
-                      </div>
-                      <div className="card-product-info">
-                        <a
-                          href={`/products/${product.slug}`}
-                          className="title link"
-                        >
-                          {product.name}
-                        </a>
-                        <PriceGate amount={product.price} suffix=" / piece" />
-                        <ul className="list-color-product mt_8">
-                          {product.colors.slice(0, 3).map((color, index) => (
-                            <li
-                              className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`}
-                              key={color}
-                            >
-                              <span className="d-none text-capitalize color-filter">
-                                {color}
-                              </span>
-                              <span
-                                className={
-                                  index === 0
-                                    ? "swatch-value bg-main"
-                                    : index === 1
-                                      ? "swatch-value bg-light-blue"
-                                      : "swatch-value bg-grey"
-                                }
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                })}
+                .map((product, index) => (
+                  <ModaveProductCard
+                    product={product}
+                    key={product.id}
+                    delay={`${index * 0.03}s`}
+                    showColorSwatches
+                  />
+                ))}
             </div>
             <div className="text-center mt_32">
               <button
@@ -639,8 +633,20 @@ export function ModaveModals() {
                                   ) : null}
                                   <img
                                     className="lazyload"
-                                    data-src={item.product.images[0]}
-                                    src={item.product.images[0]}
+                                    data-src={productImageForColorIndex(
+                                      item.product,
+                                      productColorIndex(
+                                        item.product,
+                                        item.color,
+                                      ),
+                                    )}
+                                    src={productImageForColorIndex(
+                                      item.product,
+                                      productColorIndex(
+                                        item.product,
+                                        item.color,
+                                      ),
+                                    )}
                                     alt={item.product.name}
                                   />
                                 </a>
@@ -679,12 +685,12 @@ export function ModaveModals() {
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-5">
+                          <div className="sarjan-mini-cart-empty text-center">
                             <h6>Your cart is empty</h6>
-                            <p className="text-secondary">
+                            <p className="text-secondary mb_0">
                               Add products to create an order request.
                             </p>
-                            <div className="sarjan-mini-cart-empty-actions mt_12">
+                            <div className="sarjan-mini-cart-empty-actions">
                               {!hasB2BSession ? (
                                 <>
                                   <button
@@ -735,6 +741,28 @@ export function ModaveModals() {
                             />
                           </h5>
                         </div>
+                        {cartGst.applies ? (
+                          <div className="tf-cart-totals-discounts sarjan-cart-gst-row">
+                            <span className="text-button">
+                              GST ({(cartGst.rate * 100).toFixed(0)}%)
+                            </span>
+                            <span className="text-button">
+                              {formatInr(cartGst.amount)}
+                            </span>
+                          </div>
+                        ) : null}
+                        {cartGst.applies ? (
+                          <div className="tf-cart-totals-discounts">
+                            <h5>Total</h5>
+                            <h5>
+                              <PriceGate
+                                amount={cartGrandTotal}
+                                className="tf-totals-total-value"
+                                compact
+                              />
+                            </h5>
+                          </div>
+                        ) : null}
                         <div className="tf-cart-checkbox">
                           <div className="tf-checkbox-wrapp">
                             <input
@@ -929,220 +957,10 @@ export function ModaveModals() {
             {quickLoading ? (
               <div className="p-5 text-center">Loading product...</div>
             ) : quickProduct ? (
-              <div className="tf-product-info-wrap tf-quick-view-info">
-                <div className="tf-quick-view-image position-relative">
-                  {isProductSoldOut(quickProduct) ? (
-                    <div className="sarjan-oos-ribbon" role="status">
-                      Out of stock
-                    </div>
-                  ) : null}
-                  <div className="main-image">
-                    <img src={quickProduct.images[0]} alt={quickProduct.name} />
-                  </div>
-                  <div className="thumb-image">
-                    <img
-                      src={quickProduct.images[1] ?? quickProduct.images[0]}
-                      alt={quickProduct.name}
-                    />
-                  </div>
-                </div>
-                <div className="tf-product-info-list">
-                  <div className="tf-product-info-heading">
-                    <div className="tf-product-info-name">
-                      <div className="text text-btn-uppercase">
-                        {quickProduct.category}
-                      </div>
-                      <h3 className="name">{quickProduct.name}</h3>
-                      <div className="text-caption-1 text-secondary">
-                        MOQ {quickProduct.moq}.{" "}
-                        <span
-                          className={
-                            isProductSoldOut(quickProduct)
-                              ? "sarjan-stock-unavailable"
-                              : undefined
-                          }
-                        >
-                          Stock {quickProduct.stock}.
-                        </span>
-                      </div>
-                    </div>
-                    <div className="tf-product-info-price">
-                      <span
-                        className="d-none price-on-sale"
-                        aria-hidden
-                        data-base-price={quickProduct.price}
-                      />
-                      <h4 className="font-2">
-                        <PriceGate
-                          amount={quickProduct.price}
-                          suffix=" / piece"
-                        />
-                      </h4>
-                    </div>
-                    <p className="text-secondary">{quickProduct.description}</p>
-                  </div>
-                  <div className="tf-product-info-choose-option">
-                    <div className="variant-picker-item">
-                      <div className="variant-picker-label mb_12">
-                        Colors:
-                        <span className="text-title variant-picker-label-value value-currentColor">
-                          {quickProduct.colors[0]}
-                        </span>
-                      </div>
-                      <div className="variant-picker-values variant-color">
-                        {quickProduct.colors.slice(0, 3).map((color, index) => (
-                          <span
-                            className={`hover-tooltip tooltip-bot radius-60 color-btn${index === 0 ? " active" : ""}`}
-                            data-value={color}
-                            data-color={color.toLowerCase()}
-                            key={color}
-                          >
-                            <span
-                              className={
-                                index === 0
-                                  ? "btn-checkbox bg-dark-blue"
-                                  : index === 1
-                                    ? "btn-checkbox bg-red"
-                                    : "btn-checkbox bg-grey"
-                              }
-                            />
-                            <span className="tooltip">{color}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="tf-product-info-quantity">
-                      <div className="title mb_12">Sets:</div>
-                      <div className="wg-quantity">
-                        <span className="btn-quantity btn-decrease">-</span>
-                        <input
-                          className="quantity-product"
-                          type="text"
-                          name="number"
-                          defaultValue="1"
-                        />
-                        <span className="btn-quantity btn-increase">+</span>
-                      </div>
-                    </div>
-                    <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
-                      {isProductSoldOut(quickProduct) ? (
-                        <>
-                          <span
-                            className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"
-                            style={{ opacity: 0.55, cursor: "not-allowed" }}
-                            aria-disabled="true"
-                          >
-                            Out of stock
-                          </span>
-                          <span
-                            className="btn-style-3 flex-grow-1 text-btn-uppercase"
-                            style={{ opacity: 0.55, cursor: "not-allowed" }}
-                            aria-disabled="true"
-                          >
-                            Out of stock
-                          </span>
-                          <a
-                            href="#compare"
-                            data-bs-toggle="offcanvas"
-                            aria-controls="compare"
-                            className="box-icon hover-tooltip compare btn-icon-action"
-                            data-compare-add
-                            data-product-slug={quickProduct.slug}
-                          >
-                            <span className="icon icon-gitDiff" />
-                            <span className="tooltip text-caption-2">
-                              Compare
-                            </span>
-                          </a>
-                          <a
-                            href="#"
-                            role="button"
-                            className={`box-icon hover-tooltip wishlist btn-icon-action${quickWishlisted ? " active added" : ""}`}
-                            data-wishlist-toggle
-                            data-product-slug={quickProduct.slug}
-                            aria-pressed={quickWishlisted}
-                          >
-                            <span className="icon icon-heart" />
-                            <span className="tooltip text-caption-2">
-                              Wishlist
-                            </span>
-                          </a>
-                        </>
-                      ) : (
-                        <>
-                          <a
-                            href="#shoppingCart"
-                            data-bs-toggle="modal"
-                            className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
-                            data-cart-add
-                            data-product-slug={quickProduct.slug}
-                            data-product-size-run={productSizeRun(
-                              quickProduct,
-                            ).join(",")}
-                            data-product-color={quickProduct.colors[0]}
-                            data-set-price={productSetPrice(
-                              quickProduct,
-                              quickProduct.colors[0],
-                              productSizeRun(quickProduct),
-                            )}
-                          >
-                            <span className="sarjan-add-set-label">
-                              Add 1 set
-                            </span>
-                          </a>
-                          <a
-                            href="#shoppingCart"
-                            data-bs-toggle="modal"
-                            className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
-                            data-cart-add
-                            data-product-all-colors="true"
-                            data-product-colors={quickProduct.colors.join(",")}
-                            data-product-slug={quickProduct.slug}
-                            data-product-size-run={productSizeRun(
-                              quickProduct,
-                            ).join(",")}
-                            data-product-color={quickProduct.colors[0]}
-                          >
-                            Add all colors
-                          </a>
-                          <a
-                            href="#compare"
-                            data-bs-toggle="offcanvas"
-                            aria-controls="compare"
-                            className="box-icon hover-tooltip compare btn-icon-action"
-                            data-compare-add
-                            data-product-slug={quickProduct.slug}
-                          >
-                            <span className="icon icon-gitDiff" />
-                            <span className="tooltip text-caption-2">
-                              Compare
-                            </span>
-                          </a>
-                          <a
-                            href="#"
-                            role="button"
-                            className={`box-icon hover-tooltip wishlist btn-icon-action${quickWishlisted ? " active added" : ""}`}
-                            data-wishlist-toggle
-                            data-product-slug={quickProduct.slug}
-                            aria-pressed={quickWishlisted}
-                          >
-                            <span className="icon icon-heart" />
-                            <span className="tooltip text-caption-2">
-                              Wishlist
-                            </span>
-                          </a>
-                        </>
-                      )}
-                    </div>
-                    <a
-                      href={`/products/${quickProduct.slug}`}
-                      className="tf-btn w-100 btn-fill radius-4"
-                    >
-                      <span className="text">View Full Details</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
+              <QuickViewProduct
+                product={quickProduct}
+                wishlistActive={quickWishlisted}
+              />
             ) : (
               <div className="p-5 text-center">Product not found.</div>
             )}

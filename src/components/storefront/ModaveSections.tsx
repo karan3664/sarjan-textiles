@@ -16,6 +16,7 @@ import {
 } from "@/lib/product-availability";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
+import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
@@ -34,10 +35,8 @@ import { InstagramPostsCarousel } from "./InstagramPostsCarousel";
 import { siteUrl } from "@/lib/seo";
 import { BlogShareBar } from "./BlogShareBar";
 import { BlogCommentsBlock } from "./BlogCommentsBlock";
-import {
-  paginationRangeLabel,
-  StorefrontPagination,
-} from "./StorefrontPagination";
+import { paginationRangeLabel } from "@/lib/pagination-utils";
+import { StorefrontPagination } from "./StorefrontPagination";
 
 function contactInstagramHandle(url: string, fallback = "@sarjantextiles") {
   try {
@@ -106,7 +105,6 @@ function ProductFeature({ product }: { product: Product }) {
     ...products.slice(1, 3).map((item) => item.images[0]),
   ];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-  const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = product.imageAlt || `${product.name} ${product.category}`;
   const soldOut = isProductSoldOut(product);
 
@@ -216,183 +214,33 @@ function ProductFeature({ product }: { product: Product }) {
                     </h4>
                   </div>
                 </div>
-                <div className="tf-product-info-choose-option">
-                  <div className="variant-picker-item">
-                    <div className="variant-picker-label mb_12">
-                      Colors:
-                      <span className="text-title variant-picker-label-value value-currentColor">
-                        {product.colors[0]}
-                      </span>
-                    </div>
-                    <div className="variant-picker-values variant-color">
-                      {product.colors.slice(0, 3).map((color, index) => (
-                        <span
-                          className={`hover-tooltip tooltip-bot radius-60 color-btn${index === 0 ? " active" : ""}`}
-                          data-value={color}
-                          data-color={color.toLowerCase()}
-                          key={color}
-                        >
-                          <span
-                            className={
-                              index === 0
-                                ? "btn-checkbox bg-dark-blue"
-                                : index === 1
-                                  ? "btn-checkbox bg-red"
-                                  : "btn-checkbox bg-grey"
-                            }
-                          />
-                          <span className="tooltip">{color}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="tf-product-info-quantity">
-                    <div className="title mb_12">Sets:</div>
-                    <div className="wg-quantity">
-                      <span className="btn-quantity btn-decrease">-</span>
-                      <input
-                        className="quantity-product"
-                        type="text"
-                        name="number"
-                        defaultValue={1}
-                      />
-                      <span className="btn-quantity btn-increase">+</span>
-                    </div>
-                    <div className="text-caption-1 text-secondary mt_8">
-                      1 set = {sizeRun.join(" / ")}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
-                      {soldOut ? (
-                        <>
-                          <span
-                            className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"
-                            style={{ opacity: 0.55, cursor: "not-allowed" }}
-                            aria-disabled="true"
-                          >
-                            Out of stock
-                          </span>
-                          <span
-                            className="btn-style-3 flex-grow-1 text-btn-uppercase"
-                            style={{ opacity: 0.55, cursor: "not-allowed" }}
-                            aria-disabled="true"
-                          >
-                            Out of stock
-                          </span>
-                          <a
-                            href="#compare"
-                            data-bs-toggle="offcanvas"
-                            aria-controls="compare"
-                            className="box-icon hover-tooltip compare btn-icon-action"
-                            data-compare-add
-                            data-product-slug={product.slug}
-                          >
-                            <span className="icon icon-gitDiff" />
-                            <span className="tooltip text-caption-2">
-                              Compare
-                            </span>
-                          </a>
-                          <a
-                            href="#"
-                            role="button"
-                            className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
-                            data-wishlist-toggle
-                            data-product-slug={product.slug}
-                          >
-                            <span className="icon icon-heart" />
-                            <span className="tooltip text-caption-2">
-                              Wishlist
-                            </span>
-                          </a>
-                        </>
-                      ) : (
-                        <>
-                          <a
-                            href="#shoppingCart"
-                            data-bs-toggle="modal"
-                            className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
-                            data-cart-add
-                            data-product-slug={product.slug}
-                            data-product-size-run={sizeRun.join(",")}
-                            data-product-color={product.colors[0]}
-                            data-set-price={setPrice}
-                          >
-                            <span className="sarjan-add-set-label">
-                              Add 1 set
-                            </span>
-                          </a>
-                          <a
-                            href="#shoppingCart"
-                            data-bs-toggle="modal"
-                            className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
-                            data-cart-add
-                            data-product-all-colors="true"
-                            data-product-colors={product.colors.join(",")}
-                            data-product-slug={product.slug}
-                            data-product-size-run={sizeRun.join(",")}
-                            data-product-color={product.colors[0]}
-                          >
-                            Add all colors
-                          </a>
-                          <a
-                            href="#compare"
-                            data-bs-toggle="offcanvas"
-                            aria-controls="compare"
-                            className="box-icon hover-tooltip compare btn-icon-action"
-                            data-compare-add
-                            data-product-slug={product.slug}
-                          >
-                            <span className="icon icon-gitDiff" />
-                            <span className="tooltip text-caption-2">
-                              Compare
-                            </span>
-                          </a>
-                          <a
-                            href="#"
-                            role="button"
-                            className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
-                            data-wishlist-toggle
-                            data-product-slug={product.slug}
-                          >
-                            <span className="icon icon-heart" />
-                            <span className="tooltip text-caption-2">
-                              Wishlist
-                            </span>
-                          </a>
-                        </>
-                      )}
-                    </div>
-                    {soldOut ? (
-                      <span
-                        className="btn-style-3 text-btn-uppercase d-inline-block w-100 text-center"
-                        style={{ opacity: 0.55, cursor: "not-allowed" }}
-                        aria-disabled="true"
-                      >
-                        Out of stock
-                      </span>
-                    ) : (
-                      <a
-                        href="#shoppingCart"
-                        data-bs-toggle="modal"
-                        className="btn-style-3 text-btn-uppercase"
-                        data-cart-add
-                        data-product-slug={product.slug}
-                        data-product-size-run={sizeRun.join(",")}
-                        data-product-color={product.colors[0]}
-                      >
-                        Buy it now
-                      </a>
-                    )}
-                  </div>
-                  <div>
-                    <Link
-                      href={`/products/${product.slug}`}
-                      className="btn-line"
+                <ProductPurchasePanel product={product} />
+                <div className="mt_12">
+                  {soldOut ? (
+                    <span
+                      className="btn-style-3 text-btn-uppercase d-inline-block w-100 text-center"
+                      style={{ opacity: 0.55, cursor: "not-allowed" }}
+                      aria-disabled="true"
                     >
-                      View Full details
-                    </Link>
-                  </div>
+                      Out of stock
+                    </span>
+                  ) : (
+                    <a
+                      href="#shoppingCart"
+                      data-bs-toggle="modal"
+                      className="btn-style-3 text-btn-uppercase w-100 d-block text-center"
+                      data-cart-add
+                      data-product-slug={product.slug}
+                      data-product-size-run={sizeRun.join(",")}
+                    >
+                      Buy it now
+                    </a>
+                  )}
+                </div>
+                <div>
+                  <Link href={`/products/${product.slug}`} className="btn-line">
+                    View Full details
+                  </Link>
                 </div>
               </div>
             </div>
@@ -856,7 +704,7 @@ export async function HomeDynamic() {
                           <TestimonialStarsDisplay
                             rating={testimonial.rating}
                           />
-                          <p className="text-secondary">
+                          <p className="text-secondary sarjan-emoji-text">
                             &quot;{testimonial.quote}&quot;
                           </p>
                           <div className="box-author">
@@ -1166,181 +1014,62 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         <p>{product.description}</p>
                       </div>
                     </div>
-                    <div className="tf-product-info-choose-option">
-                      <div className="variant-picker-item">
-                        <div className="variant-picker-label mb_12">
-                          Colors:
-                          <span className="text-title variant-picker-label-value value-currentColor">
-                            {product.colors[0]}
-                          </span>
-                        </div>
-                        <div className="variant-picker-values">
-                          {product.colors.map((color, index) => (
-                            <Fragment key={color}>
-                              <input
-                                id={`product-color-${index}`}
-                                type="radio"
-                                name="color1"
-                                defaultChecked={index === 0}
-                              />
-                              <label
-                                className={`hover-tooltip tooltip-bot radius-60 color-btn${index === 0 ? " active" : ""}`}
-                                htmlFor={`product-color-${index}`}
-                                data-value={color}
-                                data-color={color.toLowerCase()}
-                              >
-                                <span
-                                  className={
-                                    index === 0
-                                      ? "btn-checkbox bg-dark-blue"
-                                      : index === 1
-                                        ? "btn-checkbox bg-red"
-                                        : "btn-checkbox bg-grey"
-                                  }
-                                />
-                                <span className="tooltip">{color}</span>
-                              </label>
-                            </Fragment>
-                          ))}
-                        </div>
+                    <ProductPurchasePanel product={product} />
+                    {soldOut ? (
+                      <div className="mb_16">
+                        <p className="text-caption-1 text-secondary mb_0">
+                          This product cannot be added to cart until stock
+                          returns.{" "}
+                          <Link href="/contact" className="link">
+                            Contact sales
+                          </Link>{" "}
+                          or browse{" "}
+                          <Link href="/products" className="link">
+                            the catalog
+                          </Link>
+                          .
+                        </p>
                       </div>
-                      <div className="tf-product-info-quantity">
-                        <div className="title mb_12">Sets:</div>
-                        <div className="wg-quantity">
-                          <span className="btn-quantity btn-decrease">-</span>
-                          <input
-                            className="quantity-product"
-                            type="text"
-                            name="number"
-                            defaultValue={1}
-                          />
-                          <span className="btn-quantity btn-increase">+</span>
-                        </div>
-                        <div className="text-caption-1 text-secondary mt_8">
-                          1 set = {sizeRun.join(" / ")}
-                        </div>
-                      </div>
-                      <div>
-                        {soldOut ? (
-                          <div className="mb_16">
-                            <div
-                              className="sarjan-oos-pill mb_12"
-                              role="status"
-                            >
-                              Out of stock
-                            </div>
-                            <p className="text-caption-1 text-secondary mb_0">
-                              This product cannot be added to cart until stock
-                              returns.{" "}
-                              <Link href="/contact" className="link">
-                                Contact sales
-                              </Link>{" "}
-                              or browse{" "}
-                              <Link href="/products" className="link">
-                                the catalog
-                              </Link>
-                              .
-                            </p>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
-                              <a
-                                href="#shoppingCart"
-                                data-bs-toggle="modal"
-                                className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
-                                data-cart-add
-                                data-product-slug={product.slug}
-                                data-product-size-run={sizeRun.join(",")}
-                                data-product-color={product.colors[0]}
-                                data-set-price={setPrice}
-                              >
-                                <span className="sarjan-add-set-label">
-                                  Add 1 set
-                                </span>
-                              </a>
-                              <a
-                                href="#shoppingCart"
-                                data-bs-toggle="modal"
-                                className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
-                                data-cart-add
-                                data-product-all-colors="true"
-                                data-product-colors={product.colors.join(",")}
-                                data-product-slug={product.slug}
-                                data-product-size-run={sizeRun.join(",")}
-                                data-product-color={product.colors[0]}
-                              >
-                                Add all colors
-                              </a>
-                              <a
-                                href="#compare"
-                                data-bs-toggle="offcanvas"
-                                aria-controls="compare"
-                                className="box-icon hover-tooltip compare btn-icon-action"
-                                data-compare-add
-                                data-product-slug={product.slug}
-                              >
-                                <span className="icon icon-gitDiff" />
-                                <span className="tooltip text-caption-2">
-                                  Compare
-                                </span>
-                              </a>
-                              <a
-                                href="#"
-                                role="button"
-                                className="box-icon hover-tooltip text-caption-2 wishlist btn-icon-action"
-                                data-wishlist-toggle
-                                data-product-slug={product.slug}
-                              >
-                                <span className="icon icon-heart" />
-                                <span className="tooltip text-caption-2">
-                                  Wishlist
-                                </span>
-                              </a>
-                            </div>
-                            <a
-                              href="#shoppingCart"
-                              data-bs-toggle="modal"
-                              className="btn-style-3 text-btn-uppercase"
-                              data-cart-add
-                              data-product-slug={product.slug}
-                              data-product-size-run={sizeRun.join(",")}
-                              data-product-color={product.colors[0]}
-                            >
-                              Buy it now
-                            </a>
-                          </>
-                        )}
-                      </div>
-                      <ul className="tf-product-info-sku">
-                        <li>
-                          <p className="text-caption-1">SKU:</p>
-                          <p className="text-caption-1 text-1">{product.sku}</p>
-                        </li>
-                        <li>
-                          <p className="text-caption-1">Available:</p>
-                          <p
-                            className={`text-caption-1 text-1${soldOut ? " sarjan-stock-unavailable" : ""}`}
-                          >
-                            {soldOut
-                              ? "Out of stock"
-                              : `In stock: ${product.stock}`}
-                          </p>
-                        </li>
-                        <li>
-                          <p className="text-caption-1">Categories:</p>
-                          <p className="text-caption-1">
-                            <a href="/contact" className="text-1 link">
-                              {product.category}
-                            </a>
-                            ,{" "}
-                            <a href="/contact" className="text-1 link">
-                              {product.fabric}
-                            </a>
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
+                    ) : (
+                      <a
+                        href="#shoppingCart"
+                        data-bs-toggle="modal"
+                        className="btn-style-3 text-btn-uppercase w-100 d-block text-center mt_12"
+                        data-cart-add
+                        data-product-slug={product.slug}
+                        data-product-size-run={sizeRun.join(",")}
+                      >
+                        Buy it now
+                      </a>
+                    )}
+                    <ul className="tf-product-info-sku">
+                      <li>
+                        <p className="text-caption-1">SKU:</p>
+                        <p className="text-caption-1 text-1">{product.sku}</p>
+                      </li>
+                      <li>
+                        <p className="text-caption-1">Available:</p>
+                        <p
+                          className={`text-caption-1 text-1${soldOut ? " sarjan-stock-unavailable" : ""}`}
+                        >
+                          {soldOut
+                            ? "Out of stock"
+                            : `In stock: ${product.stock}`}
+                        </p>
+                      </li>
+                      <li>
+                        <p className="text-caption-1">Categories:</p>
+                        <p className="text-caption-1">
+                          <a href="/contact" className="text-1 link">
+                            {product.category}
+                          </a>
+                          ,{" "}
+                          <a href="/contact" className="text-1 link">
+                            {product.fabric}
+                          </a>
+                        </p>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -3292,26 +3021,11 @@ function CheckoutDynamic({
                       ) : null,
                     )}
                   </div>
-                  <div className="sec-discount">
-                    <div className="ip-discount-code">
-                      <input
-                        type="text"
-                        placeholder="Order reference / PO number"
-                      />
-                      <button className="tf-btn">
-                        <span className="text">Apply</span>
-                      </button>
-                    </div>
-                    <p>
-                      Final discount and freight are confirmed by admin during
-                      order approval.
-                    </p>
-                  </div>
                   <div className="sec-total-price">
                     <div className="top">
                       <div className="item d-flex align-items-center justify-content-between text-button">
-                        <span>Dispatch</span>
-                        <span>Admin review</span>
+                        <span>Subtotal</span>
+                        <PriceGate amount={subtotal} compact />
                       </div>
                     </div>
                     <div className="bottom">

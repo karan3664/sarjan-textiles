@@ -26,17 +26,9 @@ export function guestCheckoutMarketingEnabled() {
   return envBool("NEXT_PUBLIC_GUEST_CHECKOUT_MARKETING", true);
 }
 
-/** TCS rate under Income Tax Act (e.g. 0.001 = 0.1%) — display only; not tax advice. */
-export function tcsRateOnSale() {
-  return envNumber("NEXT_PUBLIC_TCS_RATE_ON_SALE", 0);
-}
-
-/** Optional note shown next to TCS line (e.g. TDS on purchase). */
-export function tdsDisplayNote() {
-  return (
-    process.env.NEXT_PUBLIC_TDS_DISPLAY_NOTE?.trim() ||
-    "TDS/TCS applicability depends on your entity type and thresholds; confirm with your CA."
-  );
+/** GST rate on taxable subtotal (0.05 = 5%). Shown for logged-in B2B cart/checkout. */
+export function gstRateOnSale() {
+  return envNumber("NEXT_PUBLIC_GST_RATE_ON_SALE", 0.05);
 }
 
 /** Credit outstanding alert threshold (INR) for admin hub. */

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
+    "dev:clean": "rm -rf .next && next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0"
@@ -14,6 +15,7 @@
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "bcryptjs": "^3.0.3",
+    "emoji-picker-react": "^4.19.1",
     "google-auth-library": "^10.6.2",
     "isomorphic-dompurify": "^3.14.0",
     "lucide-react": "^0.468.0",

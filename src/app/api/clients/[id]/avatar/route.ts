@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
@@ -64,21 +64,61 @@ async function uploadAvatarToSupabase(
   return data.publicUrl;
 }
 
+async function deleteAvatarFromSupabase(clientId: string) {
+  const supabase = supabaseAdmin();
+  if (!supabase) return;
+  await supabase.storage
+    .from(storageBucket)
+    .remove([`avatars/${clientId}.webp`])
+    .catch(() => null);
+}
+
+async function deleteLocalAvatarFile(clientId: string) {
+  const filename = `${clientId}.webp`;
+  await unlink(path.join(localAvatarDir, filename)).catch(() => null);
+}
+
+async function authorizeAvatarRequest(request: Request, id: string) {
+  const session = verifyClientToken(bearerToken(request));
+  if (!session || session.clientId !== id) {
+    return { error: Response.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  const row = await getClient(id);
+  if (!row) {
+    return {
+      error: Response.json({ error: "Client not found" }, { status: 404 }),
+    };
+  }
+  const blocked = clientStatusAuthError(row.status);
+  if (blocked) {
+    return { error: Response.json({ error: blocked }, { status: 403 }) };
+  }
+
+  return { session, row };
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const auth = await authorizeAvatarRequest(request, id);
+  if ("error" in auth && auth.error) return auth.error;
+
+  await Promise.all([deleteLocalAvatarFile(id), deleteAvatarFromSupabase(id)]);
+
+  const client = await updateClient(id, { avatarUrl: "" });
+  return Response.json({ client: publicClient(client) });
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = verifyClientToken(bearerToken(request));
-  if (!session || session.clientId !== id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const row = await getClient(id);
-  if (!row)
-    return Response.json({ error: "Client not found" }, { status: 404 });
-  const blocked = clientStatusAuthError(row.status);
-  if (blocked) return Response.json({ error: blocked }, { status: 403 });
+  const auth = await authorizeAvatarRequest(request, id);
+  if ("error" in auth && auth.error) return auth.error;
 
   const formData = await request.formData();
   const file = formData.get("file");
@@ -117,9 +157,21 @@ export async function POST(
       return Response.json(
         {
           error:
-            "This image was blocked: no adult or explicit content is allowed on profile photos. Please upload a professional headshot or company logo.",
+            "This image was blocked: use a professional headshot (with shirt) or company logo only — shirtless, nude, and suggestive photos are not allowed.",
         },
         { status: 422 },
+      );
+    }
+    if (
+      error instanceof Error &&
+      error.message === "AVATAR_MODERATION_DISABLED"
+    ) {
+      return Response.json(
+        {
+          error:
+            "Image safety checks are disabled on this server. Contact support.",
+        },
+        { status: 503 },
       );
     }
     return Response.json(

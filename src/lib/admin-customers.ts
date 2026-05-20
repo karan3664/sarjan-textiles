@@ -1,6 +1,11 @@
 import { clients as demoClients, orders as demoOrders } from "@/data/mock";
 import { orderStatuses } from "@/lib/admin-orders";
-import { getClients, readLocalDb, type LocalOrder } from "@/lib/local-db";
+import {
+  getClients,
+  readLocalDb,
+  syncPendingOrderDispatchAddresses,
+  type LocalOrder,
+} from "@/lib/local-db";
 
 function demoOrderStatus(status: string): LocalOrder["status"] {
   if (orderStatuses.includes(status as LocalOrder["status"]))
@@ -9,8 +14,13 @@ function demoOrderStatus(status: string): LocalOrder["status"] {
 }
 
 export async function getAdminCustomers() {
-  const db = await readLocalDb();
   const localClients = await getClients();
+  await Promise.all(
+    localClients
+      .filter((client) => client.address?.line1?.trim())
+      .map((client) => syncPendingOrderDispatchAddresses(client.id)),
+  );
+  const db = await readLocalDb();
   const localCustomers = localClients.map((client) => ({
     source: "local" as const,
     id: client.id,
@@ -20,6 +30,7 @@ export async function getAdminCustomers() {
     gst: client.gst ?? "",
     city: client.city ?? client.address?.city ?? "",
     phone: client.phone ?? client.address?.phone ?? "",
+    address: client.address,
     status: client.status,
     outstanding: db.orders
       .filter(

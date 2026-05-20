@@ -152,7 +152,9 @@ export function AdminTestimonialsClient({
                   rating={testimonial.rating}
                   className="list-star-default mb_12"
                 />
-                <blockquote>{testimonial.quote}</blockquote>
+                <blockquote className="sarjan-emoji-text">
+                  {testimonial.quote}
+                </blockquote>
                 <div className="sarjan-admin-testimonial-actions">
                   <button
                     type="button"

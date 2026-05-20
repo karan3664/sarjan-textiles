@@ -4,6 +4,7 @@ import {
   updateClient,
   updateClientPassword,
 } from "@/lib/local-db";
+import { isValidGstin, normalizeGstin } from "@/lib/gst";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 
 export async function GET(
@@ -41,6 +42,16 @@ export async function PATCH(
         body.newPassword,
       );
       return Response.json({ client: publicClient(client) });
+    }
+    if (body.gst !== undefined) {
+      const gst = normalizeGstin(String(body.gst ?? ""));
+      if (!isValidGstin(gst)) {
+        return Response.json(
+          { error: "Valid GST number is required for wholesale accounts" },
+          { status: 400 },
+        );
+      }
+      body.gst = gst;
     }
     const client = await updateClient(id, body);
     return Response.json({ client: publicClient(client) });

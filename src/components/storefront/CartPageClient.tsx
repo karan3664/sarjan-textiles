@@ -11,6 +11,8 @@ import {
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
+import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
 
@@ -24,6 +26,7 @@ export function CartPageClient() {
   const [cart, setCart] = useState<StoredCartItem[]>([]);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientGst, setClientGst] = useState("");
   const hasB2BSession = useClientHasB2BToken();
 
   useEffect(() => {
@@ -34,12 +37,19 @@ export function CartPageClient() {
       );
     };
 
+    const syncClient = () =>
+      setClientGst(storedClientGstNumber(readStoredClient()));
+    syncClient();
     syncCartWithApi().then(sync).catch(sync);
     window.addEventListener("sarjan-cart-updated", sync);
     window.addEventListener("storage", sync);
+    window.addEventListener("storage", syncClient);
+    window.addEventListener("sarjan-auth-updated", syncClient);
     return () => {
       window.removeEventListener("sarjan-cart-updated", sync);
       window.removeEventListener("storage", sync);
+      window.removeEventListener("storage", syncClient);
+      window.removeEventListener("sarjan-auth-updated", syncClient);
     };
   }, []);
 
@@ -82,6 +92,15 @@ export function CartPageClient() {
     () => lines.reduce((sum, item) => sum + item.lineTotal, 0),
     [lines],
   );
+
+  const gst = useMemo(
+    () =>
+      computeGstOnSubtotal(subtotal, clientGst, {
+        b2bPricing: hasB2BSession,
+      }),
+    [subtotal, clientGst, hasB2BSession],
+  );
+  const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
 
   const updateQuantity = (item: CartLine, quantity: number) => {
     const nextQuantity = Math.max(1, quantity);
@@ -280,13 +299,19 @@ export function CartPageClient() {
                       <span>Subtotal</span>
                       <PriceGate amount={subtotal} className="total" compact />
                     </div>
-                    <div className="discount text-button d-flex justify-content-between align-items-center">
-                      <span>Discounts</span>
-                      <PriceGate amount={0} className="total" compact />
-                    </div>
+                    {gst.applies ? (
+                      <div className="discount text-button d-flex justify-content-between align-items-center">
+                        <span>GST ({(gst.rate * 100).toFixed(0)}%)</span>
+                        <span>{formatInr(gst.amount)}</span>
+                      </div>
+                    ) : null}
                     <h5 className="total-order d-flex justify-content-between align-items-center">
                       <span>Total</span>
-                      <PriceGate amount={subtotal} className="total" compact />
+                      <PriceGate
+                        amount={grandTotal}
+                        className="total"
+                        compact
+                      />
                     </h5>
                     <div className="box-progress-checkout">
                       <fieldset className="check-agree">

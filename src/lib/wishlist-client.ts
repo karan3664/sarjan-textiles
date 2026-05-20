@@ -39,8 +39,43 @@ export function toggleWishlist(slug: string) {
   return next.includes(slug);
 }
 
+/** Drop slugs that no longer exist in the catalog (e.g. after CMS dedupe). */
+export async function resolveWishlistSlugs(slugs: string[]) {
+  if (!slugs.length) return [];
+  try {
+    const res = await fetch(
+      `/api/catalog/products?ids=${encodeURIComponent(slugs.join(","))}&limit=${slugs.length}`,
+    );
+    const data = (await res.json()) as { items?: Array<{ slug: string }> };
+    const valid = new Set((data.items ?? []).map((item) => item.slug));
+    return slugs.filter((slug) => valid.has(slug));
+  } catch {
+    return slugs;
+  }
+}
+
+/** Prune localStorage wishlist to catalog-backed slugs; returns valid list. */
+export async function refreshWishlistFromCatalog() {
+  const current = readWishlist();
+  const valid = await resolveWishlistSlugs(current);
+  if (
+    valid.length !== current.length ||
+    valid.some((slug, index) => slug !== current[index])
+  ) {
+    writeWishlist(valid);
+  }
+  return valid;
+}
+
+export function setWishlistCountBadge(count: number) {
+  if (typeof window === "undefined") return;
+  document.querySelectorAll(".wishlist-count").forEach((node) => {
+    node.textContent = String(count);
+  });
+}
+
 /** Sync heart button styles with localStorage (for dynamically mounted buttons). */
-export function syncWishlistButtonStates() {
+export function syncWishlistButtonStates(count = readWishlist().length) {
   if (typeof window === "undefined") return;
   const wishlisted = new Set(readWishlist());
   document
@@ -51,7 +86,5 @@ export function syncWishlistButtonStates() {
       node.classList.toggle("added", active);
       node.setAttribute("aria-pressed", String(active));
     });
-  document.querySelectorAll(".wishlist-count").forEach((node) => {
-    node.textContent = String(wishlisted.size);
-  });
+  setWishlistCountBadge(count);
 }

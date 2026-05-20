@@ -1,21 +1,38 @@
+"use client";
+
+import { useState, type CSSProperties } from "react";
 import type { Product } from "@/data/mock";
 import { isProductSoldOut } from "@/lib/product-availability";
+import { productColorHex } from "@/lib/product-color-swatch";
 import { PriceGate } from "./PriceGate";
 
 export function ModaveProductCard({
   product,
   delay = "0s",
   className = "",
+  showColorSwatches = false,
 }: {
   product: Product;
   delay?: string;
   className?: string;
+  showColorSwatches?: boolean;
 }) {
-  const hover = product.images[1] ?? product.images[0];
+  const [colorIndex, setColorIndex] = useState(0);
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
   const altText = product.imageAlt || `${product.name} ${product.category}`;
-
   const soldOut = isProductSoldOut(product);
+  const colors = product.colors.length ? product.colors : ["Default"];
+  const activeColor = colors[colorIndex] ?? colors[0];
+  const primaryImage = product.images[colorIndex] ?? product.images[0];
+  const hoverIndex =
+    product.images.length > 1
+      ? colorIndex === 0
+        ? 1
+        : colorIndex < product.images.length
+          ? colorIndex
+          : 0
+      : 0;
+  const hoverImage = product.images[hoverIndex] ?? primaryImage;
 
   return (
     <div
@@ -26,14 +43,14 @@ export function ModaveProductCard({
         <a href={`/products/${product.slug}`} className="product-img">
           <img
             className="lazyload img-product"
-            data-src={product.images[0]}
-            src={product.images[0]}
+            data-src={primaryImage}
+            src={primaryImage}
             alt={altText}
           />
           <img
             className="lazyload img-hover"
-            data-src={hover}
-            src={hover}
+            data-src={hoverImage}
+            src={hoverImage}
             alt={`${altText} alternate view`}
           />
         </a>
@@ -89,7 +106,7 @@ export function ModaveProductCard({
               data-cart-add
               data-product-slug={product.slug}
               data-product-size-run={sizeRun.join(",")}
-              data-product-color={product.colors[0]}
+              data-product-color={activeColor}
             >
               Add To cart
             </a>
@@ -109,9 +126,58 @@ export function ModaveProductCard({
           {product.name}
         </a>
         <PriceGate amount={product.price} suffix=" / piece" />
-        <div className="text-secondary small">
-          1 set · {sizeRun.length} sizes · {product.fabric}
-        </div>
+        {showColorSwatches ? (
+          <ul
+            className="list-color-product mt_8"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {colors.slice(0, 5).map((color, index) => {
+              const swatchImage =
+                product.images[index] ?? product.images[0] ?? "";
+              return (
+                <li
+                  className={`list-color-item color-swatch${index === colorIndex ? " active line" : ""}`}
+                  key={`${product.slug}-${color}`}
+                  onClick={() => setColorIndex(index)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setColorIndex(index);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Color ${color}`}
+                  aria-pressed={index === colorIndex}
+                >
+                  <span className="d-none text-capitalize color-filter">
+                    {color}
+                  </span>
+                  <span
+                    className="swatch-value sarjan-color-swatch-fill"
+                    style={
+                      {
+                        "--sarjan-swatch": productColorHex(color),
+                      } as CSSProperties
+                    }
+                  />
+                  {swatchImage ? (
+                    <img
+                      className="lazyload"
+                      data-src={swatchImage}
+                      src={swatchImage}
+                      alt=""
+                    />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="text-secondary small">
+            1 set · {sizeRun.length} sizes · {product.fabric}
+          </div>
+        )}
       </div>
     </div>
   );

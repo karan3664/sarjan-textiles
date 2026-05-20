@@ -1,6 +1,11 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import type { CmsTestimonial } from "@/lib/cms-store";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
+import {
+  sanitizeUserText,
+  USER_TEXT_LIMITS,
+  validateUserText,
+} from "@/lib/user-text";
 
 const defaultAvatar = "/sarjan-assets/sarjan-favicon-192.png";
 
@@ -17,11 +22,21 @@ export async function POST(request: Request) {
   const body = (await request.json()) as Partial<CmsTestimonial>;
   const cms = await getCmsSnapshot();
 
-  if (!body.author || !body.quote) {
-    return Response.json(
-      { error: "Author and quote required" },
-      { status: 400 },
-    );
+  const authorCheck = validateUserText(String(body.author ?? ""), {
+    min: 1,
+    max: USER_TEXT_LIMITS.testimonialAuthor,
+    label: "Author",
+  });
+  const quoteCheck = validateUserText(String(body.quote ?? ""), {
+    min: 1,
+    max: USER_TEXT_LIMITS.testimonialQuote,
+    label: "Testimonial",
+  });
+  if (!authorCheck.ok) {
+    return Response.json({ error: authorCheck.error }, { status: 400 });
+  }
+  if (!quoteCheck.ok) {
+    return Response.json({ error: quoteCheck.error }, { status: 400 });
   }
 
   const rating = Math.round(Number(body.rating));
@@ -32,11 +47,12 @@ export async function POST(request: Request) {
     );
   }
 
+  const product = sanitizeUserText(String(body.product ?? "Sarjan Textiles"));
   const testimonial: CmsTestimonial = {
     id: `TST-${Date.now()}`,
-    author: body.author,
-    quote: body.quote,
-    product: body.product ?? "Sarjan Textiles",
+    author: authorCheck.value,
+    quote: quoteCheck.value,
+    product: product || "Sarjan Textiles",
     price: formatTestimonialPrice(body.price ?? ""),
     rating,
     image: body.image ?? "/sarjan-assets/banner-textiles-studio.webp",

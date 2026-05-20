@@ -1,6 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GstVerificationFields } from "./GstVerificationFields";
+import {
+  bumpClientAvatarCache,
+  clientAvatarSrc,
+  hasCustomClientAvatar,
+} from "@/lib/client-avatar-display";
+import { resolveDispatchAddress } from "@/lib/dispatch-address";
+import {
+  isGstVerifiedOnFile,
+  isValidGstin,
+  normalizeGstin,
+} from "@/lib/gstin-form";
 import { PageTitle } from "./PageTitle";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 
@@ -78,15 +90,39 @@ function readClient() {
   }
 }
 
+function clientAuthToken() {
+  return typeof window !== "undefined"
+    ? localStorage.getItem("sarjan-client-token")?.trim()
+    : "";
+}
+
+function clientAuthHeaders(): HeadersInit {
+  const token = clientAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 function clientAuthJsonHeaders(): HeadersInit {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("sarjan-client-token")?.trim()
-      : "";
   return {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...clientAuthHeaders(),
   };
+}
+
+function stripAvatarCacheQuery(url?: string) {
+  if (!url?.trim()) return undefined;
+  const trimmed = url.trim();
+  const index = trimmed.indexOf("?");
+  return index === -1 ? trimmed : trimmed.slice(0, index);
+}
+
+function persistClient(client: Client) {
+  const stored: Client = {
+    ...client,
+    avatarUrl: stripAvatarCacheQuery(client.avatarUrl),
+  };
+  localStorage.setItem("sarjan-client", JSON.stringify(stored));
+  window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+  return stored;
 }
 
 function useClientAndOrders() {
@@ -116,8 +152,12 @@ function useClientAndOrders() {
     ])
       .then(([clientData, orderData]) => {
         const freshClient = clientData?.client ?? stored;
-        setClient(freshClient);
-        localStorage.setItem("sarjan-client", JSON.stringify(freshClient));
+        const normalized: Client = {
+          ...freshClient,
+          avatarUrl: stripAvatarCacheQuery(freshClient?.avatarUrl),
+        };
+        setClient(normalized);
+        localStorage.setItem("sarjan-client", JSON.stringify(normalized));
         setOrders(orderData.orders ?? []);
       })
       .finally(() => setLoading(false));
@@ -167,13 +207,7 @@ function AccountFrame({
               <div className="sidebar-account">
                 <div className="account-avatar">
                   <div className="image">
-                    <img
-                      src={
-                        client?.avatarUrl?.trim() ||
-                        "/template/storefront/images/avatar/user-account.jpg"
-                      }
-                      alt=""
-                    />
+                    <img src={clientAvatarSrc(client?.avatarUrl)} alt="" />
                   </div>
                   <h6 className="mb_4">
                     {client?.companyName ?? "Sarjan Client"}
@@ -216,8 +250,11 @@ export function AccountDashboardPage() {
     email: "",
     phone: "",
     gst: "",
+    ownerLegalName: "",
     city: "",
   });
+  const [savedGst, setSavedGst] = useState("");
+  const [gstVerified, setGstVerified] = useState(false);
   const [password, setPassword] = useState({
     currentPassword: "",
     newPassword: "",
@@ -226,18 +263,36 @@ export function AccountDashboardPage() {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarRemoving, setAvatarRemoving] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState("");
+  const [avatarPreviewKey, setAvatarPreviewKey] = useState(0);
   useEffect(() => {
     if (!client) return;
+    const gst = client.gst ?? client.address?.gst ?? "";
+    const normalizedGst = normalizeGstin(gst);
+    setSavedGst(normalizedGst);
+    setGstVerified(
+      isGstVerifiedOnFile({
+        gst: normalizedGst,
+        companyName: client.companyName,
+        ownerLegalName: client.address?.ownerLegalName,
+      }),
+    );
     setForm({
       companyName: client.companyName ?? "",
       email: client.email ?? "",
-      phone: client.phone ?? "",
-      gst: client.gst ?? client.address?.gst ?? "",
+      phone: client.phone ?? client.address?.phone ?? "",
+      gst,
+      ownerLegalName: client.address?.ownerLegalName ?? "",
       city: client.city ?? client.address?.city ?? "",
     });
   }, [client]);
+
+  const onGstVerifiedChange = useCallback((verified: boolean) => {
+    setGstVerified(verified);
+  }, []);
 
   const updateForm = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -251,27 +306,59 @@ export function AccountDashboardPage() {
       return;
     }
 
+    const nextGst = normalizeGstin(form.gst);
+    const gstChanged = nextGst !== savedGst;
+
+    if (!nextGst || !isValidGstin(nextGst)) {
+      setMessage("GST number is required (valid 15-character GSTIN).");
+      return;
+    }
+    if (gstChanged && !gstVerified) {
+      setMessage(
+        "Verify GST with the portal after changing or adding a GST number.",
+      );
+      return;
+    }
+    if (!form.companyName.trim()) {
+      setMessage("Trade / business name is required.");
+      return;
+    }
+    if (!form.ownerLegalName.trim()) {
+      setMessage("Legal / proprietor full name is required.");
+      return;
+    }
+
     const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
       method: "PATCH",
       headers: clientAuthJsonHeaders(),
       body: JSON.stringify({
-        companyName: form.companyName,
-        phone: form.phone,
-        gst: form.gst,
-        city: form.city,
+        companyName: form.companyName.trim(),
+        phone: form.phone.trim(),
+        gst: nextGst,
+        city: form.city.trim(),
         address: {
           ...(client.address ?? {}),
-          phone: form.phone,
-          gst: form.gst,
-          city: form.city,
+          phone: form.phone.trim(),
+          gst: nextGst,
+          city: form.city.trim(),
+          ownerLegalName: form.ownerLegalName.trim(),
         },
       }),
     });
     const data = await res.json();
     if (res.ok) {
-      setClient(data.client);
-      localStorage.setItem("sarjan-client", JSON.stringify(data.client));
-      window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+      setClient(persistClient(data.client));
+      const refreshedGst = normalizeGstin(
+        data.client.gst ?? data.client.address?.gst ?? "",
+      );
+      setSavedGst(refreshedGst);
+      setGstVerified(
+        isGstVerifiedOnFile({
+          gst: refreshedGst,
+          companyName: data.client.companyName,
+          ownerLegalName: data.client.address?.ownerLegalName,
+        }),
+      );
       setMessage("Account updated.");
     } else {
       setMessage(data.error ?? "Account update failed.");
@@ -317,11 +404,26 @@ export function AccountDashboardPage() {
     }, 700);
   };
 
+  const applyAvatarClient = useCallback(
+    (next: Client, message: string) => {
+      const stored = persistClient(next);
+      bumpClientAvatarCache();
+      setClient(stored);
+      setAvatarPreviewKey((key) => key + 1);
+      setAvatarMessage(message);
+      window.setTimeout(() => setAvatarMessage(""), 5000);
+    },
+    [setClient],
+  );
+
   const uploadAvatar = async (file: File) => {
     if (!client?.id) return;
+    if (!clientAuthToken()) {
+      setAvatarMessage("Login required.");
+      return;
+    }
     setAvatarUploading(true);
     setAvatarMessage("");
-    const token = localStorage.getItem("sarjan-client-token")?.trim();
     const formData = new FormData();
     formData.set("file", file);
     try {
@@ -329,7 +431,7 @@ export function AccountDashboardPage() {
         `/api/clients/${encodeURIComponent(client.id)}/avatar`,
         {
           method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: clientAuthHeaders(),
           body: formData,
         },
       );
@@ -339,16 +441,49 @@ export function AccountDashboardPage() {
         return;
       }
       if (data.client) {
-        setClient(data.client);
-        localStorage.setItem("sarjan-client", JSON.stringify(data.client));
-        window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
-        setAvatarMessage("Photo updated.");
-        window.setTimeout(() => setAvatarMessage(""), 4000);
+        applyAvatarClient(data.client, "Photo updated.");
       }
     } catch {
       setAvatarMessage("Upload failed.");
     } finally {
       setAvatarUploading(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    if (!client?.id) return;
+    if (!hasCustomClientAvatar(client.avatarUrl)) return;
+    if (!clientAuthToken()) {
+      setAvatarMessage("Login required.");
+      return;
+    }
+    setAvatarRemoving(true);
+    setAvatarMessage("");
+    try {
+      const res = await fetch(
+        `/api/clients/${encodeURIComponent(client.id)}/avatar`,
+        {
+          method: "DELETE",
+          headers: clientAuthHeaders(),
+        },
+      );
+      const data = (await res.json()) as { client?: Client; error?: string };
+      if (!res.ok) {
+        setAvatarMessage(data.error ?? "Could not remove photo.");
+        return;
+      }
+      if (data.client) {
+        bumpClientAvatarCache();
+        const stored = persistClient(data.client);
+        setClient(stored);
+        setAvatarPreviewKey((key) => key + 1);
+        setAvatarMessage("Profile photo removed.");
+        window.setTimeout(() => setAvatarMessage(""), 5000);
+      }
+    } catch {
+      setAvatarMessage("Could not remove photo.");
+    } finally {
+      setAvatarRemoving(false);
     }
   };
 
@@ -365,43 +500,58 @@ export function AccountDashboardPage() {
                 <div className="sarjan-profile-avatar-block mb_24">
                   <div className="text-title mb_8">Profile photo</div>
                   <p className="text-secondary text-caption-1 mb_16">
-                    JPG, PNG, or WebP · max 4MB. Use a professional headshot or
-                    company logo only — adult or explicit images are blocked
-                    automatically.
+                    JPG, PNG, or WebP · max 4MB. Use a professional headshot
+                    (with shirt) or company logo only — nudity, shirtless, and
+                    suggestive photos are blocked automatically.
                   </p>
                   <div className="d-flex align-items-center gap-20 flex-wrap">
                     <div className="sarjan-profile-avatar-thumb">
                       <img
-                        src={
-                          client.avatarUrl?.trim() ||
-                          "/template/storefront/images/avatar/user-account.jpg"
-                        }
+                        key={avatarPreviewKey}
+                        src={clientAvatarSrc(client.avatarUrl)}
                         alt=""
                         width={100}
                         height={100}
                       />
                     </div>
-                    <div>
+                    <div className="sarjan-profile-avatar-actions">
                       <input
+                        ref={avatarInputRef}
                         id="sarjan-profile-avatar-input"
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                         className="d-none"
-                        disabled={avatarUploading}
+                        disabled={avatarUploading || avatarRemoving}
                         onChange={(event) => {
                           const file = event.target.files?.[0];
                           if (file) void uploadAvatar(file);
                           event.target.value = "";
                         }}
                       />
-                      <label
-                        htmlFor="sarjan-profile-avatar-input"
+                      <button
+                        type="button"
                         className="tf-btn btn-white has-border radius-4"
+                        disabled={avatarUploading || avatarRemoving}
+                        onClick={() => avatarInputRef.current?.click()}
                       >
                         <span className="text">
                           {avatarUploading ? "Uploading…" : "Choose photo"}
                         </span>
-                      </label>
+                      </button>
+                      {hasCustomClientAvatar(client.avatarUrl) ? (
+                        <button
+                          type="button"
+                          className="tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove"
+                          disabled={avatarUploading || avatarRemoving}
+                          onClick={() => void removeAvatar()}
+                        >
+                          <span className="text">
+                            {avatarRemoving
+                              ? "Removing…"
+                              : "Remove profile photo"}
+                          </span>
+                        </button>
+                      ) : null}
                       {avatarMessage ? (
                         <p
                           className={
@@ -446,19 +596,39 @@ export function AccountDashboardPage() {
                   <fieldset>
                     <input
                       type="text"
-                      placeholder="Phone*"
-                      value={form.phone}
-                      onChange={(e) => updateForm("phone", e.target.value)}
+                      placeholder="Legal name / proprietor (as on GST)"
+                      value={form.ownerLegalName}
+                      onChange={(e) =>
+                        updateForm("ownerLegalName", e.target.value)
+                      }
                     />
                   </fieldset>
                   <fieldset>
                     <input
                       type="text"
-                      placeholder="GST Number"
-                      value={form.gst}
-                      onChange={(e) => updateForm("gst", e.target.value)}
+                      placeholder="Phone*"
+                      value={form.phone}
+                      onChange={(e) => updateForm("phone", e.target.value)}
                     />
                   </fieldset>
+                </div>
+                <div className="mb_20">
+                  <GstVerificationFields
+                    gst={form.gst}
+                    savedGst={savedGst}
+                    allowGstEditWhenVerified
+                    onGstChange={(value) => updateForm("gst", value)}
+                    companyName={form.companyName}
+                    onCompanyNameChange={(value) =>
+                      updateForm("companyName", value)
+                    }
+                    ownerLegalName={form.ownerLegalName}
+                    onOwnerLegalNameChange={(value) =>
+                      updateForm("ownerLegalName", value)
+                    }
+                    onVerifiedChange={onGstVerifiedChange}
+                    hideNameFields
+                  />
                 </div>
                 <div className="tf-select mb_20">
                   <select
@@ -949,7 +1119,22 @@ export function AccountAddressPage() {
   );
 }
 
-function OrderView({ order }: { order: Order }) {
+function OrderView({
+  order,
+  client,
+}: {
+  order: Order;
+  client?: Client | null;
+}) {
+  const dispatchText = client
+    ? resolveDispatchAddress(order.dispatchAddress, {
+        companyName: client.companyName,
+        gst: client.gst,
+        city: client.city,
+        phone: client.phone,
+        address: client.address,
+      })
+    : order.dispatchAddress;
   const steps = [
     "Pending approval",
     "Approved",
@@ -1017,7 +1202,7 @@ function OrderView({ order }: { order: Order }) {
               </div>
               <p className="text-secondary mt_24">
                 Dispatch Address:{" "}
-                {order.dispatchAddress || "Will be confirmed by admin."}
+                {dispatchText || "Will be confirmed by admin."}
               </p>
               <p className="text-secondary">
                 Payment terms will be confirmed by accounts.
@@ -1031,7 +1216,7 @@ function OrderView({ order }: { order: Order }) {
 }
 
 export function AccountOrderDetailsPage({ orderId }: { orderId?: string }) {
-  const { orders, loading } = useClientAndOrders();
+  const { client, orders, loading } = useClientAndOrders();
   const order = useMemo(
     () => (orderId ? orders.find((item) => item.id === orderId) : orders[0]),
     [orderId, orders],
@@ -1042,7 +1227,7 @@ export function AccountOrderDetailsPage({ orderId }: { orderId?: string }) {
       {loading ? (
         <p>Loading order...</p>
       ) : order ? (
-        <OrderView order={order} />
+        <OrderView order={order} client={client} />
       ) : (
         <p className="text-secondary">No order found.</p>
       )}
@@ -1170,7 +1355,7 @@ export function OrderTrackingPage() {
           </div>
           {order ? (
             <div className="mt_32">
-              <OrderView order={order} />
+              <OrderView order={order} client={client} />
             </div>
           ) : null}
         </div>

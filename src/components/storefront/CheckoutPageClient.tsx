@@ -10,11 +10,13 @@ import {
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import { guestCheckoutMarketingEnabled } from "@/lib/commerce-config";
 import {
-  guestCheckoutMarketingEnabled,
-  tdsDisplayNote,
-} from "@/lib/commerce-config";
-import { computeTcsOnTaxableSale, formatInr } from "@/lib/gst-display";
+  readStoredClient,
+  storedClientGstNumber,
+  type StoredClient,
+} from "@/lib/client-session";
+import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
@@ -24,20 +26,7 @@ type CheckoutLine = StoredCartItem & {
   lineTotal: number;
 };
 
-type CheckoutClient = {
-  id?: string;
-  companyName?: string;
-  email?: string;
-  phone?: string;
-  city?: string;
-  address?: {
-    contactName?: string;
-    line1?: string;
-    city?: string;
-    state?: string;
-    pincode?: string;
-  };
-};
+type CheckoutClient = StoredClient & { city?: string };
 
 export function CheckoutPageClient() {
   const [cart, setCart] = useState<StoredCartItem[]>([]);
@@ -55,7 +44,7 @@ export function CheckoutPageClient() {
           setClient(null);
           return;
         }
-        setClient(JSON.parse(localStorage.getItem("sarjan-client") ?? "null"));
+        setClient(readStoredClient());
       } catch {
         setClient(null);
       }
@@ -114,7 +103,15 @@ export function CheckoutPageClient() {
     [lines],
   );
 
-  const tcs = useMemo(() => computeTcsOnTaxableSale(subtotal), [subtotal]);
+  const clientGst = storedClientGstNumber(client);
+  const gst = useMemo(
+    () =>
+      computeGstOnSubtotal(subtotal, clientGst, {
+        b2bPricing: Boolean(client?.id),
+      }),
+    [subtotal, clientGst, client?.id],
+  );
+  const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
 
   const submitOrder = async () => {
     const client = JSON.parse(
@@ -436,48 +433,24 @@ export function CheckoutPageClient() {
                         </div>
                       ))}
                     </div>
-                    <div className="sec-discount">
-                      <div className="ip-discount-code">
-                        <input type="text" placeholder="Add voucher discount" />
-                        <button className="tf-btn" type="button">
-                          <span className="text">Apply Code</span>
-                        </button>
-                      </div>
-                      <p>
-                        Discount code is only used after admin review for
-                        eligible B2B orders.
-                      </p>
-                    </div>
                     <div className="sec-total-price">
                       <div className="top">
                         <div className="item d-flex align-items-center justify-content-between text-button">
-                          <span>Shipping</span>
-                          <span>Admin review</span>
+                          <span>Subtotal</span>
+                          <PriceGate amount={subtotal} compact />
                         </div>
-                        <div className="item d-flex align-items-center justify-content-between text-button">
-                          <span>Discounts</span>
-                          <PriceGate amount={0} compact />
-                        </div>
-                        {tcs.amount > 0 ? (
+                        {gst.applies ? (
                           <div className="item d-flex align-items-center justify-content-between text-button">
-                            <span>TCS (indicative)</span>
-                            <span>
-                              {formatInr(tcs.amount)}{" "}
-                              <span className="text-caption-1 text-secondary">
-                                ({(tcs.rate * 100).toFixed(3)}%)
-                              </span>
-                            </span>
+                            <span>GST ({(gst.rate * 100).toFixed(0)}%)</span>
+                            <span>{formatInr(gst.amount)}</span>
                           </div>
                         ) : null}
                       </div>
-                      <p className="text-caption-1 text-secondary mt_8 mb_0">
-                        {tdsDisplayNote()}
-                      </p>
                       <div className="bottom">
                         <h5 className="d-flex justify-content-between">
                           <span>Total</span>
                           <PriceGate
-                            amount={subtotal}
+                            amount={grandTotal}
                             className="total-price-checkout"
                             compact
                           />

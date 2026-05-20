@@ -9,10 +9,8 @@ import {
   writeWishlist,
 } from "@/lib/wishlist-client";
 import { ModaveProductCard } from "./ModaveProductCard";
-import {
-  paginationRangeLabel,
-  StorefrontPagination,
-} from "./StorefrontPagination";
+import { paginationRangeLabel } from "@/lib/pagination-utils";
+import { StorefrontPagination } from "./StorefrontPagination";
 
 const WISHLIST_PER_PAGE = 24;
 
@@ -48,8 +46,14 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
         const bySlug = new Map<Product["slug"], Product>(
           (data.items ?? []).map((product: Product) => [product.slug, product]),
         );
+        const validSlugs = slugs.filter((slug) => bySlug.has(slug));
+        if (validSlugs.length !== slugs.length) {
+          writeWishlist(validSlugs);
+        }
         setProducts(
-          slugs.map((slug) => bySlug.get(slug)).filter(Boolean) as Product[],
+          validSlugs
+            .map((slug) => bySlug.get(slug))
+            .filter(Boolean) as Product[],
         );
       })
       .catch(() => setProducts([]))
@@ -57,8 +61,9 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
   }, [slugs]);
 
   useEffect(() => {
-    if (!products.length) return;
-    window.requestAnimationFrame(() => syncWishlistButtonStates());
+    window.requestAnimationFrame(() =>
+      syncWishlistButtonStates(products.length),
+    );
   }, [products]);
 
   const totalPages = Math.max(

@@ -59,7 +59,6 @@ function PageTitle({ title }: { title: string }) {
 export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [hasGst, setHasGst] = useState(true);
   const [gst, setGst] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [ownerFullName, setOwnerFullName] = useState("");
@@ -86,7 +85,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const gstinReady = isValidGstin(normalizedGst);
 
   const loadGstCaptcha = useCallback(async () => {
-    if (!isRegister || !hasGst || !isValidGstin(normalizeGstin(gst))) return;
+    if (!isRegister || !isValidGstin(normalizeGstin(gst))) return;
     setCaptchaFetching(true);
     setCaptchaLoadError("");
     try {
@@ -108,10 +107,10 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     } finally {
       setCaptchaFetching(false);
     }
-  }, [gst, hasGst, isRegister]);
+  }, [gst, isRegister]);
 
   useEffect(() => {
-    if (!isRegister || !hasGst) {
+    if (!isRegister) {
       setCaptchaSessionId(null);
       setCaptchaB64(null);
       setCaptchaInput("");
@@ -125,7 +124,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       return;
     }
     void loadGstCaptcha();
-  }, [gstinReady, hasGst, isRegister, loadGstCaptcha]);
+  }, [gstinReady, isRegister, loadGstCaptcha]);
 
   const title = isRegister
     ? "Register"
@@ -150,22 +149,22 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       setMessage("Email OTP verification required");
       return;
     }
-    if (isRegister && hasGst && !isValidGstin(String(payload.gst ?? ""))) {
+    if (isRegister && !isValidGstin(String(payload.gst ?? ""))) {
       setLoading(false);
-      setMessage("Enter valid GST number or choose without GST registration");
+      setMessage("Valid GST number is required for wholesale registration");
       return;
     }
-    if (isRegister && hasGst && !String(payload.companyName ?? "").trim()) {
+    if (isRegister && !String(payload.companyName ?? "").trim()) {
       setLoading(false);
       setMessage("Trade / business name is required.");
       return;
     }
-    if (isRegister && hasGst && !String(payload.ownerLegalName ?? "").trim()) {
+    if (isRegister && !String(payload.ownerLegalName ?? "").trim()) {
       setLoading(false);
       setMessage("Legal / proprietor full name (as on GST) is required.");
       return;
     }
-    if (isRegister && hasGst && !gstVerified && !gstManualAllowed) {
+    if (isRegister && !gstVerified && !gstManualAllowed) {
       setLoading(false);
       setMessage(
         "Verify GST with the captcha so trade and legal names load from the portal.",
@@ -365,213 +364,167 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                 <div className="wrap">
                   {isRegister ? (
                     <>
-                      <div className="sarjan-gst-toggle">
-                        <label className="tf-cart-checkbox">
-                          <input
-                            type="checkbox"
-                            className="tf-check"
-                            checked={hasGst}
-                            onChange={(event) => {
-                              setHasGst(event.target.checked);
-                              setGstVerified(false);
-                              setGstManualAllowed(false);
-                              setGstMessage("");
-                              if (event.target.checked) {
-                                setCompanyName("");
-                                setOwnerFullName("");
-                              }
-                            }}
-                          />
-                          <span>Company has GST number</span>
-                        </label>
-                        <p className="text-caption-1 text-secondary">
-                          If no GST, uncheck and register with company name
-                          manually. With GST checked, trade and legal names come
-                          from verification (or manual entry only if the portal
-                          fails).
+                      <p className="text-caption-1 text-secondary mb_16">
+                        GST registration is required for all wholesale accounts.
+                        Verify with the GST portal to load trade and legal
+                        names.
+                      </p>
+                      <input type="hidden" name="hasGst" value="true" />
+                      <fieldset>
+                        <input
+                          type="text"
+                          placeholder="GST number*"
+                          name="gst"
+                          value={gst}
+                          readOnly={gstVerified && !gstManualAllowed}
+                          onChange={(event) => {
+                            setGst(event.target.value.toUpperCase());
+                            setGstVerified(false);
+                            setGstManualAllowed(false);
+                            setCompanyName("");
+                            setOwnerFullName("");
+                          }}
+                          required
+                        />
+                      </fieldset>
+                      {!gstinReady ? (
+                        <p className="sarjan-gst-captcha-hint">
+                          Enter a full 15-character GSTIN. A captcha from the
+                          official GST portal will load automatically.
                         </p>
-                      </div>
-                      <input
-                        type="hidden"
-                        name="hasGst"
-                        value={hasGst ? "true" : "false"}
-                      />
-                      {hasGst ? (
+                      ) : null}
+                      {gstinReady && !gstVerified ? (
                         <>
-                          <fieldset>
+                          <p className="sarjan-gst-captcha-hint">
+                            Security check from{" "}
+                            <a
+                              href="https://services.gst.gov.in/services/searchtp"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              GST portal
+                            </a>
+                            : type the 6 digits shown in the image.
+                          </p>
+                          <div className="sarjan-gst-captcha-panel">
+                            {captchaB64 ? (
+                              <img
+                                className="sarjan-gst-captcha-img"
+                                src={`data:${captchaMediaType};base64,${captchaB64}`}
+                                alt="GST captcha"
+                              />
+                            ) : captchaFetching ? (
+                              <span className="text-caption-1 text-secondary">
+                                Loading captcha…
+                              </span>
+                            ) : null}
+                            <div className="sarjan-gst-captcha-actions">
+                              <button
+                                type="button"
+                                className="tf-btn btn-fill sarjan-gst-captcha-refresh"
+                                onClick={() => void loadGstCaptcha()}
+                                disabled={
+                                  captchaFetching || gstLoading || !gstinReady
+                                }
+                              >
+                                <span className="text text-button">
+                                  {captchaFetching
+                                    ? "Loading…"
+                                    : "Refresh image"}
+                                </span>
+                              </button>
+                            </div>
                             <input
                               type="text"
-                              placeholder="GST number*"
-                              name="gst"
-                              value={gst}
-                              readOnly={gstVerified && !gstManualAllowed}
-                              onChange={(event) => {
-                                setGst(event.target.value.toUpperCase());
-                                setGstVerified(false);
-                                setGstManualAllowed(false);
-                                setCompanyName("");
-                                setOwnerFullName("");
+                              inputMode="numeric"
+                              autoComplete="off"
+                              placeholder="6-digit captcha*"
+                              value={captchaInput}
+                              onChange={(event) =>
+                                setCaptchaInput(
+                                  event.target.value
+                                    .replace(/\D/g, "")
+                                    .slice(0, 6),
+                                )
+                              }
+                              maxLength={6}
+                              style={{
+                                height: 50,
+                                maxWidth: 160,
+                                letterSpacing: "0.2em",
                               }}
-                              required
                             />
-                          </fieldset>
-                          {!gstinReady ? (
-                            <p className="sarjan-gst-captcha-hint">
-                              Enter a full 15-character GSTIN. A captcha from
-                              the official GST portal will load automatically.
-                            </p>
+                          </div>
+                          {captchaLoadError ? (
+                            <p className="text-danger">{captchaLoadError}</p>
                           ) : null}
-                          {gstinReady && !gstVerified ? (
-                            <>
-                              <p className="sarjan-gst-captcha-hint">
-                                Security check from{" "}
-                                <a
-                                  href="https://services.gst.gov.in/services/searchtp"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  GST portal
-                                </a>
-                                : type the 6 digits shown in the image.
-                              </p>
-                              <div className="sarjan-gst-captcha-panel">
-                                {captchaB64 ? (
-                                  <img
-                                    className="sarjan-gst-captcha-img"
-                                    src={`data:${captchaMediaType};base64,${captchaB64}`}
-                                    alt="GST captcha"
-                                  />
-                                ) : captchaFetching ? (
-                                  <span className="text-caption-1 text-secondary">
-                                    Loading captcha…
-                                  </span>
-                                ) : null}
-                                <div className="sarjan-gst-captcha-actions">
-                                  <button
-                                    type="button"
-                                    className="tf-btn btn-fill sarjan-gst-captcha-refresh"
-                                    onClick={() => void loadGstCaptcha()}
-                                    disabled={
-                                      captchaFetching ||
-                                      gstLoading ||
-                                      !gstinReady
-                                    }
-                                  >
-                                    <span className="text text-button">
-                                      {captchaFetching
-                                        ? "Loading…"
-                                        : "Refresh image"}
-                                    </span>
-                                  </button>
-                                </div>
-                                <input
-                                  type="text"
-                                  inputMode="numeric"
-                                  autoComplete="off"
-                                  placeholder="6-digit captcha*"
-                                  value={captchaInput}
-                                  onChange={(event) =>
-                                    setCaptchaInput(
-                                      event.target.value
-                                        .replace(/\D/g, "")
-                                        .slice(0, 6),
-                                    )
-                                  }
-                                  maxLength={6}
-                                  style={{
-                                    height: 50,
-                                    maxWidth: 160,
-                                    letterSpacing: "0.2em",
-                                  }}
-                                />
-                              </div>
-                              {captchaLoadError ? (
-                                <p className="text-danger">
-                                  {captchaLoadError}
-                                </p>
-                              ) : null}
-                              <fieldset style={{ marginTop: 8 }}>
-                                <button
-                                  type="button"
-                                  className="tf-btn btn-fill"
-                                  style={{ width: "100%" }}
-                                  onClick={verifyGst}
-                                  disabled={
-                                    gstLoading ||
-                                    captchaFetching ||
-                                    !captchaSessionId ||
-                                    captchaInput.replace(/\D/g, "").length !== 6
-                                  }
-                                >
-                                  <span className="text text-button">
-                                    {gstLoading
-                                      ? "Verifying…"
-                                      : "Verify GST with portal"}
-                                  </span>
-                                </button>
-                              </fieldset>
-                            </>
-                          ) : null}
-                          <fieldset>
-                            <input
-                              type="text"
-                              placeholder={
-                                gstManualAllowed
-                                  ? "Trade / business name*"
-                                  : "Trade / business name (as on GST)*"
-                              }
-                              name="companyName"
-                              value={companyName}
-                              onChange={(event) =>
-                                setCompanyName(event.target.value)
-                              }
-                              readOnly={!gstManualAllowed}
-                              required
-                            />
-                          </fieldset>
-                          <fieldset>
-                            <input
-                              type="text"
-                              placeholder={
-                                gstManualAllowed
-                                  ? "Legal name / proprietor full name*"
-                                  : "Legal name / proprietor (lgnm on GST)*"
-                              }
-                              name="ownerLegalName"
-                              value={ownerFullName}
-                              onChange={(event) =>
-                                setOwnerFullName(event.target.value)
-                              }
-                              readOnly={!gstManualAllowed}
-                              required
-                            />
-                          </fieldset>
-                          {gstMessage ? (
-                            <p
-                              className={
-                                gstVerified || gstManualAllowed
-                                  ? "text-success"
-                                  : "text-danger"
+                          <fieldset style={{ marginTop: 8 }}>
+                            <button
+                              type="button"
+                              className="tf-btn btn-fill"
+                              style={{ width: "100%" }}
+                              onClick={verifyGst}
+                              disabled={
+                                gstLoading ||
+                                captchaFetching ||
+                                !captchaSessionId ||
+                                captchaInput.replace(/\D/g, "").length !== 6
                               }
                             >
-                              {gstMessage}
-                            </p>
-                          ) : null}
+                              <span className="text text-button">
+                                {gstLoading
+                                  ? "Verifying…"
+                                  : "Verify GST with portal"}
+                              </span>
+                            </button>
+                          </fieldset>
                         </>
-                      ) : (
-                        <fieldset>
-                          <input
-                            type="text"
-                            placeholder="Company name*"
-                            name="companyName"
-                            value={companyName}
-                            onChange={(event) =>
-                              setCompanyName(event.target.value)
-                            }
-                            required
-                          />
-                        </fieldset>
-                      )}
+                      ) : null}
+                      <fieldset>
+                        <input
+                          type="text"
+                          placeholder={
+                            gstManualAllowed
+                              ? "Trade / business name*"
+                              : "Trade / business name (as on GST)*"
+                          }
+                          name="companyName"
+                          value={companyName}
+                          onChange={(event) =>
+                            setCompanyName(event.target.value)
+                          }
+                          readOnly={!gstManualAllowed}
+                          required
+                        />
+                      </fieldset>
+                      <fieldset>
+                        <input
+                          type="text"
+                          placeholder={
+                            gstManualAllowed
+                              ? "Legal name / proprietor full name*"
+                              : "Legal name / proprietor (lgnm on GST)*"
+                          }
+                          name="ownerLegalName"
+                          value={ownerFullName}
+                          onChange={(event) =>
+                            setOwnerFullName(event.target.value)
+                          }
+                          readOnly={!gstManualAllowed}
+                          required
+                        />
+                      </fieldset>
+                      {gstMessage ? (
+                        <p
+                          className={
+                            gstVerified || gstManualAllowed
+                              ? "text-success"
+                              : "text-danger"
+                          }
+                        >
+                          {gstMessage}
+                        </p>
+                      ) : null}
                       <fieldset>
                         <input
                           type="text"

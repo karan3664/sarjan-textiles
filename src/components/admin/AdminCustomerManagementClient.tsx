@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { AdminCustomer } from "@/lib/admin-customers";
+import { resolveDispatchAddress } from "@/lib/dispatch-address";
 
 type CustomerStatus = AdminCustomer["status"];
 type OrderStatus = AdminCustomer["orders"][number]["status"];
@@ -529,7 +530,7 @@ export function AdminCustomerManagementClient({
                   <strong>{selected.gst || "-"}</strong>
                 </div>
                 {selected.ownerLegalName ? (
-                  <div>
+                  <div className="sarjan-customer-info-cell-legal">
                     <span>Legal / proprietor</span>
                     <strong>{selected.ownerLegalName}</strong>
                   </div>
@@ -673,7 +674,14 @@ export function AdminCustomerManagementClient({
                         </span>
                       </div>
                       <div className="text-caption-1 text-secondary">
-                        Dispatch: {order.dispatchAddress || "Address pending"}
+                        Dispatch:{" "}
+                        {resolveDispatchAddress(order.dispatchAddress, {
+                          companyName: selected.companyName,
+                          gst: selected.gst,
+                          city: selected.city,
+                          phone: selected.phone,
+                          address: selected.address,
+                        }) || "Address pending"}
                       </div>
                     </div>
                   ))

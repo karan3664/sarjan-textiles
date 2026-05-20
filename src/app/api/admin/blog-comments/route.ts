@@ -9,6 +9,11 @@ import {
   type BlogCommentUpdatePatch,
 } from "@/lib/blog-comments-store";
 import { verifyAdminToken } from "@/lib/admin-token";
+import {
+  sanitizeUserText,
+  USER_TEXT_LIMITS,
+  validateUserText,
+} from "@/lib/user-text";
 
 function canModerate(role: string) {
   return role === "super_admin" || role === "admin" || role === "content";
@@ -75,24 +80,24 @@ export async function PATCH(request: Request) {
   }
 
   if (appendReplyRaw !== undefined) {
-    const reply = String(appendReplyRaw)
-      .replace(/<[^>]*>/g, "")
-      .trim();
-    if (reply.length > 4000) {
-      return NextResponse.json({ error: "Reply too long" }, { status: 400 });
+    const replyCheck = validateUserText(String(appendReplyRaw), {
+      min: 1,
+      max: USER_TEXT_LIMITS.adminReply,
+      label: "Reply",
+    });
+    if (!replyCheck.ok) {
+      return NextResponse.json({ error: replyCheck.error }, { status: 400 });
     }
-    patch.appendAdminReply = reply;
+    patch.appendAdminReply = replyCheck.value;
   }
 
   if (adminReplyRaw !== undefined && appendReplyRaw === undefined) {
-    const reply = String(adminReplyRaw)
-      .replace(/<[^>]*>/g, "")
-      .trim();
-    if (reply.length > 4000) {
+    const legacyReply = sanitizeUserText(String(adminReplyRaw));
+    if (legacyReply.length > USER_TEXT_LIMITS.adminReply) {
       return NextResponse.json({ error: "Reply too long" }, { status: 400 });
     }
-    patch.adminReply = reply;
-    patch.adminRepliedAt = reply ? new Date().toISOString() : undefined;
+    patch.adminReply = legacyReply;
+    patch.adminRepliedAt = legacyReply ? new Date().toISOString() : undefined;
   }
 
   const hasAppendText =

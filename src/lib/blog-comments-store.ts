@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { sanitizeUserText } from "@/lib/user-text";
 
 const COMMENTS_FILE = path.join(process.cwd(), "data", "blog-comments.json");
 
@@ -60,10 +61,6 @@ function supabaseDb() {
 function parseStatus(s: string): BlogCommentStatus {
   if (s === "approved" || s === "rejected" || s === "pending") return s;
   return "pending";
-}
-
-function stripHtmlTags(s: string): string {
-  return s.replace(/<[^>]*>/g, "");
 }
 
 function parseAdminRepliesFromJson(value: unknown): BlogAdminReply[] {
@@ -283,7 +280,7 @@ export async function updateBlogComment(
   }
 
   if (patch.appendAdminReply !== undefined) {
-    const t = stripHtmlTags(patch.appendAdminReply).trim();
+    const t = sanitizeUserText(patch.appendAdminReply);
     if (t.length > 4000) {
       console.error("[blog-comments] append reply too long");
       return null;
@@ -296,7 +293,7 @@ export async function updateBlogComment(
       });
     }
   } else if (patch.adminReply !== undefined) {
-    const t = stripHtmlTags(patch.adminReply).trim();
+    const t = sanitizeUserText(patch.adminReply);
     adminReplies = t
       ? [
           {

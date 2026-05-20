@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 
 type FeedbackFormProps = {
   defaultMode?: "feedback" | "testimonial";
@@ -107,12 +108,12 @@ export function FeedbackForm({
         </fieldset>
       ) : null}
       <fieldset>
-        <textarea
+        <EmojiTextarea
           name="message"
           placeholder={
             mode === "testimonial"
-              ? "Write testimonial quote"
-              : "Write feedback"
+              ? "Write testimonial quote (emoji welcome)"
+              : "Write feedback (emoji welcome)"
           }
           required
         />

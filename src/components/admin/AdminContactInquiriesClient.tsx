@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 
 type Inquiry = {
   id: string;
@@ -264,7 +265,9 @@ export function AdminContactInquiriesClient({
                 <div className="sarjan-inquiry-body-label text-caption-1 text-secondary">
                   Message from customer
                 </div>
-                <p className="sarjan-inquiry-body-text">{inquiry.message}</p>
+                <p className="sarjan-inquiry-body-text sarjan-emoji-text">
+                  {inquiry.message}
+                </p>
               </div>
               {activeReplyId === inquiry.id ? (
                 <div className="sarjan-mail-draft">
@@ -314,9 +317,10 @@ export function AdminContactInquiriesClient({
                     >
                       Message
                     </label>
-                    <textarea
+                    <EmojiTextarea
                       id={`inquiry-message-${inquiry.id}`}
                       rows={8}
+                      textareaClassName="form-control"
                       value={draftFor(inquiry).message}
                       onChange={(event) =>
                         setDraft(inquiry.id, { message: event.target.value })

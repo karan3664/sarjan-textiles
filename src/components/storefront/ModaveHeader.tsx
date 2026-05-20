@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigation, siteSettings } from "@/data/site";
 import { readCart } from "@/lib/cart-client";
-import { readWishlist } from "@/lib/wishlist-client";
+import { refreshWishlistFromCatalog } from "@/lib/wishlist-client";
 
 type CatalogCategory = {
   name: string;
@@ -83,18 +83,31 @@ export function ModaveHeader() {
   }, []);
 
   useEffect(() => {
-    const syncCounts = () => {
-      setWishlistCount(readWishlist().length);
+    let cancelled = false;
+
+    const syncCounts = async () => {
+      const validWishlist = await refreshWishlistFromCatalog();
+      if (cancelled) return;
+      setWishlistCount(validWishlist.length);
       setCartCount(readCart().reduce((sum, item) => sum + item.quantity, 0));
     };
-    syncCounts();
-    window.addEventListener("sarjan-wishlist-updated", syncCounts);
-    window.addEventListener("sarjan-cart-updated", syncCounts);
-    window.addEventListener("storage", syncCounts);
+
+    void syncCounts();
+    const onWishlistUpdated = () => {
+      void syncCounts();
+    };
+    const onCartUpdated = () => {
+      setCartCount(readCart().reduce((sum, item) => sum + item.quantity, 0));
+    };
+
+    window.addEventListener("sarjan-wishlist-updated", onWishlistUpdated);
+    window.addEventListener("sarjan-cart-updated", onCartUpdated);
+    window.addEventListener("storage", onWishlistUpdated);
     return () => {
-      window.removeEventListener("sarjan-wishlist-updated", syncCounts);
-      window.removeEventListener("sarjan-cart-updated", syncCounts);
-      window.removeEventListener("storage", syncCounts);
+      cancelled = true;
+      window.removeEventListener("sarjan-wishlist-updated", onWishlistUpdated);
+      window.removeEventListener("sarjan-cart-updated", onCartUpdated);
+      window.removeEventListener("storage", onWishlistUpdated);
     };
   }, []);
 
