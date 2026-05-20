@@ -5,6 +5,7 @@ import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { PageTitle } from "./PageTitle";
 import { FeedbackForm } from "./FeedbackForm";
+import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 
 export function DynamicInfoPage({
   title,
@@ -306,18 +307,41 @@ export function CustomerFeedbackPage() {
   return (
     <>
       <PageTitle
-        title="Customer Feedback"
-        crumbs={["Homepage", "Customer Feedback"]}
+        title="Share Testimonial"
+        crumbs={["Homepage", "Share Testimonial"]}
       />
       <section className="flat-spacing">
         <div className="container">
           <div className="heading-section text-center">
-            <h4>Customer Feedback</h4>
+            <h4>Share your experience</h4>
             <p className="text-secondary">
-              Wholesale client feedback saved through backend-ready form.
+              Submit a testimonial for Sarjan Textiles. Our team reviews every
+              submission; approved quotes appear on the homepage.
+            </p>
+            <p className="text-caption-1 text-secondary mt_12">
+              Logged-in clients can also use{" "}
+              <Link href="/my-account-testimonials" className="link">
+                My Account → Share Testimonial
+              </Link>
+              .
             </p>
           </div>
-          <FeedbackForm />
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <TestimonialSubmitForm />
+            </div>
+          </div>
+          <div className="heading-section text-center mt_48">
+            <h5 className="mb_8">Order or product feedback</h5>
+            <p className="text-secondary text-caption-1">
+              For support on a specific order, use the feedback form below.
+            </p>
+          </div>
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <FeedbackForm defaultMode="feedback" />
+            </div>
+          </div>
         </div>
       </section>
     </>

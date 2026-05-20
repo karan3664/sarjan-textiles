@@ -1,8 +1,20 @@
-import { getInstagramPosts } from "@/lib/instagram";
+import {
+  getInstagramPosts,
+  instagramProfileUrl,
+  instagramUsernameFromUrl,
+} from "@/lib/instagram";
+import { getCmsSnapshot } from "@/lib/cms-store";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const posts = await getInstagramPosts(8);
-  return Response.json({ posts });
+  const cms = await getCmsSnapshot();
+  const profileUrl =
+    cms.siteSettings.instagramUrl?.trim() || instagramProfileUrl;
+  const username = instagramUsernameFromUrl(profileUrl) ?? "sarjantextiles";
+  const posts = await getInstagramPosts(8, {
+    username,
+    profileUrl,
+  });
+  return Response.json({ posts, username, profileUrl });
 }

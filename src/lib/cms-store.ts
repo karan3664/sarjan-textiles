@@ -21,6 +21,7 @@ export type CmsTestimonial = (typeof defaultHome.testimonials)[number] & {
   id: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: string;
+  rating?: number;
 };
 
 export type ClientPricingRule = {
@@ -586,6 +587,7 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   testimonials: defaultHome.testimonials.map((testimonial, index) => ({
     ...testimonial,
     id: `TST-${String(index + 1).padStart(3, "0")}`,
+    rating: testimonial.rating ?? 5,
     status: index === 0 ? "approved" : "pending",
     submittedAt: new Date(0).toISOString(),
   })),

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageTitle } from "./PageTitle";
+import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 
 type Client = {
   id: string;
@@ -53,6 +54,11 @@ const nav = [
   { href: "/my-account", label: "Dashboard", icon: "icon-user" },
   { href: "/my-account-orders", label: "Orders", icon: "icon-bag" },
   { href: "/my-account-address", label: "Address", icon: "icon-mapPin" },
+  {
+    href: "/my-account-testimonials",
+    label: "Share Testimonial",
+    icon: "icon-star",
+  },
   { href: "/order-tracking", label: "Order Tracking", icon: "icon-truck" },
   { href: "/login", label: "Logout", icon: "icon-log-out" },
 ];
@@ -493,6 +499,12 @@ export function AccountDashboardPage() {
                     className="tf-btn btn-white has-border radius-4"
                   >
                     <span className="text">Track Order</span>
+                  </a>
+                  <a
+                    href="/my-account-testimonials"
+                    className="tf-btn btn-white has-border radius-4"
+                  >
+                    <span className="text">Share Testimonial</span>
                   </a>
                 </div>
               </div>
@@ -1164,5 +1176,32 @@ export function OrderTrackingPage() {
         </div>
       </section>
     </>
+  );
+}
+
+export function AccountTestimonialsPage() {
+  const { client, loading } = useClientAndOrders();
+
+  return (
+    <AccountFrame active="/my-account-testimonials" title="Share Testimonial">
+      <div className="account-details">
+        {loading ? (
+          <p>Loading…</p>
+        ) : client ? (
+          <>
+            <h5 className="title mb_8">Submit a testimonial</h5>
+            <p className="text-secondary text-caption-1 mb_24">
+              Tell other wholesale buyers about your experience with Sarjan
+              Textiles. Your quote is saved as <strong>pending</strong> until an
+              admin approves it; only then it appears in the homepage carousel.
+            </p>
+            <TestimonialSubmitForm
+              defaultAuthor={client.companyName}
+              defaultEmail={client.email}
+            />
+          </>
+        ) : null}
+      </div>
+    </AccountFrame>
   );
 }

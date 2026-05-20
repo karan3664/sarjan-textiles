@@ -170,6 +170,12 @@ export function ModaveHeader() {
                           >
                             My Orders
                           </a>
+                          <a
+                            href="/my-account-testimonials"
+                            className="body-text-1 link d-block mb_8"
+                          >
+                            Share Testimonial
+                          </a>
                           <button
                             type="button"
                             className="body-text-1 link sarjan-logout-btn"

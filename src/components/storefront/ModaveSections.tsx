@@ -16,18 +16,21 @@ import {
 } from "@/lib/product-availability";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
+import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
 import { ProductSortSelect } from "./ProductSortSelect";
+import { formatTestimonialPrice } from "@/lib/testimonial-price";
 import { PriceGate } from "./PriceGate";
 import { WishlistPageClient } from "./WishlistPageClient";
 import type { CmsCustomBlock, CmsCustomSection } from "@/types/cms-custom";
 import {
   getInstagramPosts,
   instagramProfileUrl,
-  type InstagramPost,
+  instagramUsernameFromUrl,
 } from "@/lib/instagram";
+import { InstagramPostsCarousel } from "./InstagramPostsCarousel";
 import { siteUrl } from "@/lib/seo";
 import { BlogShareBar } from "./BlogShareBar";
 import { BlogCommentsBlock } from "./BlogCommentsBlock";
@@ -618,18 +621,9 @@ function testimonialAvatar(avatar?: string) {
     : defaultTestimonialAvatar;
 }
 
-function fallbackInstagramPosts(sourceProducts: Product[]): InstagramPost[] {
-  return sourceProducts.slice(0, 6).map((product) => ({
-    id: `fallback-${product.id}`,
-    image: product.images[0],
-    alt: product.imageAlt || product.name,
-    href: instagramProfileUrl,
-    source: "fallback",
-  }));
-}
-
 export async function HomeDynamic() {
   const cms = await getCmsSnapshot();
+  const cmsSiteSettings = cms.siteSettings;
   const home = cms.home;
   const homeContent = home as typeof home & {
     topPicksTitle?: string;
@@ -649,10 +643,14 @@ export async function HomeDynamic() {
     (testimonial) => testimonial.status === "approved",
   );
   const featured = products[0];
-  const liveInstagramPosts = await getInstagramPosts(6);
-  const instagramPosts = liveInstagramPosts.length
-    ? liveInstagramPosts
-    : fallbackInstagramPosts(products);
+  const instagramProfile =
+    cmsSiteSettings.instagramUrl?.trim() || instagramProfileUrl;
+  const instagramUsername =
+    instagramUsernameFromUrl(instagramProfile) ?? "sarjantextiles";
+  const liveInstagramPosts = await getInstagramPosts(12, {
+    username: instagramUsername,
+    profileUrl: instagramProfile,
+  });
   const sections = normalizeHomeSections(
     homeContent.sections as HomeSectionControl[] | undefined,
   );
@@ -822,6 +820,14 @@ export async function HomeDynamic() {
                 {homeContent.testimonialsDescription ??
                   "Our customers adore our products, and we constantly aim to delight them."}
               </p>
+              <p className="mt_16 mb_0">
+                <Link
+                  href="/my-account-testimonials"
+                  className="link text-button"
+                >
+                  Share your experience →
+                </Link>
+              </p>
             </div>
             <div
               dir="ltr"
@@ -843,11 +849,9 @@ export async function HomeDynamic() {
                     <div className="testimonial-item hover-img sarjan-testimonial-text-only">
                       <div className="content">
                         <div className="content-top">
-                          <div className="list-star-default">
-                            {Array.from({ length: 5 }).map((_, index) => (
-                              <i className="icon icon-star" key={index} />
-                            ))}
-                          </div>
+                          <TestimonialStarsDisplay
+                            rating={testimonial.rating}
+                          />
                           <p className="text-secondary">
                             &quot;{testimonial.quote}&quot;
                           </p>
@@ -870,7 +874,7 @@ export async function HomeDynamic() {
                               {testimonial.product}
                             </p>
                             <div className="text-button price">
-                              {testimonial.price}
+                              {formatTestimonialPrice(testimonial.price)}
                             </div>
                           </div>
                         </div>
@@ -885,62 +889,29 @@ export async function HomeDynamic() {
         </section>
       ) : null,
     gallery: (
-      <section className="flat-spacing pt-0">
+      <section className="flat-spacing pt-0 sarjan-instagram-gallery-section">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
             <h3 className="heading">{home.galleryTitle}</h3>
             <p className="subheading text-secondary">
               {home.galleryDescription}
             </p>
+            <p className="mt_12 mb_0">
+              <Link
+                href={instagramProfile}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link text-button"
+              >
+                @{instagramUsername} on Instagram →
+              </Link>
+            </p>
           </div>
-          <div
-            dir="ltr"
-            className="swiper tf-sw-shop-gallery"
-            data-preview="5"
-            data-tablet="3"
-            data-mobile="2"
-            data-space-lg="10"
-            data-space-md="10"
-            data-space="8"
-            data-pagination="2"
-            data-pagination-md="3"
-            data-pagination-lg="1"
-          >
-            <div className="swiper-wrapper">
-              {instagramPosts.map((post, index) => (
-                <div className="swiper-slide" key={`gallery-${post.id}`}>
-                  <div
-                    className="gallery-item hover-overlay hover-img wow fadeInUp"
-                    data-wow-delay={`.${index + 1}s`}
-                  >
-                    <a
-                      href={post.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="img-style sarjan-instagram-gallery-link"
-                    >
-                      <img
-                        className="lazyload img-hover"
-                        data-src={post.image}
-                        src={post.image}
-                        alt={post.alt}
-                      />
-                    </a>
-                    <a
-                      href={post.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="box-icon hover-tooltip"
-                    >
-                      <span className="icon icon-instagram" />{" "}
-                      <span className="tooltip">Open Instagram</span>
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="sw-pagination-gallery sw-dots type-circle justify-content-center" />
-          </div>
+          <InstagramPostsCarousel
+            posts={liveInstagramPosts}
+            profileUrl={instagramProfile}
+            username={instagramUsername}
+          />
         </div>
       </section>
     ),

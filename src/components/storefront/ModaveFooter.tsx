@@ -185,6 +185,14 @@ export async function ModaveFooter() {
                             My Wishlist
                           </Link>
                         </li>
+                        <li className="text-caption-1">
+                          <Link
+                            href="/customer-feedback"
+                            className="footer-menu_item"
+                          >
+                            Share Testimonial
+                          </Link>
+                        </li>
                       </ul>
                     </div>
                   </div>
