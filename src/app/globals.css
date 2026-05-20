@@ -1559,8 +1559,20 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
 }
 
+.sarjan-client-create-grid {
+  align-items: stretch;
+}
+
+/* Equal row height: inputs align at bottom even when only some fields have hints */
 .sarjan-client-create-grid fieldset {
+  display: flex;
+  flex-direction: column;
   margin: 0;
+  min-height: 100%;
+}
+
+.sarjan-client-create-grid fieldset > input {
+  margin-top: auto;
 }
 
 .sarjan-client-create-grid input {
@@ -3824,34 +3836,168 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: var(--line, #e5e5e5);
 }
 
-/* Admin blog comments: use tf-button (admin), not storefront tf-btn */
+/* Admin blog comments: toolbar, table cells, tf-button column */
+.sarjan-admin-blog-comments-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-search,
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-status {
+  box-sizing: border-box;
+  min-height: 46px;
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: var(--sarjan-ui-font, inherit);
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background-color: #fff;
+  color: #181818;
+  box-shadow: none;
+}
+
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-search {
+  flex: 1 1 220px;
+  max-width: 360px;
+  min-width: 200px;
+}
+
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-status {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 200px;
+  min-width: 160px;
+  padding-right: 36px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23555' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+}
+
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-search:hover,
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-status:hover {
+  border-color: #c4c4c4;
+}
+
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-search:focus,
+.sarjan-admin-blog-comments .sarjan-admin-blog-comments-status:focus {
+  border-color: #181818;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
+}
+
 .sarjan-admin-blog-comments .table tbody td {
   vertical-align: top;
 }
 
+.sarjan-admin-blog-comments .badge {
+  display: inline-block;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+}
+
+.sarjan-admin-blog-comments-actions-th,
+.sarjan-admin-blog-comments-actions-cell {
+  width: 168px;
+  min-width: 168px;
+}
+
+.sarjan-admin-blog-comments-reply-cell {
+  min-width: 260px;
+  max-width: 340px;
+}
+
+.sarjan-admin-blog-comments-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .sarjan-admin-blog-comments-reply textarea.form-control {
+  width: 100%;
   height: auto !important;
   min-height: 5.5rem;
   max-width: 100%;
   resize: vertical;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  padding-right: 2.75rem;
+  padding-bottom: 2.25rem;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.sarjan-admin-blog-comments-reply .tf-button,
+.sarjan-admin-blog-comments-actions .tf-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: 42px;
+  margin: 0;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: none;
+  line-height: 1.3;
 }
 
 .sarjan-admin-blog-comments-actions {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: stretch;
+  gap: 8px;
 }
 
-.sarjan-admin-blog-comments-actions .tf-button {
-  white-space: nowrap;
+.sarjan-admin-blog-comments-actions .tf-button.sarjan-danger-button,
+.sarjan-admin-blog-comments-reply .tf-button.sarjan-danger-button {
+  border: 1px solid #b42318 !important;
+  background: #fff5f5 !important;
+  color: #b42318 !important;
 }
 
-.sarjan-admin-blog-comments-actions .tf-button.sarjan-danger-button {
-  border: 1px solid #b42318;
+.sarjan-admin-blog-comments-actions
+  .tf-button.sarjan-danger-button:hover:not(:disabled),
+.sarjan-admin-blog-comments-reply
+  .tf-button.sarjan-danger-button:hover:not(:disabled) {
+  background: #b42318 !important;
+  color: #fff !important;
 }
 
-.sarjan-admin-blog-comments-actions .tf-button:disabled {
+.sarjan-admin-blog-comments-actions
+  .tf-button:not(.style-1):not(.sarjan-danger-button) {
+  background: #fff !important;
+  color: #181818 !important;
+  border: 1px solid #d8d8d8 !important;
+}
+
+.sarjan-admin-blog-comments-actions
+  .tf-button:not(.style-1):not(.sarjan-danger-button):hover:not(:disabled) {
+  background: #f4f4f4 !important;
+  color: #181818 !important;
+}
+
+.sarjan-admin-blog-comments-actions .tf-button:disabled,
+.sarjan-admin-blog-comments-reply .tf-button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }

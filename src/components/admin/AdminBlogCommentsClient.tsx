@@ -177,18 +177,16 @@ export function AdminBlogCommentsClient({
 
   return (
     <div className="wg-box sarjan-admin-blog-comments">
-      <div className="flex flex-wrap gap14 items-center justify-between mb_20">
+      <div className="sarjan-admin-blog-comments-toolbar">
         <input
           type="search"
-          className="form-control"
-          style={{ maxWidth: 320 }}
+          className="form-control sarjan-admin-blog-comments-search"
           placeholder="Search slug, name, email, text…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <select
-          className="form-select"
-          style={{ maxWidth: 200 }}
+          className="form-select sarjan-admin-blog-comments-status"
           value={statusFilter}
           onChange={(e) =>
             setStatusFilter(e.target.value as "all" | BlogCommentStatus)
@@ -214,7 +212,7 @@ export function AdminBlogCommentsClient({
               <th>Comment</th>
               <th>Status</th>
               <th>Reply (storefront uses Sarjan logo)</th>
-              <th style={{ minWidth: 200 }}>Actions</th>
+              <th className="sarjan-admin-blog-comments-actions-th">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -244,7 +242,7 @@ export function AdminBlogCommentsClient({
                 <td className="sarjan-admin-blog-comments-reply-cell">
                   <div className="sarjan-admin-blog-comments-reply">
                     {c.adminReplies.length > 0 ? (
-                      <ul className="sarjan-admin-blog-comments-reply-history mb_12">
+                      <ul className="sarjan-admin-blog-comments-reply-history">
                         {c.adminReplies.map((r) => (
                           <li key={r.id}>
                             <div className="sarjan-admin-blog-comments-reply-head">
@@ -273,7 +271,6 @@ export function AdminBlogCommentsClient({
                       </ul>
                     ) : null}
                     <EmojiTextarea
-                      className="mb_12"
                       textareaClassName="form-control"
                       rows={3}
                       placeholder="Type a new reply (emoji welcome). Saves append to the thread."
