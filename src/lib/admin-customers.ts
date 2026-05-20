@@ -50,6 +50,7 @@ export async function getAdminCustomers() {
     gst: "Demo GST",
     city: client.city,
     phone: "",
+    address: undefined,
     status: client.status === "Approved" ? "approved" : "pending",
     outstanding: client.outstanding,
     createdAt: "2026-05-01T00:00:00.000Z",

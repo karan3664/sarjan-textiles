@@ -37,6 +37,8 @@ type Address = {
   pincode?: string;
   gst?: string;
   transport?: string;
+  /** Legal / proprietor full name as on GST certificate (lgnm). */
+  ownerLegalName?: string;
 };
 
 type Order = {
