@@ -173,6 +173,39 @@ export function seoPageJsonLd(page: CmsSeoPage) {
   };
 }
 
+export function productBreadcrumbJsonLd(product: Product) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Products",
+        item: absoluteUrl("/products"),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.category || "Catalog",
+        item: absoluteUrl("/products"),
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: product.name,
+        item: absoluteUrl(`/products/${product.slug}`),
+      },
+    ],
+  };
+}
+
 export function productJsonLd(product: Product) {
   const returnPolicyUrl = absoluteUrl("/refund-policy");
   return {

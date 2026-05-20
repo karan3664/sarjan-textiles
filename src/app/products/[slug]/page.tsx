@@ -8,6 +8,7 @@ import { getProductCategoryRoute } from "@/lib/product-seo-slug";
 import {
   JsonLd,
   pageMetadata,
+  productBreadcrumbJsonLd,
   productJsonLd,
   productMetadata,
   siteUrl,
@@ -67,6 +68,7 @@ export default async function ProductSlugPage({
     return (
       <ModaveShell>
         <JsonLd data={productJsonLd(product)} />
+        <JsonLd data={productBreadcrumbJsonLd(product)} />
         <ProductDetailDynamic product={product} />
       </ModaveShell>
     );

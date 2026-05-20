@@ -17,6 +17,9 @@ This app is **one Next.js 15 project**. Use **Supabase** for Postgres + Storage.
    | 4     | `20260510171000_app_backups.sql`                   |
    | 5     | `20260510183000_analytics_events.sql`              |
    | 6     | `20260514170000_multilevel_pricing_categories.sql` |
+   | 7     | `20260519180000_client_avatar_url.sql`             |
+   | 8     | `20260519220000_blog_comments.sql`                 |
+   | 9     | `20260519233000_blog_comments_admin_replies.sql`   |
 
 3. **Project Settings → API**: copy `Project URL`, `anon public` key, and `service_role` key (server-only; never expose to the browser).
 
