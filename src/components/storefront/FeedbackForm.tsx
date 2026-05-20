@@ -1,79 +1,168 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
 
 /** Public order / product feedback — no testimonial mode (testimonials are login-only). */
 export function FeedbackForm() {
-  const [message, setMessage] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [formKey, setFormKey] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [messageBody, setMessageBody] = useState("");
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const res = await fetch("/api/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        companyName: form.get("companyName"),
-        email: form.get("email"),
-        orderId: form.get("orderId"),
-        message: form.get("message"),
-      }),
-    });
-    const data = (await res.json()) as { error?: string };
-    setMessage(
-      res.ok
-        ? "Thank you. Our team will review your message and follow up by email."
-        : (data.error ?? "Submit failed."),
+  /** Strip accidental GET submissions (?companyName=…) from the address bar. */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (
+      !params.has("companyName") &&
+      !params.has("email") &&
+      !params.has("message")
+    ) {
+      return;
+    }
+    window.history.replaceState(null, "", "/order-feedback");
+    setStatusMessage(
+      "Please submit the form again — your browser reloaded the page instead of sending in the background.",
     );
-    if (res.ok) event.currentTarget.reset();
+  }, []);
+
+  const submitFeedback = useCallback(async () => {
+    const form = formRef.current;
+    if (!form || submitting) return;
+
+    setSubmitting(true);
+    setStatusMessage("");
+
+    try {
+      const fd = new FormData(form);
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: fd.get("companyName"),
+          email: fd.get("email"),
+          orderId: fd.get("orderId"),
+          message: fd.get("message"),
+        }),
+      });
+
+      let data: { error?: string } = {};
+      try {
+        data = (await res.json()) as { error?: string };
+      } catch {
+        setStatusMessage("Unexpected server response. Please try again.");
+        return;
+      }
+
+      if (!res.ok) {
+        setStatusMessage(data.error ?? "Submit failed.");
+        return;
+      }
+
+      setStatusMessage(
+        "Thank you. Our team will review your message and follow up by email.",
+      );
+      setMessageBody("");
+      setFormKey((key) => key + 1);
+    } catch {
+      setStatusMessage("Network error. Check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [submitting]);
+
+  const onFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void submitFeedback();
   };
 
   return (
-    <form
-      className="form-leave-comment sarjan-order-feedback-form"
-      onSubmit={submit}
-    >
-      <div className="wrap">
-        <fieldset>
-          <input name="companyName" placeholder="Company name *" required />
-        </fieldset>
-        <fieldset>
-          <input
-            name="email"
-            placeholder="Email address *"
-            type="email"
-            required
-          />
-        </fieldset>
-      </div>
-      <fieldset>
-        <input name="orderId" placeholder="Order ID (optional)" />
-      </fieldset>
-      <fieldset>
-        <EmojiTextarea
-          name="message"
-          rows={5}
-          placeholder="Describe your order issue or product feedback… (emoji welcome)"
-          required
-        />
-      </fieldset>
-      {message ? (
+    <div className="sarjan-order-feedback-form-wrap">
+      {statusMessage ? (
         <p
-          className={
-            message.includes("failed") || message.includes("required")
-              ? "text-danger mt_12"
-              : "text-success mt_12"
-          }
+          className={`sarjan-order-feedback-status mb_16 ${
+            statusMessage.includes("failed") ||
+            statusMessage.includes("error") ||
+            statusMessage.includes("reloaded")
+              ? "text-danger"
+              : "text-success"
+          }`}
+          role="status"
+          aria-live="polite"
         >
-          {message}
+          {statusMessage}
         </p>
       ) : null}
-      <div className="button-submit send-wrap">
-        <button className="tf-btn btn-fill radius-4" type="submit">
-          <span className="text text-button">Submit feedback</span>
-        </button>
-      </div>
-    </form>
+      <form
+        key={formKey}
+        ref={formRef}
+        className="form-leave-comment sarjan-order-feedback-form"
+        method="post"
+        action="/order-feedback"
+        onSubmit={onFormSubmit}
+        noValidate
+      >
+        <div className="wrap">
+          <div className="cols sarjan-order-feedback-form-row-2">
+            <fieldset>
+              <input
+                name="companyName"
+                type="text"
+                placeholder="Company name *"
+                autoComplete="organization"
+                required
+                disabled={submitting}
+              />
+            </fieldset>
+            <fieldset>
+              <input
+                name="email"
+                type="email"
+                placeholder="Email address *"
+                autoComplete="email"
+                required
+                disabled={submitting}
+              />
+            </fieldset>
+          </div>
+          <fieldset className="sarjan-order-feedback-order-field">
+            <input
+              name="orderId"
+              type="text"
+              placeholder="Order ID (optional)"
+              autoComplete="off"
+              disabled={submitting}
+            />
+          </fieldset>
+          <fieldset>
+            <EmojiTextarea
+              name="message"
+              rows={5}
+              placeholder="Describe your order issue or product feedback… (emoji welcome)"
+              required
+              value={messageBody}
+              onChange={(event) => setMessageBody(event.target.value)}
+              disabled={submitting}
+            />
+          </fieldset>
+        </div>
+        <div className="button-submit send-wrap">
+          <button
+            type="button"
+            className={sarjanButtonClass()}
+            disabled={submitting}
+            onClick={() => void submitFeedback()}
+          >
+            <span className="text">
+              {submitting ? "Sending…" : "Submit feedback"}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

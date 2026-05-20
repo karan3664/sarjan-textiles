@@ -2,11 +2,11 @@ import Link from "next/link";
 import { products } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { FeedbackForm } from "./FeedbackForm";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { PageTitle } from "./PageTitle";
 import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
-import { FeedbackForm } from "./FeedbackForm";
 
 export function DynamicInfoPage({
   title,

@@ -24,6 +24,8 @@ const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
 
 const PICKER_WIDTH = 352;
 const PICKER_HEIGHT = 420;
+/** Ignore outside-close until the opening click/pointer cycle finishes (dev Strict Mode). */
+const PICKER_OPEN_GUARD_MS = 250;
 
 type EmojiTextareaProps = Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
@@ -46,6 +48,7 @@ export function EmojiTextarea({
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const pickerPortalRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const openingGuardRef = useRef(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerStyle, setPickerStyle] = useState<CSSProperties>({});
   const [pickerSize, setPickerSize] = useState({
@@ -128,7 +131,13 @@ export function EmojiTextarea({
 
   const togglePicker = useCallback(() => {
     setPickerOpen((open) => {
-      if (!open) positionPicker();
+      if (!open) {
+        openingGuardRef.current = true;
+        positionPicker();
+        window.setTimeout(() => {
+          openingGuardRef.current = false;
+        }, PICKER_OPEN_GUARD_MS);
+      }
       return !open;
     });
   }, [positionPicker]);
@@ -155,6 +164,7 @@ export function EmojiTextarea({
     const close = () => setPickerOpen(false);
 
     const onPointerDown = (event: PointerEvent) => {
+      if (openingGuardRef.current) return;
       const target = event.target as Node;
       if (isInsidePicker(target)) return;
       close();
@@ -164,11 +174,11 @@ export function EmojiTextarea({
       if (event.key === "Escape") close();
     };
 
-    // Defer so the same click that opened the picker does not close it
+    // Defer so the same click that opened the picker does not close it immediately
     const attachId = window.setTimeout(() => {
       document.addEventListener("pointerdown", onPointerDown, true);
       document.addEventListener("keydown", onKeyDown);
-    }, 0);
+    }, PICKER_OPEN_GUARD_MS);
 
     return () => {
       window.clearTimeout(attachId);
@@ -194,7 +204,7 @@ export function EmojiTextarea({
               className="sarjan-emoji-picker-backdrop"
               aria-label="Close emoji picker"
               tabIndex={-1}
-              onPointerDown={() => setPickerOpen(false)}
+              onClick={() => setPickerOpen(false)}
             />
             <div
               ref={pickerPortalRef}
@@ -240,7 +250,11 @@ export function EmojiTextarea({
             aria-expanded={pickerOpen}
             aria-controls={pickerId}
             aria-label="Open emoji picker"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
             onClick={(event) => {
+              event.preventDefault();
               event.stopPropagation();
               togglePicker();
             }}

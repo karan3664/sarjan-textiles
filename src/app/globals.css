@@ -4052,6 +4052,103 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   line-height: 1.5;
 }
 
+/* Form status — order feedback & contact inquiry */
+.sarjan-order-feedback-form-wrap .sarjan-order-feedback-status,
+.sarjan-contact-inquiry-form-wrap .sarjan-contact-inquiry-status {
+  max-width: 640px;
+  margin: 0 auto 16px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Order feedback form (/order-feedback) */
+
+.sarjan-order-feedback-page .sarjan-order-feedback-form {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.sarjan-order-feedback-form > .wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.sarjan-order-feedback-form .cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+.sarjan-order-feedback-form .cols.sarjan-order-feedback-form-row-2 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 576px) {
+  .sarjan-order-feedback-form .cols.sarjan-order-feedback-form-row-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sarjan-order-feedback-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  width: 100%;
+  display: block;
+}
+
+.sarjan-order-feedback-form fieldset input[type="text"],
+.sarjan-order-feedback-form fieldset input[type="email"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  font-size: 15px;
+  line-height: 1.4;
+  border: 2px solid var(--line, #e5e5e5);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--main, #111);
+}
+
+.sarjan-order-feedback-form fieldset input[type="text"]:hover,
+.sarjan-order-feedback-form fieldset input[type="email"]:hover,
+.sarjan-order-feedback-form fieldset input[type="text"]:focus,
+.sarjan-order-feedback-form fieldset input[type="email"]:focus {
+  border-color: var(--main, #111);
+  outline: none;
+}
+
+.sarjan-order-feedback-form fieldset input:-webkit-autofill,
+.sarjan-order-feedback-form fieldset input:-webkit-autofill:hover,
+.sarjan-order-feedback-form fieldset input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: var(--main, #111);
+  caret-color: var(--main, #111);
+}
+
+.sarjan-order-feedback-form .sarjan-order-feedback-order-field {
+  width: 100%;
+}
+
+.sarjan-order-feedback-form .sarjan-emoji-field {
+  display: block;
+  width: 100%;
+}
+
+.sarjan-order-feedback-form .sarjan-emoji-field textarea {
+  min-height: 140px;
+}
+
 .sarjan-testimonial-form-notice.is-success {
   color: var(--success, #198754);
 }
@@ -4330,6 +4427,20 @@ blockquote.sarjan-emoji-text,
 .form-leave-comment .button-submit > button,
 .form-leave-comment .button-submit button[type="submit"] {
   border: 1px solid var(--main);
+}
+
+.form-leave-comment .sarjan-emoji-trigger {
+  position: relative;
+  z-index: 5;
+  width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: inherit !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
 }
 
 .sarjan-emoji-field {
