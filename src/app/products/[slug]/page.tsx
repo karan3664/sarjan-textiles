@@ -7,6 +7,7 @@ import { getServerClientId } from "@/lib/client-session-server";
 import { getProductCategoryRoute } from "@/lib/product-seo-slug";
 import {
   JsonLd,
+  listingBreadcrumbJsonLd,
   pageMetadata,
   productBreadcrumbJsonLd,
   productJsonLd,
@@ -86,6 +87,16 @@ export default async function ProductSlugPage({
     return (
       <ModaveShell>
         <JsonLd data={jsonLd} />
+        <JsonLd
+          data={listingBreadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Products", path: "/products" },
+            {
+              name: categoryRoute.title,
+              path: `/products/${categoryRoute.slug}`,
+            },
+          ])}
+        />
         <ProductSeoListingPage
           title={categoryRoute.title}
           subtitle={categoryRoute.description}

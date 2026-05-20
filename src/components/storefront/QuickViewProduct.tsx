@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { productImageForColorIndex } from "@/lib/product-colors";
 import { PriceGate } from "./PriceGate";
@@ -36,10 +37,13 @@ export function QuickViewProduct({
           </div>
         ) : null}
         <div className="main-image">
-          <img src={primaryImage} alt={product.name} />
+          <img src={primaryImage} alt={buildProductImageAlt(product)} />
         </div>
         <div className="thumb-image">
-          <img src={hoverImage} alt={product.name} />
+          <img
+            src={hoverImage}
+            alt={buildProductImageAlt(product, { variant: "alternate" })}
+          />
         </div>
       </div>
       <div className="tf-product-info-list">

@@ -19,6 +19,7 @@ import {
   dedupeTestimonialsByName,
   normalizeCatalogLabel,
 } from "@/lib/dedupe-catalog";
+import { withProductImageAlts } from "@/lib/product-image-alt";
 import {
   ensureUniqueProductSlugs,
   migrateWeakProductSlugs,
@@ -682,7 +683,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
       : defaultCmsSnapshot.products;
   const products = ensureUniqueProductSlugs(
     migrateWeakProductSlugs(dedupeProductsByName(rawProducts)),
-  );
+  ).map((product) => withProductImageAlts(product));
   const rawBlogs =
     Array.isArray(input.blogs) && input.blogs.length
       ? input.blogs

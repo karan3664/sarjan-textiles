@@ -1,7 +1,12 @@
 import { ProductSeoListingPage } from "@/components/storefront/ProductSeoListingPage";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCollectionRoute } from "@/lib/product-seo-slug";
-import { JsonLd, pageMetadata, siteUrl } from "@/lib/seo";
+import {
+  JsonLd,
+  listingBreadcrumbJsonLd,
+  pageMetadata,
+  siteUrl,
+} from "@/lib/seo";
 import { notFound } from "next/navigation";
 
 export const revalidate = 300;
@@ -42,6 +47,13 @@ export default async function CollectionDetailPage({
   return (
     <ModaveShell>
       <JsonLd data={jsonLd} />
+      <JsonLd
+        data={listingBreadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Collections", path: "/collections" },
+          { name: route.title, path: `/collections/${route.slug}` },
+        ])}
+      />
       <ProductSeoListingPage
         title={route.title}
         subtitle={route.description}

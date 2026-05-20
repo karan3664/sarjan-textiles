@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import type { CmsBlog, CmsPages, CmsSeoPage } from "@/lib/cms-store";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 
 type SeoInput = {
   title: string;
@@ -90,17 +91,40 @@ export function pageMetadata(input: SeoInput): Metadata {
   };
 }
 
+function categoryListingPath(categoryName: string) {
+  const hay = categoryName.toLowerCase();
+  if (hay.includes("kurta")) return "/products/kurtas";
+  if (hay.includes("shirt")) return "/products/shirts";
+  if (hay.includes("jacket")) return "/products/jackets";
+  return "/products";
+}
+
 export function productMetadata(product: Product): Metadata {
   const item = product as SeoProduct;
-  return pageMetadata({
-    title: item.metaTitle || product.name,
-    description:
-      item.metaDescription ||
-      product.description ||
-      `${product.name} by ${siteSettings.brandName}. MOQ ${product.moq}.`,
-    path: `/products/${product.slug}`,
-    image: product.images[0],
-    imageAlt: item.imageAlt || product.name,
+  const canonical = absoluteUrl(`/products/${product.slug}`);
+  const title = (item.metaTitle || product.name).includes(
+    siteSettings.brandName,
+  )
+    ? item.metaTitle || product.name
+    : `${item.metaTitle || product.name} | ${siteSettings.brandName}`;
+  const description =
+    item.metaDescription ||
+    product.description ||
+    `${product.name} by ${siteSettings.brandName}. MOQ ${product.moq}.`;
+  const imageAlt = buildProductImageAlt(product);
+  const ogImages = product.images
+    .filter(Boolean)
+    .slice(0, 4)
+    .map((src, index) => ({
+      url: imageUrl(src),
+      width: 1200,
+      height: 630,
+      alt: buildProductImageAlt(product, { index }),
+    }));
+
+  return {
+    title,
+    description,
     keywords: splitKeywords(item.keywords).length
       ? splitKeywords(item.keywords)
       : [
@@ -110,7 +134,32 @@ export function productMetadata(product: Product): Metadata {
           ...product.colors,
           ...product.sizes,
         ],
-  });
+    alternates: { canonical },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: canonical,
+      siteName: siteSettings.brandName,
+      images: ogImages.length
+        ? ogImages
+        : [
+            {
+              url: imageUrl(product.images[0]),
+              width: 1200,
+              height: 630,
+              alt: imageAlt,
+            },
+          ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImages[0]?.url ?? imageUrl(product.images[0])],
+    },
+  };
 }
 
 export function blogMetadata(blog: CmsBlog): Metadata {
@@ -173,51 +222,56 @@ export function seoPageJsonLd(page: CmsSeoPage) {
   };
 }
 
-export function productBreadcrumbJsonLd(product: Product) {
+export function listingBreadcrumbJsonLd(
+  crumbs: Array<{ name: string; path: string }>,
+) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: siteUrl,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Products",
-        item: absoluteUrl("/products"),
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: product.category || "Catalog",
-        item: absoluteUrl("/products"),
-      },
-      {
-        "@type": "ListItem",
-        position: 4,
-        name: product.name,
-        item: absoluteUrl(`/products/${product.slug}`),
-      },
-    ],
+    itemListElement: crumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(crumb.path),
+    })),
   };
+}
+
+export function productBreadcrumbJsonLd(product: Product) {
+  const categoryName = product.category || "Catalog";
+  return listingBreadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Products", path: "/products" },
+    { name: categoryName, path: categoryListingPath(categoryName) },
+    { name: product.name, path: `/products/${product.slug}` },
+  ]);
 }
 
 export function productJsonLd(product: Product) {
   const returnPolicyUrl = absoluteUrl("/refund-policy");
+  const productUrl = absoluteUrl(`/products/${product.slug}`);
   return {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": productUrl,
     name: product.name,
-    image: product.images.map(imageUrl),
+    url: productUrl,
     description: product.description,
     sku: product.sku,
-    brand: { "@type": "Brand", name: siteSettings.brandName },
     category: product.category,
     material: product.fabric,
+    color: product.colors?.length ? product.colors : undefined,
+    image: product.images.filter(Boolean).map((src, index) => ({
+      "@type": "ImageObject",
+      url: imageUrl(src),
+      caption: buildProductImageAlt(product, { index }),
+    })),
+    brand: { "@type": "Brand", name: siteSettings.brandName },
+    manufacturer: {
+      "@type": "Organization",
+      name: siteSettings.legalName,
+      url: siteUrl,
+    },
     seller: {
       "@type": "Organization",
       name: siteSettings.brandName,
@@ -225,13 +279,14 @@ export function productJsonLd(product: Product) {
     },
     offers: {
       "@type": "Offer",
-      url: absoluteUrl(`/products/${product.slug}`),
+      url: productUrl,
       priceCurrency: "INR",
       price: product.price,
       availability:
         product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: siteSettings.brandName },
       hasMerchantReturnPolicy: {
         "@type": "MerchantReturnPolicy",
         applicableCountry: "IN",

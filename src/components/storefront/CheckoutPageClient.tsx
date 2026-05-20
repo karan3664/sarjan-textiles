@@ -22,6 +22,7 @@ import {
   type StoredClient,
 } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
@@ -416,7 +417,7 @@ export function CheckoutPageClient() {
                             ) : null}
                             <img
                               src={item.product.images[0]}
-                              alt={item.product.name}
+                              alt={buildProductImageAlt(item.product)}
                             />
                           </Link>
                           <div className="content-box">

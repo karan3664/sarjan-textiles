@@ -10,6 +10,7 @@ import {
   getCmsSnapshot,
   type CmsProductFilterGroup,
 } from "@/lib/cms-store";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { productSetPrice } from "@/lib/product-pricing";
 import {
   isProductSoldOut,
@@ -106,7 +107,7 @@ function ProductFeature({ product }: { product: Product }) {
     ...products.slice(1, 3).map((item) => item.images[0]),
   ];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-  const altText = product.imageAlt || `${product.name} ${product.category}`;
+  const altText = buildProductImageAlt(product);
   const soldOut = isProductSoldOut(product);
 
   return (
@@ -840,7 +841,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
   ];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
-  const altText = product.imageAlt || `${product.name} ${product.category}`;
+  const altText = buildProductImageAlt(product);
   const soldOut = isProductSoldOut(product);
 
   return (
@@ -1579,7 +1580,7 @@ export function PageTitle({
 function ProductListCard({ product }: { product: Product }) {
   const hover = product.images[1] ?? product.images[0];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-  const altText = product.imageAlt || `${product.name} ${product.category}`;
+  const altText = buildProductImageAlt(product);
   const soldOut = isProductSoldOut(product);
 
   return (

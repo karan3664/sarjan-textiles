@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import type { Product } from "@/data/mock";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { productColorHex } from "@/lib/product-color-swatch";
 import { PriceGate } from "./PriceGate";
@@ -19,7 +20,7 @@ export function ModaveProductCard({
 }) {
   const [colorIndex, setColorIndex] = useState(0);
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
-  const altText = product.imageAlt || `${product.name} ${product.category}`;
+  const altText = buildProductImageAlt(product);
   const soldOut = isProductSoldOut(product);
   const colors = product.colors.length ? product.colors : ["Default"];
   const activeColor = colors[colorIndex] ?? colors[0];
@@ -51,7 +52,7 @@ export function ModaveProductCard({
             className="lazyload img-hover"
             data-src={hoverImage}
             src={hoverImage}
-            alt={`${altText} alternate view`}
+            alt={buildProductImageAlt(product, { variant: "alternate" })}
           />
         </a>
         <div

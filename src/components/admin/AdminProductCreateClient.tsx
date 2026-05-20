@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
 import { SIZE_GROUPS } from "@/lib/cart-client";
 import type { ProductCategoryMaster } from "@/lib/cms-store";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { buildSeoProductSlug, isWeakProductSlug } from "@/lib/product-seo-slug";
 import { slugifyCmsSegment } from "@/lib/slug";
 
@@ -174,7 +175,15 @@ function productFromForm(
     images: form.images.length
       ? form.images
       : ["/sarjan-assets/sarjan-logo-icon.png"],
-    imageAlt: form.imageAlt.trim() || `${name} ${category}`,
+    imageAlt:
+      form.imageAlt.trim() ||
+      buildProductImageAlt({
+        name,
+        category,
+        fabric,
+        colors,
+        imageAlt: "",
+      }),
     description: form.description.trim(),
     care: form.care.trim(),
     metaTitle: form.metaTitle.trim() || name,

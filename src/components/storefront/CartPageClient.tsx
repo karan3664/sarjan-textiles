@@ -14,6 +14,7 @@ import {
 } from "@/lib/cart-client";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
 
@@ -182,7 +183,7 @@ export function CartPageClient() {
                               ) : null}
                               <img
                                 src={item.product.images[0]}
-                                alt={item.product.name}
+                                alt={buildProductImageAlt(item.product)}
                               />
                             </Link>
                             <div className="cart-info">
