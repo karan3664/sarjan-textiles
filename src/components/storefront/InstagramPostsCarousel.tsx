@@ -179,17 +179,30 @@ export function InstagramPostsCarousel({
   const handle = username.replace(/^@/, "");
 
   useEffect(() => {
-    if (initialPosts.length) {
-      setPosts(initialPosts);
-      setLoading(false);
-      return;
-    }
+    setPosts(initialPosts);
+    setLoading(!initialPosts.length);
 
     let cancelled = false;
-    setLoading(true);
+
+    const saveCache = (fresh: InstagramPost[]) => {
+      void fetch("/api/instagram/cache", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posts: fresh }),
+      });
+    };
 
     const load = async () => {
       try {
+        const browserPosts = await fetchInstagramPostsInBrowser(username, 12);
+        if (cancelled) return;
+
+        if (browserPosts.length) {
+          setPosts(browserPosts);
+          saveCache(browserPosts);
+          return;
+        }
+
         const res = await fetch("/api/instagram", { cache: "no-store" });
         const data = (await res.json()) as { posts?: InstagramPost[] };
         if (cancelled) return;
@@ -199,19 +212,9 @@ export function InstagramPostsCarousel({
           return;
         }
 
-        const browserPosts = await fetchInstagramPostsInBrowser(username, 12);
-        if (cancelled) return;
-
-        if (browserPosts.length) {
-          setPosts(browserPosts);
-          void fetch("/api/instagram/cache", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ posts: browserPosts }),
-          });
-        }
+        if (!initialPosts.length) setPosts([]);
       } catch {
-        if (!cancelled) setPosts([]);
+        if (!cancelled && !initialPosts.length) setPosts([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
