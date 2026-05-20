@@ -112,6 +112,10 @@ export function ModaveHeader() {
   }, []);
 
   const logout = () => {
+    void fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => undefined);
     localStorage.removeItem("sarjan-client");
     localStorage.removeItem("sarjan-client-token");
     window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));

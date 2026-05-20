@@ -6,6 +6,8 @@ import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
 import { SIZE_GROUPS } from "@/lib/cart-client";
 import type { ProductCategoryMaster } from "@/lib/cms-store";
+import { buildSeoProductSlug, isWeakProductSlug } from "@/lib/product-seo-slug";
+import { slugifyCmsSegment } from "@/lib/slug";
 
 type ProductForm = {
   name: string;
@@ -111,12 +113,17 @@ const emptyForm: ProductForm = {
   isFeatured: false,
 };
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+function previewProductSlug(form: ProductForm) {
+  const name = form.name.trim();
+  const sku = form.sku.trim();
+  const category = form.category.trim() || "Uncategorized";
+  const colors = splitList(form.colors);
+  const fabric = form.fabric.trim() || "Cotton";
+  const draft = slugifyCmsSegment(name || sku || "product");
+  if (!draft) return "";
+  return isWeakProductSlug(draft)
+    ? buildSeoProductSlug({ category, fabric, colors, name: name || sku })
+    : draft;
 }
 
 function splitList(value: string) {
@@ -133,13 +140,18 @@ function productFromForm(
 ): Product {
   const name = form.name.trim();
   const sku = form.sku.trim();
-  const slug = slugify(name || sku || `product-${Date.now()}`);
   const fallbackId = `PRD-${Date.now().toString().slice(-6)}-${String(index + 1).padStart(2, "0")}`;
   const categoryPath = splitList(form.categoryPath).length
     ? splitList(form.categoryPath)
     : [form.category.trim() || "Uncategorized"];
   const category =
     form.category.trim() || categoryPath.at(-1) || "Uncategorized";
+  const colors = splitList(form.colors);
+  const fabric = form.fabric.trim() || "Cotton";
+  const draftSlug = slugifyCmsSegment(name || sku || `product-${Date.now()}`);
+  const slug = isWeakProductSlug(draftSlug)
+    ? buildSeoProductSlug({ category, fabric, colors, name })
+    : draftSlug;
 
   return {
     id: fallbackId,
@@ -151,13 +163,13 @@ function productFromForm(
     categoryLevel1: categoryPath[0],
     categoryLevel2: categoryPath[1],
     categoryLevel3: categoryPath[2],
-    fabric: form.fabric.trim() || "Cotton",
+    fabric,
     price: Number(form.price) || 0,
     moq: Number(form.moq) || 1,
     stock: Number(form.stock) || 0,
     reserved: Number(form.reserved) || 0,
     sold: Number(form.sold) || 0,
-    colors: splitList(form.colors),
+    colors,
     sizes: splitList(form.sizes),
     images: form.images.length
       ? form.images
@@ -803,7 +815,7 @@ export function AdminProductCreateClient({
                   </div>
                   <input
                     type="text"
-                    value={slugify(form.name || form.sku)}
+                    value={previewProductSlug(form)}
                     readOnly
                   />
                 </fieldset>

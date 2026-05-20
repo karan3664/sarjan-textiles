@@ -19,6 +19,10 @@ import {
   dedupeTestimonialsByName,
   normalizeCatalogLabel,
 } from "@/lib/dedupe-catalog";
+import {
+  ensureUniqueProductSlugs,
+  migrateWeakProductSlugs,
+} from "@/lib/product-seo-slug";
 
 export type CmsBlog = (typeof defaultBlogs)[number];
 export type CmsHome = typeof defaultHome;
@@ -558,14 +562,14 @@ const defaultCategoryHubPages: CategoryHubPage[] = [
         description:
           "Deep indigo and resist-inspired layouts for festive shelves.",
         image: "/sarjan-assets/shirt-ajrak-black-studio.webp",
-        href: "/products?q=Ajrak",
+        href: "/collections/ajrakh",
       },
       {
         id: "sub-mashru",
         title: "Mashru Kurta",
         description: "Silk-cotton blend with a soft sheen for premium retail.",
         image: "/sarjan-assets/shirt-blue-block-studio.webp",
-        href: "/products?q=Mashru",
+        href: "/collections/mashru",
       },
       {
         id: "sub-mirror",
@@ -579,7 +583,7 @@ const defaultCategoryHubPages: CategoryHubPage[] = [
         title: "Cotton Kurta",
         description: "Everyday cotton bases with dependable repeat MOQs.",
         image: "/sarjan-assets/shirt-mustard-block-studio.webp",
-        href: "/products?category=mens-kurtas",
+        href: "/products/kurtas",
       },
     ],
   },
@@ -676,7 +680,9 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     Array.isArray(input.products) && input.products.length
       ? input.products
       : defaultCmsSnapshot.products;
-  const products = dedupeProductsByName(rawProducts);
+  const products = ensureUniqueProductSlugs(
+    migrateWeakProductSlugs(dedupeProductsByName(rawProducts)),
+  );
   const rawBlogs =
     Array.isArray(input.blogs) && input.blogs.length
       ? input.blogs
@@ -983,7 +989,11 @@ export async function getAuditLogs(): Promise<AuditLog[]> {
 
 export async function getCmsProductBySlug(slug: string) {
   const cms = await getCmsSnapshot();
-  return cms.products.find((product) => product.slug === slug);
+  return (
+    cms.products.find(
+      (product) => product.slug === slug || product.legacySlugs?.includes(slug),
+    ) ?? null
+  );
 }
 
 export async function getCmsBlogBySlug(slug: string) {

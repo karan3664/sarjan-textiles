@@ -1,5 +1,6 @@
 export type StoredClient = {
   id?: string;
+  status?: "pending" | "approved" | "rejected" | "inactive";
   gst?: string;
   companyName?: string;
   email?: string;

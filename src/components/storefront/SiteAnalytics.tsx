@@ -19,7 +19,7 @@ function hasConsent() {
 }
 
 const googleAnalyticsId =
-  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || "G-L5JB54GCZ8";
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || "";
 
 export function SiteAnalytics() {
   const [gaOn, setGaOn] = useState(false);
@@ -38,7 +38,7 @@ export function SiteAnalytics() {
     };
   }, [sync]);
 
-  if (!gaOn) return null;
+  if (!gaOn || !googleAnalyticsId) return null;
 
   return (
     <>

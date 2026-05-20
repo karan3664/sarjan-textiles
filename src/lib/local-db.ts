@@ -11,6 +11,10 @@ import {
   formatClientDispatchAddress,
   hasMeaningfulDispatchAddress,
 } from "@/lib/dispatch-address";
+import {
+  reserveInventoryForOrder,
+  syncInventoryForOrderStatusChange,
+} from "@/lib/order-inventory";
 
 export type LocalClient = {
   id: string;
@@ -938,7 +942,9 @@ export async function createOrder(
       .select("*")
       .single();
     if (error) throw new Error(error.message);
-    return mapOrder(data);
+    const mapped = mapOrder(data);
+    await reserveInventoryForOrder(mapped);
+    return mapped;
   }
   const db = dbForClient;
   const client = clientRow;
@@ -963,6 +969,7 @@ export async function createOrder(
     createdAt: new Date().toISOString(),
   };
 
+  await reserveInventoryForOrder(order);
   db.orders.push(order);
   await writeLocalDb(db);
   return order;
@@ -1066,7 +1073,13 @@ export async function updateOrderStatus(
         .select("*")
         .single();
       if (error) throw new Error(error.message);
-      return mapOrder(data);
+      const mapped = mapOrder(data);
+      await syncInventoryForOrderStatusChange(
+        mapped,
+        (existing.status as LocalOrder["status"]) ?? "Pending approval",
+        status,
+      );
+      return mapped;
     } catch {
       // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
     }
@@ -1074,12 +1087,14 @@ export async function updateOrderStatus(
   const db = await readLocalDb();
   const order = db.orders.find((item) => item.id === id);
   if (!order) throw new Error("Order not found");
+  const previousStatus = order.status;
   order.status = status;
   if (note !== undefined) order.note = note.trim();
   order.dispatchHistory = [
     ...(order.dispatchHistory ?? []),
     { status, note: note?.trim(), createdAt: new Date().toISOString() },
   ];
+  await syncInventoryForOrderStatusChange(order, previousStatus, status);
   await writeLocalDb(db);
   return order;
 }
@@ -1142,7 +1157,15 @@ export async function updateOrderAdmin(
         .select("*")
         .single();
       if (error) throw new Error(error.message);
-      return mapOrder(data);
+      const mapped = mapOrder(data);
+      if (input.status && input.status !== existing.status) {
+        await syncInventoryForOrderStatusChange(
+          mapped,
+          existing.status as LocalOrder["status"],
+          input.status,
+        );
+      }
+      return mapped;
     } catch {
       // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
     }
@@ -1161,6 +1184,11 @@ export async function updateOrderAdmin(
         createdAt: new Date().toISOString(),
       },
     ];
+    await syncInventoryForOrderStatusChange(
+      order,
+      previousStatus,
+      input.status,
+    );
   }
   await writeLocalDb(db);
   return order;

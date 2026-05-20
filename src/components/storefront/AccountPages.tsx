@@ -10,6 +10,11 @@ import {
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import {
+  clientAuthHeaders,
+  clientAuthJsonHeaders,
+  clientAuthToken,
+} from "@/lib/client-auth-browser";
+import {
   isGstVerifiedOnFile,
   isValidGstin,
   normalizeGstin,
@@ -51,6 +56,13 @@ type Order = {
   creditDays: number;
   subtotal: number;
   dispatchAddress: string;
+  dispatchDate?: string;
+  transportDetails?: string;
+  lrNumber?: string;
+  courierDetails?: string;
+  vehicleDetails?: string;
+  trackingNotes?: string;
+  dispatchHistory?: Array<{ status: string; note?: string; createdAt: string }>;
   note?: string;
   createdAt: string;
   items: Array<{
@@ -93,24 +105,6 @@ function readClient() {
   }
 }
 
-function clientAuthToken() {
-  return typeof window !== "undefined"
-    ? localStorage.getItem("sarjan-client-token")?.trim()
-    : "";
-}
-
-function clientAuthHeaders(): HeadersInit {
-  const token = clientAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-function clientAuthJsonHeaders(): HeadersInit {
-  return {
-    "Content-Type": "application/json",
-    ...clientAuthHeaders(),
-  };
-}
-
 function stripAvatarCacheQuery(url?: string) {
   if (!url?.trim()) return undefined;
   const trimmed = url.trim();
@@ -149,7 +143,10 @@ function useClientAndOrders() {
       fetch(`/api/clients/${encodeURIComponent(stored.id)}`)
         .then((res) => res.json())
         .catch(() => null),
-      fetch(`/api/orders?clientId=${encodeURIComponent(stored.id)}`)
+      fetch("/api/client/orders", {
+        headers: clientAuthHeaders(),
+        credentials: "include",
+      })
         .then((res) => res.json())
         .catch(() => ({ orders: [] })),
     ])
@@ -1156,8 +1153,10 @@ function OrderView({
     "Ready for Dispatch",
     "Dispatched",
     "Delivered",
+    "Rejected",
   ];
   const current = Math.max(0, steps.indexOf(order.status));
+  const dispatchNotes = (order.dispatchHistory ?? []).slice().reverse();
 
   return (
     <div className="account-order-details">
@@ -1217,6 +1216,44 @@ function OrderView({
                 Dispatch Address:{" "}
                 {dispatchText || "Will be confirmed by admin."}
               </p>
+              {order.lrNumber ? (
+                <p className="text-secondary">LR Number: {order.lrNumber}</p>
+              ) : null}
+              {order.vehicleDetails ? (
+                <p className="text-secondary">
+                  Vehicle: {order.vehicleDetails}
+                </p>
+              ) : null}
+              {order.transportDetails ? (
+                <p className="text-secondary">
+                  Transport: {order.transportDetails}
+                </p>
+              ) : null}
+              {order.courierDetails ? (
+                <p className="text-secondary">
+                  Courier: {order.courierDetails}
+                </p>
+              ) : null}
+              {order.trackingNotes ? (
+                <p className="text-secondary">
+                  Tracking notes: {order.trackingNotes}
+                </p>
+              ) : null}
+              {order.dispatchDate ? (
+                <p className="text-secondary">
+                  Dispatch date: {order.dispatchDate}
+                </p>
+              ) : null}
+              {dispatchNotes.length ? (
+                <ul className="text-secondary mt_16 mb-0 ps-3">
+                  {dispatchNotes.map((entry) => (
+                    <li key={`${entry.createdAt}-${entry.status}`}>
+                      {entry.status}
+                      {entry.note ? ` — ${entry.note}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <p className="text-secondary">
                 Payment terms will be confirmed by accounts.
               </p>

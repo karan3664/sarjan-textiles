@@ -1,24 +1,58 @@
-import { DynamicInfoPage } from "@/components/storefront/StaticPages";
+import Link from "next/link";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { cmsSeoMetadata } from "@/lib/page-seo";
+import { PageTitle } from "@/components/storefront/PageTitle";
+import { COLLECTION_ROUTES } from "@/lib/product-seo-slug";
+import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/lib/seo";
 
 export async function generateMetadata() {
   return cmsSeoMetadata("collections");
 }
 
-export default function CollectionsPage() {
+export default async function CollectionsPage() {
+  const jsonLd = await cmsSeoJsonLd("collections");
+
   return (
     <ModaveShell>
-      <DynamicInfoPage
-        title="Collections"
-        subtitle="Admin-managed textile ranges for shirts, kurtas, festive edits, and wholesale-ready seasonal buying."
-        items={[
-          { title: "Printed Shirts", body: "MOQ-led shirt collections with size-run ordering and repeatable catalog SKUs." },
-          { title: "Kurtas", body: "Cotton, rayon, and slub kurta ranges for everyday and festive retail shelves." },
-          { title: "Featured Products", body: "Homepage and catalog collections can be changed from admin CMS." },
-        ]}
-        cta={{ label: "Explore Products", href: "/products" }}
-      />
+      <JsonLd data={jsonLd} />
+      <PageTitle title="Collections" crumbs={["Home", "Collections"]} />
+      <section className="flat-spacing-2">
+        <div className="container">
+          <p className="text-muted mb-4">
+            Explore Ajrakh, Mashru, and block-print lines — each collection
+            links to a curated wholesale catalog view.
+          </p>
+          <div className="row g-4">
+            {COLLECTION_ROUTES.map((collection) => (
+              <div className="col-md-4" key={collection.slug}>
+                <div className="card h-100">
+                  <div className="card-body d-flex flex-column">
+                    <h3 className="h5">
+                      <Link href={`/collections/${collection.slug}`}>
+                        {collection.title}
+                      </Link>
+                    </h3>
+                    <p className="text-muted flex-grow-1">
+                      {collection.description}
+                    </p>
+                    <Link
+                      href={`/collections/${collection.slug}`}
+                      className="tf-btn btn-line mt-2"
+                    >
+                      View collection
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 mb-0">
+            <Link href="/products" className="text-button">
+              Browse full product catalog
+            </Link>
+          </p>
+        </div>
+      </section>
     </ModaveShell>
   );
 }

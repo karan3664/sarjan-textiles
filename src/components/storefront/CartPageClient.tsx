@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
@@ -62,7 +63,10 @@ export function CartPageClient() {
 
     const ids = Array.from(new Set(cart.map((item) => item.slug))).join(",");
     setLoading(true);
-    fetch(`/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`)
+    fetch(
+      `/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`,
+      catalogFetchInit(),
+    )
       .then((res) => res.json())
       .then((data) => {
         const bySlug = new Map<Product["slug"], Product>(

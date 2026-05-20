@@ -10,6 +10,7 @@ import {
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { productSetPrice } from "@/lib/product-pricing";
 import { isProductSoldOut } from "@/lib/product-availability";
 import {
@@ -244,7 +245,10 @@ export function ModaveModals() {
     }
 
     const ids = Array.from(new Set(cart.map((item) => item.slug))).join(",");
-    fetch(`/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`)
+    fetch(
+      `/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`,
+      catalogFetchInit(),
+    )
       .then((res) => res.json())
       .then((data) => {
         const bySlug = new Map<Product["slug"], Product>(
@@ -401,7 +405,10 @@ export function ModaveModals() {
       if (!slug) return;
       setQuickProduct(null);
       setQuickLoading(true);
-      fetch(`/api/catalog/products?ids=${encodeURIComponent(slug)}&limit=1`)
+      fetch(
+        `/api/catalog/products?ids=${encodeURIComponent(slug)}&limit=1`,
+        catalogFetchInit(),
+      )
         .then((res) => res.json())
         .then((data) => setQuickProduct(data.items?.[0] ?? null))
         .catch(() => setQuickProduct(null))

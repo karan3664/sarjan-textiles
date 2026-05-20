@@ -21,10 +21,20 @@ export async function POST(request: Request) {
     const client = await loginClient(body.email, body.password);
     const blocked = clientStatusAuthError(client.status);
     if (blocked) return Response.json({ error: blocked }, { status: 403 });
-    return Response.json({
-      client: publicClient(client),
-      token: createClientToken({ clientId: client.id, email: client.email }),
+    const token = createClientToken({
+      clientId: client.id,
+      email: client.email,
     });
+    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    const response = Response.json({
+      client: publicClient(client),
+      token,
+    });
+    response.headers.append(
+      "Set-Cookie",
+      `sarjan-client-token=${encodeURIComponent(token)}; Path=/; HttpOnly${secure}; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`,
+    );
+    return response;
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Login failed" },

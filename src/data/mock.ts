@@ -1,6 +1,8 @@
 export type Product = {
   id: string;
   slug: string;
+  /** Previous URLs kept for lookup + 301 redirects after SEO slug migration. */
+  legacySlugs?: string[];
   name: string;
   sku: string;
   category: string;
@@ -302,9 +304,14 @@ const generatedProducts: Product[] = Array.from(
     const imagePool = isKurta ? kurtaImages : shirtImages;
     const primaryImage = imagePool[index % imagePool.length];
 
+    const categoryPart = isKurta ? "kurta" : "shirt";
+    const patternPart = print.toLowerCase().replaceAll(" ", "-");
+    const colorPart = color.toLowerCase().replaceAll(" ", "-");
+    const slugBase = `${categoryPart}-${patternPart === "ajrak" ? "ajrakh" : patternPart}-${colorPart}`;
+
     return {
       id: `PRD-${String(n).padStart(4, "0")}`,
-      slug: `${isKurta ? "mens-kurta" : "mens-shirt"}-${print.toLowerCase().replaceAll(" ", "-")}-${String(n).padStart(4, "0")}`,
+      slug: slugBase,
       name: `${color} ${print} ${isKurta ? "Men's Kurta" : "Men's Shirt"}`,
       sku: `SAR-${isKurta ? "KU" : "SH"}-${String(n).padStart(4, "0")}`,
       category,

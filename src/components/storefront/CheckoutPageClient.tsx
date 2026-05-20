@@ -10,6 +10,11 @@ import {
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import {
+  catalogFetchInit,
+  clientAuthJsonHeaders,
+  isClientApproved,
+} from "@/lib/client-auth-browser";
 import { guestCheckoutMarketingEnabled } from "@/lib/commerce-config";
 import {
   readStoredClient,
@@ -72,7 +77,10 @@ export function CheckoutPageClient() {
 
     const ids = Array.from(new Set(cart.map((item) => item.slug))).join(",");
     setLoading(true);
-    fetch(`/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`)
+    fetch(
+      `/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`,
+      catalogFetchInit(),
+    )
       .then((res) => res.json())
       .then((data) => {
         const bySlug = new Map<Product["slug"], Product>(
@@ -116,18 +124,22 @@ export function CheckoutPageClient() {
   const submitOrder = async () => {
     const client = JSON.parse(
       localStorage.getItem("sarjan-client") ?? "null",
-    ) as { id?: string; email?: string } | null;
+    ) as { id?: string; email?: string; status?: string } | null;
     if (!client?.id) {
       setMessage("Login required before order submit.");
+      return;
+    }
+    if (!isClientApproved()) {
+      setMessage(
+        "Your wholesale account must be approved before placing orders. You will receive an email when approved.",
+      );
       return;
     }
 
     const res = await fetch("/api/orders", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("sarjan-client-token") ?? ""}`,
-      },
+      headers: clientAuthJsonHeaders(),
+      credentials: "include",
       body: JSON.stringify({
         clientId: client.id,
         clientEmail: client.email,

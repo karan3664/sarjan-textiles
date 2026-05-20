@@ -1,3 +1,8 @@
+import {
+  catalogFetchInit,
+  clientAuthJsonHeaders,
+} from "@/lib/client-auth-browser";
+
 export const CART_KEY = "sarjan-cart";
 export const FULL_SIZE_RUN = ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 export const SIZE_GROUPS = {
@@ -18,9 +23,8 @@ type LegacyCartItem = Partial<StoredCartItem> & {
 
 export function normalizeCartItem(item: LegacyCartItem): StoredCartItem | null {
   if (!item.slug) return null;
-  const sizes = Array.isArray(item.sizes) && item.sizes.length
-    ? item.sizes
-    : FULL_SIZE_RUN;
+  const sizes =
+    Array.isArray(item.sizes) && item.sizes.length ? item.sizes : FULL_SIZE_RUN;
 
   return {
     slug: item.slug,
@@ -44,8 +48,10 @@ export function readCart(): StoredCartItem[] {
 function readClientId() {
   if (typeof window === "undefined") return "";
   try {
-    const client = JSON.parse(window.localStorage.getItem("sarjan-client") ?? "null") as { id?: string } | null;
-    return client?.id ?? window.localStorage.getItem("sarjan-client-token") ?? "";
+    const client = JSON.parse(
+      window.localStorage.getItem("sarjan-client") ?? "null",
+    ) as { id?: string } | null;
+    return client?.id?.trim() ?? "";
   } catch {
     return window.localStorage.getItem("sarjan-client-token") ?? "";
   }
@@ -57,12 +63,16 @@ function persistCartToApi(items: StoredCartItem[]) {
 
   void fetch("/api/cart", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: clientAuthJsonHeaders(),
+    credentials: "include",
     body: JSON.stringify({ clientId, items }),
   }).catch(() => undefined);
 }
 
-export function writeCart(items: StoredCartItem[], options: { syncApi?: boolean } = {}) {
+export function writeCart(
+  items: StoredCartItem[],
+  options: { syncApi?: boolean } = {},
+) {
   const next = items.map(normalizeCartItem).filter(Boolean) as StoredCartItem[];
   window.localStorage.setItem(CART_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("sarjan-cart-updated"));
@@ -70,11 +80,19 @@ export function writeCart(items: StoredCartItem[], options: { syncApi?: boolean 
 }
 
 export function sameCartLine(a: StoredCartItem, b: StoredCartItem) {
-  return a.slug === b.slug && a.color === b.color && a.sizes.join("|") === b.sizes.join("|");
+  return (
+    a.slug === b.slug &&
+    a.color === b.color &&
+    a.sizes.join("|") === b.sizes.join("|")
+  );
 }
 
 export function parseSizeRun(value?: string) {
-  const sizes = value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+  const sizes =
+    value
+      ?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean) ?? [];
   return sizes.length ? sizes : FULL_SIZE_RUN;
 }
 
@@ -83,7 +101,10 @@ export async function syncCartWithApi() {
   const localItems = readCart();
   if (!clientId) return localItems;
 
-  const response = await fetch(`/api/cart?clientId=${encodeURIComponent(clientId)}`);
+  const response = await fetch(
+    `/api/cart?clientId=${encodeURIComponent(clientId)}`,
+    catalogFetchInit(),
+  );
   if (!response.ok) return localItems;
 
   const data = await response.json();

@@ -3,6 +3,7 @@ import { Fragment, type ReactNode } from "react";
 import { home as defaultHome, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts, type CatalogFilters } from "@/lib/catalog";
+import { getServerClientId } from "@/lib/client-session-server";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import {
   getCachedCmsSnapshot,
@@ -1932,12 +1933,14 @@ export async function ProductsListingDynamic({
     "price-high-low": "Price, high to low",
   };
   const cms = await getCachedCmsSnapshot();
+  const clientId = await getServerClientId();
   const catalog = await getCatalogProducts({
     page,
     limit: perPage,
     sort: sortValue,
     q,
     filters,
+    clientId,
   });
   const totalPages = catalog.totalPages;
   const currentPage = catalog.page;
