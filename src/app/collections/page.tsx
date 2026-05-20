@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { PageTitle } from "@/components/storefront/PageTitle";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { COLLECTION_ROUTES } from "@/lib/product-seo-slug";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
 import { JsonLd } from "@/lib/seo";
@@ -37,9 +38,9 @@ export default async function CollectionsPage() {
                     </p>
                     <Link
                       href={`/collections/${collection.slug}`}
-                      className="tf-btn btn-line mt-2"
+                      className={sarjanButtonClass("mt-2 align-self-start")}
                     >
-                      View collection
+                      <span className="text">View collection</span>
                     </Link>
                   </div>
                 </div>

@@ -3,118 +3,58 @@
 import { useState } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 
-type FeedbackFormProps = {
-  defaultMode?: "feedback" | "testimonial";
-};
-
-export function FeedbackForm({
-  defaultMode = "testimonial",
-}: FeedbackFormProps) {
+/** Public order / product feedback — no testimonial mode (testimonials are login-only). */
+export function FeedbackForm() {
   const [message, setMessage] = useState("");
-  const [mode, setMode] = useState<"feedback" | "testimonial">(defaultMode);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const endpoint =
-      mode === "testimonial" ? "/api/testimonials" : "/api/feedback";
-    const payload =
-      mode === "testimonial"
-        ? {
-            author: form.get("companyName"),
-            product: form.get("product"),
-            price: form.get("price"),
-            quote: form.get("message"),
-            avatar: "/sarjan-assets/sarjan-favicon-192.png",
-            image:
-              form.get("image") || "/sarjan-assets/banner-textiles-studio.webp",
-          }
-        : {
-            companyName: form.get("companyName"),
-            email: form.get("email"),
-            orderId: form.get("orderId"),
-            message: form.get("message"),
-          };
-    const res = await fetch(endpoint, {
+    const res = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        companyName: form.get("companyName"),
+        email: form.get("email"),
+        orderId: form.get("orderId"),
+        message: form.get("message"),
+      }),
     });
-    const data = await res.json();
+    const data = (await res.json()) as { error?: string };
     setMessage(
       res.ok
-        ? mode === "testimonial"
-          ? "Testimonial submitted for admin approval."
-          : "Feedback saved."
+        ? "Thank you. Our team will review your message and follow up by email."
         : (data.error ?? "Submit failed."),
     );
     if (res.ok) event.currentTarget.reset();
   };
 
   return (
-    <form className="form-leave-comment mt_32" onSubmit={submit}>
-      <div className="d-flex gap-12 mb_20">
-        <button
-          type="button"
-          className={`tf-btn ${mode === "testimonial" ? "btn-fill" : "btn-white has-border"} radius-4`}
-          onClick={() => setMode("testimonial")}
-        >
-          <span className="text">Testimonial</span>
-        </button>
-        <button
-          type="button"
-          className={`tf-btn ${mode === "feedback" ? "btn-fill" : "btn-white has-border"} radius-4`}
-          onClick={() => setMode("feedback")}
-        >
-          <span className="text">Feedback</span>
-        </button>
-      </div>
+    <form
+      className="form-leave-comment sarjan-order-feedback-form"
+      onSubmit={submit}
+    >
       <div className="wrap">
         <fieldset>
-          <input
-            name="companyName"
-            placeholder={
-              mode === "testimonial" ? "Author / Company name" : "Company name"
-            }
-            required
-          />
+          <input name="companyName" placeholder="Company name *" required />
         </fieldset>
         <fieldset>
           <input
             name="email"
-            placeholder="Email"
+            placeholder="Email address *"
             type="email"
-            required={mode === "feedback"}
+            required
           />
         </fieldset>
       </div>
-      {mode === "testimonial" ? (
-        <div className="wrap">
-          <fieldset>
-            <input name="product" placeholder="Product name" />
-          </fieldset>
-          <fieldset>
-            <input name="price" placeholder="Product price" />
-          </fieldset>
-        </div>
-      ) : (
-        <fieldset>
-          <input name="orderId" placeholder="Order ID" />
-        </fieldset>
-      )}
-      {mode === "testimonial" ? (
-        <fieldset>
-          <input name="image" placeholder="Product image URL optional" />
-        </fieldset>
-      ) : null}
+      <fieldset>
+        <input name="orderId" placeholder="Order ID (optional)" />
+      </fieldset>
       <fieldset>
         <EmojiTextarea
           name="message"
-          placeholder={
-            mode === "testimonial"
-              ? "Write testimonial quote (emoji welcome)"
-              : "Write feedback (emoji welcome)"
-          }
+          rows={5}
+          placeholder="Describe your order issue or product feedback… (emoji welcome)"
           required
         />
       </fieldset>
@@ -122,18 +62,18 @@ export function FeedbackForm({
         <p
           className={
             message.includes("failed") || message.includes("required")
-              ? "text-danger"
-              : "text-success"
+              ? "text-danger mt_12"
+              : "text-success mt_12"
           }
         >
           {message}
         </p>
       ) : null}
-      <button className="tf-btn btn-fill radius-4" type="submit">
-        <span className="text">
-          {mode === "testimonial" ? "Submit for Approval" : "Submit Feedback"}
-        </span>
-      </button>
+      <div className="button-submit send-wrap">
+        <button className="tf-btn btn-fill radius-4" type="submit">
+          <span className="text text-button">Submit feedback</span>
+        </button>
+      </div>
     </form>
   );
 }

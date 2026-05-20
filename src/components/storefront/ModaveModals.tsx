@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
+  normalizeCartSlugs,
   parseSizeRun,
   readCart,
   sameCartLine,
@@ -30,6 +31,10 @@ import { QuickViewProduct } from "./QuickViewProduct";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import {
+  openModalFromLocationHash,
+  showBootstrapModal,
+} from "@/lib/bootstrap-modal";
+import {
   productColorIndex,
   productImageForColorIndex,
   resolveSelectedColorInScope,
@@ -41,60 +46,8 @@ type HydratedCartItem = StoredCartItem & {
   lineTotal: number;
 };
 
-type BootstrapModalCtor = {
-  new (element: Element): { show: () => void };
-  getInstance?: (element: Element) => { show: () => void } | null;
-  getOrCreateInstance?: (element: Element) => { show: () => void };
-};
-
 function showWishlistModal() {
-  const el = document.getElementById("wishlist");
-  if (!el) return;
-
-  const win = window as unknown as {
-    bootstrap?: { Modal?: BootstrapModalCtor };
-    jQuery?: (sel: string | Element) => { modal: (action?: string) => unknown };
-  };
-
-  try {
-    const Modal = win.bootstrap?.Modal;
-    if (Modal) {
-      if (typeof Modal.getInstance === "function") {
-        const existing = Modal.getInstance(el);
-        (existing ?? new Modal(el)).show();
-        return;
-      }
-      if (typeof Modal.getOrCreateInstance === "function") {
-        Modal.getOrCreateInstance(el).show();
-        return;
-      }
-      new Modal(el).show();
-      return;
-    }
-  } catch {
-    /* try jQuery / manual */
-  }
-
-  try {
-    if (win.jQuery) {
-      win.jQuery("#wishlist").modal("show");
-      return;
-    }
-  } catch {
-    /* manual */
-  }
-
-  el.classList.add("show");
-  el.style.display = "block";
-  el.removeAttribute("aria-hidden");
-  el.setAttribute("aria-modal", "true");
-  el.setAttribute("role", "dialog");
-  document.body.classList.add("modal-open");
-  if (!document.body.querySelector(".modal-backdrop")) {
-    const backdrop = document.createElement("div");
-    backdrop.className = "modal-backdrop fade show";
-    document.body.appendChild(backdrop);
-  }
+  showBootstrapModal("wishlist");
 }
 
 /** Sync "Add N set(s)" label and optional price on product / quick-view blocks. */
@@ -161,13 +114,13 @@ export function ModaveModals() {
   }, []);
 
   useEffect(() => {
-    const sync = () => {
-      const next = readCart();
+    const applyCart = (next: StoredCartItem[]) => {
       setCart((current) =>
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
-    syncCartWithApi().then(sync).catch(sync);
+    const sync = () => applyCart(readCart());
+    void syncCartWithApi().then(applyCart).catch(sync);
     window.addEventListener("sarjan-cart-updated", sync);
     window.addEventListener("storage", sync);
     return () => {
@@ -233,12 +186,6 @@ export function ModaveModals() {
   }, []);
 
   useEffect(() => {
-    document.querySelectorAll(".count-box").forEach((node) => {
-      node.textContent = String(
-        cart.reduce((sum, item) => sum + item.quantity, 0),
-      );
-    });
-
     if (!cart.length) {
       setItems([]);
       return;
@@ -251,11 +198,20 @@ export function ModaveModals() {
     )
       .then((res) => res.json())
       .then((data) => {
+        const products = Array.isArray(data.items)
+          ? (data.items as Product[])
+          : [];
+        const normalizedCart = normalizeCartSlugs(cart, products);
+        if (JSON.stringify(normalizedCart) !== JSON.stringify(cart)) {
+          writeCart(normalizedCart);
+          return;
+        }
+
         const bySlug = new Map<Product["slug"], Product>(
-          (data.items ?? []).map((product: Product) => [product.slug, product]),
+          products.map((product) => [product.slug, product]),
         );
         setItems(
-          cart
+          normalizedCart
             .map((item) => {
               const product = bySlug.get(item.slug);
               if (!product) return null;
@@ -508,6 +464,16 @@ export function ModaveModals() {
     });
   }, [filteredRecommendations, visibleSearchItems]);
 
+  useEffect(() => {
+    const onHash = () => openModalFromLocationHash();
+    const timer = window.setTimeout(onHash, 0);
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", onHash);
+    };
+  }, []);
+
   return (
     <>
       <div className="modal fade modal-search sarjan-search-modal" id="search">
@@ -590,7 +556,7 @@ export function ModaveModals() {
                     );
                 }}
               >
-                <span className="text">
+                <span className="text text-button">
                   {visibleSearchItems < filteredRecommendations.length
                     ? "Load More"
                     : "View All"}
@@ -707,7 +673,9 @@ export function ModaveModals() {
                                       goFromModal("shoppingCart", "/login")
                                     }
                                   >
-                                    <span className="text">Login</span>
+                                    <span className="text text-button">
+                                      Login
+                                    </span>
                                   </button>
                                   <button
                                     type="button"
@@ -716,7 +684,9 @@ export function ModaveModals() {
                                       goFromModal("shoppingCart", "/register")
                                     }
                                   >
-                                    <span className="text">Sign Up</span>
+                                    <span className="text text-button">
+                                      Sign Up
+                                    </span>
                                   </button>
                                 </>
                               ) : null}
@@ -727,7 +697,9 @@ export function ModaveModals() {
                                   goFromModal("shoppingCart", "/products")
                                 }
                               >
-                                <span className="text">Browse Products</span>
+                                <span className="text text-button">
+                                  Browse Products
+                                </span>
                               </button>
                             </div>
                           </div>
@@ -797,7 +769,7 @@ export function ModaveModals() {
                                   goFromModal("shoppingCart", "/login")
                                 }
                               >
-                                <span className="text">Login</span>
+                                <span className="text text-button">Login</span>
                               </button>
                               <button
                                 type="button"
@@ -806,7 +778,9 @@ export function ModaveModals() {
                                   goFromModal("shoppingCart", "/register")
                                 }
                               >
-                                <span className="text">Sign Up</span>
+                                <span className="text text-button">
+                                  Sign Up
+                                </span>
                               </button>
                             </>
                           ) : null}
@@ -815,7 +789,7 @@ export function ModaveModals() {
                             className="tf-btn w-100 btn-white radius-4 has-border"
                             onClick={() => goFromModal("shoppingCart", "/cart")}
                           >
-                            <span className="text">View Cart</span>
+                            <span className="text text-button">View Cart</span>
                           </button>
                           <button
                             type="button"
@@ -824,7 +798,7 @@ export function ModaveModals() {
                               goFromModal("shoppingCart", "/checkout")
                             }
                           >
-                            <span className="text">Check Out</span>
+                            <span className="text text-button">Check Out</span>
                           </button>
                         </div>
                         <div className="text-center">
@@ -931,7 +905,7 @@ export function ModaveModals() {
                     className="btn-style-2 w-100 radius-4 view-all-wishlist"
                     onClick={() => goFromModal("wishlist", "/wishlist")}
                   >
-                    <span className="text-btn-uppercase">
+                    <span className="text text-button text-btn-uppercase">
                       View All Wish List
                     </span>
                   </button>

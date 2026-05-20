@@ -152,6 +152,11 @@ export async function ModaveFooter() {
                             Shipping policy
                           </Link>
                         </li>
+                        <li className="text-caption-1">
+                          <Link href="/site-map" className="footer-menu_item">
+                            Site map
+                          </Link>
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -187,10 +192,10 @@ export async function ModaveFooter() {
                         </li>
                         <li className="text-caption-1">
                           <Link
-                            href="/customer-feedback"
+                            href="/order-feedback"
                             className="footer-menu_item"
                           >
-                            Share Testimonial
+                            Order Feedback
                           </Link>
                         </li>
                       </ul>

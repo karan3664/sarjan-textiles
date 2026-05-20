@@ -155,7 +155,7 @@ export function AdminContactInquiriesClient({
     <>
       <div className="sarjan-home-kpi-grid sarjan-testimonial-kpi-grid">
         {[
-          ["Total Inquiries", inquiries.length],
+          ["Total feedback", inquiries.length],
           [
             "New",
             inquiries.filter((item) => (item.status ?? "new") === "new").length,

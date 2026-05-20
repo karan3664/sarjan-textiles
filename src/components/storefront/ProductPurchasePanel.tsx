@@ -117,7 +117,9 @@ export function ProductPurchasePanel({
               data-product-color={activeColor}
               data-set-price={setPrice}
             >
-              <span className="sarjan-add-set-label">Add 1 set</span>
+              <span className="text text-button sarjan-add-set-label">
+                Add 1 set
+              </span>
             </a>
             <a
               href="#shoppingCart"
@@ -129,7 +131,7 @@ export function ProductPurchasePanel({
               data-product-slug={product.slug}
               data-product-size-run={sizeRun.join(",")}
             >
-              Add all colors
+              <span className="text text-button">Add all colors</span>
             </a>
             <a
               href="#compare"

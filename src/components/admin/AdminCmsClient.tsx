@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
+import { AdminAuthBannersEditor } from "@/components/admin/AdminAuthBannersEditor";
 import type { CmsBlog, CmsSnapshot } from "@/lib/cms-store";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -494,6 +495,13 @@ export function AdminCmsClient() {
           />
         </fieldset>
       </div>
+
+      <AdminAuthBannersEditor
+        cms={cms}
+        onChange={setCms}
+        onSave={saveCms}
+        saveState={saveState}
+      />
 
       <div className="wg-box" id="settings">
         <div className="flex items-center justify-between mb-24">

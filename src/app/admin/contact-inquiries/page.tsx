@@ -8,7 +8,7 @@ export default async function AdminContactInquiriesPage() {
   const inquiries = await getFeedbacks();
 
   return (
-    <AdminTemplateChrome active="inquiries" title="Contact Inquiries">
+    <AdminTemplateChrome active="inquiries" title="Order Feedback">
       <AdminContactInquiriesClient initialInquiries={inquiries} />
     </AdminTemplateChrome>
   );

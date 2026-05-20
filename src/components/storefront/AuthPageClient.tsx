@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
+import { persistClientSession } from "@/lib/client-auth-browser";
+import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
+import type { AuthBanners } from "@/lib/auth-banner-types";
+import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -10,6 +16,12 @@ function isErrorMessage(value: string) {
   return /failed|invalid|required|incorrect|verify|unavailable|match/i.test(
     value,
   );
+}
+
+function safeAuthRedirect(next: string | null) {
+  const path = next?.trim() ?? "";
+  if (!path.startsWith("/") || path.startsWith("//")) return "/profile";
+  return path;
 }
 
 const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -25,7 +37,7 @@ function isValidGstin(value: string) {
 function PageTitle({ title }: { title: string }) {
   return (
     <div
-      className="page-title"
+      className="page-title sarjan-auth-hero"
       style={{
         backgroundImage:
           "url(/template/storefront/images/section/page-title.jpg)",
@@ -57,7 +69,14 @@ function PageTitle({ title }: { title: string }) {
   );
 }
 
-export function AuthPageClient({ mode }: { mode: AuthMode }) {
+export function AuthPageClient({
+  mode,
+  banners,
+}: {
+  mode: AuthMode;
+  banners: AuthBanners;
+}) {
+  const searchParams = useSearchParams();
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [gst, setGst] = useState("");
@@ -80,6 +99,8 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailOtpLoading, setEmailOtpLoading] = useState(false);
+  const [registerState, setRegisterState] = useState("");
+  const [registerCity, setRegisterCity] = useState("");
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
   const normalizedGst = normalizeGstin(gst);
@@ -189,6 +210,16 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
         ? "/api/auth/forgot"
         : "/api/auth/login";
 
+    if (isRegister) {
+      if (!registerState.trim() || !registerCity.trim()) {
+        setLoading(false);
+        setMessage("Select state and city.");
+        return;
+      }
+      payload.state = registerState;
+      payload.city = registerCity;
+    }
+
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -204,10 +235,8 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     }
 
     if (data.token) {
-      localStorage.setItem("sarjan-client-token", data.token);
-      localStorage.setItem("sarjan-client", JSON.stringify(data.client));
-      window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
-      window.location.assign("/profile");
+      persistClientSession(data.token, data.client);
+      window.location.assign(safeAuthRedirect(searchParams.get("next")));
       return;
     }
 
@@ -376,22 +405,22 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
   return (
     <>
       <PageTitle title={title} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-auth-page">
         <div className="container">
-          <div className="login-wrap">
-            <div className="left">
+          <div className="login-wrap sarjan-auth-layout">
+            <div className="left sarjan-auth-form-panel">
               <div className="heading">
                 <h4>{title}</h4>
               </div>
               <form
                 action="#"
-                className="form-login form-has-password"
+                className="form-login form-has-password sarjan-auth-form"
                 onSubmit={submit}
               >
                 <div className="wrap">
                   {isRegister ? (
                     <>
-                      <p className="text-caption-1 text-secondary mb_16">
+                      <p className="sarjan-auth-intro">
                         GST registration is required for all wholesale accounts.
                         Verify with the GST portal to load trade and legal
                         names.
@@ -552,13 +581,15 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                           {gstMessage}
                         </p>
                       ) : null}
-                      <fieldset>
-                        <input
-                          type="text"
-                          placeholder="City / buying category"
-                          name="city"
-                        />
-                      </fieldset>
+                      <IndiaStateCitySelect
+                        layout="stack"
+                        state={registerState}
+                        city={registerCity}
+                        onStateChange={setRegisterState}
+                        onCityChange={setRegisterCity}
+                        stateRequired
+                        cityRequired
+                      />
                     </>
                   ) : null}
                   <fieldset>
@@ -573,11 +604,14 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                   </fieldset>
                   {isRegister ? (
                     <>
-                      <fieldset className="sarjan-gst-row sarjan-otp-row">
+                      <fieldset className="sarjan-otp-row">
                         <input
                           type="text"
+                          className="sarjan-otp-input"
                           placeholder="Email OTP*"
                           name="emailOtp"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
                           value={emailOtp}
                           onChange={(event) => {
                             setEmailOtp(
@@ -587,35 +621,37 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                           }}
                           required
                         />
-                        <button
-                          type="button"
-                          className="tf-btn btn-fill"
-                          onClick={sendEmailOtp}
-                          disabled={emailOtpLoading || !email.trim()}
-                        >
-                          <span className="text text-button">
-                            {emailOtpLoading && !emailOtpSent
-                              ? "Sending..."
-                              : emailOtpSent
-                                ? "Resend OTP"
-                                : "Send OTP"}
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          className="tf-btn btn-white has-border"
-                          onClick={verifyEmailOtp}
-                          disabled={
-                            emailOtpLoading ||
-                            !emailOtpToken ||
-                            emailOtp.length !== 6 ||
-                            emailVerified
-                          }
-                        >
-                          <span className="text text-button">
-                            {emailVerified ? "Verified" : "Verify OTP"}
-                          </span>
-                        </button>
+                        <div className="sarjan-otp-actions">
+                          <button
+                            type="button"
+                            className={sarjanButtonClass("sarjan-auth-btn")}
+                            onClick={sendEmailOtp}
+                            disabled={emailOtpLoading || !email.trim()}
+                          >
+                            <span className="text">
+                              {emailOtpLoading && !emailOtpSent
+                                ? "Sending..."
+                                : emailOtpSent
+                                  ? "Resend OTP"
+                                  : "Send OTP"}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            className={sarjanButtonClass("sarjan-auth-btn")}
+                            onClick={verifyEmailOtp}
+                            disabled={
+                              emailOtpLoading ||
+                              !emailOtpToken ||
+                              emailOtp.length !== 6 ||
+                              emailVerified
+                            }
+                          >
+                            <span className="text">
+                              {emailVerified ? "Verified" : "Verify OTP"}
+                            </span>
+                          </button>
+                        </div>
                       </fieldset>
                       <input
                         type="hidden"
@@ -664,7 +700,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                     </fieldset>
                   ) : null}
                   {!isRegister && !isForgot ? (
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="sarjan-auth-form-meta d-flex align-items-center justify-content-between">
                       <div className="tf-cart-checkbox">
                         <div className="tf-checkbox-wrapp">
                           <input
@@ -688,7 +724,7 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                     </div>
                   ) : null}
                   {isRegister ? (
-                    <div className="d-flex align-items-center">
+                    <div className="sarjan-auth-form-meta d-flex align-items-center flex-wrap">
                       <div className="tf-cart-checkbox">
                         <div className="tf-checkbox-wrapp">
                           <input
@@ -724,9 +760,9 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                     {message}
                   </p>
                 ) : null}
-                <div className="button-submit">
+                <div className="button-submit sarjan-auth-submit-wrap">
                   <button
-                    className="tf-btn btn-fill"
+                    className="tf-btn btn-fill sarjan-auth-submit"
                     type="submit"
                     disabled={loading}
                   >
@@ -741,23 +777,17 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
                 </div>
               </form>
             </div>
-            <div className="right">
-              <h4 className="mb_8">
-                {isRegister ? "Already have an account?" : "New Customer"}
-              </h4>
-              <p className="text-secondary">
-                {isRegister
-                  ? "Welcome back. Sign in to access your personalized experience, saved preferences, and more."
-                  : "Register your company to access wholesale catalog, set-wise B2B ordering, and order history."}
-              </p>
-              <a
-                href={isRegister ? "/login" : "/register"}
-                className="tf-btn btn-fill"
-              >
-                <span className="text text-button">
-                  {isRegister ? "Login" : "Register"}
-                </span>
-              </a>
+            <div className="right right--auth-visual">
+              <AuthSideVisual
+                mode={isForgot ? "forgot" : isRegister ? "register" : "login"}
+                banner={
+                  isForgot
+                    ? banners.forgot
+                    : isRegister
+                      ? banners.register
+                      : banners.login
+                }
+              />
             </div>
           </div>
         </div>

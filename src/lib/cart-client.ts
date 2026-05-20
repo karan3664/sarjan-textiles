@@ -1,3 +1,4 @@
+import type { Product } from "@/data/mock";
 import {
   catalogFetchInit,
   clientAuthJsonHeaders,
@@ -87,6 +88,70 @@ export function sameCartLine(a: StoredCartItem, b: StoredCartItem) {
   );
 }
 
+export function cartItemCount(cart: StoredCartItem[]) {
+  return cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+/** Map legacy SEO slugs to current product slugs; drop deleted products. */
+export function normalizeCartSlugs(
+  cart: StoredCartItem[],
+  products: Product[],
+): StoredCartItem[] {
+  const validSlugs = new Set(products.map((product) => product.slug));
+  const legacyToSlug = new Map<string, string>();
+  for (const product of products) {
+    for (const legacy of product.legacySlugs ?? []) {
+      legacyToSlug.set(legacy, product.slug);
+    }
+  }
+
+  const next: StoredCartItem[] = [];
+  for (const line of cart) {
+    const slug = validSlugs.has(line.slug)
+      ? line.slug
+      : legacyToSlug.get(line.slug);
+    if (!slug) continue;
+    const entry = normalizeCartItem({ ...line, slug });
+    if (!entry) continue;
+    const existing = next.find((item) => sameCartLine(item, entry));
+    if (existing) existing.quantity += entry.quantity;
+    else next.push(entry);
+  }
+  return next;
+}
+
+async function fetchProductsForCart(cart: StoredCartItem[]) {
+  const ids = Array.from(new Set(cart.map((item) => item.slug)));
+  if (!ids.length) return [] as Product[];
+
+  const response = await fetch(
+    `/api/catalog/products?ids=${encodeURIComponent(ids.join(","))}&limit=60`,
+    catalogFetchInit(),
+  );
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  return Array.isArray(data.items) ? (data.items as Product[]) : [];
+}
+
+export async function reconcileCartWithCatalog(
+  cart: StoredCartItem[] = readCart(),
+): Promise<StoredCartItem[]> {
+  if (!cart.length) {
+    writeCart([], { syncApi: false });
+    return [];
+  }
+
+  const products = await fetchProductsForCart(cart);
+  if (products === null) return cart;
+
+  const normalized = normalizeCartSlugs(cart, products);
+  if (JSON.stringify(normalized) !== JSON.stringify(cart)) {
+    writeCart(normalized);
+  }
+  return normalized;
+}
+
 export function parseSizeRun(value?: string) {
   const sizes =
     value
@@ -98,25 +163,24 @@ export function parseSizeRun(value?: string) {
 
 export async function syncCartWithApi() {
   const clientId = readClientId();
-  const localItems = readCart();
-  if (!clientId) return localItems;
+  let items = readCart();
 
-  const response = await fetch(
-    `/api/cart?clientId=${encodeURIComponent(clientId)}`,
-    catalogFetchInit(),
-  );
-  if (!response.ok) return localItems;
-
-  const data = await response.json();
-  const serverItems = Array.isArray(data.items)
-    ? (data.items.map(normalizeCartItem).filter(Boolean) as StoredCartItem[])
-    : [];
-
-  if (serverItems.length) {
-    writeCart(serverItems, { syncApi: false });
-    return serverItems;
+  if (clientId) {
+    const response = await fetch(
+      `/api/cart?clientId=${encodeURIComponent(clientId)}`,
+      catalogFetchInit(),
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const serverItems = Array.isArray(data.items)
+        ? (data.items
+            .map(normalizeCartItem)
+            .filter(Boolean) as StoredCartItem[])
+        : [];
+      if (serverItems.length) items = serverItems;
+      else if (items.length) persistCartToApi(items);
+    }
   }
 
-  if (localItems.length) persistCartToApi(localItems);
-  return localItems;
+  return reconcileCartWithCatalog(items);
 }

@@ -56,6 +56,8 @@ export const sarjanRegisteredAddress =
 
 export const sarjanDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(sarjanRegisteredAddress)}`;
 
+import { defaultAuthBanners } from "@/lib/auth-banner-defaults";
+
 export const siteSettings = {
   /** India GST identification number (invoices / compliance). */
   gstin: "24JXPPK2159M2ZQ",
@@ -92,6 +94,8 @@ export const siteSettings = {
     description:
       "Explore Sarjan Textiles collections, place B2B orders, track dispatches, and manage 90-day credit workflows.",
   },
+  /** Login / register / forgot side banners (CMS-editable, WebP + AVIF + blur). */
+  authBanners: defaultAuthBanners,
 };
 
 export const navigation = [
@@ -384,6 +388,10 @@ export const home = {
       asset("shirt-ajrak-black-studio.png"),
       asset("kurta-blue-floral-studio.png"),
     ],
+    /** Muted autoplay video slides after banner images (optional). */
+    videoEnabled: false,
+    videoUrl: "",
+    videoUrls: [] as string[],
   },
   highlights: [
     { value: "90", label: "Day credit cycle" },

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { home as defaultHome, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts, type CatalogFilters } from "@/lib/catalog";
@@ -235,7 +235,7 @@ function ProductFeature({ product }: { product: Product }) {
                       data-product-slug={product.slug}
                       data-product-size-run={sizeRun.join(",")}
                     >
-                      Buy it now
+                      <span className="text text-button">Buy it now</span>
                     </a>
                   )}
                 </div>
@@ -485,7 +485,12 @@ export async function HomeDynamic() {
     testimonialsTitle?: string;
     testimonialsDescription?: string;
     sections?: HomeSectionControl[];
-    hero: typeof home.hero & { images?: string[] };
+    hero: typeof home.hero & {
+      images?: string[];
+      videoEnabled?: boolean;
+      videoUrls?: string[];
+      videoUrl?: string;
+    };
   };
   const heroImages = (
     Array.isArray(homeContent.hero.images) && homeContent.hero.images.length
@@ -516,6 +521,9 @@ export async function HomeDynamic() {
         title={home.hero.title}
         description={home.hero.description}
         cta={home.hero.primaryCta}
+        videoEnabled={Boolean(homeContent.hero.videoEnabled)}
+        videoUrls={homeContent.hero.videoUrls}
+        videoUrl={homeContent.hero.videoUrl ?? ""}
       />
     ),
     categories: (
@@ -1041,7 +1049,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         data-product-slug={product.slug}
                         data-product-size-run={sizeRun.join(",")}
                       >
-                        Buy it now
+                        <span className="text text-button">Buy it now</span>
                       </a>
                     )}
                     <ul className="tf-product-info-sku">
@@ -1140,13 +1148,13 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         <a
                           href="#shoppingCart"
                           data-bs-toggle="modal"
-                          className="tf-btn w-100 btn-reset radius-4 btn-add-to-cart"
+                          className="tf-btn w-100 btn-fill radius-4 btn-add-to-cart"
                           data-cart-add
                           data-product-slug={product.slug}
                           data-product-size-run={sizeRun.join(",")}
                           data-product-color={product.colors[0]}
                         >
-                          <span className="text text-btn-uppercase">
+                          <span className="text text-button text-btn-uppercase">
                             Add To Cart
                           </span>
                         </a>
@@ -1269,7 +1277,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                   <textarea name="message" rows={4} required />
                 </fieldset>
                 <button type="button" className="btn-style-2 w-100">
-                  <span className="text">Send</span>
+                  <span className="text text-button">Send</span>
                 </button>
               </form>
             </div>
@@ -1676,7 +1684,7 @@ function ProductListCard({ product }: { product: Product }) {
                 data-product-size-run={sizeRun.join(",")}
                 data-product-color={product.colors[0]}
               >
-                Add To cart
+                <span className="text text-button">Add To cart</span>
               </a>
             )}
             <a
@@ -2445,6 +2453,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
     sections?: CmsCustomSection[];
   };
   const showAboutHeroImage = Boolean(String(page.image ?? "").trim());
+  const contactBannerImage =
+    String(page.image ?? "").trim() ||
+    "/sarjan-assets/banner-textiles-studio.webp";
 
   return (
     <>
@@ -2456,9 +2467,16 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
         <>
           <section className="flat-spacing">
             <div className="container">
-              <div className="contact-us-map">
+              <div className="contact-us-map sarjan-contact-us-map">
                 <div className="wrap-map">
-                  <div className="map-contact sarjan-contact-map">
+                  <div
+                    className="map-contact sarjan-contact-map"
+                    style={
+                      {
+                        "--sarjan-contact-bg": `url("${contactBannerImage}")`,
+                      } as CSSProperties
+                    }
+                  >
                     <div>
                       <h3 className="mb_12">Sarjan Textiles</h3>
                       <p className="text-secondary">{page.body}</p>

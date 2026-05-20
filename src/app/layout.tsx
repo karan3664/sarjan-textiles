@@ -42,6 +42,7 @@ export default function RootLayout({
         {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
           <link key={href} rel="stylesheet" href={href} />
         ))}
+        <link rel="stylesheet" href="/storefront-buttons.css" />
       </head>
       <body className="preload-wrapper">
         <SiteAnalytics />

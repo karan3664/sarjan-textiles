@@ -78,7 +78,8 @@ export async function POST(request: Request) {
       password: String(body.password),
       companyName: String(body.companyName ?? "").trim(),
       gst: String(body.gst),
-      city: body.city != null ? String(body.city) : undefined,
+      city: body.city != null ? String(body.city).trim() : undefined,
+      state: body.state != null ? String(body.state).trim() : undefined,
       ownerLegalName: String(body.ownerLegalName ?? "").trim() || undefined,
     });
     return Response.json({

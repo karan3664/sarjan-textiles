@@ -664,6 +664,21 @@ function migrateSiteSettings(merged: CmsSiteSettings): CmsSiteSettings {
     next.gstin = defaultSiteSettings.gstin;
   }
 
+  next.authBanners = {
+    login: {
+      ...defaultSiteSettings.authBanners.login,
+      ...(merged.authBanners?.login ?? {}),
+    },
+    register: {
+      ...defaultSiteSettings.authBanners.register,
+      ...(merged.authBanners?.register ?? {}),
+    },
+    forgot: {
+      ...defaultSiteSettings.authBanners.forgot,
+      ...(merged.authBanners?.forgot ?? {}),
+    },
+  };
+
   return next;
 }
 
@@ -700,7 +715,34 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
       ...defaultCmsSnapshot.siteSettings,
       ...(input.siteSettings ?? {}),
     }),
-    home: { ...defaultCmsSnapshot.home, ...(input.home ?? {}) },
+    home: {
+      ...defaultCmsSnapshot.home,
+      ...(input.home ?? {}),
+      hero: {
+        ...defaultCmsSnapshot.home.hero,
+        ...(input.home?.hero ?? {}),
+        videoEnabled: Boolean(input.home?.hero?.videoEnabled),
+        videoUrls: (() => {
+          const fromArray = Array.isArray(input.home?.hero?.videoUrls)
+            ? input.home.hero.videoUrls
+                .map((item) => String(item ?? "").trim())
+                .filter(Boolean)
+            : [];
+          if (fromArray.length) return fromArray;
+          const legacy = String(input.home?.hero?.videoUrl ?? "").trim();
+          return legacy ? [legacy] : [];
+        })(),
+        videoUrl: (() => {
+          const fromArray = Array.isArray(input.home?.hero?.videoUrls)
+            ? input.home.hero.videoUrls
+                .map((item) => String(item ?? "").trim())
+                .filter(Boolean)
+            : [];
+          if (fromArray.length) return fromArray[0];
+          return String(input.home?.hero?.videoUrl ?? "").trim();
+        })(),
+      },
+    },
     products,
     productFilters:
       Array.isArray(input.productFilters) && input.productFilters.length

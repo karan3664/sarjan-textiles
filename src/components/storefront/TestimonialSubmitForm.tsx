@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
+import { clientAuthJsonHeaders } from "@/lib/client-auth-browser";
 import { TestimonialStarRating } from "./TestimonialStarRating";
 
 type Props = {
@@ -68,11 +69,19 @@ export function TestimonialSubmitForm({
     try {
       const res = await fetch("/api/testimonials", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: clientAuthJsonHeaders(),
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          setMessage(
+            data.error ??
+              "Please sign in with an approved wholesale account to submit a testimonial.",
+          );
+          return;
+        }
         setMessage(
           data.error ?? "Could not submit testimonial. Please try again.",
         );
@@ -97,8 +106,8 @@ export function TestimonialSubmitForm({
       onSubmit={submit}
     >
       <p className="sarjan-testimonial-form-intro text-secondary text-caption-1">
-        Approved wholesale clients can share their experience here. Sarjan
-        reviews every submission before it is shown on the homepage.
+        Only signed-in, approved wholesale clients can submit testimonials.
+        Sarjan reviews every quote before it appears on the homepage.
       </p>
 
       <div className="wrap sarjan-testimonial-form-row-2">

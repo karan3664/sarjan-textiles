@@ -1,6 +1,6 @@
-import { CustomerFeedbackPage } from "@/components/storefront/StaticPages";
-import { ModaveShell } from "@/components/storefront/ModaveShell";
+import { redirect } from "next/navigation";
 
-export default function Feedback() {
-  return <ModaveShell><CustomerFeedbackPage /></ModaveShell>;
+/** Legacy URL — feedback lives on /order-feedback now. */
+export default function CustomerFeedbackRedirect() {
+  redirect("/order-feedback");
 }

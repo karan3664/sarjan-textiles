@@ -8,6 +8,13 @@ import {
   hasCustomClientAvatar,
 } from "@/lib/client-avatar-display";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
+import { resolveAccountAddress } from "@/lib/client-address";
+import { findStateForCity } from "@/lib/india-locations";
+import {
+  normalizeIndianPincode,
+  verifyIndianPincode,
+} from "@/lib/india-pincode";
+import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import {
   clientAuthHeaders,
@@ -252,6 +259,7 @@ export function AccountDashboardPage() {
     gst: "",
     ownerLegalName: "",
     city: "",
+    state: "",
   });
   const [savedGst, setSavedGst] = useState("");
   const [gstVerified, setGstVerified] = useState(false);
@@ -287,6 +295,9 @@ export function AccountDashboardPage() {
       gst,
       ownerLegalName: client.address?.ownerLegalName ?? "",
       city: client.city ?? client.address?.city ?? "",
+      state:
+        client.address?.state ??
+        findStateForCity(client.city ?? client.address?.city ?? ""),
     });
   }, [client]);
 
@@ -327,6 +338,10 @@ export function AccountDashboardPage() {
       setMessage("Legal / proprietor full name is required.");
       return;
     }
+    if (!form.state.trim() || !form.city.trim()) {
+      setMessage("Select state and city.");
+      return;
+    }
 
     const phone = form.phone.trim();
     const unique = await checkClientFieldsUnique(
@@ -351,6 +366,7 @@ export function AccountDashboardPage() {
           phone: form.phone.trim(),
           gst: nextGst,
           city: form.city.trim(),
+          state: form.state.trim(),
           ownerLegalName: form.ownerLegalName.trim(),
         },
       }),
@@ -640,21 +656,15 @@ export function AccountDashboardPage() {
                     hideNameFields
                   />
                 </div>
-                <div className="tf-select mb_20">
-                  <select
-                    className="text-title"
-                    value={form.city}
-                    onChange={(e) => updateForm("city", e.target.value)}
-                  >
-                    <option value="">Select city</option>
-                    <option value="Surat">Surat</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Jaipur">Jaipur</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+                <IndiaStateCitySelect
+                  layout="stack"
+                  state={form.state}
+                  city={form.city}
+                  onStateChange={(value) => updateForm("state", value)}
+                  onCityChange={(value) => updateForm("city", value)}
+                  stateRequired
+                  cityRequired
+                />
                 <div className="row mb_32">
                   <div className="col-md-4">
                     <p className="text-secondary">Orders</p>
@@ -891,20 +901,86 @@ export function AccountOrdersPage() {
 }
 
 export function AccountAddressPage() {
-  const { client, loading, setClient } = useClientAndOrders();
+  const { client, orders, loading, setClient } = useClientAndOrders();
   const [address, setAddress] = useState<Address>({});
+  const [addressFromOrder, setAddressFromOrder] = useState(false);
   const [message, setMessage] = useState("");
+  const [pincodeChecking, setPincodeChecking] = useState(false);
+  const [pincodeFeedback, setPincodeFeedback] = useState<{
+    tone: "muted" | "success" | "error";
+    text: string;
+  }>({ tone: "muted", text: "" });
 
   useEffect(() => {
-    if (client?.address) setAddress(client.address);
-  }, [client]);
+    if (!client) return;
+    const resolved = resolveAccountAddress(client, orders);
+    setAddress(resolved.address);
+    setAddressFromOrder(resolved.fromOrder);
+  }, [client, orders]);
 
   const update = (key: keyof Address, value: string) =>
     setAddress((current) => ({ ...current, [key]: value }));
 
+  const validatePincode = useCallback(async () => {
+    const pincode = normalizeIndianPincode(address.pincode ?? "");
+    if (!pincode) {
+      const text = "Postal code is required.";
+      setPincodeFeedback({ tone: "error", text });
+      return { ok: false, message: text };
+    }
+    if (!address.state?.trim() || !address.city?.trim()) {
+      const text = "Select state and city before validating PIN code.";
+      setPincodeFeedback({ tone: "error", text });
+      return { ok: false, message: text };
+    }
+
+    setPincodeChecking(true);
+    try {
+      const result = await verifyIndianPincode(
+        pincode,
+        address.state ?? "",
+        address.city ?? "",
+      );
+      setPincodeFeedback({
+        tone: result.valid ? "success" : "error",
+        text: result.message,
+      });
+      if (result.valid && result.pincode !== address.pincode) {
+        setAddress((current) => ({ ...current, pincode: result.pincode }));
+      }
+      return { ok: result.valid, message: result.message };
+    } catch {
+      const text = "Could not verify PIN code. Try again.";
+      setPincodeFeedback({ tone: "error", text });
+      return { ok: false, message: text };
+    } finally {
+      setPincodeChecking(false);
+    }
+  }, [address.pincode, address.state, address.city]);
+
+  useEffect(() => {
+    const pincode = normalizeIndianPincode(address.pincode ?? "");
+    if (
+      pincode.length !== 6 ||
+      !address.state?.trim() ||
+      !address.city?.trim()
+    ) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void validatePincode();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [address.pincode, address.state, address.city, validatePincode]);
+
   const save = async () => {
     if (!client?.id) {
       setMessage("Login required.");
+      return;
+    }
+    const pinCheck = await validatePincode();
+    if (!pinCheck.ok) {
+      setMessage(pinCheck.message);
       return;
     }
     const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
@@ -921,6 +997,7 @@ export function AccountAddressPage() {
     if (res.ok) {
       setClient(data.client);
       localStorage.setItem("sarjan-client", JSON.stringify(data.client));
+      setAddressFromOrder(false);
       setMessage("Address saved.");
     } else {
       setMessage(data.error ?? "Address save failed.");
@@ -941,6 +1018,7 @@ export function AccountAddressPage() {
     const data = await res.json();
     if (res.ok) {
       setAddress(emptyAddress);
+      setAddressFromOrder(false);
       setClient(data.client);
       localStorage.setItem("sarjan-client", JSON.stringify(data.client));
       setMessage("Address removed.");
@@ -1022,31 +1100,40 @@ export function AccountAddressPage() {
                   onChange={(e) => update("line2", e.target.value)}
                 />
               </fieldset>
-              <div className="cols mb_20">
-                <fieldset>
-                  <input
-                    type="text"
-                    placeholder="City"
-                    value={address.city ?? ""}
-                    onChange={(e) => update("city", e.target.value)}
-                  />
-                </fieldset>
-                <fieldset>
-                  <input
-                    type="text"
-                    placeholder="State"
-                    value={address.state ?? ""}
-                    onChange={(e) => update("state", e.target.value)}
-                  />
-                </fieldset>
-              </div>
+              <IndiaStateCitySelect
+                state={address.state ?? ""}
+                city={address.city ?? ""}
+                onStateChange={(value) => update("state", value)}
+                onCityChange={(value) => update("city", value)}
+                stateRequired
+                cityRequired
+              />
               <fieldset className="mb_20">
                 <input
                   type="text"
-                  placeholder="Postal Code"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  maxLength={6}
+                  placeholder="Postal Code*"
                   value={address.pincode ?? ""}
-                  onChange={(e) => update("pincode", e.target.value)}
+                  onChange={(e) => {
+                    update("pincode", normalizeIndianPincode(e.target.value));
+                    if (pincodeFeedback.tone !== "muted") {
+                      setPincodeFeedback({ tone: "muted", text: "" });
+                    }
+                  }}
+                  onBlur={() => void validatePincode()}
+                  required
                 />
+                {pincodeChecking || pincodeFeedback.text ? (
+                  <p
+                    className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
+                  >
+                    {pincodeChecking
+                      ? "Checking PIN code against India Post…"
+                      : pincodeFeedback.text}
+                  </p>
+                ) : null}
               </fieldset>
               <div className="tf-cart-checkbox mb_20">
                 <div className="tf-checkbox-wrapp">
@@ -1064,7 +1151,12 @@ export function AccountAddressPage() {
                 <button
                   type="button"
                   className="tf-btn btn-white has-border radius-4"
-                  onClick={() => setAddress(client?.address ?? {})}
+                  onClick={() => {
+                    if (!client) return;
+                    const resolved = resolveAccountAddress(client, orders);
+                    setAddress(resolved.address);
+                    setAddressFromOrder(resolved.fromOrder);
+                  }}
                 >
                   <span className="text">Cancel</span>
                 </button>
@@ -1090,6 +1182,12 @@ export function AccountAddressPage() {
                     "Sarjan Client"}
                 </p>
                 <p>{address.line1 || "No address saved"}</p>
+                {addressFromOrder ? (
+                  <p className="text-secondary text-caption-1 mb_8">
+                    Street address loaded from your latest order. Click Save
+                    address to store it on your profile.
+                  </p>
+                ) : null}
                 {address.line2 ? <p>{address.line2}</p> : null}
                 <p>
                   {[address.city, address.state, address.pincode]

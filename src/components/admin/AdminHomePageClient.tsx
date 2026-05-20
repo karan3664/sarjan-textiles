@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "@/data/mock";
 import type { CmsHome } from "@/lib/cms-store";
+import {
+  normalizeHeroVideoUrls,
+  parseHeroVideoSource,
+  youtubeThumbnailUrl,
+} from "@/lib/hero-video";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
@@ -56,7 +61,12 @@ const sectionOptions: Array<{ type: HomeSectionType; title: string }> = [
 ];
 
 type HomeDraft = Omit<CmsHome, "hero" | "sections"> & {
-  hero: CmsHome["hero"] & { images?: string[] };
+  hero: CmsHome["hero"] & {
+    images?: string[];
+    videoEnabled?: boolean;
+    videoUrls?: string[];
+    videoUrl?: string;
+  };
   sections?: HomeSectionControl[];
   topPicksTitle?: string;
   topPicksDescription?: string;
@@ -99,6 +109,10 @@ function getHeroImages(hero: HomeDraft["hero"]) {
       ? hero.images
       : [hero.image];
   return images.filter(Boolean);
+}
+
+function getHeroVideos(hero: HomeDraft["hero"]) {
+  return normalizeHeroVideoUrls(hero);
 }
 
 function splitLines(value: string) {
@@ -214,6 +228,179 @@ function HeroImagesField({
   );
 }
 
+function HeroVideoThumb({ url }: { url: string }) {
+  const parsed = parseHeroVideoSource(url);
+  if (parsed?.type === "youtube") {
+    return (
+      <img
+        src={youtubeThumbnailUrl(parsed.videoId)}
+        alt=""
+        className="sarjan-home-thumb-youtube"
+      />
+    );
+  }
+  if (parsed?.type === "file") {
+    return (
+      <video
+        src={parsed.src}
+        muted
+        playsInline
+        preload="metadata"
+        className="sarjan-home-thumb-video"
+      />
+    );
+  }
+  return <span className="body-text text-tiny">Invalid URL</span>;
+}
+
+function HeroVideosField({
+  enabled,
+  videos,
+  poster,
+  uploadState,
+  urlDraft,
+  onToggle,
+  onUpload,
+  onAddUrl,
+  onUrlDraftChange,
+  onPrimary,
+  onRemove,
+}: {
+  enabled: boolean;
+  videos: string[];
+  poster?: string;
+  uploadState?: string;
+  urlDraft: string;
+  onToggle: (enabled: boolean) => void;
+  onUpload: (files: File[]) => void;
+  onAddUrl: () => void;
+  onUrlDraftChange: (value: string) => void;
+  onPrimary: (index: number) => void;
+  onRemove: (index: number) => void;
+}) {
+  const primary = videos[0];
+  const parsed = primary ? parseHeroVideoSource(primary) : null;
+
+  return (
+    <div className="sarjan-home-video-panel mt-24">
+      <div className="body-title mb-10">
+        Video slides (rotates with banners)
+      </div>
+      <label className="tf-cart-checkbox d-flex align-items-center gap-8 mb-16">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(event) => onToggle(event.target.checked)}
+        />
+        <span className="text-secondary">
+          Add video slides after banner images (muted autoplay, plays once each)
+        </span>
+      </label>
+      {enabled ? (
+        <>
+          <div className="sarjan-home-preview sarjan-home-video-preview">
+            {parsed?.type === "youtube" ? (
+              <iframe
+                className="sarjan-home-video-preview-youtube"
+                src={parsed.embedUrl}
+                title="YouTube preview"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            ) : parsed?.type === "file" ? (
+              <video
+                src={parsed.src}
+                poster={poster}
+                muted
+                loop
+                playsInline
+                autoPlay
+                controls
+              />
+            ) : (
+              <div className="body-text text-secondary">
+                Upload videos or add a YouTube / MP4 URL
+              </div>
+            )}
+          </div>
+          <div className="sarjan-home-upload-row">
+            <label className="tf-button style-1 mb-0">
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                multiple
+                onChange={(event) => {
+                  onUpload(Array.from(event.target.files ?? []));
+                  event.currentTarget.value = "";
+                }}
+              />
+              {uploadState === "uploading" ? "Uploading..." : "Choose Videos"}
+            </label>
+          </div>
+          <p className="sarjan-home-video-hint text-caption-1 text-secondary">
+            <span className="sarjan-home-video-hint-line">
+              MP4, WebM, MOV (max 80MB each). Multiple uploads allowed.
+            </span>
+            <span className="sarjan-home-video-hint-line sarjan-home-video-hint-chips">
+              <span>Or add a YouTube link:</span>
+              <span className="sarjan-inline-code">youtube.com/watch?v=…</span>
+              <span className="sarjan-inline-code">youtu.be/…</span>
+            </span>
+          </p>
+          {uploadState && uploadState !== "uploading" ? (
+            <div className="text-tiny text-danger mt-8">{uploadState}</div>
+          ) : null}
+          <div className="sarjan-home-add-video-url mt-16">
+            <Field label="Add video URL (YouTube or file path)">
+              <div className="sarjan-home-add-video-url-row">
+                <TextInput
+                  value={urlDraft}
+                  onChange={onUrlDraftChange}
+                  placeholder="https://www.youtube.com/watch?v=… or /uploads/cms/hero.mp4"
+                />
+                <button
+                  type="button"
+                  className="tf-button style-1 mb-0"
+                  onClick={onAddUrl}
+                >
+                  Add
+                </button>
+              </div>
+            </Field>
+          </div>
+          {videos.length ? (
+            <div className="sarjan-home-thumb-grid sarjan-home-video-thumb-grid">
+              {videos.map((url, index) => (
+                <div
+                  className={`sarjan-home-thumb sarjan-home-video-thumb${index === 0 ? " active" : ""}`}
+                  key={`${url}-${index}`}
+                >
+                  <button
+                    type="button"
+                    className="sarjan-home-thumb-image"
+                    onClick={() => onPrimary(index)}
+                    aria-label="Show this video first in rotation"
+                  >
+                    <HeroVideoThumb url={url} />
+                  </button>
+                  <button
+                    type="button"
+                    className="sarjan-home-thumb-remove"
+                    onClick={() => onRemove(index)}
+                    aria-label="Remove video"
+                  >
+                    <i className="icon-close" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 export function AdminHomePageClient({
   initialHome,
   products,
@@ -221,14 +408,18 @@ export function AdminHomePageClient({
   initialHome: CmsHome;
   products: Product[];
 }) {
-  const [home, setHome] = useState<HomeDraft>(() => ({
-    ...(initialHome as HomeDraft),
-    sections: (initialHome as HomeDraft).sections?.length
-      ? (initialHome as HomeDraft).sections
-      : defaultSections(),
-  }));
+  const [home, setHome] = useState<HomeDraft>(() => {
+    const draft = initialHome as HomeDraft;
+    const videoUrls = getHeroVideos(draft.hero);
+    return {
+      ...draft,
+      hero: { ...draft.hero, videoUrls, videoUrl: videoUrls[0] ?? "" },
+      sections: draft.sections?.length ? draft.sections : defaultSections(),
+    };
+  });
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [uploadState, setUploadState] = useState<UploadState>({});
+  const [heroVideoUrlDraft, setHeroVideoUrlDraft] = useState("");
 
   const previewStats = useMemo(
     () => [
@@ -240,6 +431,7 @@ export function AdminHomePageClient({
   );
 
   const heroImages = getHeroImages(home.hero);
+  const heroVideos = getHeroVideos(home.hero);
   const sections = home.sections?.length ? home.sections : defaultSections();
 
   const saveHome = async () => {
@@ -273,6 +465,90 @@ export function AdminHomePageClient({
       ...current,
       hero: { ...current.hero, [key]: value },
     }));
+  };
+
+  const updateHeroVideoEnabled = (enabled: boolean) => {
+    setHome((current) => ({
+      ...current,
+      hero: { ...current.hero, videoEnabled: enabled },
+    }));
+  };
+
+  const updateHeroVideos = (videoUrls: string[]) => {
+    const next = videoUrls.map((item) => item.trim()).filter(Boolean);
+    setHome((current) => ({
+      ...current,
+      hero: {
+        ...current.hero,
+        videoUrls: next,
+        videoUrl: next[0] ?? "",
+        videoEnabled: next.length > 0 ? true : current.hero.videoEnabled,
+      },
+    }));
+  };
+
+  const uploadHeroVideos = async (files: File[]) => {
+    if (!files.length) return;
+    setUploadState((current) => ({ ...current, heroVideo: "uploading" }));
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const body = new FormData();
+        body.append("file", file);
+        const res = await fetch("/api/admin/uploads", {
+          method: "POST",
+          body,
+        });
+        const data = (await res.json()) as { url?: string; error?: string };
+        if (!res.ok || !data.url) {
+          throw new Error(data.error ?? "Video upload failed");
+        }
+        uploaded.push(data.url);
+      }
+      updateHeroVideos([...heroVideos, ...uploaded]);
+      setUploadState((current) => ({ ...current, heroVideo: undefined }));
+    } catch (error) {
+      setUploadState((current) => ({
+        ...current,
+        heroVideo:
+          error instanceof Error ? error.message : "Video upload failed",
+      }));
+    }
+  };
+
+  const addHeroVideoUrl = () => {
+    const trimmed = heroVideoUrlDraft.trim();
+    if (!trimmed) return;
+    if (!parseHeroVideoSource(trimmed)) {
+      setUploadState((current) => ({
+        ...current,
+        heroVideo: "Enter a valid YouTube or video file URL",
+      }));
+      return;
+    }
+    if (heroVideos.includes(trimmed)) {
+      setUploadState((current) => ({
+        ...current,
+        heroVideo: "This video is already in the list",
+      }));
+      return;
+    }
+    updateHeroVideos([...heroVideos, trimmed]);
+    setHeroVideoUrlDraft("");
+    setUploadState((current) => ({ ...current, heroVideo: undefined }));
+  };
+
+  const setPrimaryHeroVideo = (index: number) => {
+    const next = [...heroVideos];
+    const [selected] = next.splice(index, 1);
+    if (!selected) return;
+    updateHeroVideos([selected, ...next]);
+  };
+
+  const removeHeroVideo = (index: number) => {
+    updateHeroVideos(
+      heroVideos.filter((_, videoIndex) => videoIndex !== index),
+    );
   };
 
   const updateHeroImages = (images: string[]) => {
@@ -894,7 +1170,8 @@ export function AdminHomePageClient({
           <div>
             <h5>Homepage Banner</h5>
             <div className="body-text text-secondary">
-              Client-facing hero slider with multiple banner images.
+              Banner images plus optional video slides (multiple uploads, muted
+              autoplay).
             </div>
           </div>
           <div className="box-status text-button type-delivery">
@@ -910,6 +1187,19 @@ export function AdminHomePageClient({
               onUpload={uploadHeroImages}
               onPrimary={setPrimaryHeroImage}
               onRemove={removeHeroImage}
+            />
+            <HeroVideosField
+              enabled={Boolean(home.hero.videoEnabled)}
+              videos={heroVideos}
+              poster={heroImages[0]}
+              uploadState={uploadState.heroVideo}
+              urlDraft={heroVideoUrlDraft}
+              onToggle={updateHeroVideoEnabled}
+              onUpload={uploadHeroVideos}
+              onAddUrl={addHeroVideoUrl}
+              onUrlDraftChange={setHeroVideoUrlDraft}
+              onPrimary={setPrimaryHeroVideo}
+              onRemove={removeHeroVideo}
             />
           </div>
           <div className="sarjan-home-form-panel">
@@ -1319,8 +1609,9 @@ export function AdminHomePageClient({
         <div>
           <h5>Testimonials moved to approval workflow</h5>
           <div className="body-text text-secondary">
-            Customers submit testimonials from frontend/API. Admin approves them
-            from separate page. Approved testimonials appear on homepage.
+            Approved clients submit testimonials from My Account (login
+            required). Admin approves them here. Order feedback is under Order
+            Feedback.
           </div>
         </div>
         <a className="tf-button style-1" href="/admin/testimonials">

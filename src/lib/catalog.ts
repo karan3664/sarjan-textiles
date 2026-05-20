@@ -33,6 +33,12 @@ function slugValue(value: string) {
     .replace(/^-|-$/g, "");
 }
 
+function productMatchesCartIds(product: Product, ids: string[]) {
+  const wanted = new Set(ids);
+  if (wanted.has(product.slug)) return true;
+  return product.legacySlugs?.some((legacy) => wanted.has(legacy)) ?? false;
+}
+
 export function sortProductList(
   products: Product[],
   sort: string | null | undefined = "best-selling",
@@ -240,7 +246,7 @@ export async function getCatalogProducts({
   const { products } = await getCmsSnapshot();
   const query = q?.trim().toLowerCase();
   const source = ids?.length
-    ? products.filter((product) => ids.includes(product.slug))
+    ? products.filter((product) => productMatchesCartIds(product, ids))
     : sortProductList(products, sort);
   const searched = query
     ? source.filter((product) =>

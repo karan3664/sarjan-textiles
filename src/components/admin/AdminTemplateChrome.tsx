@@ -162,7 +162,7 @@ const SIDEBAR_NAV_ITEMS = (
     {
       href: "/admin/contact-inquiries",
       icon: "icon-message",
-      label: "Contact Inquiries",
+      label: "Order Feedback",
       section: "inquiries",
     },
     {

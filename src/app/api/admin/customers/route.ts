@@ -48,6 +48,7 @@ export async function POST(request: Request) {
       ownerLegalName: body.ownerLegalName,
       gst: body.gst,
       city: body.city,
+      state: body.state,
       phone: body.phone,
       status: body.status ?? "approved",
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import type { AdminCustomer } from "@/lib/admin-customers";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
@@ -78,6 +79,7 @@ export function AdminCustomerManagementClient({
     email: "",
     phone: "",
     city: "",
+    state: "",
     gst: "",
     password: "",
   });
@@ -171,6 +173,10 @@ export function AdminCustomerManagementClient({
       return;
     }
     const phone = newClient.phone.trim();
+    if (!newClient.state.trim() || !newClient.city.trim()) {
+      setNotice("Select state and city.");
+      return;
+    }
 
     setSaving("new-client");
     setNotice("");
@@ -211,6 +217,7 @@ export function AdminCustomerManagementClient({
         email: "",
         phone: "",
         city: "",
+        state: "",
         gst: "",
         password: "",
       });
@@ -410,18 +417,20 @@ export function AdminCustomerManagementClient({
               }
             />
           </fieldset>
-          <fieldset>
-            <div className="body-title mb-10">City</div>
-            <input
-              value={newClient.city}
-              onChange={(event) =>
-                setNewClient((current) => ({
-                  ...current,
-                  city: event.target.value,
-                }))
-              }
-            />
-          </fieldset>
+          <IndiaStateCitySelect
+            layout="admin"
+            state={newClient.state}
+            city={newClient.city}
+            onStateChange={(value) =>
+              setNewClient((current) => ({ ...current, state: value }))
+            }
+            onCityChange={(value) =>
+              setNewClient((current) => ({ ...current, city: value }))
+            }
+            selectClassName="w-100"
+            stateRequired
+            cityRequired
+          />
           <fieldset>
             <div className="body-title mb-10">GST</div>
             <input

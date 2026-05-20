@@ -1,5 +1,6 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import type { CmsTestimonial } from "@/lib/cms-store";
+import { requireApprovedClientRequest } from "@/lib/client-approved-session";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
 import {
   sanitizeUserText,
@@ -19,14 +20,21 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireApprovedClientRequest(request);
+  if (auth instanceof Response) return auth;
+  const { client } = auth;
+
   const body = (await request.json()) as Partial<CmsTestimonial>;
   const cms = await getCmsSnapshot();
 
-  const authorCheck = validateUserText(String(body.author ?? ""), {
-    min: 1,
-    max: USER_TEXT_LIMITS.testimonialAuthor,
-    label: "Author",
-  });
+  const authorCheck = validateUserText(
+    String(body.author ?? client.companyName ?? "").trim(),
+    {
+      min: 1,
+      max: USER_TEXT_LIMITS.testimonialAuthor,
+      label: "Author",
+    },
+  );
   const quoteCheck = validateUserText(String(body.quote ?? ""), {
     min: 1,
     max: USER_TEXT_LIMITS.testimonialQuote,

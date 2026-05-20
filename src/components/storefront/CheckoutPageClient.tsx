@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { isProductSoldOut } from "@/lib/product-availability";
-import { useEffect, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { Product } from "@/data/mock";
 import {
   readCart,
@@ -14,7 +20,9 @@ import {
   catalogFetchInit,
   clientAuthJsonHeaders,
   isClientApproved,
+  loginClientSession,
 } from "@/lib/client-auth-browser";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { guestCheckoutMarketingEnabled } from "@/lib/commerce-config";
 import {
   readStoredClient,
@@ -23,6 +31,12 @@ import {
 } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { findStateForCity } from "@/lib/india-locations";
+import {
+  normalizeIndianPincode,
+  verifyIndianPincode,
+} from "@/lib/india-pincode";
+import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate } from "./PriceGate";
 
@@ -40,6 +54,18 @@ export function CheckoutPageClient() {
   const [client, setClient] = useState<CheckoutClient | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [checkoutState, setCheckoutState] = useState("");
+  const [checkoutCity, setCheckoutCity] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [loginMessage, setLoginMessage] = useState("");
+  const [checkoutPincode, setCheckoutPincode] = useState("");
+  const [pincodeChecking, setPincodeChecking] = useState(false);
+  const [pincodeFeedback, setPincodeFeedback] = useState<{
+    tone: "muted" | "success" | "error";
+    text: string;
+  }>({ tone: "muted", text: "" });
 
   useEffect(() => {
     const sync = () => setCart(readCart());
@@ -68,6 +94,68 @@ export function CheckoutPageClient() {
       window.removeEventListener("sarjan-auth-updated", syncClient);
     };
   }, []);
+
+  useEffect(() => {
+    if (!client) return;
+    const city = client.address?.city ?? client.city ?? "";
+    setCheckoutCity(city);
+    setCheckoutState(client.address?.state ?? findStateForCity(city));
+    setCheckoutPincode(normalizeIndianPincode(client.address?.pincode ?? ""));
+    setPincodeFeedback({ tone: "muted", text: "" });
+  }, [client]);
+
+  const validateCheckoutPincode = useCallback(async () => {
+    const pincode = normalizeIndianPincode(checkoutPincode);
+    if (!pincode) {
+      const text = "Postal code is required.";
+      setPincodeFeedback({ tone: "error", text });
+      return { ok: false, message: text };
+    }
+    if (!checkoutState.trim() || !checkoutCity.trim()) {
+      const text = "Select state and city before validating PIN code.";
+      setPincodeFeedback({ tone: "error", text });
+      return { ok: false, message: text };
+    }
+
+    setPincodeChecking(true);
+    try {
+      const result = await verifyIndianPincode(
+        pincode,
+        checkoutState,
+        checkoutCity,
+      );
+      setPincodeFeedback({
+        tone: result.valid ? "success" : "error",
+        text: result.message,
+      });
+      if (result.valid && result.pincode !== checkoutPincode) {
+        setCheckoutPincode(result.pincode);
+      }
+      return { ok: result.valid, message: result.message };
+    } catch {
+      const text = "Could not verify PIN code. Try again.";
+      setPincodeFeedback({ tone: "error", text });
+      return { ok: false, message: text };
+    } finally {
+      setPincodeChecking(false);
+    }
+  }, [checkoutPincode, checkoutState, checkoutCity]);
+
+  useEffect(() => {
+    const pincode = normalizeIndianPincode(checkoutPincode);
+    if (pincode.length !== 6 || !checkoutState.trim() || !checkoutCity.trim()) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void validateCheckoutPincode();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [checkoutPincode, checkoutState, checkoutCity, validateCheckoutPincode]);
+
+  useEffect(() => {
+    if (pincodeFeedback.tone === "muted") return;
+    setPincodeFeedback({ tone: "muted", text: "" });
+  }, [checkoutState, checkoutCity]);
 
   useEffect(() => {
     if (!cart.length) {
@@ -122,6 +210,21 @@ export function CheckoutPageClient() {
   );
   const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
 
+  const handleCheckoutLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoginBusy(true);
+    setLoginMessage("");
+    const result = await loginClientSession(loginEmail, loginPassword);
+    setLoginBusy(false);
+    if (!result.ok) {
+      setLoginMessage(result.error);
+      return;
+    }
+    setClient(result.client as CheckoutClient);
+    setLoginPassword("");
+    setLoginMessage("");
+  };
+
   const submitOrder = async () => {
     const client = JSON.parse(
       localStorage.getItem("sarjan-client") ?? "null",
@@ -136,6 +239,26 @@ export function CheckoutPageClient() {
       );
       return;
     }
+
+    const pinCheck = await validateCheckoutPincode();
+    if (!pinCheck.ok) {
+      setMessage(pinCheck.message);
+      return;
+    }
+
+    const street = (
+      document.querySelector<HTMLInputElement>("[name='dispatchAddress']")
+        ?.value ?? ""
+    ).trim();
+    const pin = normalizeIndianPincode(checkoutPincode);
+    const dispatchAddress = [
+      street,
+      checkoutCity.trim(),
+      checkoutState.trim(),
+      pin,
+    ]
+      .filter(Boolean)
+      .join(", ");
 
     const res = await fetch("/api/orders", {
       method: "POST",
@@ -245,17 +368,50 @@ export function CheckoutPageClient() {
                     <div className="wrap">
                       <div className="title-login">
                         <p>Already have an account?</p>
-                        <a href="/login" className="text-button">
+                        <Link
+                          href="/login?next=/checkout"
+                          className="text-button"
+                        >
                           Login here
-                        </a>
+                        </Link>
                       </div>
-                      <form className="login-box">
+                      <form
+                        className="login-box form-has-password"
+                        onSubmit={handleCheckoutLogin}
+                      >
                         <div className="grid-2">
-                          <input type="text" placeholder="Your name/Email" />
-                          <input type="password" placeholder="Password" />
+                          <input
+                            type="email"
+                            name="email"
+                            placeholder="Email address*"
+                            autoComplete="email"
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            required
+                            disabled={loginBusy}
+                          />
+                          <input
+                            type="password"
+                            name="password"
+                            placeholder="Password*"
+                            autoComplete="current-password"
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            required
+                            disabled={loginBusy}
+                          />
                         </div>
-                        <button className="tf-btn" type="button">
-                          <span className="text">Login</span>
+                        {loginMessage ? (
+                          <p className="text-danger mb_8">{loginMessage}</p>
+                        ) : null}
+                        <button
+                          className={sarjanButtonClass()}
+                          type="submit"
+                          disabled={loginBusy}
+                        >
+                          <span className="text">
+                            {loginBusy ? "Logging in…" : "Login"}
+                          </span>
                         </button>
                       </form>
                     </div>
@@ -301,32 +457,51 @@ export function CheckoutPageClient() {
                           <option value="India">India</option>
                         </select>
                       </div>
+                      <IndiaStateCitySelect
+                        layout="grid-2"
+                        state={checkoutState}
+                        city={checkoutCity}
+                        onStateChange={setCheckoutState}
+                        onCityChange={setCheckoutCity}
+                        stateRequired
+                        cityRequired
+                      />
                       <div className="grid-2">
-                        <input
-                          type="text"
-                          placeholder="Town/City*"
-                          defaultValue={
-                            client?.address?.city ?? client?.city ?? ""
-                          }
-                        />
                         <input
                           type="text"
                           placeholder="Street, address..."
                           name="dispatchAddress"
                           defaultValue={client?.address?.line1 ?? ""}
                         />
+                        <input
+                          type="text"
+                          name="pincode"
+                          inputMode="numeric"
+                          autoComplete="postal-code"
+                          maxLength={6}
+                          placeholder="Postal Code*"
+                          value={checkoutPincode}
+                          onChange={(e) => {
+                            setCheckoutPincode(
+                              normalizeIndianPincode(e.target.value),
+                            );
+                            if (pincodeFeedback.tone !== "muted") {
+                              setPincodeFeedback({ tone: "muted", text: "" });
+                            }
+                          }}
+                          onBlur={() => void validateCheckoutPincode()}
+                          required
+                        />
                       </div>
-                      <div className="grid-2">
-                        <div className="tf-select">
-                          <select className="text-title" defaultValue="Gujarat">
-                            <option value="Choose State">Choose State</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                          </select>
-                        </div>
-                        <input type="text" placeholder="Postal Code*" />
-                      </div>
+                      {pincodeChecking || pincodeFeedback.text ? (
+                        <p
+                          className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
+                        >
+                          {pincodeChecking
+                            ? "Checking PIN code against India Post…"
+                            : pincodeFeedback.text}
+                        </p>
+                      ) : null}
                       <textarea placeholder="Write note..." name="note" />
                     </form>
                   </div>

@@ -4,7 +4,8 @@ import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigation, siteSettings } from "@/data/site";
-import { readCart } from "@/lib/cart-client";
+import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
+import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { refreshWishlistFromCatalog } from "@/lib/wishlist-client";
 
 type CatalogCategory = {
@@ -87,9 +88,10 @@ export function ModaveHeader() {
 
     const syncCounts = async () => {
       const validWishlist = await refreshWishlistFromCatalog();
+      const cart = await syncCartWithApi();
       if (cancelled) return;
       setWishlistCount(validWishlist.length);
-      setCartCount(readCart().reduce((sum, item) => sum + item.quantity, 0));
+      setCartCount(cartItemCount(cart));
     };
 
     void syncCounts();
@@ -97,7 +99,7 @@ export function ModaveHeader() {
       void syncCounts();
     };
     const onCartUpdated = () => {
-      setCartCount(readCart().reduce((sum, item) => sum + item.quantity, 0));
+      setCartCount(cartItemCount(readCart()));
     };
 
     window.addEventListener("sarjan-wishlist-updated", onWishlistUpdated);
@@ -155,9 +157,15 @@ export function ModaveHeader() {
               <ul className="nav-icon d-flex justify-content-end align-items-center">
                 <li className="nav-search">
                   <a
-                    href="#search"
+                    href="#"
+                    role="button"
                     data-bs-toggle="modal"
+                    data-bs-target="#search"
                     className="nav-icon-item"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      showBootstrapModal("search");
+                    }}
                   >
                     <span className="icon icon-search2" />
                   </a>
@@ -174,7 +182,7 @@ export function ModaveHeader() {
                       <>
                         <div className="sub-top">
                           <a href="/profile" className="tf-btn btn-reset">
-                            My Account
+                            <span className="text text-button">My Account</span>
                           </a>
                           <p className="text-center text-secondary-2">
                             {client.companyName ?? client.email}
@@ -206,7 +214,7 @@ export function ModaveHeader() {
                       <>
                         <div className="sub-top">
                           <a href="/login" className="tf-btn btn-reset">
-                            Login
+                            <span className="text text-button">Login</span>
                           </a>
                           <p className="text-center text-secondary-2">
                             Don&apos;t have an account?{" "}

@@ -7,6 +7,7 @@ import {
   assertUniqueAmongClients,
   type ClientUniqueFields,
 } from "@/lib/client-duplicate-check";
+import { streetLineFromDispatch } from "@/lib/client-address";
 import {
   formatClientDispatchAddress,
   hasMeaningfulDispatchAddress,
@@ -347,6 +348,7 @@ export async function createClient(input: {
   companyName: string;
   gst?: string;
   city?: string;
+  state?: string;
   /** GST legal / proprietor name (lgnm); stored in address JSON. */
   ownerLegalName?: string;
 }) {
@@ -358,11 +360,12 @@ export async function createClient(input: {
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
-      const addressPayload =
-        input.ownerLegalName?.trim() != null &&
-        input.ownerLegalName.trim() !== ""
-          ? { ownerLegalName: input.ownerLegalName.trim() }
-          : {};
+      const addressPayload: NonNullable<LocalClient["address"]> = {};
+      if (input.ownerLegalName?.trim()) {
+        addressPayload.ownerLegalName = input.ownerLegalName.trim();
+      }
+      if (input.city?.trim()) addressPayload.city = input.city.trim();
+      if (input.state?.trim()) addressPayload.state = input.state.trim();
       const row = {
         email: input.email.trim().toLowerCase(),
         password_hash: hashPassword(input.password),
@@ -370,7 +373,7 @@ export async function createClient(input: {
         gst: input.gst?.trim(),
         city: input.city?.trim(),
         status: "pending",
-        address: addressPayload,
+        address: Object.keys(addressPayload).length ? addressPayload : {},
       };
       const { data, error } = await supabase
         .from("clients")
@@ -393,9 +396,16 @@ export async function createClient(input: {
     companyName: input.companyName.trim(),
     gst: input.gst?.trim(),
     city: input.city?.trim(),
-    address: input.ownerLegalName?.trim()
-      ? { ownerLegalName: input.ownerLegalName.trim() }
-      : undefined,
+    address:
+      input.ownerLegalName?.trim() || input.city?.trim() || input.state?.trim()
+        ? {
+            ...(input.ownerLegalName?.trim()
+              ? { ownerLegalName: input.ownerLegalName.trim() }
+              : {}),
+            ...(input.city?.trim() ? { city: input.city.trim() } : {}),
+            ...(input.state?.trim() ? { state: input.state.trim() } : {}),
+          }
+        : undefined,
     status: "pending",
     createdAt: new Date().toISOString(),
   };
@@ -411,6 +421,7 @@ export async function createAdminClient(input: {
   companyName: string;
   gst?: string;
   city?: string;
+  state?: string;
   phone?: string;
   ownerLegalName?: string;
   status?: LocalClient["status"];
@@ -430,17 +441,19 @@ export async function createAdminClient(input: {
     companyName: input.companyName,
     gst: input.gst,
     city: input.city,
+    state: input.state,
     ownerLegalName: input.ownerLegalName,
   };
 
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
-      const addressPayload =
-        input.ownerLegalName?.trim() != null &&
-        input.ownerLegalName.trim() !== ""
-          ? { ownerLegalName: input.ownerLegalName.trim() }
-          : {};
+      const addressPayload: NonNullable<LocalClient["address"]> = {};
+      if (input.ownerLegalName?.trim()) {
+        addressPayload.ownerLegalName = input.ownerLegalName.trim();
+      }
+      if (input.city?.trim()) addressPayload.city = input.city.trim();
+      if (input.state?.trim()) addressPayload.state = input.state.trim();
       const row = {
         email,
         password_hash: hashPassword(password),
@@ -449,7 +462,7 @@ export async function createAdminClient(input: {
         city: input.city?.trim(),
         phone: input.phone?.trim(),
         status: input.status ?? "approved",
-        address: addressPayload,
+        address: Object.keys(addressPayload).length ? addressPayload : {},
       };
       const { data, error } = await supabase
         .from("clients")
@@ -881,6 +894,29 @@ export async function markFeedbackReplied(
   return feedback;
 }
 
+async function maybeBackfillClientAddressFromDispatch(
+  clientId: string,
+  dispatchAddress: string,
+) {
+  if (!hasMeaningfulDispatchAddress(dispatchAddress)) return;
+  const client = await getClient(clientId);
+  if (!client?.address?.line1?.trim()) {
+    const line1 = streetLineFromDispatch(dispatchAddress);
+    if (line1) {
+      await updateClient(clientId, {
+        address: {
+          ...(client?.address ?? {}),
+          line1,
+          contactName: client?.address?.contactName ?? client?.companyName,
+          city: client?.address?.city ?? client?.city,
+          gst: client?.address?.gst ?? client?.gst,
+          phone: client?.address?.phone ?? client?.phone,
+        },
+      });
+    }
+  }
+}
+
 export async function createOrder(
   input: Omit<
     LocalOrder,
@@ -944,6 +980,10 @@ export async function createOrder(
     if (error) throw new Error(error.message);
     const mapped = mapOrder(data);
     await reserveInventoryForOrder(mapped);
+    await maybeBackfillClientAddressFromDispatch(
+      input.clientId,
+      mapped.dispatchAddress,
+    );
     return mapped;
   }
   const db = dbForClient;
@@ -972,6 +1012,10 @@ export async function createOrder(
   await reserveInventoryForOrder(order);
   db.orders.push(order);
   await writeLocalDb(db);
+  await maybeBackfillClientAddressFromDispatch(
+    input.clientId,
+    order.dispatchAddress,
+  );
   return order;
 }
 

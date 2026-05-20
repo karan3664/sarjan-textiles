@@ -109,7 +109,7 @@ export function ModaveProductCard({
               data-product-size-run={sizeRun.join(",")}
               data-product-color={activeColor}
             >
-              Add To cart
+              <span className="text text-button">Add To cart</span>
             </a>
           )}
         </div>

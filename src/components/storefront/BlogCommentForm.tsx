@@ -139,8 +139,14 @@ export function BlogCommentForm({ slug }: { slug: string }) {
           </fieldset>
         </div>
         <div className="button-submit">
-          <button type="submit" disabled={busy}>
-            {busy ? "Submitting…" : "Submit Comment"}
+          <button
+            type="submit"
+            className="tf-btn btn-fill radius-4"
+            disabled={busy}
+          >
+            <span className="text text-button">
+              {busy ? "Submitting…" : "Submit Comment"}
+            </span>
           </button>
         </div>
       </form>

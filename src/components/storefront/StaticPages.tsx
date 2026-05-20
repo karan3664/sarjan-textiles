@@ -7,7 +7,6 @@ import { PageTitle } from "./PageTitle";
 import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
 import { FeedbackForm } from "./FeedbackForm";
-import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 
 export function DynamicInfoPage({
   title,
@@ -23,45 +22,52 @@ export function DynamicInfoPage({
   cta?: { label: string; href: string };
 }) {
   return (
-    <>
+    <div className="sarjan-policy-page">
       <PageTitle title={title} crumbs={["Homepage", title]} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-policy-content">
         <div className="container">
-          <div className="row align-items-center">
-            <div className="col-lg-6">
-              <img className="radius-16 w-100" src={image} alt={title} />
+          <div className="row g-4 g-lg-5 align-items-start">
+            <div className="col-lg-5">
+              <div className="sarjan-policy-media">
+                <img src={image} alt={title} loading="lazy" decoding="async" />
+              </div>
             </div>
-            <div className="col-lg-6">
-              <div className="heading-section mb_24">
-                <h3>{title}</h3>
-                <p className="text-secondary">{subtitle}</p>
+            <div className="col-lg-7">
+              <div className="sarjan-policy-copy">
+                <div className="sarjan-policy-lead">
+                  <h2 className="sarjan-policy-heading">{title}</h2>
+                  <p className="sarjan-policy-subtitle">{subtitle}</p>
+                </div>
+                <ul className="sarjan-policy-list">
+                  {items.map((item) => (
+                    <li className="sarjan-policy-item" key={item.title}>
+                      <span
+                        className="sarjan-policy-item-icon"
+                        aria-hidden="true"
+                      >
+                        <i className="icon icon-sealCheck" />
+                      </span>
+                      <div className="sarjan-policy-item-body">
+                        <h3>{item.title}</h3>
+                        <p>{item.body}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {cta ? (
+                  <Link
+                    href={cta.href}
+                    className="tf-btn btn-fill radius-4 sarjan-policy-cta"
+                  >
+                    <span className="text text-button">{cta.label}</span>
+                  </Link>
+                ) : null}
               </div>
-              <div className="d-grid gap-16">
-                {items.map((item) => (
-                  <div className="feature-with-icon" key={item.title}>
-                    <div className="box-icon w_40 round">
-                      <i className="icon icon-sealCheck" />
-                    </div>
-                    <div>
-                      <h6>{item.title}</h6>
-                      <p className="text-secondary mb-0">{item.body}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {cta ? (
-                <Link
-                  href={cta.href}
-                  className="tf-btn btn-fill radius-4 mt_32"
-                >
-                  <span className="text">{cta.label}</span>
-                </Link>
-              ) : null}
             </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
@@ -209,21 +215,25 @@ export function TermsPage() {
   ];
 
   return (
-    <>
+    <div className="sarjan-policy-page">
       <PageTitle title="Terms Of Use" crumbs={["Homepage", "Terms Of Use"]} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-terms-page">
         <div className="container">
-          <div className="terms-of-use-wrap">
+          <p className="sarjan-terms-intro">
+            Wholesale ordering rules for approved Sarjan Textiles B2B accounts.
+            Contact us if you need clarification before placing an order.
+          </p>
+          <div className="sarjan-terms-grid">
             {terms.map(([title, text]) => (
-              <div className="terms-item" key={title}>
+              <article className="sarjan-terms-card" key={title}>
                 <h5>{title}</h5>
                 <p className="text-secondary">{text}</p>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
@@ -288,23 +298,28 @@ export function FaqPage() {
   );
 }
 
-export function CustomerFeedbackPage() {
+/** Public order / product feedback (no login). Testimonials: /my-account-testimonials only. */
+export function OrderFeedbackPage() {
   return (
     <>
       <PageTitle
-        title="Share Testimonial"
-        crumbs={["Homepage", "Share Testimonial"]}
+        title="Order Feedback"
+        crumbs={["Homepage", "Order Feedback"]}
       />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-order-feedback-page">
         <div className="container">
-          <div className="heading-section text-center">
-            <h4>Share your experience</h4>
+          <div className="heading-section text-center mb_32">
+            <h4>Order or product feedback</h4>
             <p className="text-secondary">
-              Submit a testimonial for Sarjan Textiles. Our team reviews every
-              submission; approved quotes appear on the homepage.
+              Questions about an order, dispatch, quality, or catalog? Send a
+              message and our team will reply by email.
             </p>
             <p className="text-caption-1 text-secondary mt_12">
-              Logged-in clients can also use{" "}
+              To share a homepage testimonial,{" "}
+              <Link href="/login" className="link">
+                sign in
+              </Link>{" "}
+              and open{" "}
               <Link href="/my-account-testimonials" className="link">
                 My Account → Share Testimonial
               </Link>
@@ -313,18 +328,7 @@ export function CustomerFeedbackPage() {
           </div>
           <div className="row justify-content-center">
             <div className="col-lg-8">
-              <TestimonialSubmitForm />
-            </div>
-          </div>
-          <div className="heading-section text-center mt_48">
-            <h5 className="mb_8">Order or product feedback</h5>
-            <p className="text-secondary text-caption-1">
-              For support on a specific order, use the feedback form below.
-            </p>
-          </div>
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <FeedbackForm defaultMode="feedback" />
+              <FeedbackForm />
             </div>
           </div>
         </div>
