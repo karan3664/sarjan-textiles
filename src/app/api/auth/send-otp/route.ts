@@ -4,6 +4,10 @@ import {
   normalizeEmail,
 } from "@/lib/email-otp";
 import { buildSarjanEmailHtml, escapeHtml } from "@/lib/email-template";
+import {
+  findClientFieldDuplicate,
+  normalizeClientEmail,
+} from "@/lib/client-duplicate-check";
 import { readLocalDb } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
@@ -23,11 +27,11 @@ export async function POST(request: Request) {
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
     const db = await readLocalDb();
-    if (db.clients.some((client) => client.email === email)) {
-      return Response.json(
-        { error: "Email already registered" },
-        { status: 400 },
-      );
+    const duplicate = findClientFieldDuplicate(db.clients, {
+      email: normalizeClientEmail(email),
+    });
+    if (duplicate) {
+      return Response.json({ error: duplicate.message }, { status: 400 });
     }
 
     const otp = generateEmailOtp();

@@ -4,6 +4,10 @@ import path from "path";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import {
+  assertUniqueAmongClients,
+  type ClientUniqueFields,
+} from "@/lib/client-duplicate-check";
+import {
   formatClientDispatchAddress,
   hasMeaningfulDispatchAddress,
 } from "@/lib/dispatch-address";
@@ -325,6 +329,14 @@ export async function writeLocalDb(db: LocalDb) {
   await writeFile(dbPath, JSON.stringify(db, null, 2));
 }
 
+export async function ensureClientFieldsUnique(
+  fields: ClientUniqueFields,
+  excludeClientId?: string,
+) {
+  const db = await readLocalDb();
+  assertUniqueAmongClients(db.clients, fields, excludeClientId);
+}
+
 export async function createClient(input: {
   email: string;
   password: string;
@@ -334,6 +346,11 @@ export async function createClient(input: {
   /** GST legal / proprietor name (lgnm); stored in address JSON. */
   ownerLegalName?: string;
 }) {
+  await ensureClientFieldsUnique({
+    email: input.email,
+    gst: input.gst,
+  });
+
   const supabase = supabaseAdmin();
   if (supabase) {
     try {
@@ -364,8 +381,6 @@ export async function createClient(input: {
   }
   const db = await readLocalDb();
   const email = input.email.trim().toLowerCase();
-  if (db.clients.some((client) => client.email === email))
-    throw new Error("Email already registered");
 
   const client: LocalClient = {
     id: randomUUID(),
@@ -396,6 +411,12 @@ export async function createAdminClient(input: {
   ownerLegalName?: string;
   status?: LocalClient["status"];
 }) {
+  await ensureClientFieldsUnique({
+    email: input.email,
+    gst: input.gst,
+    phone: input.phone,
+  });
+
   const email = input.email.trim().toLowerCase();
   const password =
     input.password?.trim() || `Sarjan@${new Date().getFullYear()}`;
@@ -507,6 +528,30 @@ export async function updateClient(
     >
   >,
 ) {
+  const existing = await getClient(id);
+  if (!existing) throw new Error("Client not found");
+
+  const nextPhone =
+    input.phone !== undefined
+      ? String(input.phone).trim()
+      : input.address?.phone !== undefined
+        ? String(input.address.phone).trim()
+        : (existing.phone ?? existing.address?.phone ?? "").trim();
+  const nextGst =
+    input.gst !== undefined
+      ? String(input.gst).trim()
+      : input.address?.gst !== undefined
+        ? String(input.address.gst).trim()
+        : (existing.gst ?? existing.address?.gst ?? "").trim();
+
+  await ensureClientFieldsUnique(
+    {
+      phone: nextPhone || undefined,
+      gst: nextGst || undefined,
+    },
+    id,
+  );
+
   const supabase = supabaseAdmin();
   if (supabase) {
     try {

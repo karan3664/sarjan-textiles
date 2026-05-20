@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import type { AdminCustomer } from "@/lib/admin-customers";
+import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
+import { isValidGstin, normalizeGstin } from "@/lib/gstin-form";
 
 type CustomerStatus = AdminCustomer["status"];
 type OrderStatus = AdminCustomer["orders"][number]["status"];
@@ -162,15 +164,37 @@ export function AdminCustomerManagementClient({
       setNotice("Valid email required.");
       return;
     }
+    const gstRaw = newClient.gst.trim();
+    const gst = gstRaw ? normalizeGstin(gstRaw) : "";
+    if (gstRaw && !isValidGstin(gst)) {
+      setNotice("Invalid GST number format.");
+      return;
+    }
+    const phone = newClient.phone.trim();
 
     setSaving("new-client");
     setNotice("");
     try {
+      const unique = await checkClientFieldsUnique({
+        email,
+        phone: phone || undefined,
+        gst: gst || undefined,
+      });
+      if (!unique.ok) {
+        setNotice(unique.error);
+        return;
+      }
       const res = await fetch("/api/admin/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-        body: JSON.stringify({ ...newClient, companyName, email }),
+        body: JSON.stringify({
+          ...newClient,
+          companyName,
+          email,
+          phone,
+          gst: gst || undefined,
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         customers?: AdminCustomer[];

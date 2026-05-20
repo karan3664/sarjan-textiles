@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -171,6 +172,17 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       );
       return;
     }
+    if (isRegister) {
+      const unique = await checkClientFieldsUnique({
+        email: String(payload.email ?? "").trim(),
+        gst: normalizeGstin(String(payload.gst ?? "")),
+      });
+      if (!unique.ok) {
+        setLoading(false);
+        setMessage(unique.error);
+        return;
+      }
+    }
     const endpoint = isRegister
       ? "/api/auth/register"
       : isForgot
@@ -229,6 +241,11 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
     setEmailOtpMessage("");
     setEmailVerified(false);
     try {
+      const unique = await checkClientFieldsUnique({ email: normalized });
+      if (!unique.ok) {
+        setEmailOtpMessage(unique.error);
+        return;
+      }
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -316,7 +333,16 @@ export function AuthPageClient({ mode }: { mode: AuthMode }) {
       const trade = tradeRaw || legal;
       setCompanyName(trade);
       setOwnerFullName(legal);
-      setGst(data.gst.gstin);
+      const verifiedGstin = normalizeGstin(
+        String(data.gst.gstin ?? normalized),
+      );
+      setGst(verifiedGstin);
+      const gstUnique = await checkClientFieldsUnique({ gst: verifiedGstin });
+      if (!gstUnique.ok) {
+        setGstVerified(false);
+        setGstMessage(gstUnique.error);
+        return;
+      }
       setGstVerified(true);
       setGstMessage(
         tradeRaw && tradeRaw !== legal

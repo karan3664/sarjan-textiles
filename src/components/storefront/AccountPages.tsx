@@ -8,6 +8,7 @@ import {
   hasCustomClientAvatar,
 } from "@/lib/client-avatar-display";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
+import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import {
   isGstVerifiedOnFile,
   isValidGstin,
@@ -327,6 +328,16 @@ export function AccountDashboardPage() {
     }
     if (!form.ownerLegalName.trim()) {
       setMessage("Legal / proprietor full name is required.");
+      return;
+    }
+
+    const phone = form.phone.trim();
+    const unique = await checkClientFieldsUnique(
+      { phone, gst: nextGst, excludeClientId: client.id },
+      { authHeaders: clientAuthJsonHeaders() },
+    );
+    if (!unique.ok) {
+      setMessage(unique.error);
       return;
     }
 
