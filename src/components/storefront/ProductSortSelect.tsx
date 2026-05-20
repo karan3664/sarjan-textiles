@@ -1,8 +1,15 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export function ProductSortSelect({ value, labels }: { value: string; labels: Record<string, string> }) {
+function ProductSortSelectInner({
+  value,
+  labels,
+}: {
+  value: string;
+  labels: Record<string, string>;
+}) {
   const searchParams = useSearchParams();
 
   return (
@@ -18,10 +25,39 @@ export function ProductSortSelect({ value, labels }: { value: string; labels: Re
         }}
       >
         {Object.entries(labels).map(([optionValue, label]) => (
-          <option value={optionValue} key={optionValue}>{label}</option>
+          <option value={optionValue} key={optionValue}>
+            {label}
+          </option>
         ))}
       </select>
       <span className="icon icon-arrow-down" aria-hidden="true" />
     </div>
+  );
+}
+
+export function ProductSortSelect({
+  value,
+  labels,
+}: {
+  value: string;
+  labels: Record<string, string>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="sarjan-sort-select">
+          <select aria-label="Sort products" value={value} disabled>
+            {Object.entries(labels).map(([optionValue, label]) => (
+              <option value={optionValue} key={optionValue}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <span className="icon icon-arrow-down" aria-hidden="true" />
+        </div>
+      }
+    >
+      <ProductSortSelectInner value={value} labels={labels} />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import { persistClientSession } from "@/lib/client-auth-browser";
 import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
@@ -69,7 +69,26 @@ function PageTitle({ title }: { title: string }) {
   );
 }
 
-export function AuthPageClient({
+function authPageTitle(mode: AuthMode) {
+  if (mode === "register") return "Register";
+  if (mode === "forgot") return "Forgot Password";
+  return "Login";
+}
+
+function AuthPageFallback({ mode }: { mode: AuthMode }) {
+  return (
+    <>
+      <PageTitle title={authPageTitle(mode)} />
+      <section className="flat-spacing sarjan-auth-page">
+        <div className="container text-center py-5 text-secondary">
+          Loading…
+        </div>
+      </section>
+    </>
+  );
+}
+
+function AuthPageClientInner({
   mode,
   banners,
 }: {
@@ -793,5 +812,16 @@ export function AuthPageClient({
         </div>
       </section>
     </>
+  );
+}
+
+export function AuthPageClient(props: {
+  mode: AuthMode;
+  banners: AuthBanners;
+}) {
+  return (
+    <Suspense fallback={<AuthPageFallback mode={props.mode} />}>
+      <AuthPageClientInner {...props} />
+    </Suspense>
   );
 }
