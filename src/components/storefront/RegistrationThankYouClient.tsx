@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { useEffect, useState } from "react";
 
 export function RegistrationThankYouClient() {
@@ -119,14 +120,22 @@ export function RegistrationThankYouClient() {
             )}
 
             <div className="sarjan-registration-thankyou-actions">
-              <Link href="/products" className="tf-btn btn-fill">
-                <span className="text">Browse products</span>
+              <Link href="/products" className={withBtnIcon("tf-btn btn-fill")}>
+                <TfButtonIcon icon="icon-arrRight">
+                  Browse products
+                </TfButtonIcon>
               </Link>
-              <Link href="/" className="tf-btn btn-white has-border">
-                <span className="text">Back to home</span>
+              <Link
+                href="/"
+                className={withBtnIcon("tf-btn btn-white has-border")}
+              >
+                <TfButtonIcon icon="icon-arrLeft">Back to home</TfButtonIcon>
               </Link>
-              <Link href="/contact" className="tf-btn btn-white has-border">
-                <span className="text">Contact us</span>
+              <Link
+                href="/contact"
+                className={withBtnIcon("tf-btn btn-white has-border")}
+              >
+                <TfButtonIcon icon="icon-mail">Contact us</TfButtonIcon>
               </Link>
             </div>
           </div>

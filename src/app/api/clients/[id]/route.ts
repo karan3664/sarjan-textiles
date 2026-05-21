@@ -24,7 +24,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const session = verifyClientToken(bearerToken(request));
+    const session = await verifyClientToken(bearerToken(request));
     if (!session || session.clientId !== id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }

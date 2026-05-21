@@ -1,15 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AdminReportsCharts } from "@/components/admin/AdminReportsCharts";
 import type { AdminReportsData } from "@/lib/admin-reports";
-
-type ReportKey =
-  | "orders"
-  | "clients"
-  | "inventory"
-  | "finance"
-  | "dispatch"
-  | "productMovement";
+import type { ReportKey } from "@/lib/admin-report-charts";
+import {
+  REPORT_IMAGE_KEY,
+  absoluteReportImageUrl,
+  downloadXlsxPlain,
+  downloadXlsxWithImages,
+  printPdfWithImages,
+  rowsIncludeProductImages,
+} from "@/lib/admin-report-export";
 
 const reportLabels: Record<ReportKey, string> = {
   orders: "Orders Report",
@@ -26,7 +28,13 @@ function downloadCsv(filename: string, rows: Array<Record<string, unknown>>) {
     headers.join(","),
     ...rows.map((row) =>
       headers
-        .map((header) => `"${String(row[header] ?? "").replaceAll('"', '""')}"`)
+        .map((header) => {
+          const value =
+            header === REPORT_IMAGE_KEY
+              ? absoluteReportImageUrl(String(row[header] ?? ""))
+              : String(row[header] ?? "");
+          return `"${value.replaceAll('"', '""')}"`;
+        })
         .join(","),
     ),
   ].join("\n");
@@ -43,31 +51,27 @@ async function downloadXlsx(
   filename: string,
   rows: Array<Record<string, unknown>>,
 ) {
-  const XLSX = await import("xlsx");
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(
-    workbook,
-    XLSX.utils.json_to_sheet(rows),
-    "Report",
-  );
-  XLSX.writeFile(workbook, filename);
+  if (rowsIncludeProductImages(rows)) {
+    await downloadXlsxWithImages(filename, rows);
+    return;
+  }
+  await downloadXlsxPlain(filename, rows);
 }
 
 function printPdf(title: string, rows: Array<Record<string, unknown>>) {
-  const headers = Object.keys(rows[0] ?? { empty: "" });
-  const table = `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${headers.map((header) => `<td>${String(row[header] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-  const popup = window.open("", "_blank", "width=1200,height=800");
-  if (!popup) return;
-  popup.document.write(
-    `<html><head><title>${title}</title><style>body{font-family:Arial;padding:24px;color:#181818}h1{font-size:22px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#f5f5f5}</style></head><body><h1>${title}</h1>${table}</body></html>`,
-  );
-  popup.document.close();
-  popup.print();
+  printPdfWithImages(title, rows);
+}
+
+function orderedHeaders(rows: Array<Record<string, unknown>>) {
+  const keys = Object.keys(rows[0] ?? {});
+  if (!keys.includes(REPORT_IMAGE_KEY)) return keys;
+  return [REPORT_IMAGE_KEY, ...keys.filter((key) => key !== REPORT_IMAGE_KEY)];
 }
 
 export function AdminReportsClient({ data }: { data: AdminReportsData }) {
   const [active, setActive] = useState<ReportKey>("orders");
   const [query, setQuery] = useState("");
+  const [exporting, setExporting] = useState(false);
   const rows = useMemo(() => {
     const reportRows = data[active] as Array<Record<string, unknown>>;
     const normalized = query.trim().toLowerCase();
@@ -80,7 +84,19 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
       ),
     );
   }, [active, data, query]);
-  const headers = Object.keys(rows[0] ?? {});
+  const headers = orderedHeaders(rows);
+  const hasImageColumn = headers.includes(REPORT_IMAGE_KEY);
+
+  const runExport = async (kind: "csv" | "xlsx" | "pdf") => {
+    setExporting(true);
+    try {
+      if (kind === "csv") downloadCsv(`${active}-report.csv`, rows);
+      if (kind === "xlsx") await downloadXlsx(`${active}-report.xlsx`, rows);
+      if (kind === "pdf") printPdf(reportLabels[active], rows);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <>
@@ -102,29 +118,33 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
           <div>
             <h5>Reports & Analytics</h5>
             <div className="body-text text-secondary">
-              Orders, clients, inventory, dispatch, product movement, finance
-              ledger, CSV, Excel, and PDF exports.
+              Charts above match the selected report tab. Export tables as CSV,
+              Excel, or PDF. Inventory and movement exports include product
+              photos.
             </div>
           </div>
           <div className="d-flex gap10 flex-wrap">
             <button
               type="button"
               className="tf-button"
-              onClick={() => downloadCsv(`${active}-report.csv`, rows)}
+              disabled={exporting || !rows.length}
+              onClick={() => void runExport("csv")}
             >
               CSV
             </button>
             <button
               type="button"
               className="tf-button"
-              onClick={() => downloadXlsx(`${active}-report.xlsx`, rows)}
+              disabled={exporting || !rows.length}
+              onClick={() => void runExport("xlsx")}
             >
-              Excel
+              {exporting ? "Exporting…" : "Excel"}
             </button>
             <button
               type="button"
               className="tf-button"
-              onClick={() => printPdf(reportLabels[active], rows)}
+              disabled={exporting || !rows.length}
+              onClick={() => void runExport("pdf")}
             >
               PDF
             </button>
@@ -142,6 +162,7 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
             </button>
           ))}
         </div>
+        <AdminReportsCharts report={active} data={data} />
         <form
           className="form-search-2 sarjan-report-search"
           onSubmit={(event) => event.preventDefault()}
@@ -166,7 +187,7 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
               <tr>
                 {headers.map((header) => (
                   <th className="text-title" key={header}>
-                    {header}
+                    {header === REPORT_IMAGE_KEY ? "Photo" : header}
                   </th>
                 ))}
               </tr>
@@ -175,6 +196,20 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
               {rows.slice(0, 500).map((row, index) => (
                 <tr className="tf-table-item item-row" key={index}>
                   {headers.map((header) => {
+                    if (header === REPORT_IMAGE_KEY) {
+                      const src = absoluteReportImageUrl(
+                        String(row[header] ?? ""),
+                      );
+                      return (
+                        <td key={header} className="sarjan-report-table__image">
+                          {src ? (
+                            <img src={src} alt="" width={48} height={48} />
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      );
+                    }
                     const text = String(row[header] ?? "-");
                     return (
                       <td
@@ -189,7 +224,7 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
               ))}
               {!rows.length ? (
                 <tr>
-                  <td>
+                  <td colSpan={Math.max(headers.length, 1)}>
                     <div className="sarjan-empty-state">
                       No report data found.
                     </div>
@@ -199,6 +234,11 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
             </tbody>
           </table>
         </div>
+        {hasImageColumn ? (
+          <p className="text-caption-1 text-secondary mt_12 mb_0">
+            Product photos are embedded in Excel and PDF for this report.
+          </p>
+        ) : null}
       </div>
     </>
   );

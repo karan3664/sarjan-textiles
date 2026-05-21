@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { isProductSoldOut } from "@/lib/product-availability";
 import {
   type FormEvent,
@@ -16,6 +17,7 @@ import {
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import { requestAdminNotificationRefresh } from "@/lib/admin-notification-live";
 import {
   catalogFetchInit,
   clientAuthJsonHeaders,
@@ -295,6 +297,7 @@ export function CheckoutPageClient() {
         : (data.error ?? "Order failed"),
     );
     if (res.ok) {
+      requestAdminNotificationRefresh();
       writeCart([]);
       window.location.assign(
         `/payment-confirmation?orderId=${encodeURIComponent(data.order.id)}`,
@@ -405,13 +408,13 @@ export function CheckoutPageClient() {
                           <p className="text-danger mb_8">{loginMessage}</p>
                         ) : null}
                         <button
-                          className={sarjanButtonClass()}
+                          className={withBtnIcon(sarjanButtonClass())}
                           type="submit"
                           disabled={loginBusy}
                         >
-                          <span className="text">
+                          <TfButtonIcon icon="icon-user">
                             {loginBusy ? "Logging in…" : "Login"}
-                          </span>
+                          </TfButtonIcon>
                         </button>
                       </form>
                     </div>
@@ -555,11 +558,13 @@ export function CheckoutPageClient() {
                         </p>
                       ) : null}
                       <button
-                        className="tf-btn btn-reset"
+                        className={withBtnIcon("tf-btn btn-reset")}
                         type="button"
                         onClick={submitOrder}
                       >
-                        Submit Order Request
+                        <TfButtonIcon icon="icon-checkCircle">
+                          Submit Order Request
+                        </TfButtonIcon>
                       </button>
                     </form>
                   </div>
@@ -655,8 +660,13 @@ export function CheckoutPageClient() {
               <p className="text-secondary mt_8">
                 Add product sets before checkout.
               </p>
-              <Link href="/products" className="tf-btn btn-fill radius-4 mt_24">
-                <span className="text">Browse Products</span>
+              <Link
+                href="/products"
+                className={withBtnIcon("tf-btn btn-fill radius-4 mt_24")}
+              >
+                <TfButtonIcon icon="icon-arrRight">
+                  Browse Products
+                </TfButtonIcon>
               </Link>
             </div>
           )}

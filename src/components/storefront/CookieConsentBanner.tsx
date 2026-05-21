@@ -1,5 +1,7 @@
 "use client";
 
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -54,16 +56,16 @@ export function CookieConsentBanner() {
         <div className="d-flex gap-12 flex-wrap">
           <button
             type="button"
-            className="tf-btn btn-fill radius-4"
+            className={withBtnIcon("tf-btn btn-fill radius-4")}
             onClick={accept}
           >
-            <span className="text">Accept</span>
+            <TfButtonIcon icon="icon-check">Accept</TfButtonIcon>
           </button>
           <Link
             href="/privacy-policy"
-            className="tf-btn btn-white has-border radius-4"
+            className={withBtnIcon("tf-btn btn-white has-border radius-4")}
           >
-            <span className="text">Learn more</span>
+            <TfButtonIcon icon="icon-question">Learn more</TfButtonIcon>
           </Link>
         </div>
       </div>

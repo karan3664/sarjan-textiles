@@ -79,7 +79,7 @@ async function deleteLocalAvatarFile(clientId: string) {
 }
 
 async function authorizeAvatarRequest(request: Request, id: string) {
-  const session = verifyClientToken(bearerToken(request));
+  const session = await verifyClientToken(bearerToken(request));
   if (!session || session.clientId !== id) {
     return { error: Response.json({ error: "Unauthorized" }, { status: 401 }) };
   }

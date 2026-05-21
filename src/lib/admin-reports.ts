@@ -6,12 +6,32 @@ function inr(value: number) {
   return `₹${Math.round(value).toLocaleString("en-IN")}`;
 }
 
+function productImageUrl(images: string[] | undefined) {
+  return images?.[0]?.trim() ?? "";
+}
+
 export async function getAdminReportsData() {
-  const [orders, customers, cms] = await Promise.all([getAdminOrders(), getAdminCustomers(), getCmsSnapshot()]);
+  const [orders, customers, cms] = await Promise.all([
+    getAdminOrders(),
+    getAdminCustomers(),
+    getCmsSnapshot(),
+  ]);
   const products = cms.products;
   const inventoryLogs = cms.inventoryLogs ?? [];
-  const outstanding = orders.reduce((sum, order) => sum + (order.outstandingAmount ?? 0), 0);
-  const lowStock = products.filter((product) => product.stock > 0 && product.stock - product.reserved <= product.moq);
+  const imageBySku = new Map(
+    products.map((product) => [product.sku, productImageUrl(product.images)]),
+  );
+  const imageBySlug = new Map(
+    products.map((product) => [product.slug, productImageUrl(product.images)]),
+  );
+  const outstanding = orders.reduce(
+    (sum, order) => sum + (order.outstandingAmount ?? 0),
+    0,
+  );
+  const lowStock = products.filter(
+    (product) =>
+      product.stock > 0 && product.stock - product.reserved <= product.moq,
+  );
 
   return {
     summary: [
@@ -41,6 +61,7 @@ export async function getAdminReportsData() {
       createdAt: client.createdAt,
     })),
     inventory: products.map((product) => ({
+      image: productImageUrl(product.images),
       sku: product.sku,
       product: product.name,
       category: product.category,
@@ -49,29 +70,45 @@ export async function getAdminReportsData() {
       sold: product.sold,
       returned: product.returned ?? 0,
       damaged: product.damaged ?? 0,
-      status: product.stock <= 0 ? "Out of Stock" : product.stock - product.reserved <= product.moq ? "Low Stock" : "Healthy",
+      status:
+        product.stock <= 0
+          ? "Out of Stock"
+          : product.stock - product.reserved <= product.moq
+            ? "Low Stock"
+            : "Healthy",
     })),
-    finance: orders.filter((order) => order.status !== "Rejected").map((order) => ({
-      order: order.id,
-      client: order.clientName,
-      invoice: order.subtotal,
-      paid: order.paidAmount ?? 0,
-      outstanding: order.outstandingAmount ?? 0,
-      paymentStatus: order.paymentStatus ?? "Pending",
-      chequeNumber: order.chequeNumber ?? "",
-      depositStatus: order.depositStatus ?? "Not deposited",
-      creditDueOn: order.creditDueOn,
-    })),
-    dispatch: orders.flatMap((order) => (order.dispatchHistory ?? []).map((log) => ({
-      order: order.id,
-      client: order.clientName,
-      status: log.status,
-      note: log.note ?? "",
-      lrNumber: order.lrNumber ?? "",
-      vehicleDetails: order.vehicleDetails ?? "",
-      createdAt: log.createdAt,
-    }))),
+    finance: orders
+      .filter((order) => order.status !== "Rejected")
+      .map((order) => ({
+        order: order.id,
+        client: order.clientName,
+        invoice: order.subtotal,
+        paid: order.paidAmount ?? 0,
+        outstanding: order.outstandingAmount ?? 0,
+        paymentStatus: order.paymentStatus ?? "Pending",
+        chequeNumber: order.chequeNumber ?? "",
+        depositStatus: order.depositStatus ?? "Not deposited",
+        creditDueOn: order.creditDueOn,
+      })),
+    dispatch: orders.flatMap((order) =>
+      (order.dispatchHistory ?? []).map((log) => ({
+        order: order.id,
+        client: order.clientName,
+        status: log.status,
+        note: log.note ?? "",
+        lrNumber: order.lrNumber ?? "",
+        vehicleDetails: order.vehicleDetails ?? "",
+        createdAt: log.createdAt,
+      })),
+    ),
     productMovement: inventoryLogs.map((log) => ({
+      image:
+        imageBySku.get(log.sku) ??
+        imageBySlug.get(
+          products.find((product) => product.name === log.productName)?.slug ??
+            "",
+        ) ??
+        "",
       date: log.createdAt,
       product: log.productName,
       sku: log.sku,

@@ -1,6 +1,10 @@
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { NotFoundPage } from "@/components/storefront/StaticPages";
+import { NotFoundAnimated } from "@/components/storefront/NotFoundAnimated";
 
 export default function NotFound() {
-  return <ModaveShell><NotFoundPage /></ModaveShell>;
+  return (
+    <ModaveShell>
+      <NotFoundAnimated />
+    </ModaveShell>
+  );
 }

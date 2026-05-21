@@ -1,0 +1,103 @@
+/**
+ * Sarjan home hero — loaded last (after Modave) so copy is never clipped.
+ */
+
+/* Modave .tf-slideshow { overflow: hidden } would crop vertically centered copy */
+.tf-slideshow.sarjan-hero-rotator {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.tf-slideshow.sarjan-hero-rotator .sarjan-hero-rotator-stage {
+  overflow: hidden;
+  border-radius: 0;
+}
+
+/* Cancel Modave fixed .wrap-slider heights (400px / 500px / 700px) */
+.tf-slideshow.sarjan-hero-rotator .wrap-slider.sarjan-hero-copy-layer {
+  height: auto !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Tablet + mobile: copy anchored to bottom, never vertically centered */
+@media (max-width: 1199px) {
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-copy-layer .box-content,
+  .tf-slideshow.sarjan-hero-rotator .box-content {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    text-align: center;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .wrap-slider.sarjan-hero-copy-layer {
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-copy-layer .box-content {
+    pointer-events: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 16px clamp(52px, 14vw, 80px) !important;
+    box-sizing: border-box;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-copy-layer .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-heading,
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-copy-layer .heading,
+  .tf-slideshow.sarjan-hero-rotator h2.sarjan-hero-heading {
+    font-size: clamp(22px, 6.2vw, 30px) !important;
+    line-height: 1.2 !important;
+    font-weight: 500 !important;
+    max-width: 20ch;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    text-wrap: balance;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-subheading,
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+    max-width: 36ch;
+    margin: 0 auto !important;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .content-slider {
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .tf-slideshow.sarjan-hero-rotator {
+    --sarjan-hero-h: clamp(300px, 58vw, min(82svh, 540px));
+    min-height: var(--sarjan-hero-h) !important;
+    height: var(--sarjan-hero-h) !important;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .wrap-slider.sarjan-hero-copy-layer {
+    height: 100% !important;
+  }
+}

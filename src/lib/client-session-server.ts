@@ -7,7 +7,7 @@ export async function getServerClientSession() {
     jar.get("sarjan-client-token")?.value?.trim() ||
     jar.get("sarjan_client_token")?.value?.trim() ||
     "";
-  return verifyClientToken(token);
+  return await verifyClientToken(token || null);
 }
 
 export async function getServerClientId() {

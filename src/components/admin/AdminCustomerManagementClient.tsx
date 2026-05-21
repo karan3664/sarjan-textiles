@@ -3,7 +3,13 @@
 import { useMemo, useState } from "react";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import type { AdminCustomer } from "@/lib/admin-customers";
+import { AdminOrderItemImage } from "@/components/admin/AdminOrderItemImage";
+import {
+  printClientOrdersPdf,
+  type ClientOrdersPdfInput,
+} from "@/lib/admin-report-export";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
+import { resolveOrderItemImage } from "@/lib/product-image-resolve";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
 import { isValidGstin, normalizeGstin } from "@/lib/gstin-form";
 
@@ -61,10 +67,48 @@ function InlineLoader({ show }: { show: boolean }) {
   ) : null;
 }
 
+function buildClientOrdersPdf(
+  customer: AdminCustomer,
+  productImageBySlug: Record<string, string>,
+): ClientOrdersPdfInput {
+  return {
+    companyName: customer.companyName,
+    email: customer.email,
+    phone: customer.phone,
+    gst: customer.gst,
+    city: customer.city,
+    orderCount: customer.orders.length,
+    orders: customer.orders.map((order) => ({
+      id: order.id,
+      date: formatDate(order.createdAt),
+      status: order.status,
+      total: formatInr(order.subtotal),
+      dispatch:
+        resolveDispatchAddress(order.dispatchAddress, {
+          companyName: customer.companyName,
+          gst: customer.gst,
+          city: customer.city,
+          phone: customer.phone,
+          address: customer.address,
+        }) || "Address pending",
+      items: order.items.map((item) => ({
+        image: resolveOrderItemImage(productImageBySlug, item),
+        name: item.name,
+        color: item.color,
+        sizes: item.sizes?.length ? item.sizes.join(", ") : "-",
+        sets: String(item.setQuantity),
+        lineTotal: formatInr(item.lineTotal),
+      })),
+    })),
+  };
+}
+
 export function AdminCustomerManagementClient({
   initialCustomers,
+  productImageBySlug,
 }: {
   initialCustomers: AdminCustomer[];
+  productImageBySlug: Record<string, string>;
 }) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [query, setQuery] = useState("");
@@ -72,6 +116,7 @@ export function AdminCustomerManagementClient({
   const [selectedId, setSelectedId] = useState(initialCustomers[0]?.id ?? "");
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [createAttempted, setCreateAttempted] = useState(false);
   const [newClient, setNewClient] = useState({
     companyName: "",
@@ -618,10 +663,28 @@ export function AdminCustomerManagementClient({
                 <div>
                   <h5>Customer Wise Orders</h5>
                   <div className="body-text text-secondary">
-                    Order process and dispatch tracking update.
+                    Order process and dispatch tracking update. Export PDF
+                    includes product photos per line item.
                   </div>
                 </div>
-                <span>{selected.orders.length} orders</span>
+                <div className="d-flex gap10 align-items-center flex-wrap">
+                  <button
+                    type="button"
+                    className="tf-button style-1"
+                    disabled={!selected.orders.length || exportingPdf}
+                    onClick={() => {
+                      setExportingPdf(true);
+                      void printClientOrdersPdf(
+                        buildClientOrdersPdf(selected, productImageBySlug),
+                      )
+                        .catch(() => setNotice("PDF export failed. Try again."))
+                        .finally(() => setExportingPdf(false));
+                    }}
+                  >
+                    {exportingPdf ? "Preparing PDF…" : "Export orders PDF"}
+                  </button>
+                  <span>{selected.orders.length} orders</span>
+                </div>
               </div>
 
               <div className="sarjan-customer-orders">
@@ -716,6 +779,37 @@ export function AdminCustomerManagementClient({
                           address: selected.address,
                         }) || "Address pending"}
                       </div>
+                      {order.items.length ? (
+                        <ul className="sarjan-customer-order-lines">
+                          {order.items.map((item, itemIndex) => (
+                            <li
+                              key={`${order.id}-${item.slug}-${itemIndex}`}
+                              className="sarjan-customer-order-line"
+                            >
+                              <AdminOrderItemImage
+                                src={resolveOrderItemImage(
+                                  productImageBySlug,
+                                  item,
+                                )}
+                                alt={item.name}
+                                size={44}
+                              />
+                              <span className="sarjan-customer-order-line__info">
+                                <strong>{item.name}</strong>
+                                <span className="text-caption-1 text-secondary">
+                                  {item.color}
+                                  {item.sizes?.length
+                                    ? ` · ${item.sizes.join(", ")}`
+                                    : ""}{" "}
+                                  · {item.setQuantity} set
+                                  {item.setQuantity === 1 ? "" : "s"} ·{" "}
+                                  {formatInr(item.lineTotal)}
+                                </span>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </div>
                   ))
                 ) : (

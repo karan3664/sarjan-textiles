@@ -1,5 +1,3 @@
-import { createHmac } from "crypto";
-
 export type ClientSession = {
   clientId: string;
   email: string;
@@ -28,12 +26,23 @@ function tokenFromCookieHeader(cookieHeader: string | null) {
   return null;
 }
 
-function encode(value: unknown) {
-  return Buffer.from(JSON.stringify(value)).toString("base64url");
+function base64UrlEncode(value: string) {
+  return btoa(value)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
-function sign(value: string) {
-  return createHmac("sha256", secret()).update(value).digest("base64url");
+function base64UrlDecode(value: string) {
+  const padded = value
+    .replaceAll("-", "+")
+    .replaceAll("_", "/")
+    .padEnd(Math.ceil(value.length / 4) * 4, "=");
+  return atob(padded);
+}
+
+function encodeSegment(value: unknown) {
+  return base64UrlEncode(JSON.stringify(value));
 }
 
 function constantTimeEqual(a: string, b: string) {
@@ -44,28 +53,49 @@ function constantTimeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-export function createClientToken(input: { clientId: string; email: string }) {
-  const header = encode({ alg: "HS256", typ: "JWT" });
+async function hmac(value: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(value),
+  );
+  const bytes = Array.from(new Uint8Array(signature));
+  return base64UrlEncode(String.fromCharCode(...bytes));
+}
+
+export async function createClientToken(input: {
+  clientId: string;
+  email: string;
+}) {
+  const header = encodeSegment({ alg: "HS256", typ: "JWT" });
   const now = Date.now();
-  const payload = encode({
+  const payload = encodeSegment({
     ...input,
     iat: now,
     exp: now + 1000 * 60 * 60 * 24 * 7,
   });
   const unsigned = `${header}.${payload}`;
-  return `${unsigned}.${sign(unsigned)}`;
+  return `${unsigned}.${await hmac(unsigned)}`;
 }
 
-export function verifyClientToken(token?: string | null): ClientSession | null {
+export async function verifyClientToken(
+  token?: string | null,
+): Promise<ClientSession | null> {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const unsigned = `${parts[0]}.${parts[1]}`;
-  if (!constantTimeEqual(sign(unsigned), parts[2])) return null;
+  if (!parts[2] || !constantTimeEqual(parts[2], await hmac(unsigned)))
+    return null;
   try {
-    const payload = JSON.parse(
-      Buffer.from(parts[1], "base64url").toString("utf8"),
-    ) as ClientSession;
+    const payload = JSON.parse(base64UrlDecode(parts[1])) as ClientSession;
     if (!payload.clientId || !payload.email || Date.now() > payload.exp)
       return null;
     return payload;

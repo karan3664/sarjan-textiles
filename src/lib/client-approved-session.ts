@@ -26,7 +26,7 @@ export function clientStatusAuthError(
 export async function requireApprovedClientRequest(
   request: Request,
 ): Promise<Response | { session: ClientSession; client: LocalClient }> {
-  const session = verifyClientToken(bearerToken(request));
+  const session = await verifyClientToken(bearerToken(request));
   if (!session) {
     return Response.json(
       { error: "Valid client token required" },

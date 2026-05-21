@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { AdminDashboardCharts } from "@/components/admin/AdminDashboardCharts";
 
 type DashboardItem = {
   label: string;
@@ -38,9 +39,13 @@ type DashboardData = {
   groups: DashboardGroup[];
   charts: {
     monthlyOrders: ChartPoint[];
+    monthlySales: ChartPoint[];
+    clientSignups: ChartPoint[];
     productDemand: ChartPoint[];
     clientActivity: ChartPoint[];
     dispatchTrend: ChartPoint[];
+    monthlyUnitsSold: ChartPoint[];
+    stockSnapshot: ChartPoint[];
   };
   recentOrders: RecentOrder[];
   alerts: Array<{ label: string; detail: string }>;
@@ -79,33 +84,6 @@ function statusClass(status: string, col: StatusCol) {
     return "type-delivery";
   }
   return "type-pending";
-}
-
-function MiniBarChart({ data }: { data: ChartPoint[] }) {
-  const max = useMemo(
-    () => Math.max(...data.map((item) => item.value), 1),
-    [data],
-  );
-
-  return (
-    <div className="sarjan-admin-chart" role="list">
-      {data.map((item) => (
-        <div
-          className="sarjan-admin-chart-row"
-          key={item.label}
-          role="listitem"
-        >
-          <div className="text-caption-1 text-secondary">{item.label}</div>
-          <div className="sarjan-admin-chart-track">
-            <span
-              style={{ width: `${Math.max((item.value / max) * 100, 8)}%` }}
-            />
-          </div>
-          <div className="text-title">{item.value}</div>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function LoadingDashboard() {
@@ -149,13 +127,6 @@ export function AdminDashboardClient() {
   }
 
   if (!dashboard) return <LoadingDashboard />;
-
-  const chartSections = [
-    { title: "Monthly Orders Graph", data: dashboard.charts.monthlyOrders },
-    { title: "Product Demand Graph", data: dashboard.charts.productDemand },
-    { title: "Client Activity Graph", data: dashboard.charts.clientActivity },
-    { title: "Dispatch Trend", data: dashboard.charts.dispatchTrend },
-  ];
 
   return (
     <>
@@ -204,16 +175,7 @@ export function AdminDashboardClient() {
         ))}
       </div>
 
-      <div className="sarjan-admin-chart-grid">
-        {chartSections.map((section) => (
-          <div className="wg-box" key={section.title}>
-            <div className="box-top">
-              <h5 className="box-title">{section.title}</h5>
-            </div>
-            <MiniBarChart data={section.data} />
-          </div>
-        ))}
-      </div>
+      <AdminDashboardCharts charts={dashboard.charts} />
 
       <div className="tf-grid-layout tf-grid-layout-1">
         <div className="wg-box">
@@ -241,25 +203,25 @@ export function AdminDashboardClient() {
                     <td>{order.date}</td>
                     <td>{order.total}</td>
                     <td>
-                      <div
+                      <span
                         className={`box-status text-button ${statusClass(order.paymentStatus, "payment")}`}
                       >
                         {order.paymentStatus}
-                      </div>
+                      </span>
                     </td>
                     <td>
-                      <div
+                      <span
                         className={`box-status text-button ${statusClass(order.dispatchStatus, "dispatch")}`}
                       >
                         {order.dispatchStatus}
-                      </div>
+                      </span>
                     </td>
                     <td>
-                      <div
+                      <span
                         className={`box-status text-button ${statusClass(order.approvalStatus, "approval")}`}
                       >
                         {order.approvalStatus}
-                      </div>
+                      </span>
                     </td>
                   </tr>
                 ))}

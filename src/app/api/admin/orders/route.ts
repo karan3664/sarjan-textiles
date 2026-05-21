@@ -127,6 +127,7 @@ function normalizeItems(raw: unknown) {
         piecesPerSet,
         unitPrice,
         lineTotal,
+        image: typeof item.image === "string" ? item.image.trim() : undefined,
       };
     })
     .filter((item) => item.name && item.unitPrice >= 0);

@@ -6,6 +6,7 @@ import {
   isValidGstin,
   normalizeGstin,
 } from "@/lib/gstin-form";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type GstVerificationFieldsProps = {
   gst: string;
@@ -69,7 +70,7 @@ export function GstVerificationFields({
     if (!verifiedOnFile) return;
     setGstVerified(true);
     setGstManualAllowed(false);
-    setGstMessage("GST verified on your account.");
+    setGstMessage("");
     setCaptchaSessionId(null);
     setCaptchaB64(null);
     setCaptchaInput("");
@@ -211,7 +212,7 @@ export function GstVerificationFields({
               })
             ) {
               setGstVerified(true);
-              setGstMessage("GST verified on your account.");
+              setGstMessage("");
               return;
             }
             resetVerification();
@@ -261,13 +262,18 @@ export function GstVerificationFields({
             <div className="sarjan-gst-captcha-actions">
               <button
                 type="button"
-                className="tf-btn btn-fill sarjan-gst-captcha-refresh"
+                className={withBtnIcon(
+                  "tf-btn btn-fill sarjan-gst-captcha-refresh",
+                )}
                 onClick={() => void loadGstCaptcha()}
                 disabled={captchaFetching || gstLoading || !gstinReady}
               >
-                <span className="text text-button">
+                <TfButtonIcon
+                  icon="icon-arrowClockwise"
+                  textClassName="text text-button"
+                >
                   {captchaFetching ? "Loading…" : "Refresh image"}
-                </span>
+                </TfButtonIcon>
               </button>
             </div>
             <input
@@ -295,7 +301,7 @@ export function GstVerificationFields({
           <fieldset style={{ marginTop: 8 }}>
             <button
               type="button"
-              className="tf-btn btn-fill"
+              className={withBtnIcon("tf-btn btn-fill")}
               style={{ width: "100%" }}
               onClick={() => void verifyGst()}
               disabled={
@@ -305,9 +311,12 @@ export function GstVerificationFields({
                 captchaInput.replace(/\D/g, "").length !== 6
               }
             >
-              <span className="text text-button">
+              <TfButtonIcon
+                icon="icon-checkCircle"
+                textClassName="text text-button"
+              >
                 {gstLoading ? "Verifying…" : "Verify GST with portal"}
-              </span>
+              </TfButtonIcon>
             </button>
           </fieldset>
         </>
@@ -344,7 +353,7 @@ export function GstVerificationFields({
           </fieldset>
         </>
       ) : null}
-      {gstMessage ? (
+      {gstMessage && !verifiedOnFile ? (
         <p
           className={
             gstVerified || gstManualAllowed ? "text-success" : "text-danger"

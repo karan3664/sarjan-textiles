@@ -28,6 +28,7 @@ import {
 } from "./PriceGate";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { QuickViewProduct } from "./QuickViewProduct";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import {
@@ -67,24 +68,17 @@ function syncAddSetLabel(scope: Element) {
   const total = price * quantity;
   const money = `₹${total.toLocaleString("en-IN")}`;
   const showMoney = clientHasApprovedPricing();
-  const label =
-    button.querySelector<HTMLElement>(".sarjan-add-set-label") ??
-    button.querySelector<HTMLElement>(":scope > span");
-  const totalNode = button.querySelector<HTMLElement>(
-    ".tf-qty-price, .total-price",
+  const label = button.querySelector<HTMLElement>(".sarjan-add-set-label");
+  const priceNode = button.querySelector<HTMLElement>(
+    ".sarjan-add-set-price, .tf-qty-price, .total-price",
   );
   const word = quantity === 1 ? "set" : "sets";
+  const lineLabel = `Add ${quantity} ${word}`;
   if (label) {
-    if (showMoney) {
-      label.textContent = totalNode
-        ? `Add ${quantity} ${word}`
-        : `Add ${quantity} ${word} · ${money}`;
-    } else {
-      label.textContent = `Add ${quantity} ${word}`;
-    }
+    label.textContent = lineLabel;
   }
-  if (totalNode) {
-    totalNode.textContent = showMoney ? money : "";
+  if (priceNode) {
+    priceNode.textContent = showMoney ? money : "";
   }
 }
 
@@ -477,7 +471,7 @@ export function ModaveModals() {
   return (
     <>
       <div className="modal fade modal-search sarjan-search-modal" id="search">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered sarjan-search-modal-dialog">
           <div className="modal-content">
             <div className="d-flex justify-content-between align-items-center">
               <h5>Search</h5>
@@ -486,27 +480,32 @@ export function ModaveModals() {
                 data-bs-dismiss="modal"
               />
             </div>
-            <form className="form-search" onSubmit={submitSearch}>
-              <fieldset className="text">
-                <input
-                  type="text"
-                  placeholder="Searching..."
-                  value={searchQuery}
-                  onChange={(event) => {
-                    setSearchQuery(event.target.value);
-                    setVisibleSearchItems(4);
-                  }}
-                />
-              </fieldset>
-              <button type="submit">
-                <i className="icon icon-search" />
-              </button>
-            </form>
-            <div className="sarjan-search-keywords">
-              <h6>Feature keywords Today</h6>
-              <div className="sarjan-search-chips">
-                {["Printed shirts", "Mens kurta", "Ajrak", "Festive print"].map(
-                  (keyword) => (
+            <div className="sarjan-search-modal-body">
+              <form className="form-search" onSubmit={submitSearch}>
+                <fieldset className="text">
+                  <input
+                    type="text"
+                    placeholder="Searching..."
+                    value={searchQuery}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      setVisibleSearchItems(4);
+                    }}
+                  />
+                </fieldset>
+                <button type="submit">
+                  <i className="icon icon-search" />
+                </button>
+              </form>
+              <div className="sarjan-search-keywords">
+                <h6>Feature keywords Today</h6>
+                <div className="sarjan-search-chips">
+                  {[
+                    "Printed shirts",
+                    "Mens kurta",
+                    "Ajrak",
+                    "Festive print",
+                  ].map((keyword) => (
                     <button
                       type="button"
                       className="sarjan-search-chip"
@@ -521,47 +520,58 @@ export function ModaveModals() {
                     >
                       {keyword}
                     </button>
-                  ),
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="sarjan-search-heading">
-              <h6>Recently viewed products</h6>
-            </div>
-            <div className="tf-grid-layout tf-col-2 lg-col-4 mt_16 sarjan-search-grid">
-              {filteredRecommendations
-                .slice(0, visibleSearchItems)
-                .map((product, index) => (
-                  <ModaveProductCard
-                    product={product}
-                    key={product.id}
-                    delay={`${index * 0.03}s`}
-                    showColorSwatches
-                  />
-                ))}
-            </div>
-            <div className="text-center mt_32">
-              <button
-                type="button"
-                className="tf-btn btn-fill radius-4"
-                onClick={() => {
-                  if (visibleSearchItems < filteredRecommendations.length)
-                    setVisibleSearchItems((value) => value + 4);
-                  else
-                    goFromModal(
-                      "search",
-                      searchQuery.trim()
-                        ? `/products?q=${encodeURIComponent(searchQuery.trim())}&page=1`
-                        : "/products",
-                    );
-                }}
-              >
-                <span className="text text-button">
-                  {visibleSearchItems < filteredRecommendations.length
-                    ? "Load More"
-                    : "View All"}
-                </span>
-              </button>
+              <div className="sarjan-search-heading">
+                <h6>Recently viewed products</h6>
+              </div>
+              <div className="tf-grid-layout mt_16 sarjan-search-grid">
+                {filteredRecommendations
+                  .slice(0, visibleSearchItems)
+                  .map((product, index) => (
+                    <ModaveProductCard
+                      product={product}
+                      key={product.id}
+                      delay={`${index * 0.03}s`}
+                      showColorSwatches
+                      priceCompact
+                      className="sarjan-search-card"
+                    />
+                  ))}
+              </div>
+              <div className="text-center sarjan-search-modal-actions">
+                <button
+                  type="button"
+                  className={withBtnIcon(
+                    "tf-btn btn-fill radius-4 w-100 sarjan-search-load-more",
+                  )}
+                  onClick={() => {
+                    if (visibleSearchItems < filteredRecommendations.length)
+                      setVisibleSearchItems((value) => value + 4);
+                    else
+                      goFromModal(
+                        "search",
+                        searchQuery.trim()
+                          ? `/products?q=${encodeURIComponent(searchQuery.trim())}&page=1`
+                          : "/products",
+                      );
+                  }}
+                >
+                  <TfButtonIcon
+                    icon={
+                      visibleSearchItems < filteredRecommendations.length
+                        ? "icon-arrow-down"
+                        : "icon-arrRight"
+                    }
+                    textClassName="text text-button"
+                  >
+                    {visibleSearchItems < filteredRecommendations.length
+                      ? "Load More"
+                      : "View All"}
+                  </TfButtonIcon>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -668,38 +678,53 @@ export function ModaveModals() {
                                 <>
                                   <button
                                     type="button"
-                                    className="tf-btn btn-white radius-4 has-border"
+                                    className={withBtnIcon(
+                                      "tf-btn btn-white radius-4 has-border",
+                                    )}
                                     onClick={() =>
                                       goFromModal("shoppingCart", "/login")
                                     }
                                   >
-                                    <span className="text text-button">
+                                    <TfButtonIcon
+                                      icon="icon-user"
+                                      textClassName="text text-button"
+                                    >
                                       Login
-                                    </span>
+                                    </TfButtonIcon>
                                   </button>
                                   <button
                                     type="button"
-                                    className="tf-btn btn-fill radius-4"
+                                    className={withBtnIcon(
+                                      "tf-btn btn-fill radius-4",
+                                    )}
                                     onClick={() =>
                                       goFromModal("shoppingCart", "/register")
                                     }
                                   >
-                                    <span className="text text-button">
+                                    <TfButtonIcon
+                                      icon="icon-user"
+                                      textClassName="text text-button"
+                                    >
                                       Sign Up
-                                    </span>
+                                    </TfButtonIcon>
                                   </button>
                                 </>
                               ) : null}
                               <button
                                 type="button"
-                                className="tf-btn btn-fill radius-4"
+                                className={withBtnIcon(
+                                  "tf-btn btn-fill radius-4",
+                                )}
                                 onClick={() =>
                                   goFromModal("shoppingCart", "/products")
                                 }
                               >
-                                <span className="text text-button">
+                                <TfButtonIcon
+                                  icon="icon-arrRight"
+                                  textClassName="text text-button"
+                                >
                                   Browse Products
-                                </span>
+                                </TfButtonIcon>
                               </button>
                             </div>
                           </div>
@@ -759,47 +784,75 @@ export function ModaveModals() {
                             <a href="/term-of-use">Terms &amp; Conditions</a>
                           </label>
                         </div>
-                        <div className="tf-mini-cart-view-checkout">
-                          {!hasB2BSession ? (
-                            <>
-                              <button
-                                type="button"
-                                className="tf-btn w-100 btn-white radius-4 has-border"
-                                onClick={() =>
-                                  goFromModal("shoppingCart", "/login")
-                                }
-                              >
-                                <span className="text text-button">Login</span>
-                              </button>
-                              <button
-                                type="button"
-                                className="tf-btn w-100 btn-white radius-4 has-border"
-                                onClick={() =>
-                                  goFromModal("shoppingCart", "/register")
-                                }
-                              >
-                                <span className="text text-button">
-                                  Sign Up
-                                </span>
-                              </button>
-                            </>
-                          ) : null}
+                        <div
+                          className={`tf-mini-cart-view-checkout sarjan-mini-cart-actions${!hasB2BSession ? " sarjan-mini-cart-actions--guest" : ""}`}
+                        >
                           <button
                             type="button"
-                            className="tf-btn w-100 btn-white radius-4 has-border"
-                            onClick={() => goFromModal("shoppingCart", "/cart")}
-                          >
-                            <span className="text text-button">View Cart</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="tf-btn w-100 btn-fill radius-4"
+                            className={withBtnIcon(
+                              "tf-btn w-100 btn-fill radius-4 sarjan-mini-cart-actions__checkout",
+                            )}
                             onClick={() =>
                               goFromModal("shoppingCart", "/checkout")
                             }
                           >
-                            <span className="text text-button">Check Out</span>
+                            <TfButtonIcon
+                              icon="icon-checkCircle"
+                              textClassName="text text-button"
+                            >
+                              Check Out
+                            </TfButtonIcon>
                           </button>
+                          <button
+                            type="button"
+                            className={withBtnIcon(
+                              "tf-btn w-100 btn-white radius-4 has-border sarjan-mini-cart-actions__view-cart",
+                            )}
+                            onClick={() => goFromModal("shoppingCart", "/cart")}
+                          >
+                            <TfButtonIcon
+                              icon="icon-ShoppingBagOpen"
+                              textClassName="text text-button"
+                            >
+                              View Cart
+                            </TfButtonIcon>
+                          </button>
+                          {!hasB2BSession ? (
+                            <div className="sarjan-mini-cart-actions__auth">
+                              <button
+                                type="button"
+                                className={withBtnIcon(
+                                  "tf-btn w-100 btn-white radius-4 has-border",
+                                )}
+                                onClick={() =>
+                                  goFromModal("shoppingCart", "/login")
+                                }
+                              >
+                                <TfButtonIcon
+                                  icon="icon-user"
+                                  textClassName="text text-button"
+                                >
+                                  Login
+                                </TfButtonIcon>
+                              </button>
+                              <button
+                                type="button"
+                                className={withBtnIcon(
+                                  "tf-btn w-100 btn-fill radius-4",
+                                )}
+                                onClick={() =>
+                                  goFromModal("shoppingCart", "/register")
+                                }
+                              >
+                                <TfButtonIcon
+                                  icon="icon-user"
+                                  textClassName="text text-button"
+                                >
+                                  Sign Up
+                                </TfButtonIcon>
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
                         <div className="text-center">
                           <button
@@ -902,12 +955,17 @@ export function ModaveModals() {
                 <div className="tf-mini-cart-bottom">
                   <button
                     type="button"
-                    className="btn-style-2 w-100 radius-4 view-all-wishlist"
+                    className={withBtnIcon(
+                      "btn-style-2 w-100 radius-4 view-all-wishlist",
+                    )}
                     onClick={() => goFromModal("wishlist", "/wishlist")}
                   >
-                    <span className="text text-button text-btn-uppercase">
+                    <TfButtonIcon
+                      icon="icon-heart"
+                      textClassName="text text-button text-btn-uppercase"
+                    >
                       View All Wish List
-                    </span>
+                    </TfButtonIcon>
                   </button>
                   <button
                     type="button"
@@ -924,7 +982,7 @@ export function ModaveModals() {
       </div>
 
       <div
-        className="modal fade modal-quick-view"
+        className="modal fade modal-quick-view sarjan-quick-view-modal"
         id="quickView"
         tabIndex={-1}
         aria-hidden="true"

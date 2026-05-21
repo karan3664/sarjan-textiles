@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { usePathname } from "next/navigation";
 import { navigation, siteSettings } from "@/data/site";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
@@ -170,7 +171,7 @@ export function ModaveHeader() {
                     <span className="icon icon-search2" />
                   </a>
                 </li>
-                <li className="nav-account">
+                <li className="nav-account sarjan-nav-account-desktop">
                   <a
                     href={client ? "/profile" : "/login"}
                     className="nav-icon-item"
@@ -181,8 +182,16 @@ export function ModaveHeader() {
                     {client ? (
                       <>
                         <div className="sub-top">
-                          <a href="/profile" className="tf-btn btn-reset">
-                            <span className="text text-button">My Account</span>
+                          <a
+                            href="/profile"
+                            className={withBtnIcon("tf-btn btn-reset")}
+                          >
+                            <TfButtonIcon
+                              icon="icon-user"
+                              textClassName="text text-button"
+                            >
+                              My Account
+                            </TfButtonIcon>
                           </a>
                           <p className="text-center text-secondary-2">
                             {client.companyName ?? client.email}
@@ -213,8 +222,16 @@ export function ModaveHeader() {
                     ) : (
                       <>
                         <div className="sub-top">
-                          <a href="/login" className="tf-btn btn-reset">
-                            <span className="text text-button">Login</span>
+                          <a
+                            href="/login"
+                            className={withBtnIcon("tf-btn btn-reset")}
+                          >
+                            <TfButtonIcon
+                              icon="icon-user"
+                              textClassName="text text-button"
+                            >
+                              Login
+                            </TfButtonIcon>
                           </a>
                           <p className="text-center text-secondary-2">
                             Don&apos;t have an account?{" "}
@@ -351,12 +368,12 @@ export function ModaveHeader() {
         </div>
       </div>
       <div
-        className="offcanvas offcanvas-start canvas-mb"
+        className="offcanvas offcanvas-start canvas-mb sarjan-mobile-menu"
         id="mobileMenu"
         tabIndex={-1}
         aria-labelledby="mobileMenuLabel"
       >
-        <div className="mb-canvas-content">
+        <div className="mb-canvas-content sarjan-mobile-menu__canvas">
           <button
             type="button"
             className="icon-close-popup"
@@ -365,19 +382,84 @@ export function ModaveHeader() {
           >
             <i className="icon icon-close" />
           </button>
-          <div className="mb-body">
-            <div>
-              <form className="form-search" action="/products">
-                <input
-                  type="text"
-                  name="q"
-                  placeholder="Search products, fabric, SKU"
-                />
-                <button type="submit" aria-label="Search">
-                  <i className="icon-search" />
-                </button>
-              </form>
-              <ul className="nav-ul-mb" id="mobileMenuLabel">
+          <div className="mb-body sarjan-mobile-menu__body">
+            <div className="sarjan-mobile-menu__auth" id="mobileMenuLabel">
+              {client ? (
+                <>
+                  <p className="sarjan-mobile-menu__user-label">Signed in as</p>
+                  <p className="sarjan-mobile-menu__user-name">
+                    {client.companyName ?? client.email}
+                  </p>
+                  <div className="sarjan-mobile-menu__actions">
+                    <Link
+                      href="/profile"
+                      className="sarjan-mobile-menu__btn"
+                      data-bs-dismiss="offcanvas"
+                    >
+                      My Account
+                    </Link>
+                    <Link
+                      href="/my-account-orders"
+                      className="sarjan-mobile-menu__btn"
+                      data-bs-dismiss="offcanvas"
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      href="/my-account-testimonials"
+                      className="sarjan-mobile-menu__btn"
+                      data-bs-dismiss="offcanvas"
+                    >
+                      Share Testimonial
+                    </Link>
+                    <button
+                      type="button"
+                      className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--logout sarjan-logout-btn"
+                      onClick={() => {
+                        logout();
+                      }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="sarjan-mobile-menu__actions sarjan-mobile-menu__actions--guest">
+                  <Link
+                    href="/login"
+                    className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--primary"
+                    data-bs-dismiss="offcanvas"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--outline"
+                    data-bs-dismiss="offcanvas"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <form
+              className="form-search sarjan-mobile-menu__search"
+              action="/products"
+            >
+              <input
+                type="text"
+                name="q"
+                placeholder="Search products, fabric, SKU"
+              />
+              <button type="submit" aria-label="Search">
+                <i className="icon-search" />
+              </button>
+            </form>
+
+            <nav className="sarjan-mobile-menu__nav" aria-label="Mobile">
+              <p className="sarjan-mobile-menu__section-label">Menu</p>
+              <ul className="nav-ul-mb sarjan-mobile-menu__links">
                 {navigation.map((item) => (
                   <li
                     className={`nav-mb-item${isActive(item.href) ? " active" : ""}`}
@@ -397,56 +479,52 @@ export function ModaveHeader() {
                 >
                   <Link
                     href="/categories"
-                    className="mb-menu-link fw-6"
+                    className="mb-menu-link"
                     data-bs-dismiss="offcanvas"
                   >
-                    <span>Category hubs</span>
+                    <span>Categories</span>
                   </Link>
                 </li>
-                {hubs.map((hub) => (
-                  <li className="nav-mb-item" key={`hub-${hub.slug}`}>
-                    <a
-                      href={`/categories/${hub.slug}`}
-                      className="mb-menu-link ps-3"
-                      data-bs-dismiss="offcanvas"
-                    >
-                      <span>{hub.title}</span>
-                    </a>
-                  </li>
-                ))}
-                <li className="nav-mb-item">
-                  <span className="mb-menu-link fw-6 text-secondary">
-                    Shop by category
-                  </span>
-                </li>
-                {catalogCategories.map((cat) => (
-                  <li className="nav-mb-item" key={`cat-${cat.slug}`}>
-                    <a
-                      href={catalogCategoryHref(cat.slug)}
-                      className="mb-menu-link ps-3"
-                      data-bs-dismiss="offcanvas"
-                    >
-                      <span>
-                        {cat.name}{" "}
-                        <span className="text-caption-2">
-                          ({cat.productCount})
-                        </span>
-                      </span>
-                    </a>
-                  </li>
-                ))}
               </ul>
-            </div>
-            <div className="mb-other-content">
-              <div className="group-icon">
-                <a
-                  href={client ? "/profile" : "/login"}
-                  className="site-nav-icon"
-                  data-bs-dismiss="offcanvas"
-                >
-                  <i className="icon icon-user" />
-                  <span>{client ? "Account" : "Login"}</span>
-                </a>
+
+              <details className="sarjan-mobile-menu__details">
+                <summary className="sarjan-mobile-menu__details-summary">
+                  Browse categories
+                </summary>
+                <ul className="nav-ul-mb sarjan-mobile-menu__sub">
+                  {hubs.map((hub) => (
+                    <li className="nav-mb-item" key={`hub-${hub.slug}`}>
+                      <a
+                        href={`/categories/${hub.slug}`}
+                        className="mb-menu-link"
+                        data-bs-dismiss="offcanvas"
+                      >
+                        <span>{hub.title}</span>
+                      </a>
+                    </li>
+                  ))}
+                  {catalogCategories.map((cat) => (
+                    <li className="nav-mb-item" key={`cat-${cat.slug}`}>
+                      <a
+                        href={catalogCategoryHref(cat.slug)}
+                        className="mb-menu-link"
+                        data-bs-dismiss="offcanvas"
+                      >
+                        <span>
+                          {cat.name}{" "}
+                          <span className="text-caption-2">
+                            ({cat.productCount})
+                          </span>
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </nav>
+
+            <div className="mb-other-content sarjan-mobile-menu__footer">
+              <div className="group-icon sarjan-mobile-menu__quick">
                 <a
                   href="#wishlist"
                   className="site-nav-icon"
@@ -455,6 +533,15 @@ export function ModaveHeader() {
                 >
                   <i className="icon icon-heart" />
                   <span>Wishlist</span>
+                </a>
+                <a
+                  href="#shoppingCart"
+                  className="site-nav-icon"
+                  data-bs-dismiss="offcanvas"
+                  data-bs-toggle="modal"
+                >
+                  <i className="icon icon-ShoppingBagOpen" />
+                  <span>Cart ({cartCount})</span>
                 </a>
               </div>
               <div className="text-need">Need help?</div>

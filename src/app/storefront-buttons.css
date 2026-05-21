@@ -378,8 +378,15 @@ body.preload-wrapper
     border-radius: var(--sarjan-btn-radius) !important;
   }
 
+  .modal-shopping-cart .sarjan-mini-cart-actions > .tf-btn,
+  .modal-shopping-cart .sarjan-mini-cart-actions__auth .tf-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    border-radius: var(--sarjan-btn-radius) !important;
+  }
+
   .modal .tf-mini-cart-bottom {
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* Disabled */

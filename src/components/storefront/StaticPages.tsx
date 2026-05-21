@@ -5,8 +5,10 @@ import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { FeedbackForm } from "./FeedbackForm";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { PageTitle } from "./PageTitle";
+import { PaymentConfirmationClient } from "./PaymentConfirmationClient";
 import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 export function DynamicInfoPage({
   title,
@@ -57,9 +59,16 @@ export function DynamicInfoPage({
                 {cta ? (
                   <Link
                     href={cta.href}
-                    className="tf-btn btn-fill radius-4 sarjan-policy-cta"
+                    className={withBtnIcon(
+                      "tf-btn btn-fill radius-4 sarjan-policy-cta",
+                    )}
                   >
-                    <span className="text text-button">{cta.label}</span>
+                    <TfButtonIcon
+                      icon="icon-arrRight"
+                      textClassName="text text-button"
+                    >
+                      {cta.label}
+                    </TfButtonIcon>
                   </Link>
                 ) : null}
               </div>
@@ -93,8 +102,11 @@ export async function SearchResultPage({
                 placeholder="Search SKU, fabric, category"
               />
             </fieldset>
-            <button type="submit" className="tf-btn btn-fill radius-4">
-              <span className="text">Search</span>
+            <button
+              type="submit"
+              className={withBtnIcon("tf-btn btn-fill radius-4")}
+            >
+              <TfButtonIcon icon="icon-search2">Search</TfButtonIcon>
             </button>
           </form>
           <div className="heading-section text-center mt_32">
@@ -130,35 +142,7 @@ export function PaymentConfirmationPage({ orderId }: { orderId?: string }) {
         title="Payment Confirmation"
         crumbs={["Homepage", "Payment Confirmation"]}
       />
-      <section className="flat-spacing">
-        <div className="container">
-          <div className="payment-confirm-wrap text-center">
-            <div className="box-icon w_80 round bg-success mx-auto">
-              <i className="icon icon-check text-white" />
-            </div>
-            <h3 className="mt_24">Order request received</h3>
-            <p className="text-secondary mt_8">
-              Order request is sent to admin for stock, MOQ, and dispatch
-              confirmation.
-            </p>
-            {orderId ? <h6 className="mt_16">Order ID: {orderId}</h6> : null}
-            <div className="d-flex gap-12 justify-content-center mt_32">
-              <Link
-                href="/my-account-orders"
-                className="tf-btn btn-fill radius-4"
-              >
-                <span className="text">View Orders</span>
-              </Link>
-              <Link
-                href="/products"
-                className="tf-btn btn-white has-border radius-4"
-              >
-                <span className="text">Continue Shopping</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PaymentConfirmationClient orderId={orderId} />
     </>
   );
 }
@@ -180,8 +164,11 @@ export function PaymentFailurePage() {
             <p className="text-secondary mt_8">
               Please retry checkout or contact Sarjan Textiles order team.
             </p>
-            <Link href="/checkout" className="tf-btn btn-fill radius-4 mt_32">
-              <span className="text">Return Checkout</span>
+            <Link
+              href="/checkout"
+              className={withBtnIcon("tf-btn btn-fill radius-4 mt_32")}
+            >
+              <TfButtonIcon icon="icon-arrLeft">Return Checkout</TfButtonIcon>
             </Link>
           </div>
         </div>
@@ -370,9 +357,11 @@ export function ProductSoldOutPage() {
                 <p className="mt_16">Set: {FULL_SIZE_RUN.join(" / ")}</p>
                 <Link
                   href="/products"
-                  className="tf-btn btn-fill radius-4 mt_24"
+                  className={withBtnIcon("tf-btn btn-fill radius-4 mt_24")}
                 >
-                  <span className="text">Browse Available Products</span>
+                  <TfButtonIcon icon="icon-arrRight">
+                    Browse Available Products
+                  </TfButtonIcon>
                 </Link>
               </div>
             </div>
@@ -392,8 +381,11 @@ export function NotFoundPage() {
           <h1 className="display-2">404</h1>
           <h4 className="mt_16">Page not found</h4>
           <p className="text-secondary mt_8">Requested page does not exist.</p>
-          <Link href="/" className="tf-btn btn-fill radius-4 mt_32">
-            <span className="text">Back Home</span>
+          <Link
+            href="/"
+            className={withBtnIcon("tf-btn btn-fill radius-4 mt_32")}
+          >
+            <TfButtonIcon icon="icon-arrLeft">Back Home</TfButtonIcon>
           </Link>
         </div>
       </section>

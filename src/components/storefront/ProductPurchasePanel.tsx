@@ -7,6 +7,7 @@ import { isProductSoldOut } from "@/lib/product-availability";
 import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type ProductPurchasePanelProps = {
   product: Product;
@@ -18,6 +19,54 @@ type ProductPurchasePanelProps = {
 
 function productSizeRun(product: Product) {
   return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+}
+
+function ProductWishlistCompareIcons({
+  product,
+  wishlistActive,
+}: {
+  product: Product;
+  wishlistActive: boolean;
+}) {
+  return (
+    <div
+      className="sarjan-product-action-icons"
+      aria-label="Wishlist and compare"
+    >
+      <a
+        href="#compare"
+        data-bs-toggle="offcanvas"
+        aria-controls="compare"
+        className="sarjan-product-icon-link hover-tooltip"
+        data-compare-add
+        data-product-slug={product.slug}
+        aria-label="Add to compare"
+      >
+        <span className="sarjan-product-icon-circle box-icon compare btn-icon-action">
+          <span className="icon icon-gitDiff" aria-hidden />
+        </span>
+        <span className="sarjan-product-icon-label">Compare</span>
+        <span className="tooltip text-caption-2">Compare</span>
+      </a>
+      <a
+        href="#"
+        role="button"
+        className="sarjan-product-icon-link hover-tooltip"
+        data-wishlist-toggle
+        data-product-slug={product.slug}
+        aria-pressed={wishlistActive}
+        aria-label={wishlistActive ? "Remove from wishlist" : "Add to wishlist"}
+      >
+        <span
+          className={`sarjan-product-icon-circle box-icon wishlist btn-icon-action${wishlistActive ? " active added" : ""}`}
+        >
+          <span className="icon icon-heart" aria-hidden />
+        </span>
+        <span className="sarjan-product-icon-label">Wishlist</span>
+        <span className="tooltip text-caption-2">Wishlist</span>
+      </a>
+    </div>
+  );
 }
 
 export function ProductPurchasePanel({
@@ -66,104 +115,88 @@ export function ProductPurchasePanel({
         </div>
       </div>
       <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
-        {soldOut ? (
-          <>
-            <span
-              className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"
-              style={{ opacity: 0.55, cursor: "not-allowed" }}
-              aria-disabled="true"
-            >
-              Out of stock
-            </span>
-            <span
-              className="btn-style-3 flex-grow-1 text-btn-uppercase"
-              style={{ opacity: 0.55, cursor: "not-allowed" }}
-              aria-disabled="true"
-            >
-              Out of stock
-            </span>
-            <a
-              href="#compare"
-              data-bs-toggle="offcanvas"
-              aria-controls="compare"
-              className="box-icon hover-tooltip compare btn-icon-action"
-              data-compare-add
-              data-product-slug={product.slug}
-            >
-              <span className="icon icon-gitDiff" />
-              <span className="tooltip text-caption-2">Compare</span>
-            </a>
-            <a
-              href="#"
-              role="button"
-              className={`box-icon hover-tooltip wishlist btn-icon-action${wishlistActive ? " active added" : ""}`}
-              data-wishlist-toggle
-              data-product-slug={product.slug}
-              aria-pressed={wishlistActive}
-            >
-              <span className="icon icon-heart" />
-              <span className="tooltip text-caption-2">Wishlist</span>
-            </a>
-          </>
-        ) : (
-          <>
-            <a
-              href="#shoppingCart"
-              data-bs-toggle="modal"
-              className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart"
-              data-cart-add
-              data-product-slug={product.slug}
-              data-product-size-run={sizeRun.join(",")}
-              data-product-color={activeColor}
-              data-set-price={setPrice}
-            >
-              <span className="text text-button sarjan-add-set-label">
-                Add 1 set
+        <div className="sarjan-product-action-buttons">
+          {soldOut ? (
+            <>
+              <span
+                className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"
+                style={{ opacity: 0.55, cursor: "not-allowed" }}
+                aria-disabled="true"
+              >
+                Out of stock
               </span>
-            </a>
-            <a
-              href="#shoppingCart"
-              data-bs-toggle="modal"
-              className="btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn"
-              data-cart-add
-              data-product-all-colors="true"
-              data-product-colors={colors.join(",")}
-              data-product-slug={product.slug}
-              data-product-size-run={sizeRun.join(",")}
-            >
-              <span className="text text-button">Add all colors</span>
-            </a>
-            <a
-              href="#compare"
-              data-bs-toggle="offcanvas"
-              aria-controls="compare"
-              className="box-icon hover-tooltip compare btn-icon-action"
-              data-compare-add
-              data-product-slug={product.slug}
-            >
-              <span className="icon icon-gitDiff" />
-              <span className="tooltip text-caption-2">Compare</span>
-            </a>
-            <a
-              href="#"
-              role="button"
-              className={`box-icon hover-tooltip wishlist btn-icon-action${wishlistActive ? " active added" : ""}`}
-              data-wishlist-toggle
-              data-product-slug={product.slug}
-              aria-pressed={wishlistActive}
-            >
-              <span className="icon icon-heart" />
-              <span className="tooltip text-caption-2">Wishlist</span>
-            </a>
-          </>
-        )}
+              <span
+                className="btn-style-3 flex-grow-1 text-btn-uppercase"
+                style={{ opacity: 0.55, cursor: "not-allowed" }}
+                aria-disabled="true"
+              >
+                Out of stock
+              </span>
+            </>
+          ) : (
+            <>
+              <a
+                href="#shoppingCart"
+                data-bs-toggle="modal"
+                className={withBtnIcon(
+                  "btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart sarjan-add-set-btn",
+                )}
+                data-cart-add
+                data-product-slug={product.slug}
+                data-product-size-run={sizeRun.join(",")}
+                data-product-color={activeColor}
+                data-set-price={setPrice}
+              >
+                <i
+                  className="icon icon-ShoppingBagOpen sarjan-tf-btn-icon"
+                  aria-hidden
+                />
+                <span className="sarjan-add-set-btn__inner">
+                  <span className="sarjan-add-set-label text text-button">
+                    Add 1 set
+                  </span>
+                  <span
+                    className="sarjan-add-set-price tf-qty-price total-price"
+                    aria-hidden="true"
+                  />
+                </span>
+              </a>
+              <a
+                href="#shoppingCart"
+                data-bs-toggle="modal"
+                className={withBtnIcon(
+                  "btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn",
+                )}
+                data-cart-add
+                data-product-all-colors="true"
+                data-product-colors={colors.join(",")}
+                data-product-slug={product.slug}
+                data-product-size-run={sizeRun.join(",")}
+              >
+                <i className="icon icon-tag sarjan-tf-btn-icon" aria-hidden />
+                <span className="text text-button sarjan-all-colors-label">
+                  <span className="sarjan-all-colors-label--long">
+                    Add all colors
+                  </span>
+                  <span className="sarjan-all-colors-label--short">
+                    All colors
+                  </span>
+                </span>
+              </a>
+            </>
+          )}
+        </div>
+        <ProductWishlistCompareIcons
+          product={product}
+          wishlistActive={wishlistActive}
+        />
       </div>
       {showViewDetailsLink ? (
         <a
           href={`/products/${product.slug}`}
-          className="tf-btn w-100 btn-fill radius-4"
+          className={withBtnIcon("tf-btn w-100 btn-fill radius-4")}
         >
-          <span className="text">View Full Details</span>
+          <TfButtonIcon icon="icon-eye">View Full Details</TfButtonIcon>
         </a>
       ) : null}
     </div>

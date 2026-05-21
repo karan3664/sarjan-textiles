@@ -91,169 +91,198 @@ type SidebarNavItem = {
   section?: AdminActiveSection;
 };
 
-const SIDEBAR_NAV_ITEMS = (
-  [
-    {
-      href: "/admin/about",
-      icon: "icon-edit",
-      label: "About Us",
-      section: "about",
-    },
-    {
-      href: "/admin/account",
-      icon: "icon-user-circle",
-      label: "Account & security",
-      section: "account",
-    },
-    {
-      href: "/admin/ai-product-studio",
-      icon: "icon-camera",
-      label: "AI Product Studio",
-      section: "studio",
-    },
-    {
-      href: "/admin/audit",
-      icon: "icon-clipboard-text",
-      label: "Audit Logs",
-      section: "audit",
-    },
-    {
-      href: "/admin/blog-comments",
-      icon: "icon-message",
-      label: "Blog comments",
-      section: "blogComments",
-    },
-    {
-      href: "/admin/blogs-list",
-      icon: "icon-edit",
-      label: "Blogs",
-      section: "blogs",
-    },
-    {
-      href: "/admin/category-pages",
-      icon: "icon-chart-bar",
-      label: "Category pages",
-      section: "categoryPages",
-    },
-    {
-      href: "/admin/customers",
-      icon: "icon-users",
-      label: "Client Management",
-      section: "customers",
-    },
-    {
-      href: "/admin/pricing",
-      icon: "icon-dollar",
-      label: "Client Pricing",
-      section: "pricing",
-    },
-    {
-      href: "/admin/home",
-      icon: "icon-edit",
-      label: "CMS / Home Page",
-      section: "home",
-    },
-    {
-      href: "/admin/commerce-hub",
-      icon: "icon-chart-bar",
-      label: "Commerce hub",
-      section: "commerceHub",
-    },
-    {
-      href: "/admin/contact-inquiries",
-      icon: "icon-message",
-      label: "Order Feedback",
-      section: "inquiries",
-    },
-    {
-      href: "/admin/contact",
-      icon: "icon-edit",
-      label: "Contact Us",
-      section: "contact",
-    },
-    {
-      href: "/admin/custom-pages",
-      icon: "icon-edit",
-      label: "Custom site pages",
-      section: "customPages",
-    },
-    {
-      href: "/admin",
-      icon: "icon-house",
-      label: "Dashboard",
-      section: "dashboard",
-    },
-    {
-      href: "/admin/backups",
-      icon: "icon-database",
-      label: "DB Backup / Restore",
-      section: "backups",
-    },
-    {
-      href: "/admin/dispatch",
-      icon: "icon-send",
-      label: "Dispatch",
-      section: "dispatch",
-    },
-    { href: "/", icon: "icon-sign-out", label: "Front Store" },
-    {
-      href: "/admin/products-low",
-      icon: "icon-basket",
-      label: "Inventory",
-      section: "inventory",
-    },
-    {
-      href: "/admin/orders",
-      icon: "icon-dollar",
-      label: "Orders",
-      section: "orders",
-    },
-    {
-      href: "/admin/payments",
-      icon: "icon-hand-coins",
-      label: "Payments & Credit",
-      section: "payments",
-    },
-    {
-      href: "/admin/product-filters",
-      icon: "icon-chart-bar",
-      label: "Product Filters",
-      section: "filters",
-    },
-    {
-      href: "/admin/products-list",
-      icon: "icon-package",
-      label: "Products",
-      section: "products",
-    },
-    {
-      href: "/admin/reports",
-      icon: "icon-chart-bar",
-      label: "Reports",
-      section: "reports",
-    },
-    {
-      href: "/admin/roles",
-      icon: "icon-users",
-      label: "Roles & Permissions",
-      section: "roles",
-    },
-    {
-      href: "/admin/seo",
-      icon: "icon-chart-bar",
-      label: "SEO",
-      section: "seo",
-    },
-    {
-      href: "/admin/testimonials",
-      icon: "icon-message",
-      label: "Testimonials",
-      section: "testimonials",
-    },
-  ] as SidebarNavItem[]
-).sort((a, b) =>
-  a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
-);
+/** Daily operations — top of sidebar */
+const SIDEBAR_PRIORITY_ITEMS: SidebarNavItem[] = [
+  {
+    href: "/admin",
+    icon: "icon-house",
+    label: "Dashboard",
+    section: "dashboard",
+  },
+  {
+    href: "/admin/orders",
+    icon: "icon-dollar",
+    label: "Orders",
+    section: "orders",
+  },
+  {
+    href: "/admin/customers",
+    icon: "icon-users",
+    label: "Client Management",
+    section: "customers",
+  },
+  {
+    href: "/admin/dispatch",
+    icon: "icon-send",
+    label: "Dispatch",
+    section: "dispatch",
+  },
+  {
+    href: "/admin/payments",
+    icon: "icon-hand-coins",
+    label: "Payments & Credit",
+    section: "payments",
+  },
+  {
+    href: "/admin/products-low",
+    icon: "icon-basket",
+    label: "Inventory",
+    section: "inventory",
+  },
+  {
+    href: "/admin/products-list",
+    icon: "icon-package",
+    label: "Products",
+    section: "products",
+  },
+  {
+    href: "/admin/pricing",
+    icon: "icon-dollar",
+    label: "Client Pricing",
+    section: "pricing",
+  },
+  {
+    href: "/admin/reports",
+    icon: "icon-chart-bar",
+    label: "Reports",
+    section: "reports",
+  },
+  {
+    href: "/admin/contact-inquiries",
+    icon: "icon-message",
+    label: "Order Feedback",
+    section: "inquiries",
+  },
+  {
+    href: "/admin/commerce-hub",
+    icon: "icon-chart-bar",
+    label: "Commerce hub",
+    section: "commerceHub",
+  },
+];
+
+/** Website, CMS, marketing — below operations */
+const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
+  {
+    href: "/admin/home",
+    icon: "icon-edit",
+    label: "CMS / Home Page",
+    section: "home",
+  },
+  {
+    href: "/admin/about",
+    icon: "icon-edit",
+    label: "About Us",
+    section: "about",
+  },
+  {
+    href: "/admin/contact",
+    icon: "icon-edit",
+    label: "Contact Us",
+    section: "contact",
+  },
+  {
+    href: "/admin/blogs-list",
+    icon: "icon-edit",
+    label: "Blogs",
+    section: "blogs",
+  },
+  {
+    href: "/admin/blog-comments",
+    icon: "icon-message",
+    label: "Blog comments",
+    section: "blogComments",
+  },
+  {
+    href: "/admin/testimonials",
+    icon: "icon-message",
+    label: "Testimonials",
+    section: "testimonials",
+  },
+  {
+    href: "/admin/category-pages",
+    icon: "icon-chart-bar",
+    label: "Category pages",
+    section: "categoryPages",
+  },
+  {
+    href: "/admin/custom-pages",
+    icon: "icon-edit",
+    label: "Custom site pages",
+    section: "customPages",
+  },
+  {
+    href: "/admin/product-filters",
+    icon: "icon-chart-bar",
+    label: "Product Filters",
+    section: "filters",
+  },
+  {
+    href: "/admin/ai-product-studio",
+    icon: "icon-camera",
+    label: "AI Product Studio",
+    section: "studio",
+  },
+  {
+    href: "/admin/seo",
+    icon: "icon-chart-bar",
+    label: "SEO",
+    section: "seo",
+  },
+];
+
+/** Account, access, maintenance — bottom */
+const SIDEBAR_SYSTEM_ITEMS: SidebarNavItem[] = [
+  {
+    href: "/admin/account",
+    icon: "icon-user-circle",
+    label: "Account & security",
+    section: "account",
+  },
+  {
+    href: "/admin/roles",
+    icon: "icon-users",
+    label: "Roles & Permissions",
+    section: "roles",
+  },
+  {
+    href: "/admin/backups",
+    icon: "icon-database",
+    label: "DB Backup / Restore",
+    section: "backups",
+  },
+  {
+    href: "/admin/audit",
+    icon: "icon-clipboard-text",
+    label: "Audit Logs",
+    section: "audit",
+  },
+  { href: "/", icon: "icon-sign-out", label: "Front Store" },
+];
+
+type SidebarNavDivider = { type: "divider"; label: string };
+
+type SidebarNavEntry = SidebarNavItem | SidebarNavDivider;
+
+const SIDEBAR_NAV_ENTRIES: SidebarNavEntry[] = [
+  ...SIDEBAR_PRIORITY_ITEMS,
+  { type: "divider", label: "Website & CMS" },
+  ...SIDEBAR_SECONDARY_ITEMS,
+  { type: "divider", label: "System" },
+  ...SIDEBAR_SYSTEM_ITEMS,
+];
+
+function isSidebarDivider(entry: SidebarNavEntry): entry is SidebarNavDivider {
+  return "type" in entry && entry.type === "divider";
+}
+
+function SidebarNavDividerRow({ label }: { label: string }) {
+  return (
+    <li className="menu-item sarjan-admin-menu-divider">
+      <span className="sarjan-admin-menu-divider__label">{label}</span>
+    </li>
+  );
+}
 
 function Sidebar({ active }: { active: AdminActiveSection }) {
   return (
@@ -286,15 +315,22 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
       <div className="section-menu-left-wrap">
         <div className="center">
           <ul>
-            {SIDEBAR_NAV_ITEMS.map((item) => (
-              <MenuItem
-                key={item.href + item.label}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                active={item.section != null && active === item.section}
-              />
-            ))}
+            {SIDEBAR_NAV_ENTRIES.map((entry, index) =>
+              isSidebarDivider(entry) ? (
+                <SidebarNavDividerRow
+                  key={`divider-${entry.label}-${index}`}
+                  label={entry.label}
+                />
+              ) : (
+                <MenuItem
+                  key={entry.href + entry.label}
+                  href={entry.href}
+                  icon={entry.icon}
+                  label={entry.label}
+                  active={entry.section != null && active === entry.section}
+                />
+              ),
+            )}
           </ul>
         </div>
       </div>
@@ -320,6 +356,7 @@ export function AdminTemplateChrome({
       {adminStyles.map((style) => (
         <link key={style} rel="stylesheet" href={`/template/admin/${style}`} />
       ))}
+      <link rel="stylesheet" href="/admin-charts.css" />
       <AdminGlobalLoader />
       <div id="wrapper">
         <div id="page">

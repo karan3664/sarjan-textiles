@@ -8,7 +8,9 @@ import { persistClientSession } from "@/lib/client-auth-browser";
 import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
 import type { AuthBanners } from "@/lib/auth-banner-types";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
+import { clientPostLoginPath } from "@/lib/auth-route-guards";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -19,9 +21,7 @@ function isErrorMessage(value: string) {
 }
 
 function safeAuthRedirect(next: string | null) {
-  const path = next?.trim() ?? "";
-  if (!path.startsWith("/") || path.startsWith("//")) return "/profile";
-  return path;
+  return clientPostLoginPath(next?.trim() || null);
 }
 
 const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -496,17 +496,22 @@ function AuthPageClientInner({
                             <div className="sarjan-gst-captcha-actions">
                               <button
                                 type="button"
-                                className="tf-btn btn-fill sarjan-gst-captcha-refresh"
+                                className={withBtnIcon(
+                                  "tf-btn btn-fill sarjan-gst-captcha-refresh",
+                                )}
                                 onClick={() => void loadGstCaptcha()}
                                 disabled={
                                   captchaFetching || gstLoading || !gstinReady
                                 }
                               >
-                                <span className="text text-button">
+                                <TfButtonIcon
+                                  icon="icon-arrowClockwise"
+                                  textClassName="text text-button"
+                                >
                                   {captchaFetching
                                     ? "Loading…"
                                     : "Refresh image"}
-                                </span>
+                                </TfButtonIcon>
                               </button>
                             </div>
                             <input
@@ -536,7 +541,7 @@ function AuthPageClientInner({
                           <fieldset style={{ marginTop: 8 }}>
                             <button
                               type="button"
-                              className="tf-btn btn-fill"
+                              className={withBtnIcon("tf-btn btn-fill")}
                               style={{ width: "100%" }}
                               onClick={verifyGst}
                               disabled={
@@ -546,11 +551,14 @@ function AuthPageClientInner({
                                 captchaInput.replace(/\D/g, "").length !== 6
                               }
                             >
-                              <span className="text text-button">
+                              <TfButtonIcon
+                                icon="icon-checkCircle"
+                                textClassName="text text-button"
+                              >
                                 {gstLoading
                                   ? "Verifying…"
                                   : "Verify GST with portal"}
-                              </span>
+                              </TfButtonIcon>
                             </button>
                           </fieldset>
                         </>
@@ -643,21 +651,25 @@ function AuthPageClientInner({
                         <div className="sarjan-otp-actions">
                           <button
                             type="button"
-                            className={sarjanButtonClass("sarjan-auth-btn")}
+                            className={withBtnIcon(
+                              sarjanButtonClass("sarjan-auth-btn"),
+                            )}
                             onClick={sendEmailOtp}
                             disabled={emailOtpLoading || !email.trim()}
                           >
-                            <span className="text">
+                            <TfButtonIcon icon="icon-mail">
                               {emailOtpLoading && !emailOtpSent
                                 ? "Sending..."
                                 : emailOtpSent
                                   ? "Resend OTP"
                                   : "Send OTP"}
-                            </span>
+                            </TfButtonIcon>
                           </button>
                           <button
                             type="button"
-                            className={sarjanButtonClass("sarjan-auth-btn")}
+                            className={withBtnIcon(
+                              sarjanButtonClass("sarjan-auth-btn"),
+                            )}
                             onClick={verifyEmailOtp}
                             disabled={
                               emailOtpLoading ||
@@ -666,9 +678,15 @@ function AuthPageClientInner({
                               emailVerified
                             }
                           >
-                            <span className="text">
+                            <TfButtonIcon
+                              icon={
+                                emailVerified
+                                  ? "icon-check"
+                                  : "icon-checkCircle"
+                              }
+                            >
                               {emailVerified ? "Verified" : "Verify OTP"}
-                            </span>
+                            </TfButtonIcon>
                           </button>
                         </div>
                       </fieldset>
@@ -781,19 +799,41 @@ function AuthPageClientInner({
                 ) : null}
                 <div className="button-submit sarjan-auth-submit-wrap">
                   <button
-                    className="tf-btn btn-fill sarjan-auth-submit"
+                    className={withBtnIcon(
+                      "tf-btn btn-fill sarjan-auth-submit",
+                    )}
                     type="submit"
                     disabled={loading}
                   >
-                    <span className="text text-button">
+                    <TfButtonIcon
+                      icon={isForgot ? "icon-security" : "icon-user"}
+                      textClassName="text text-button"
+                    >
                       {loading
                         ? "Please wait..."
                         : isForgot
                           ? "Reset Password"
                           : title}
-                    </span>
+                    </TfButtonIcon>
                   </button>
                 </div>
+                <p className="sarjan-auth-switch">
+                  {isRegister ? (
+                    <>
+                      Already have an account? <Link href="/login">Login</Link>
+                    </>
+                  ) : isForgot ? (
+                    <>
+                      Remember your password?{" "}
+                      <Link href="/login">Back to login</Link>
+                    </>
+                  ) : (
+                    <>
+                      Don&apos;t have an account?{" "}
+                      <Link href="/register">Register</Link>
+                    </>
+                  )}
+                </p>
               </form>
             </div>
             <div className="right right--auth-visual">

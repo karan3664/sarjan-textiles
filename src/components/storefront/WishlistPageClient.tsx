@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -93,8 +94,11 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
       <div className="text-center py-5">
         <h5>Your wishlist is empty</h5>
         <p className="text-secondary mt_8">Add products with heart icon.</p>
-        <Link href="/products" className="tf-btn btn-fill radius-4 mt_16">
-          <span className="text">Browse Products</span>
+        <Link
+          href="/products"
+          className={withBtnIcon("tf-btn btn-fill radius-4 mt_16")}
+        >
+          <TfButtonIcon icon="icon-arrRight">Browse Products</TfButtonIcon>
         </Link>
       </div>
     );
@@ -106,10 +110,10 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
         <h5>{products.length} wishlisted products</h5>
         <button
           type="button"
-          className="tf-btn btn-white has-border radius-4"
+          className={withBtnIcon("tf-btn btn-white has-border radius-4")}
           onClick={clearWishlist}
         >
-          <span className="text">Clear wishlist</span>
+          <TfButtonIcon icon="icon-close">Clear wishlist</TfButtonIcon>
         </button>
       </div>
       <div className="tf-grid-layout tf-col-2 lg-col-4">

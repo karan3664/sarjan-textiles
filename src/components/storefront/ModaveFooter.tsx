@@ -10,7 +10,7 @@ export async function ModaveFooter() {
     settings.directionsUrl?.trim() ||
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
   return (
-    <footer id="footer" className="footer bg-main">
+    <footer id="footer" className="footer bg-main sarjan-footer">
       <div className="footer-wrap">
         <div className="footer-body">
           <div className="container">
@@ -92,7 +92,7 @@ export async function ModaveFooter() {
                   </ul>
                 </div>
               </div>
-              <div className="col-12 col-sm-6 col-lg-2">
+              <div className="col-12 col-lg-2">
                 <div className="footer-menu footer-menu-sarjan-split">
                   <div className="footer-col-block">
                     <div className="footer-heading text-button footer-heading-mobile">
@@ -112,7 +112,7 @@ export async function ModaveFooter() {
                   </div>
                 </div>
               </div>
-              <div className="col-12 col-sm-6 col-lg-2">
+              <div className="col-12 col-lg-2">
                 <div className="footer-menu footer-menu-sarjan-split">
                   <div className="footer-col-block">
                     <div className="footer-heading text-button footer-heading-mobile">
@@ -162,7 +162,7 @@ export async function ModaveFooter() {
                   </div>
                 </div>
               </div>
-              <div className="col-12 col-sm-6 col-lg-2">
+              <div className="col-12 col-lg-2">
                 <div className="footer-menu footer-menu-sarjan-split">
                   <div className="footer-col-block">
                     <div className="footer-heading text-button footer-heading-mobile">
@@ -203,8 +203,8 @@ export async function ModaveFooter() {
                   </div>
                 </div>
               </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <div className="footer-newsletter">
+              <div className="col-12 col-lg-3">
+                <div className="footer-newsletter footer-col-block sarjan-footer-newsletter-block">
                   <div className="footer-heading text-button footer-heading-mobile">
                     {settings.footerNewsletterHeading ?? "Newsletter"}
                   </div>

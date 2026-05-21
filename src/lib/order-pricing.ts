@@ -50,6 +50,7 @@ export async function buildValidatedOrderPayload(
       piecesPerSet,
       unitPrice: Math.round(setPrice / piecesPerSet),
       lineTotal,
+      image: product.images?.[0]?.trim() ?? "",
     });
   }
 

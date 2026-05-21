@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { productColorHex } from "@/lib/product-color-swatch";
 import { PriceGate } from "./PriceGate";
@@ -12,11 +13,13 @@ export function ModaveProductCard({
   delay = "0s",
   className = "",
   showColorSwatches = false,
+  priceCompact = false,
 }: {
   product: Product;
   delay?: string;
   className?: string;
   showColorSwatches?: boolean;
+  priceCompact?: boolean;
 }) {
   const [colorIndex, setColorIndex] = useState(0);
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
@@ -103,13 +106,18 @@ export function ModaveProductCard({
             <a
               href="#shoppingCart"
               data-bs-toggle="modal"
-              className="btn-main-product"
+              className={withBtnIcon("btn-main-product")}
               data-cart-add
               data-product-slug={product.slug}
               data-product-size-run={sizeRun.join(",")}
               data-product-color={activeColor}
             >
-              <span className="text text-button">Add To cart</span>
+              <TfButtonIcon
+                icon="icon-ShoppingBagOpen"
+                textClassName="text text-button"
+              >
+                Add To cart
+              </TfButtonIcon>
             </a>
           )}
         </div>
@@ -126,7 +134,11 @@ export function ModaveProductCard({
         <a href={`/products/${product.slug}`} className="title link">
           {product.name}
         </a>
-        <PriceGate amount={product.price} suffix=" / piece" />
+        <PriceGate
+          amount={product.price}
+          suffix=" / piece"
+          compact={priceCompact}
+        />
         {showColorSwatches ? (
           <ul
             className="list-color-product mt_8"

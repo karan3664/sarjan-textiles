@@ -1,9 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AdminOrderItemImage } from "@/components/admin/AdminOrderItemImage";
 import type { AdminOrder } from "@/lib/admin-orders";
 import type { AdminCustomer } from "@/lib/admin-customers";
 import type { Product } from "@/data/mock";
+import { requestAdminNotificationRefresh } from "@/lib/admin-notification-live";
+import {
+  buildProductImageBySlug,
+  resolveOrderItemImage,
+} from "@/lib/product-image-resolve";
 
 type Mode = "orders" | "dispatch" | "payments";
 
@@ -145,6 +151,11 @@ export function AdminOrderManagementClient({
   );
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
+  const productImageBySlug = useMemo(
+    () => buildProductImageBySlug(products),
+    [products],
+  );
+
   const selectableClients = clients.filter(
     (client) => client.source === "local",
   );
@@ -263,6 +274,7 @@ export function AdminOrderManagementClient({
     return recalcItem({
       slug: product.slug,
       name: product.name,
+      image: product.images?.[0]?.trim() ?? "",
       color: patch.color || product.colors[0] || "Default",
       sizes,
       setQuantity: patch.setQuantity ?? 1,
@@ -315,6 +327,7 @@ export function AdminOrderManagementClient({
       }
       setOrders(data.orders);
       setSelectedId(data.order.id);
+      requestAdminNotificationRefresh();
       setCustomOrder((current) => ({
         ...current,
         items: [],
@@ -766,6 +779,18 @@ export function AdminOrderManagementClient({
                 <div>
                   <h6>{order.id}</h6>
                   <p>{order.clientName}</p>
+                  {order.items.length ? (
+                    <div className="sarjan-order-list-thumbs">
+                      {order.items.slice(0, 4).map((item, index) => (
+                        <AdminOrderItemImage
+                          key={`${order.id}-thumb-${index}`}
+                          src={resolveOrderItemImage(productImageBySlug, item)}
+                          alt={item.name}
+                          size={32}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
                 <div>
                   <strong>{formatInr(order.subtotal)}</strong>
@@ -1122,6 +1147,7 @@ export function AdminOrderManagementClient({
                     <table>
                       <thead>
                         <tr>
+                          <th>Photo</th>
                           <th>Product</th>
                           <th>Qty sets</th>
                           <th>Unit price</th>
@@ -1133,6 +1159,16 @@ export function AdminOrderManagementClient({
                       <tbody>
                         {draft.items.map((item, index) => (
                           <tr key={`${item.slug}-${item.color}-${index}`}>
+                            <td className="sarjan-order-item-photo-cell">
+                              <AdminOrderItemImage
+                                src={resolveOrderItemImage(
+                                  productImageBySlug,
+                                  item,
+                                )}
+                                alt={item.name}
+                                size={48}
+                              />
+                            </td>
                             <td>
                               {item.name}
                               <div className="text-caption-1 text-secondary">

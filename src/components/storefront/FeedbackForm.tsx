@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 /** Public order / product feedback — no testimonial mode (testimonials are login-only). */
 export function FeedbackForm() {
@@ -153,13 +154,13 @@ export function FeedbackForm() {
         <div className="button-submit send-wrap">
           <button
             type="button"
-            className={sarjanButtonClass()}
+            className={withBtnIcon(sarjanButtonClass())}
             disabled={submitting}
             onClick={() => void submitFeedback()}
           >
-            <span className="text">
+            <TfButtonIcon icon="icon-comment">
               {submitting ? "Sending…" : "Submit feedback"}
-            </span>
+            </TfButtonIcon>
           </button>
         </div>
       </form>

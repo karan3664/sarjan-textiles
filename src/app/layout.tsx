@@ -43,6 +43,7 @@ export default function RootLayout({
           <link key={href} rel="stylesheet" href={href} />
         ))}
         <link rel="stylesheet" href="/storefront-buttons.css" />
+        <link rel="stylesheet" href="/sarjan-hero.css" />
       </head>
       <body className="preload-wrapper">
         <SiteAnalytics />

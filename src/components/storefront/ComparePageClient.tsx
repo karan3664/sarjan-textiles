@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import {
   isProductSoldOut,
   productStockOnHand,
@@ -234,8 +235,13 @@ export function ComparePageClient({
               <p className="text-secondary mt_8">
                 Choose compare icon from product cards.
               </p>
-              <Link href="/products" className="tf-btn btn-fill radius-4 mt_24">
-                <span className="text">Browse Products</span>
+              <Link
+                href="/products"
+                className={withBtnIcon("tf-btn btn-fill radius-4 mt_24")}
+              >
+                <TfButtonIcon icon="icon-arrRight">
+                  Browse Products
+                </TfButtonIcon>
               </Link>
             </div>
           )}

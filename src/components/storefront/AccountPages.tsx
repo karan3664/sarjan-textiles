@@ -28,6 +28,7 @@ import {
 } from "@/lib/gstin-form";
 import { PageTitle } from "./PageTitle";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type Client = {
   id: string;
@@ -84,17 +85,28 @@ type Order = {
   }>;
 };
 
-const nav = [
+const nav: Array<{
+  href: string;
+  label: string;
+  shortLabel?: string;
+  icon: string;
+}> = [
   { href: "/my-account", label: "Dashboard", icon: "icon-user" },
-  { href: "/my-account-orders", label: "Orders", icon: "icon-bag" },
-  { href: "/my-account-address", label: "Address", icon: "icon-mapPin" },
+  { href: "/my-account-orders", label: "Orders", icon: "icon-ShoppingBagOpen" },
+  { href: "/my-account-address", label: "Address", icon: "icon-map-pin" },
   {
     href: "/my-account-testimonials",
     label: "Share Testimonial",
+    shortLabel: "Reviews",
     icon: "icon-star",
   },
-  { href: "/order-tracking", label: "Order Tracking", icon: "icon-truck" },
-  { href: "/login", label: "Logout", icon: "icon-log-out" },
+  {
+    href: "/order-tracking",
+    label: "Order Tracking",
+    shortLabel: "Tracking",
+    icon: "icon-shipping",
+  },
+  { href: "/login", label: "Logout", icon: "icon-arrLeft" },
 ];
 
 function money(value: number) {
@@ -207,7 +219,7 @@ function AccountFrame({
           <i className="icon icon-sidebar" />
         </button>
       </div>
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-account-page">
         <div className="container">
           <div className="my-account-wrap">
             <div className="wrap-sidebar-account">
@@ -227,14 +239,21 @@ function AccountFrame({
                   {nav.map((item) => (
                     <li key={item.href}>
                       {item.href === active ? (
-                        <span className="my-account-nav-item active">
-                          <i className={`icon ${item.icon}`} />
-                          {item.label}
+                        <span className="my-account-nav-item sarjan-account-nav-item active">
+                          <i className={`icon ${item.icon}`} aria-hidden />
+                          <span className="sarjan-account-nav-label">
+                            {item.label}
+                          </span>
                         </span>
                       ) : (
-                        <a href={item.href} className="my-account-nav-item">
-                          <i className={`icon ${item.icon}`} />
-                          {item.label}
+                        <a
+                          href={item.href}
+                          className="my-account-nav-item sarjan-account-nav-item"
+                        >
+                          <i className={`icon ${item.icon}`} aria-hidden />
+                          <span className="sarjan-account-nav-label">
+                            {item.label}
+                          </span>
                         </a>
                       )}
                     </li>
@@ -242,7 +261,24 @@ function AccountFrame({
                 </ul>
               </div>
             </div>
-            <div className="my-account-content">{children}</div>
+            <div className="my-account-content">
+              <nav
+                className="sarjan-account-mobile-nav"
+                aria-label="Account sections"
+              >
+                {nav.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className={`sarjan-account-mobile-nav__item${item.href === active ? " is-active" : ""}`}
+                  >
+                    <i className={`icon ${item.icon}`} aria-hidden />
+                    <span>{item.shortLabel ?? item.label}</span>
+                  </a>
+                ))}
+              </nav>
+              {children}
+            </div>
           </div>
         </div>
       </section>
@@ -530,7 +566,7 @@ export function AccountDashboardPage() {
                     (with shirt) or company logo only — nudity, shirtless, and
                     suggestive photos are blocked automatically.
                   </p>
-                  <div className="d-flex align-items-center gap-20 flex-wrap">
+                  <div className="sarjan-profile-avatar-layout">
                     <div className="sarjan-profile-avatar-thumb">
                       <img
                         key={avatarPreviewKey}
@@ -556,26 +592,30 @@ export function AccountDashboardPage() {
                       />
                       <button
                         type="button"
-                        className="tf-btn btn-white has-border radius-4"
+                        className={withBtnIcon(
+                          "tf-btn btn-white has-border radius-4",
+                        )}
                         disabled={avatarUploading || avatarRemoving}
                         onClick={() => avatarInputRef.current?.click()}
                       >
-                        <span className="text">
+                        <TfButtonIcon icon="icon-arrowUpRight">
                           {avatarUploading ? "Uploading…" : "Choose photo"}
-                        </span>
+                        </TfButtonIcon>
                       </button>
                       {hasCustomClientAvatar(client.avatarUrl) ? (
                         <button
                           type="button"
-                          className="tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove"
+                          className={withBtnIcon(
+                            "tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove",
+                          )}
                           disabled={avatarUploading || avatarRemoving}
                           onClick={() => void removeAvatar()}
                         >
-                          <span className="text">
+                          <TfButtonIcon icon="icon-close">
                             {avatarRemoving
                               ? "Removing…"
                               : "Remove profile photo"}
-                          </span>
+                          </TfButtonIcon>
                         </button>
                       ) : null}
                       {avatarMessage ? (
@@ -671,30 +711,46 @@ export function AccountDashboardPage() {
                     <h5>{orders.length}</h5>
                   </div>
                 </div>
-                <div className="d-flex gap-12 flex-wrap mb_32">
+                <div className="sarjan-account-quick-actions mb_32">
                   <a
                     href="/my-account-address"
-                    className="tf-btn btn-white has-border radius-4"
+                    className={withBtnIcon(
+                      "tf-btn btn-white has-border radius-4",
+                    )}
                   >
-                    <span className="text">Add / Edit Address</span>
+                    <TfButtonIcon icon="icon-map-pin">
+                      Add / Edit Address
+                    </TfButtonIcon>
                   </a>
                   <a
                     href="/my-account-orders"
-                    className="tf-btn btn-white has-border radius-4"
+                    className={withBtnIcon(
+                      "tf-btn btn-white has-border radius-4",
+                    )}
                   >
-                    <span className="text">View Orders</span>
+                    <TfButtonIcon icon="icon-ShoppingBagOpen">
+                      View Orders
+                    </TfButtonIcon>
                   </a>
                   <a
                     href="/order-tracking"
-                    className="tf-btn btn-white has-border radius-4"
+                    className={withBtnIcon(
+                      "tf-btn btn-white has-border radius-4",
+                    )}
                   >
-                    <span className="text">Track Order</span>
+                    <TfButtonIcon icon="icon-shipping">
+                      Track Order
+                    </TfButtonIcon>
                   </a>
                   <a
                     href="/my-account-testimonials"
-                    className="tf-btn btn-white has-border radius-4"
+                    className={withBtnIcon(
+                      "tf-btn btn-white has-border radius-4",
+                    )}
                   >
-                    <span className="text">Share Testimonial</span>
+                    <TfButtonIcon icon="icon-star">
+                      Share Testimonial
+                    </TfButtonIcon>
                   </a>
                 </div>
               </div>
@@ -712,19 +768,34 @@ export function AccountDashboardPage() {
                   {message}
                 </p>
               ) : null}
-              <div className="button-submit d-flex gap-12 flex-wrap">
-                <button className="tf-btn btn-fill" type="submit">
-                  <span className="text text-button">Update Account</span>
+              <div className="button-submit sarjan-account-submit-actions">
+                <button
+                  className={withBtnIcon("tf-btn btn-fill radius-4 w-100")}
+                  type="submit"
+                >
+                  <TfButtonIcon
+                    icon="icon-checkCircle"
+                    textClassName="text text-button"
+                  >
+                    Update Account
+                  </TfButtonIcon>
                 </button>
                 <button
-                  className="tf-btn btn-white has-border"
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4 w-100",
+                  )}
                   type="button"
                   onClick={() => {
                     setPasswordModalOpen(true);
                     setPasswordMessage("");
                   }}
                 >
-                  <span className="text text-button">Change Password</span>
+                  <TfButtonIcon
+                    icon="icon-security"
+                    textClassName="text text-button"
+                  >
+                    Change Password
+                  </TfButtonIcon>
                 </button>
               </div>
             </form>
@@ -818,15 +889,28 @@ export function AccountDashboardPage() {
                     </p>
                   ) : null}
                   <div className="button-submit d-flex gap-12 flex-wrap mt_24">
-                    <button className="tf-btn btn-fill" type="submit">
-                      <span className="text text-button">Update Password</span>
+                    <button
+                      className={withBtnIcon("tf-btn btn-fill")}
+                      type="submit"
+                    >
+                      <TfButtonIcon
+                        icon="icon-checkCircle"
+                        textClassName="text text-button"
+                      >
+                        Update Password
+                      </TfButtonIcon>
                     </button>
                     <button
-                      className="tf-btn btn-white has-border"
+                      className={withBtnIcon("tf-btn btn-white has-border")}
                       type="button"
                       onClick={() => setPasswordModalOpen(false)}
                     >
-                      <span className="text text-button">Cancel</span>
+                      <TfButtonIcon
+                        icon="icon-close"
+                        textClassName="text text-button"
+                      >
+                        Cancel
+                      </TfButtonIcon>
                     </button>
                   </div>
                 </form>
@@ -836,8 +920,11 @@ export function AccountDashboardPage() {
         ) : (
           <div>
             <p className="text-secondary">Login to view B2B account.</p>
-            <a href="/login" className="tf-btn btn-fill radius-4 mt_16">
-              <span className="text">Login</span>
+            <a
+              href="/login"
+              className={withBtnIcon("tf-btn btn-fill radius-4 mt_16")}
+            >
+              <TfButtonIcon icon="icon-user">Login</TfButtonIcon>
             </a>
           </div>
         )}
@@ -846,14 +933,20 @@ export function AccountDashboardPage() {
   );
 }
 
+function formatOrderStatus(status: string) {
+  return status
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function AccountOrdersPage() {
   const { orders, loading } = useClientAndOrders();
 
   return (
     <AccountFrame active="/my-account-orders" title="Your Orders">
-      <div className="account-orders">
-        <div className="wrap-account-order">
-          <table>
+      <div className="account-orders sarjan-account-orders">
+        <div className="wrap-account-order sarjan-account-orders-table-wrap">
+          <table className="sarjan-account-orders-table">
             <thead>
               <tr>
                 <th className="fw-6">Order</th>
@@ -865,31 +958,51 @@ export function AccountOrdersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
+                <tr className="sarjan-account-orders-message">
                   <td colSpan={5}>Loading orders...</td>
                 </tr>
               ) : orders.length ? (
                 orders.map((order) => (
-                  <tr className="tf-order-item" key={order.id}>
-                    <td>{order.id}</td>
-                    <td>
+                  <tr
+                    className="tf-order-item sarjan-account-orders-row"
+                    key={order.id}
+                  >
+                    <td
+                      data-label="Order"
+                      className="sarjan-account-orders__id"
+                    >
+                      {order.id}
+                    </td>
+                    <td data-label="Date">
                       {new Date(order.createdAt).toLocaleDateString("en-IN")}
                     </td>
-                    <td>{order.status}</td>
-                    <td>{money(order.subtotal)}</td>
-                    <td>
+                    <td data-label="Status">
+                      <span className="sarjan-order-status-pill">
+                        {formatOrderStatus(order.status)}
+                      </span>
+                    </td>
+                    <td
+                      data-label="Total"
+                      className="sarjan-account-orders__total"
+                    >
+                      {money(order.subtotal)}
+                    </td>
+                    <td
+                      data-label="Actions"
+                      className="sarjan-account-orders__actions"
+                    >
                       <a
                         href={`/my-account-orders-details?orderId=${encodeURIComponent(order.id)}`}
-                        className="tf-btn btn-fill radius-4"
+                        className={withBtnIcon("tf-btn btn-fill radius-4")}
                       >
-                        <span className="text">View</span>
+                        <TfButtonIcon icon="icon-eye">View</TfButtonIcon>
                       </a>
                     </td>
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={5}>No order yet.</td>
+                <tr className="sarjan-account-orders-message">
+                  <td colSpan={5}>No orders yet.</td>
                 </tr>
               )}
             </tbody>
@@ -1036,9 +1149,16 @@ export function AccountAddressPage() {
           <div className="text-center widget-inner-address">
             <button
               type="button"
-              className="tf-btn btn-fill radius-4 mb_20 btn-address"
+              className={withBtnIcon(
+                "tf-btn btn-fill radius-4 mb_20 btn-address",
+              )}
             >
-              <span className="text text-caption-1">Add / Edit address</span>
+              <TfButtonIcon
+                icon="icon-map-pin"
+                textClassName="text text-caption-1"
+              >
+                Add / Edit address
+              </TfButtonIcon>
             </button>
             <form
               className="show-form-address wd-form-address sarjan-address-form"
@@ -1145,12 +1265,19 @@ export function AccountAddressPage() {
                 <label htmlFor="address-default">Set as default address.</label>
               </div>
               <div className="d-flex align-items-center justify-content-center gap-20">
-                <button type="submit" className="tf-btn btn-fill radius-4">
-                  <span className="text">Save address</span>
+                <button
+                  type="submit"
+                  className={withBtnIcon("tf-btn btn-fill radius-4")}
+                >
+                  <TfButtonIcon icon="icon-checkCircle">
+                    Save address
+                  </TfButtonIcon>
                 </button>
                 <button
                   type="button"
-                  className="tf-btn btn-white has-border radius-4"
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4",
+                  )}
                   onClick={() => {
                     if (!client) return;
                     const resolved = resolveAccountAddress(client, orders);
@@ -1158,7 +1285,7 @@ export function AccountAddressPage() {
                     setAddressFromOrder(resolved.fromOrder);
                   }}
                 >
-                  <span className="text">Cancel</span>
+                  <TfButtonIcon icon="icon-close">Cancel</TfButtonIcon>
                 </button>
               </div>
               {message ? (
@@ -1199,7 +1326,9 @@ export function AccountAddressPage() {
                 <div className="d-flex gap-10 justify-content-center">
                   <button
                     type="button"
-                    className="tf-btn radius-4 btn-fill justify-content-center"
+                    className={withBtnIcon(
+                      "tf-btn radius-4 btn-fill justify-content-center",
+                    )}
                     onClick={() =>
                       document
                         .querySelector<HTMLInputElement>(
@@ -1208,14 +1337,16 @@ export function AccountAddressPage() {
                         ?.focus()
                     }
                   >
-                    <span className="text">Edit</span>
+                    <TfButtonIcon icon="icon-arrowUpRight">Edit</TfButtonIcon>
                   </button>
                   <button
                     type="button"
-                    className="tf-btn radius-4 btn-white has-border justify-content-center"
+                    className={withBtnIcon(
+                      "tf-btn radius-4 btn-white has-border justify-content-center",
+                    )}
                     onClick={remove}
                   >
-                    <span className="text">Delete</span>
+                    <TfButtonIcon icon="icon-close">Delete</TfButtonIcon>
                   </button>
                 </div>
               </div>
@@ -1463,13 +1594,13 @@ export function OrderTrackingPage() {
                 </div>
                 <div className="button-submit">
                   <button
-                    className="tf-btn btn-fill"
+                    className={withBtnIcon("tf-btn btn-fill")}
                     type="submit"
                     disabled={tracking}
                   >
-                    <span className="text">
+                    <TfButtonIcon icon="icon-shipping">
                       {tracking ? "Tracking..." : "Tracking Orders"}
-                    </span>
+                    </TfButtonIcon>
                   </button>
                 </div>
               </form>
@@ -1483,8 +1614,13 @@ export function OrderTrackingPage() {
                     Open your order history for all saved B2B orders, approvals,
                     and dispatch status.
                   </p>
-                  <a href="/my-account-orders" className="tf-btn btn-fill">
-                    <span className="text">My Orders</span>
+                  <a
+                    href="/my-account-orders"
+                    className={withBtnIcon("tf-btn btn-fill")}
+                  >
+                    <TfButtonIcon icon="icon-ShoppingBagOpen">
+                      My Orders
+                    </TfButtonIcon>
                   </a>
                 </>
               ) : (
@@ -1494,8 +1630,8 @@ export function OrderTrackingPage() {
                     Sign in to access order history, saved address, and B2B
                     credit workflow.
                   </p>
-                  <a href="/login" className="tf-btn btn-fill">
-                    <span className="text">Login</span>
+                  <a href="/login" className={withBtnIcon("tf-btn btn-fill")}>
+                    <TfButtonIcon icon="icon-user">Login</TfButtonIcon>
                   </a>
                 </>
               )}

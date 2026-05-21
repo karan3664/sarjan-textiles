@@ -162,37 +162,33 @@ export function HomeHeroRotator({
 
   return (
     <div
-      className={`tf-slideshow slider-center slider-parallax sarjan-hero-rotator${onVideoSlide ? " sarjan-hero-rotator--video-slide" : ""}`}
+      className={`tf-slideshow slider-parallax sarjan-hero-rotator${onVideoSlide ? " sarjan-hero-rotator--video-slide" : ""}`}
     >
-      {slides.map((slide, index) => (
-        <HeroSlideLayer
-          key={slide.id}
-          slide={slide}
-          isActive={index === active}
-          videoRef={slide.kind === "file" ? videoRef : undefined}
-          youtubeRef={slide.kind === "youtube" ? youtubeRef : undefined}
-        />
-      ))}
-      {/* Keep in DOM for height; hidden on video slides via CSS */}
-      <div className="wrap-slider" aria-hidden={onVideoSlide}>
-        <div className="box-content">
-          <div className="container">
-            <div className="content-slider">
-              <div className="box-title-slider">
-                <div
-                  className="heading text-white title-display wow fadeInUp"
-                  data-wow-delay="0s"
-                >
+      <div className="sarjan-hero-rotator-stage">
+        {slides.map((slide, index) => (
+          <HeroSlideLayer
+            key={slide.id}
+            slide={slide}
+            isActive={index === active}
+            videoRef={slide.kind === "file" ? videoRef : undefined}
+            youtubeRef={slide.kind === "youtube" ? youtubeRef : undefined}
+          />
+        ))}
+      </div>
+      {/* Title/CTA only on image slides — omit on video so mobile never shows copy over YouTube/file video */}
+      {!onVideoSlide ? (
+        <div className="wrap-slider sarjan-hero-copy-layer">
+          <div className="box-content sarjan-hero-copy">
+            <div className="content-slider sarjan-hero-copy-stack">
+              <div className="box-title-slider sarjan-hero-copy-titles">
+                <h2 className="heading text-white sarjan-hero-heading">
                   {title}
-                </div>
-                <p
-                  className="body-text-1 subheading text-white wow fadeInUp"
-                  data-wow-delay=".1s"
-                >
+                </h2>
+                <p className="body-text-1 subheading text-white sarjan-hero-subheading">
                   {description}
                 </p>
               </div>
-              <div className="box-btn-slider wow fadeInUp" data-wow-delay=".2s">
+              <div className="box-btn-slider sarjan-hero-cta">
                 <Link href={cta.href} className="tf-btn btn-fill btn-white">
                   <span className="text">{cta.label}</span>
                   <i className="icon icon-arrowUpRight" />
@@ -201,7 +197,7 @@ export function HomeHeroRotator({
             </div>
           </div>
         </div>
-      </div>
+      ) : null}
       {slides.length > 1 ? (
         <div className="sarjan-hero-dots">
           {slides.map((slide, index) => (
@@ -219,6 +215,68 @@ export function HomeHeroRotator({
   );
 }
 
+const DEFAULT_VIDEO_ASPECT = 16 / 9;
+
+/** Size hero video/YouTube to fill the slide (cover — same as image slides, no letterboxing). */
+function useHeroMediaCoverFit(
+  wrapRef: React.RefObject<HTMLDivElement | null>,
+  enabled: boolean,
+  aspectRatio: number,
+  fittedClass: string,
+  widthVar: string,
+  heightVar: string,
+) {
+  const fitMedia = useCallback(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    if (w < 2 || h < 2) return;
+
+    const mediaAspect = aspectRatio > 0 ? aspectRatio : DEFAULT_VIDEO_ASPECT;
+    const containerAspect = w / h;
+
+    let iw: number;
+    let ih: number;
+    if (containerAspect > mediaAspect) {
+      ih = h;
+      iw = Math.ceil(h * mediaAspect);
+    } else {
+      iw = w;
+      ih = Math.ceil(w / mediaAspect);
+    }
+
+    el.style.setProperty(widthVar, `${iw}px`);
+    el.style.setProperty(heightVar, `${ih}px`);
+    el.classList.add(fittedClass);
+  }, [wrapRef, aspectRatio, fittedClass, widthVar, heightVar]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const run = () => fitMedia();
+    run();
+    const raf = requestAnimationFrame(run);
+
+    const el = wrapRef.current;
+    if (!el) return () => cancelAnimationFrame(raf);
+
+    const ro = new ResizeObserver(() => run());
+    ro.observe(el);
+    window.addEventListener("resize", run);
+    window.addEventListener("orientationchange", run);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", run);
+      window.removeEventListener("orientationchange", run);
+      el.classList.remove(fittedClass);
+      el.style.removeProperty(widthVar);
+      el.style.removeProperty(heightVar);
+    };
+  }, [enabled, fitMedia, wrapRef, fittedClass, widthVar, heightVar]);
+}
+
 function HeroSlideLayer({
   slide,
   isActive,
@@ -230,13 +288,41 @@ function HeroSlideLayer({
   videoRef?: React.RefObject<HTMLVideoElement | null>;
   youtubeRef?: React.RefObject<HTMLIFrameElement | null>;
 }) {
+  const youtubeWrapRef = useRef<HTMLDivElement>(null);
+  const videoWrapRef = useRef<HTMLDivElement>(null);
+  const [fileAspect, setFileAspect] = useState(DEFAULT_VIDEO_ASPECT);
+
+  useHeroMediaCoverFit(
+    youtubeWrapRef,
+    isActive && slide.kind === "youtube",
+    DEFAULT_VIDEO_ASPECT,
+    "sarjan-hero-youtube-wrap--fitted",
+    "--hero-yt-w",
+    "--hero-yt-h",
+  );
+  useHeroMediaCoverFit(
+    videoWrapRef,
+    isActive && slide.kind === "file",
+    fileAspect,
+    "sarjan-hero-video-wrap--fitted",
+    "--hero-media-w",
+    "--hero-media-h",
+  );
+
   if (slide.kind === "image") {
     return (
       <div
-        className={`sarjan-hero-slide${isActive ? " active" : ""}`}
-        style={{ backgroundImage: `url(${slide.src})` }}
+        className={`sarjan-hero-slide sarjan-hero-slide--image${isActive ? " active" : ""}`}
         aria-hidden={!isActive}
-      />
+      >
+        <img
+          src={slide.src}
+          alt=""
+          className="sarjan-hero-slide-img"
+          decoding="async"
+          fetchPriority={isActive ? "high" : "low"}
+        />
+      </div>
     );
   }
 
@@ -247,15 +333,23 @@ function HeroSlideLayer({
         aria-hidden={!isActive}
       >
         {isActive ? (
-          <video
-            ref={videoRef}
-            className="sarjan-hero-video"
-            src={slide.src}
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-          />
+          <div ref={videoWrapRef} className="sarjan-hero-video-wrap">
+            <video
+              ref={videoRef}
+              className="sarjan-hero-video"
+              src={slide.src}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onLoadedMetadata={(event) => {
+                const el = event.currentTarget;
+                if (el.videoWidth > 0 && el.videoHeight > 0) {
+                  setFileAspect(el.videoWidth / el.videoHeight);
+                }
+              }}
+            />
+          </div>
         ) : null}
       </div>
     );
@@ -268,7 +362,7 @@ function HeroSlideLayer({
     >
       {isActive ? (
         <>
-          <div className="sarjan-hero-youtube-wrap">
+          <div ref={youtubeWrapRef} className="sarjan-hero-youtube-wrap">
             <iframe
               ref={youtubeRef}
               className="sarjan-hero-youtube"

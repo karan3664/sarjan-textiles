@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const client = await loginClient(body.email, body.password);
     const blocked = clientStatusAuthError(client.status);
     if (blocked) return Response.json({ error: blocked }, { status: 403 });
-    const token = createClientToken({
+    const token = await createClientToken({
       clientId: client.id,
       email: client.email,
     });

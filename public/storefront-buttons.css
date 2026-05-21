@@ -378,8 +378,15 @@ body.preload-wrapper
     border-radius: var(--sarjan-btn-radius) !important;
   }
 
+  .modal-shopping-cart .sarjan-mini-cart-actions > .tf-btn,
+  .modal-shopping-cart .sarjan-mini-cart-actions__auth .tf-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    border-radius: var(--sarjan-btn-radius) !important;
+  }
+
   .modal .tf-mini-cart-bottom {
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* Disabled */
@@ -401,3 +408,76 @@ body.preload-wrapper
     cursor: not-allowed;
   }
 }
+
+/* 404 page — outline CTA on dark canvas (wins over generic .tf-btn.btn-line) */
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline::before,
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline::after,
+body.preload-wrapper .sarjan-not-found-actions .tf-btn.btn-line::before,
+body.preload-wrapper .sarjan-not-found-actions .tf-btn.btn-line::after {
+  display: none !important;
+  content: none !important;
+}
+
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline,
+body.preload-wrapper .sarjan-not-found-actions .tf-btn.btn-line {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: #fff !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+}
+
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline:hover,
+body.preload-wrapper .sarjan-not-found-actions .tf-btn.btn-line:hover {
+  background-color: var(--sarjan-btn-hover-bg, var(--main)) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: var(--sarjan-btn-hover-border, var(--main)) !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline
+  .text,
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline
+  .sarjan-tf-btn-icon,
+body.preload-wrapper .sarjan-not-found-actions .tf-btn.btn-line .text,
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.btn-line
+  .sarjan-tf-btn-icon {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline:hover
+  .text,
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.sarjan-not-found-btn-outline:hover
+  .sarjan-tf-btn-icon,
+body.preload-wrapper .sarjan-not-found-actions .tf-btn.btn-line:hover .text,
+body.preload-wrapper
+  .sarjan-not-found-actions
+  .tf-btn.btn-line:hover
+  .sarjan-tf-btn-icon {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Home hero overrides: see /sarjan-hero.css (loaded after this file) */

@@ -1,5 +1,7 @@
 "use client";
 
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
@@ -141,12 +143,12 @@ export function BlogCommentForm({ slug }: { slug: string }) {
         <div className="button-submit">
           <button
             type="submit"
-            className="tf-btn btn-fill radius-4"
+            className={withBtnIcon("tf-btn btn-fill radius-4")}
             disabled={busy}
           >
-            <span className="text text-button">
+            <TfButtonIcon icon="icon-comment" textClassName="text text-button">
               {busy ? "Submitting…" : "Submit Comment"}
-            </span>
+            </TfButtonIcon>
           </button>
         </div>
       </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
@@ -144,15 +145,15 @@ export function CartPageClient() {
           </ul>
         </div>
       </div>
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-cart-page">
         <div className="container">
           {loading ? (
             <div className="text-center py-5">Loading cart...</div>
           ) : lines.length ? (
-            <div className="row">
-              <div className="col-xl-8">
-                <form>
-                  <table className="tf-table-page-cart">
+            <div className="row g-4">
+              <div className="col-12 col-xl-8">
+                <form className="sarjan-cart-form">
+                  <table className="tf-table-page-cart sarjan-cart-table">
                     <thead>
                       <tr>
                         <th>Products</th>
@@ -193,25 +194,16 @@ export function CartPageClient() {
                               >
                                 {item.product.name}
                               </Link>
-                              <div className="variant-box">
-                                <div className="tf-select">
-                                  <select
-                                    value={item.color}
-                                    onChange={() => undefined}
-                                  >
-                                    {item.product.colors.map((color) => (
-                                      <option key={color}>{color}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="tf-select">
-                                  <select
-                                    value="Full set"
-                                    onChange={() => undefined}
-                                  >
-                                    <option>Full set</option>
-                                  </select>
-                                </div>
+                              <div
+                                className="sarjan-cart-variant-row"
+                                aria-label={`Variant: ${item.color}, full set`}
+                              >
+                                <span className="sarjan-cart-variant-pill">
+                                  {item.color}
+                                </span>
+                                <span className="sarjan-cart-variant-pill">
+                                  Full set
+                                </span>
                               </div>
                               <div className="text-caption-1 text-secondary mt_8">
                                 Set: {item.sizes.join(" / ")}
@@ -296,8 +288,8 @@ export function CartPageClient() {
                   </table>
                 </form>
               </div>
-              <div className="col-xl-4">
-                <div className="fl-sidebar-cart">
+              <div className="col-12 col-xl-4">
+                <div className="fl-sidebar-cart sarjan-cart-summary">
                   <div className="box-order bg-surface">
                     <h5 className="title">Order Summary</h5>
                     <div className="subtotal text-button d-flex justify-content-between align-items-center">
@@ -331,25 +323,42 @@ export function CartPageClient() {
                           <a href="/term-of-use">terms and conditions</a>
                         </label>
                       </fieldset>
-                      {!hasB2BSession ? (
-                        <div className="d-grid gap-2 mb_12">
-                          <Link
-                            href="/login"
-                            className="tf-btn btn-fill radius-4"
-                          >
-                            <span className="text">Login</span>
-                          </Link>
-                          <Link
-                            href="/register"
-                            className="tf-btn btn-reset radius-4"
-                          >
-                            <span className="text">Sign Up</span>
-                          </Link>
-                        </div>
-                      ) : null}
-                      <a href="/checkout" className="tf-btn btn-reset">
-                        Process To Checkout
-                      </a>
+                      <div className="sarjan-cart-page-actions">
+                        <Link
+                          href="/checkout"
+                          className={withBtnIcon(
+                            "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
+                          )}
+                        >
+                          <TfButtonIcon icon="icon-checkCircle">
+                            Proceed To Checkout
+                          </TfButtonIcon>
+                        </Link>
+                        {!hasB2BSession ? (
+                          <div className="sarjan-cart-page-actions__auth">
+                            <Link
+                              href="/login"
+                              className={withBtnIcon(
+                                "tf-btn btn-white radius-4 has-border w-100",
+                              )}
+                            >
+                              <TfButtonIcon icon="icon-user">
+                                Login
+                              </TfButtonIcon>
+                            </Link>
+                            <Link
+                              href="/register"
+                              className={withBtnIcon(
+                                "tf-btn btn-fill radius-4 w-100",
+                              )}
+                            >
+                              <TfButtonIcon icon="icon-user">
+                                Sign Up
+                              </TfButtonIcon>
+                            </Link>
+                          </div>
+                        ) : null}
+                      </div>
                       <p className="text-button text-center">
                         Or continue shopping
                       </p>
@@ -367,16 +376,27 @@ export function CartPageClient() {
               <div className="sarjan-cart-empty-actions">
                 {!hasB2BSession ? (
                   <>
-                    <Link href="/login" className="tf-btn btn-reset radius-4">
-                      <span className="text">Login</span>
+                    <Link
+                      href="/login"
+                      className={withBtnIcon("tf-btn btn-reset radius-4")}
+                    >
+                      <TfButtonIcon icon="icon-user">Login</TfButtonIcon>
                     </Link>
-                    <Link href="/register" className="tf-btn btn-fill radius-4">
-                      <span className="text">Sign Up</span>
+                    <Link
+                      href="/register"
+                      className={withBtnIcon("tf-btn btn-fill radius-4")}
+                    >
+                      <TfButtonIcon icon="icon-user">Sign Up</TfButtonIcon>
                     </Link>
                   </>
                 ) : null}
-                <Link href="/products" className="tf-btn btn-fill radius-4">
-                  <span className="text">Browse Products</span>
+                <Link
+                  href="/products"
+                  className={withBtnIcon("tf-btn btn-fill radius-4")}
+                >
+                  <TfButtonIcon icon="icon-arrRight">
+                    Browse Products
+                  </TfButtonIcon>
                 </Link>
               </div>
             </div>

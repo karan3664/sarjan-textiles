@@ -77,6 +77,8 @@ export type LocalOrder = {
     piecesPerSet: number;
     unitPrice: number;
     lineTotal: number;
+    /** Product photo at order time (or resolved from catalog). */
+    image?: string;
   }>;
   dispatchAddress: string;
   dispatchDate?: string;

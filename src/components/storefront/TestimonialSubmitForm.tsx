@@ -1,5 +1,7 @@
 "use client";
 
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
@@ -172,13 +174,13 @@ export function TestimonialSubmitForm({
 
       <div className="button-submit send-wrap sarjan-testimonial-form-actions">
         <button
-          className="tf-btn btn-fill radius-4"
+          className={withBtnIcon("tf-btn btn-fill radius-4")}
           type="submit"
           disabled={submitting}
         >
-          <span className="text text-button">
+          <TfButtonIcon icon="icon-star" textClassName="text text-button">
             {submitting ? "Submitting…" : "Submit for approval"}
-          </span>
+          </TfButtonIcon>
         </button>
       </div>
     </form>

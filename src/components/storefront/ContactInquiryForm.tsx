@@ -1,5 +1,7 @@
 "use client";
 
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
@@ -101,8 +103,10 @@ export function ContactInquiryForm() {
           </fieldset>
         </div>
         <div className="button-submit send-wrap">
-          <button className="tf-btn btn-fill" type="submit">
-            <span className="text text-button">Submit Inquiry</span>
+          <button className={withBtnIcon("tf-btn btn-fill")} type="submit">
+            <TfButtonIcon icon="icon-mail" textClassName="text text-button">
+              Submit Inquiry
+            </TfButtonIcon>
           </button>
         </div>
       </form>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import type { AuthBannerAsset, AuthBannerSlot } from "@/lib/auth-banner-types";
 import { AuthBannerImage } from "@/components/storefront/AuthBannerImage";
 
@@ -56,9 +57,13 @@ export function AuthSideVisual({
         <p className="sarjan-auth-side-visual__text">{copy.text}</p>
         <Link
           href={copy.ctaHref}
-          className="tf-btn btn-white has-border sarjan-auth-banner-cta"
+          className={withBtnIcon(
+            "tf-btn btn-white has-border sarjan-auth-banner-cta",
+          )}
         >
-          <span className="text text-button">{copy.ctaLabel}</span>
+          <TfButtonIcon icon="icon-arrRight" textClassName="text text-button">
+            {copy.ctaLabel}
+          </TfButtonIcon>
         </Link>
       </div>
     </div>

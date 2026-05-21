@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
@@ -214,20 +215,30 @@ export function CompareDrawer() {
                       <Link
                         href={`/compare-products?ids=${encodeURIComponent(slugs.join(","))}`}
                         onClick={closeOffcanvas}
-                        className="tf-btn w-100 btn-fill radius-4"
+                        className={withBtnIcon(
+                          "tf-btn w-100 btn-fill radius-4",
+                        )}
                       >
-                        <span className="text text-btn-uppercase">
+                        <TfButtonIcon
+                          icon="icon-gitDiff"
+                          textClassName="text text-btn-uppercase"
+                        >
                           Compare Products
-                        </span>
+                        </TfButtonIcon>
                       </Link>
                       <button
                         type="button"
-                        className="tf-compapre-button-clear-all clear-file-delete tf-btn w-100 btn-white radius-4 has-border"
+                        className={withBtnIcon(
+                          "tf-compapre-button-clear-all clear-file-delete tf-btn w-100 btn-white radius-4 has-border",
+                        )}
                         onClick={() => setSlugs(writeCompare([]))}
                       >
-                        <span className="text text-btn-uppercase">
+                        <TfButtonIcon
+                          icon="icon-close"
+                          textClassName="text text-btn-uppercase"
+                        >
                           Clear All Products
-                        </span>
+                        </TfButtonIcon>
                       </button>
                     </div>
                   </div>

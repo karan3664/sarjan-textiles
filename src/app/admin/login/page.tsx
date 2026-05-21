@@ -23,9 +23,8 @@ export default function AdminLoginPage() {
       setMessage(data.error ?? "Login failed");
       return;
     }
-    window.location.assign(
-      new URLSearchParams(window.location.search).get("next") || "/admin",
-    );
+    const next = new URLSearchParams(window.location.search).get("next");
+    window.location.assign(next?.startsWith("/admin") ? next : "/admin");
   };
 
   return (

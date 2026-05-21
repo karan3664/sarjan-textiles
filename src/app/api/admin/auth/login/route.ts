@@ -1,3 +1,5 @@
+import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
+import { NextResponse } from "next/server";
 import { configuredAdmins, createAdminToken } from "@/lib/admin-token";
 import { mergedConfiguredAdmins } from "@/lib/admin-profile-override";
 import { isPlausiblePasswordHash, verifyPassword } from "@/lib/local-db";
@@ -44,14 +46,10 @@ export async function POST(request: Request) {
       role: admin.role,
       iat: Date.now(),
     });
-    const response = Response.json({
+    const response = NextResponse.json({
       admin: { email: admin.email, name: admin.name, role: admin.role },
     });
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-    response.headers.append(
-      "Set-Cookie",
-      `sarjan-admin-session=${token}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 8}`,
-    );
+    setAdminSessionCookie(response, token);
     return response;
   } catch {
     return Response.json({ error: "Admin login failed" }, { status: 400 });

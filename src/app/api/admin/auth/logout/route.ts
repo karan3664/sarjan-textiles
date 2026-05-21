@@ -1,5 +1,29 @@
-export async function POST() {
-  const response = Response.json({ ok: true });
-  response.headers.append("Set-Cookie", "sarjan-admin-session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+import { NextRequest, NextResponse } from "next/server";
+import { clearAdminSessionCookie } from "@/lib/admin-session-cookie";
+
+function logoutRedirect(request: NextRequest) {
+  const loginUrl = new URL("/admin/login", request.url);
+  const response = NextResponse.redirect(loginUrl, { status: 303 });
+  clearAdminSessionCookie(response);
+  return response;
+}
+
+/** Full-page logout — browser navigation reliably clears the HttpOnly cookie. */
+export async function GET(request: NextRequest) {
+  return logoutRedirect(request);
+}
+
+/** JSON logout for fetch clients; optional redirect via ?redirect=1 */
+export async function POST(request: NextRequest) {
+  const redirect =
+    request.nextUrl.searchParams.get("redirect") === "1" ||
+    (request.headers.get("accept") ?? "").includes("text/html");
+
+  if (redirect) {
+    return logoutRedirect(request);
+  }
+
+  const response = NextResponse.json({ ok: true });
+  clearAdminSessionCookie(response);
   return response;
 }

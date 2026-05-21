@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         : undefined;
 
     if (excludeClientId) {
-      const clientSession = verifyClientToken(bearerToken(request));
+      const clientSession = await verifyClientToken(bearerToken(request));
       const adminSession = await verifyAdminToken(
         (await cookies()).get("sarjan-admin-session")?.value,
       );

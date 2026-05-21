@@ -1,0 +1,24 @@
+/**
+ * Admin dashboard/reports charts — loaded after Modave admin + storefront CSS.
+ * Forces Recharts axis labels visible (theme CSS can hide tick text).
+ */
+.sarjan-report-chart-canvas svg text,
+.sarjan-report-chart-canvas svg tspan,
+.sarjan-report-chart-canvas .recharts-cartesian-axis-tick text,
+.sarjan-report-chart-canvas .recharts-layer.recharts-cartesian-axis-tick-value {
+  fill: #3d3d3d !important;
+  color: #3d3d3d !important;
+  -webkit-text-fill-color: #3d3d3d !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.sarjan-report-chart-canvas .sarjan-chart-axis-tick {
+  fill: #3d3d3d;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.sarjan-report-chart-canvas .sarjan-chart-axis-tick--x-crowded {
+  font-size: 10px;
+}

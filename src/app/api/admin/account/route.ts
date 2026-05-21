@@ -1,3 +1,5 @@
+import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
   configuredAdmins,
@@ -77,12 +79,8 @@ export async function POST(request: Request) {
       role: s.role,
       iat: Date.now(),
     });
-    const response = Response.json({ ok: true, name });
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-    response.headers.append(
-      "Set-Cookie",
-      `sarjan-admin-session=${token}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 8}`,
-    );
+    const response = NextResponse.json({ ok: true, name });
+    setAdminSessionCookie(response, token);
     return response;
   }
 
@@ -118,12 +116,8 @@ export async function POST(request: Request) {
       role: s.role,
       iat: Date.now(),
     });
-    const response = Response.json({ ok: true });
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-    response.headers.append(
-      "Set-Cookie",
-      `sarjan-admin-session=${token}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 8}`,
-    );
+    const response = NextResponse.json({ ok: true });
+    setAdminSessionCookie(response, token);
     return response;
   }
 

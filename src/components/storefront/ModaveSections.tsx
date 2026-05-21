@@ -27,6 +27,7 @@ import { ProductSortSelect } from "./ProductSortSelect";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
 import { PriceGate } from "./PriceGate";
 import { WishlistPageClient } from "./WishlistPageClient";
+import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import type { CmsCustomBlock, CmsCustomSection } from "@/types/cms-custom";
 import {
   getInstagramPosts,
@@ -230,12 +231,19 @@ function ProductFeature({ product }: { product: Product }) {
                     <a
                       href="#shoppingCart"
                       data-bs-toggle="modal"
-                      className="btn-style-3 text-btn-uppercase w-100 d-block text-center"
+                      className={withBtnIcon(
+                        "btn-style-3 text-btn-uppercase w-100 d-block text-center",
+                      )}
                       data-cart-add
                       data-product-slug={product.slug}
                       data-product-size-run={sizeRun.join(",")}
                     >
-                      <span className="text text-button">Buy it now</span>
+                      <TfButtonIcon
+                        icon="icon-lightning"
+                        textClassName="text text-button"
+                      >
+                        Buy it now
+                      </TfButtonIcon>
                     </a>
                   )}
                 </div>
@@ -1678,13 +1686,18 @@ function ProductListCard({ product }: { product: Product }) {
               <a
                 href="#shoppingCart"
                 data-bs-toggle="modal"
-                className="btn-main-product"
+                className={withBtnIcon("btn-main-product")}
                 data-cart-add
                 data-product-slug={product.slug}
                 data-product-size-run={sizeRun.join(",")}
                 data-product-color={product.colors[0]}
               >
-                <span className="text text-button">Add To cart</span>
+                <TfButtonIcon
+                  icon="icon-ShoppingBagOpen"
+                  textClassName="text text-button"
+                >
+                  Add To cart
+                </TfButtonIcon>
               </a>
             )}
             <a
@@ -2055,8 +2068,8 @@ export async function ProductsListingDynamic({
       <PageTitle title="Products" crumbs={["Homepage", "Products"]} />
       <section className="flat-spacing sarjan-products-page">
         <div className="container">
-          <div className="tf-shop-control">
-            <div className="tf-control-filter">
+          <div className="tf-shop-control sarjan-products-toolbar">
+            <div className="tf-control-filter sarjan-products-toolbar__filters">
               <a
                 href="#filterShop"
                 data-bs-toggle="offcanvas"
@@ -2073,7 +2086,7 @@ export async function ProductsListingDynamic({
                 </p>
               </div>
             </div>
-            <ul className="tf-control-layout">
+            <ul className="tf-control-layout sarjan-products-toolbar__layout">
               {layoutDots.map((layout) => (
                 <li
                   className={layout.className}
@@ -2114,8 +2127,10 @@ export async function ProductsListingDynamic({
                 </li>
               ))}
             </ul>
-            <div className="tf-control-sorting">
-              <p className="d-none d-lg-block text-caption-1">Sort by:</p>
+            <div className="tf-control-sorting sarjan-products-toolbar__sort">
+              <p className="sarjan-products-sort-label text-caption-1">
+                Sort by:
+              </p>
               <ProductSortSelect value={sortValue} labels={sortLabels} />
             </div>
           </div>
@@ -2839,21 +2854,16 @@ export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
                               >
                                 {item.product.name}
                               </Link>
-                              <div className="variant-box">
-                                <div className="tf-select">
-                                  <select defaultValue={item.color}>
-                                    {item.product.colors.map((color) => (
-                                      <option key={color}>{color}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="tf-select">
-                                  <select defaultValue={item.size}>
-                                    {item.product.sizes.map((size) => (
-                                      <option key={size}>{size}</option>
-                                    ))}
-                                  </select>
-                                </div>
+                              <div
+                                className="sarjan-cart-variant-row"
+                                aria-label={`Variant: ${item.color}`}
+                              >
+                                <span className="sarjan-cart-variant-pill">
+                                  {item.color}
+                                </span>
+                                <span className="sarjan-cart-variant-pill">
+                                  Full set
+                                </span>
                               </div>
                             </div>
                           </td>

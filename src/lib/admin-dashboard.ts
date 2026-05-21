@@ -137,6 +137,55 @@ export async function getAdminDashboardData() {
     ).length,
   }));
 
+  const monthlySales = monthLabels.map((label) => ({
+    label,
+    value: Math.round(
+      orders
+        .filter(
+          (order) =>
+            monthKey(order.createdAt) === label && order.status !== "Rejected",
+        )
+        .reduce((sum, order) => sum + order.subtotal, 0),
+    ),
+  }));
+
+  const clientSignups = monthLabels.map((label) => ({
+    label,
+    value: clients.filter((client) => monthKey(client.createdAt) === label)
+      .length,
+  }));
+
+  const monthlyUnitsSold = monthLabels.map((label) => ({
+    label,
+    value: orders
+      .filter(
+        (order) =>
+          monthKey(order.createdAt) === label && order.status !== "Rejected",
+      )
+      .reduce(
+        (sum, order) =>
+          sum +
+          order.items.reduce(
+            (itemSum, item) =>
+              itemSum + item.setQuantity * Math.max(1, item.piecesPerSet),
+            0,
+          ),
+        0,
+      ),
+  }));
+
+  const stockHealthy = products.filter(
+    (product) =>
+      product.stock > 0 &&
+      product.stock - (product.reserved ?? 0) > Math.max(product.moq, 50),
+  ).length;
+
+  const stockSnapshot = [
+    { label: "Healthy", value: stockHealthy },
+    { label: "Low stock", value: lowStock },
+    { label: "Out of stock", value: outOfStock },
+  ];
+
   return {
     summary: [
       {
@@ -228,6 +277,12 @@ export async function getAdminDashboardData() {
     ],
     charts: {
       monthlyOrders,
+      monthlySales,
+      clientSignups,
+      clientActivity,
+      dispatchTrend,
+      monthlyUnitsSold,
+      stockSnapshot,
       productDemand: productDemand.length
         ? productDemand
         : products.slice(0, 6).map((product) => ({
@@ -237,8 +292,6 @@ export async function getAdminDashboardData() {
                 : product.name,
             value: product.sold ?? 0,
           })),
-      clientActivity,
-      dispatchTrend,
     },
     recentOrders: orders.slice(0, 8).map((order) => ({
       id: order.id,
