@@ -162,12 +162,20 @@ body.preload-wrapper .preload.preload-container {
   }
 }
 
+/* Login page must stay clickable — never cover with the admin route loader */
+body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 .sarjan-admin-login {
   display: grid;
   min-height: 100vh;
   place-items: center;
   padding: 24px;
   background: #f6f5f2;
+  position: relative;
+  z-index: 1;
 }
 
 .sarjan-admin-login-card {
@@ -192,9 +200,61 @@ body.preload-wrapper .preload.preload-container {
   padding: 0 14px;
   border: 1px solid #e5e5e5;
   border-radius: 8px;
+  width: 100%;
 }
 
-.sarjan-admin-login-card button {
+.sarjan-admin-login-password {
+  position: relative;
+}
+
+.sarjan-admin-login-password input {
+  padding-right: 48px;
+}
+
+/* span — avoids Modave global `button { background: var(--main); padding: 15px 32px }` */
+.sarjan-admin-login-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  z-index: 2;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #5a5a5a;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sarjan-admin-login-password-toggle:hover {
+  color: #181818;
+  background: rgba(24, 24, 24, 0.08);
+}
+
+.sarjan-admin-login-password-toggle:focus-visible {
+  outline: 2px solid #8b1e2d;
+  outline-offset: 2px;
+}
+
+.sarjan-admin-login-password-toggle svg {
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.sarjan-admin-login-password-toggle svg[hidden] {
+  display: none;
+}
+
+.sarjan-admin-login-card button[type="submit"] {
   height: 48px;
   border: 0;
   border-radius: 8px;
@@ -208,6 +268,9 @@ body.preload-wrapper .preload.preload-container {
   border-radius: 8px;
   color: #a01f32;
   background: rgba(160, 31, 50, 0.08);
+  border: 1px solid rgba(160, 31, 50, 0.25);
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .header-style-4 .logo-header .logo {
@@ -230,6 +293,10 @@ body.preload-wrapper .preload.preload-container {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   color: var(--main, #181818);
 }
 
@@ -5131,6 +5198,234 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   cursor: not-allowed;
 }
 
+.sarjan-newsletter-unsub {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: #fbfaf7;
+}
+
+.sarjan-newsletter-unsub-card {
+  max-width: 480px;
+  padding: 32px 28px;
+  background: #fff;
+  border: 1px solid #e8e2d9;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.sarjan-newsletter-unsub-card h1 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.sarjan-newsletter-unsub-card a {
+  display: inline-block;
+  margin-top: 20px;
+  color: #8b1e2d;
+  font-weight: 600;
+}
+
+/* Newsletter admin — form fields (match account / blog-comments panels) */
+.sarjan-admin-newsletter .form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--main, #181818);
+}
+
+.sarjan-admin-newsletter .wg-box .form-control,
+.sarjan-admin-newsletter .wg-box .form-select,
+.sarjan-admin-newsletter .wg-box textarea.form-control {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--main, #181818);
+  box-shadow: none;
+}
+
+.sarjan-admin-newsletter .wg-box textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.sarjan-admin-newsletter .wg-box .form-control:hover:not(:disabled),
+.sarjan-admin-newsletter .wg-box .form-select:hover:not(:disabled) {
+  border-color: #c4c4c4;
+}
+
+.sarjan-admin-newsletter .wg-box .form-control:focus,
+.sarjan-admin-newsletter .wg-box .form-select:focus {
+  border-color: #181818;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
+}
+
+.sarjan-admin-newsletter .wg-box input.form-control:-webkit-autofill,
+.sarjan-admin-newsletter .wg-box input.form-control:-webkit-autofill:hover,
+.sarjan-admin-newsletter .wg-box input.form-control:-webkit-autofill:focus {
+  -webkit-text-fill-color: #181818;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  transition: background-color 99999s ease-out;
+}
+
+.sarjan-admin-newsletter .wg-box .form-select {
+  padding-right: 36px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  appearance: none;
+}
+
+.sarjan-admin-newsletter-templates {
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sarjan-admin-newsletter-cat-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6f6a64;
+  margin: 12px 0 8px;
+}
+
+.sarjan-admin-newsletter-template-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.sarjan-admin-newsletter-tpl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e8e8e8);
+  border-radius: 8px;
+  background: #fff !important;
+  color: var(--main, #181818) !important;
+  font-weight: 400;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.sarjan-admin-newsletter-tpl strong {
+  font-size: 14px;
+}
+
+.sarjan-admin-newsletter-tpl span {
+  font-size: 12px;
+  color: #6f6a64;
+  line-height: 1.4;
+}
+
+.sarjan-admin-newsletter-tpl.active {
+  border-color: #8b1e2d;
+  background: #fff8f9;
+}
+
+.sarjan-admin-newsletter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+  margin-top: 8px;
+}
+
+.sarjan-admin-newsletter-actions .tf-button {
+  min-height: 48px;
+  margin: 0;
+}
+
+.sarjan-admin-newsletter-test-input {
+  flex: 1 1 200px;
+  min-width: 180px;
+  max-width: 100%;
+}
+
+.sarjan-admin-newsletter-preview-frame {
+  width: 100%;
+  min-height: 520px;
+  border: 1px solid var(--line, #e8e8e8);
+  border-radius: 8px;
+  background: #f5f5f5;
+}
+
+.sarjan-admin-newsletter-subs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.sarjan-admin-newsletter-subs-title {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sarjan-admin-newsletter-subs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.sarjan-admin-newsletter-subs-search {
+  flex: 1 1 220px;
+  min-width: min(100%, 200px);
+  max-width: 360px;
+}
+
+.sarjan-admin-newsletter-subs-filter {
+  flex: 0 0 160px;
+  width: 160px;
+  max-width: 100%;
+}
+
+@media (max-width: 575px) {
+  .sarjan-admin-newsletter-subs-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sarjan-admin-newsletter-subs-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sarjan-admin-newsletter-subs-search,
+  .sarjan-admin-newsletter-subs-filter {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+}
+
 /* Emoji: never use Kumbh/Plus Jakarta in input stack — their symbol subsets steal emoji codepoints */
 @import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
 
@@ -7830,10 +8125,6 @@ blockquote.sarjan-emoji-text,
 }
 
 @media (max-width: 991px) {
-  .sarjan-account-page .btn-sidebar-account {
-    display: none !important;
-  }
-
   .sarjan-account-page .my-account-wrap {
     flex-direction: column;
     gap: 0;

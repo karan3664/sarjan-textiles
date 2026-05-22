@@ -246,15 +246,6 @@ function AccountFrame({
   return (
     <>
       <PageTitle title={title} crumbs={["Homepage", title]} />
-      <div className="btn-sidebar-account">
-        <button
-          data-bs-toggle="offcanvas"
-          data-bs-target="#mbAccount"
-          aria-controls="mbAccount"
-        >
-          <i className="icon icon-sidebar" />
-        </button>
-      </div>
       <section className="flat-spacing sarjan-account-page">
         <div className="container">
           <div className="my-account-wrap">

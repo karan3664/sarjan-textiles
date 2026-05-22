@@ -2,6 +2,7 @@ import { ModaveFooter } from "./ModaveFooter";
 import { ModaveHeader } from "./ModaveHeader";
 import { ModaveModals } from "./ModaveModals";
 import { CompareDrawer } from "./CompareDrawer";
+import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
 import { TemplateScripts } from "./TemplateScripts";
 
 export function ModaveShell({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export function ModaveShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <div id="wrapper">
+        <OffcanvasRouteGuard />
         <ModaveHeader />
         {children}
         <ModaveFooter />

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import { productionSessionCookieDomain } from "@/lib/session-cookie-domain";
 
@@ -14,6 +15,17 @@ export function adminSessionCookieBase() {
     path: "/",
     ...(domain ? { domain } : {}),
   };
+}
+
+/** Set session from a Server Action or Server Component. */
+export async function setAdminSessionInCookieStore(token: string) {
+  const jar = await cookies();
+  jar.set({
+    name: ADMIN_SESSION_COOKIE_NAME,
+    value: token,
+    ...adminSessionCookieBase(),
+    maxAge: ADMIN_SESSION_MAX_AGE_SEC,
+  });
 }
 
 /** Set session on a NextResponse (preferred — same API as clear). */

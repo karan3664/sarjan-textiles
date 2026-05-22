@@ -83,6 +83,7 @@ export const roleAccess: Record<AdminRole, string[]> = {
     "/admin/contact-inquiries",
     "/admin/seo",
     "/admin/blog-comments",
+    "/admin/newsletter",
     "/admin/account",
     "/api/admin/dashboard",
     "/api/admin/account",
@@ -92,6 +93,7 @@ export const roleAccess: Record<AdminRole, string[]> = {
     "/api/admin/testimonials",
     "/api/admin/inquiries",
     "/api/admin/blog-comments",
+    "/api/admin/newsletter",
   ],
 };
 

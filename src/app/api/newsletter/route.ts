@@ -3,10 +3,12 @@ import { siteSettings as defaultSiteSettings } from "@/data/mock";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import {
   buildSarjanEmailHtml,
+  emailSiteOrigin,
   newsletterAdminNotificationInnerHtml,
   newsletterSubscriberConfirmationInnerHtml,
 } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
+import { subscribeNewsletterEmail } from "@/lib/newsletter-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -58,8 +60,14 @@ export async function POST(request: Request) {
     defaultSiteSettings.ordersEmail;
 
   const brand = settings.brandName;
+  let created = true;
 
   try {
+    const subscribed = await subscribeNewsletterEmail(email, "footer");
+    const { subscriber } = subscribed;
+    created = subscribed.created;
+    const unsubUrl = `${emailSiteOrigin()}/newsletter/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribeToken)}`;
+
     await sendDomainMail({
       to: email,
       subject: `${brand} — newsletter subscription confirmed`,
@@ -70,12 +78,14 @@ export async function POST(request: Request) {
         "",
         "We may send occasional updates on collections and B2B programs.",
         `Reply to this email to reach ${brand}.`,
+        "",
+        `Unsubscribe anytime: ${unsubUrl}`,
       ].join("\n"),
       html: buildSarjanEmailHtml({
         preheader: "You are subscribed to Sarjan Textiles updates",
         eyebrow: "Newsletter",
         heading: "You are subscribed",
-        innerHtml: newsletterSubscriberConfirmationInnerHtml(email),
+        innerHtml: `${newsletterSubscriberConfirmationInnerHtml(email)}<p style="margin:18px 0 0;font-size:13px;color:#6f6a64;line-height:1.5;">You can <a href="${unsubUrl}" style="color:#8b1e2d;">unsubscribe</a> at any time.</p>`,
       }),
     });
 
@@ -109,6 +119,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    message: "Thanks — check your inbox for a confirmation email.",
+    created,
+    message: created
+      ? "Thanks — check your inbox for a confirmation email."
+      : "You are already subscribed. We sent a confirmation email again.",
   });
 }

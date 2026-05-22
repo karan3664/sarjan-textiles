@@ -1,20 +1,8 @@
+import { authenticateAdmin } from "@/lib/admin-auth";
 import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
 import { NextResponse } from "next/server";
-import { configuredAdmins, createAdminToken } from "@/lib/admin-token";
-import { mergedConfiguredAdmins } from "@/lib/admin-profile-override";
-import { isPlausiblePasswordHash, verifyPassword } from "@/lib/local-db";
+import { createAdminToken } from "@/lib/admin-token";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
-
-function passwordMatches(
-  admin: ReturnType<typeof configuredAdmins>[number],
-  password: string,
-) {
-  const hash = admin.passwordHash?.trim();
-  if (hash && isPlausiblePasswordHash(hash)) {
-    return verifyPassword(password, hash);
-  }
-  return admin.password === password;
-}
 
 export async function POST(request: Request) {
   try {
@@ -29,11 +17,7 @@ export async function POST(request: Request) {
       60_000,
     );
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
-    const admins = await mergedConfiguredAdmins(configuredAdmins());
-    const admin = admins.find(
-      (item) =>
-        item.email.toLowerCase() === email && passwordMatches(item, password),
-    );
+    const admin = await authenticateAdmin(email, password);
     if (!admin)
       return Response.json(
         { error: "Invalid admin credentials" },

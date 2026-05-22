@@ -111,7 +111,8 @@ export function AdminGlobalLoader() {
 
     const onSubmit = (event: SubmitEvent) => {
       const form = event.target as HTMLFormElement | null;
-      if (form?.closest(".sarjan-admin-login, #wrapper")) show();
+      if (form?.closest(".sarjan-admin-login")) return;
+      if (form?.closest("#wrapper")) show();
     };
 
     const onPageShow = () => hide(260);

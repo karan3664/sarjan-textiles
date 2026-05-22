@@ -155,8 +155,8 @@ export function ModaveHeader() {
               <div className="wrapper-header-left d-flex align-items-center gap-20" />
             </div>
             <div className="col-md-4 col-3 d-xl-none">
-              <a
-                href="#mobileMenu"
+              <button
+                type="button"
                 className="mobile-menu sarjan-mobile-menu-trigger"
                 data-bs-toggle="offcanvas"
                 data-bs-target="#mobileMenu"
@@ -168,7 +168,7 @@ export function ModaveHeader() {
                   <span />
                   <span />
                 </span>
-              </a>
+              </button>
             </div>
             <div className="col-xl-2 col-md-4 col-6 text-center">
               <Link href="/" className="logo-header">

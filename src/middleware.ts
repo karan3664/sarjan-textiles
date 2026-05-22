@@ -54,6 +54,16 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/admin/auth/") || pathname === "/admin/login";
 
   if (pathname === "/admin/login") {
+    if (
+      request.nextUrl.searchParams.has("password") ||
+      request.nextUrl.searchParams.has("pass")
+    ) {
+      const url = request.nextUrl.clone();
+      url.searchParams.delete("password");
+      url.searchParams.delete("pass");
+      return NextResponse.redirect(url);
+    }
+
     const session = await verifyAdminToken(
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
     );
