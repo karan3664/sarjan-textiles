@@ -1,6 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AdminPasswordField } from "@/components/admin/AdminPasswordField";
+
+async function readJsonResponse(res: Response) {
+  try {
+    return (await res.json()) as { error?: string; ok?: boolean };
+  } catch {
+    return {};
+  }
+}
 
 export function AdminAccountClient() {
   const [email, setEmail] = useState("");
@@ -40,7 +49,7 @@ export function AdminAccountClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "profile", name: name.trim() }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = await readJsonResponse(res);
       if (!res.ok) {
         setMsg({ type: "err", text: data.error ?? "Could not save profile." });
         return;
@@ -78,7 +87,7 @@ export function AdminAccountClient() {
           newPassword,
         }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = await readJsonResponse(res);
       if (!res.ok) {
         setMsg({
           type: "err",
@@ -151,66 +160,39 @@ export function AdminAccountClient() {
           <h5 className="mb-3">Change password</h5>
           <p className="text-caption-1 text-muted mb-3">
             After changing password, your session stays signed in on this
-            browser. On serverless hosts, password overrides are stored in{" "}
-            <code>data/admin-profile-overrides.json</code> (gitignored).
+            browser. On production, overrides are stored in Supabase (
+            <code>admin_profile_overrides</code>).
           </p>
           <form onSubmit={savePassword} className="d-grid gap-3">
-            <fieldset className="sarjan-admin-account-field">
-              <label
-                className="body-title-2 d-block mb-1"
-                htmlFor="admin-current-password"
-              >
-                Current password
-              </label>
-              <input
-                id="admin-current-password"
-                type="password"
-                className="form-control"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                disabled={busy}
-              />
-            </fieldset>
-            <fieldset className="sarjan-admin-account-field">
-              <label
-                className="body-title-2 d-block mb-1"
-                htmlFor="admin-new-password"
-              >
-                New password
-              </label>
-              <input
-                id="admin-new-password"
-                type="password"
-                className="form-control"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={8}
-                required
-                disabled={busy}
-              />
-            </fieldset>
-            <fieldset className="sarjan-admin-account-field">
-              <label
-                className="body-title-2 d-block mb-1"
-                htmlFor="admin-confirm-password"
-              >
-                Confirm new password
-              </label>
-              <input
-                id="admin-confirm-password"
-                type="password"
-                className="form-control"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={8}
-                required
-                disabled={busy}
-              />
-            </fieldset>
+            <AdminPasswordField
+              id="admin-current-password"
+              label="Current password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={setCurrentPassword}
+              required
+              disabled={busy}
+            />
+            <AdminPasswordField
+              id="admin-new-password"
+              label="New password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={setNewPassword}
+              minLength={8}
+              required
+              disabled={busy}
+            />
+            <AdminPasswordField
+              id="admin-confirm-password"
+              label="Confirm new password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              minLength={8}
+              required
+              disabled={busy}
+            />
             <button
               type="submit"
               className="tf-button style-1 w-100"

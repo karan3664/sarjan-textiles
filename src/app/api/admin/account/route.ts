@@ -72,7 +72,17 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    await updateAdminProfileOverride(s.email, { name });
+    try {
+      await updateAdminProfileOverride(s.email, { name });
+    } catch (error) {
+      return Response.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Could not save profile.",
+        },
+        { status: 503 },
+      );
+    }
     const token = await createAdminToken({
       email: s.email,
       name,
@@ -109,7 +119,17 @@ export async function POST(request: Request) {
       );
     }
     const passwordHash = hashPassword(newPassword);
-    await updateAdminProfileOverride(s.email, { passwordHash });
+    try {
+      await updateAdminProfileOverride(s.email, { passwordHash });
+    } catch (error) {
+      return Response.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Could not save password.",
+        },
+        { status: 503 },
+      );
+    }
     const token = await createAdminToken({
       email: s.email,
       name: admin.name,

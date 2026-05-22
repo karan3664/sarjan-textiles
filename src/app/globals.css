@@ -2459,6 +2459,44 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 /* Keep invalid/required styling subtle so empty fields don’t look like a different control */
+.sarjan-admin-account-page .sarjan-admin-password-wrap {
+  position: relative;
+}
+
+.sarjan-admin-account-page .sarjan-admin-password-wrap .form-control {
+  padding-right: 48px;
+}
+
+.sarjan-admin-account-page .sarjan-admin-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--secondary, #6c757d);
+}
+
+.sarjan-admin-account-page .sarjan-admin-password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sarjan-admin-account-page .sarjan-admin-password-toggle i {
+  font-size: 20px;
+}
+
+.sarjan-admin-account-page .sarjan-admin-password-toggle.is-visible i::before {
+  content: "\e938";
+}
+
 .sarjan-admin-account-page .wg-box input.form-control:invalid {
   border-color: #d8d8d8;
   box-shadow: none;

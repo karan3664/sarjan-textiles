@@ -170,6 +170,13 @@ insert into admin_notification_state (id, read_ids, list_cleared_before)
 values (1, '[]'::jsonb, null)
 on conflict (id) do nothing;
 
+create table if not exists admin_profile_overrides (
+  email text primary key,
+  name text,
+  password_hash text,
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists idx_orders_client_id on orders(client_id);
 create index if not exists idx_orders_status on orders(status);
 create index if not exists idx_feedbacks_status on feedbacks(status);
