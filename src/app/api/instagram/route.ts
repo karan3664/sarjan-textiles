@@ -12,7 +12,7 @@ export async function GET() {
   const profileUrl =
     cms.siteSettings.instagramUrl?.trim() || instagramProfileUrl;
   const username = instagramUsernameFromUrl(profileUrl) ?? "sarjantextiles";
-  const posts = await getInstagramPosts(8, {
+  const posts = await getInstagramPosts(12, {
     username,
     profileUrl,
   });

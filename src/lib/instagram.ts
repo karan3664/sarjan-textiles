@@ -1,4 +1,5 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
+import { bundledInstagramFeed } from "@/lib/instagram-feed-seed";
 import {
   instagramWebHeaders,
   parseWebProfilePosts,
@@ -250,8 +251,14 @@ async function readCachedInstagramPosts(
 ): Promise<InstagramPost[]> {
   const cms = await getCmsSnapshot();
   const cached = cms.instagramFeed?.posts;
-  if (!cached?.length) return [];
-  return cached.slice(0, limit);
+  if (cached?.length) {
+    return cached
+      .filter(isValidInstagramPost)
+      .slice(0, limit) as InstagramPost[];
+  }
+  return bundledInstagramFeed(limit).filter(
+    isValidInstagramPost,
+  ) as InstagramPost[];
 }
 
 async function writeInstagramFeedCache(posts: InstagramPost[]) {
