@@ -33,13 +33,25 @@ export async function POST(request: Request) {
     typeof body === "object" && body && "action" in body
       ? String((body as Record<string, unknown>).action ?? "")
       : "";
-  if (action === "readAll") {
-    await markAllAdminNotificationsRead(s.role);
-    return Response.json(await getAdminNotificationsPayload(s.role));
+  try {
+    if (action === "readAll") {
+      await markAllAdminNotificationsRead(s.role);
+      return Response.json(await getAdminNotificationsPayload(s.role));
+    }
+    if (action === "clear") {
+      await clearAdminNotificationList();
+      return Response.json(await getAdminNotificationsPayload(s.role));
+    }
+    return Response.json({ error: "Unknown action" }, { status: 400 });
+  } catch (error) {
+    console.error("Admin notifications action failed", error);
+    const raw = error instanceof Error ? error.message : "";
+    const message =
+      raw.includes("EROFS") ||
+      raw.includes("admin_notification_state") ||
+      raw.includes("does not exist")
+        ? "Notifications could not be saved. Apply the latest Supabase migration and redeploy."
+        : raw || "Could not update notifications.";
+    return Response.json({ error: message }, { status: 500 });
   }
-  if (action === "clear") {
-    await clearAdminNotificationList();
-    return Response.json(await getAdminNotificationsPayload(s.role));
-  }
-  return Response.json({ error: "Unknown action" }, { status: 400 });
 }

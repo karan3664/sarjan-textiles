@@ -2,6 +2,7 @@ import type { Product } from "@/data/mock";
 import {
   catalogFetchInit,
   clientAuthJsonHeaders,
+  readStoredClientId,
 } from "@/lib/client-auth-browser";
 
 export const CART_KEY = "sarjan-cart";
@@ -46,20 +47,8 @@ export function readCart(): StoredCartItem[] {
   }
 }
 
-function readClientId() {
-  if (typeof window === "undefined") return "";
-  try {
-    const client = JSON.parse(
-      window.localStorage.getItem("sarjan-client") ?? "null",
-    ) as { id?: string } | null;
-    return client?.id?.trim() ?? "";
-  } catch {
-    return window.localStorage.getItem("sarjan-client-token") ?? "";
-  }
-}
-
 function persistCartToApi(items: StoredCartItem[]) {
-  const clientId = readClientId();
+  const clientId = readStoredClientId();
   if (!clientId) return;
 
   void fetch("/api/cart", {
@@ -161,26 +150,57 @@ export function parseSizeRun(value?: string) {
   return sizes.length ? sizes : FULL_SIZE_RUN;
 }
 
-export async function syncCartWithApi() {
-  const clientId = readClientId();
-  let items = readCart();
+/** Union local + server lines; same variant keeps the higher quantity. */
+export function mergeCartLines(
+  local: StoredCartItem[],
+  server: StoredCartItem[],
+): StoredCartItem[] {
+  const next: StoredCartItem[] = [];
+  for (const raw of [...local, ...server]) {
+    const entry = normalizeCartItem(raw);
+    if (!entry) continue;
+    const existing = next.find((item) => sameCartLine(item, entry));
+    if (existing) {
+      existing.quantity = Math.max(existing.quantity, entry.quantity);
+    } else {
+      next.push({ ...entry });
+    }
+  }
+  return next;
+}
 
-  if (clientId) {
+export async function syncCartWithApi(): Promise<StoredCartItem[]> {
+  const clientId = readStoredClientId();
+  const local = readCart();
+
+  if (!clientId) {
+    return reconcileCartWithCatalog(local);
+  }
+
+  let server: StoredCartItem[] = [];
+  try {
     const response = await fetch(
       `/api/cart?clientId=${encodeURIComponent(clientId)}`,
       catalogFetchInit(),
     );
     if (response.ok) {
       const data = await response.json();
-      const serverItems = Array.isArray(data.items)
+      server = Array.isArray(data.items)
         ? (data.items
             .map(normalizeCartItem)
             .filter(Boolean) as StoredCartItem[])
         : [];
-      if (serverItems.length) items = serverItems;
-      else if (items.length) persistCartToApi(items);
     }
+  } catch {
+    return reconcileCartWithCatalog(local);
   }
 
-  return reconcileCartWithCatalog(items);
+  const merged = mergeCartLines(local, server);
+  if (JSON.stringify(merged) !== JSON.stringify(readCart())) {
+    writeCart(merged);
+  } else if (merged.length > 0) {
+    persistCartToApi(merged);
+  }
+
+  return reconcileCartWithCatalog(merged);
 }

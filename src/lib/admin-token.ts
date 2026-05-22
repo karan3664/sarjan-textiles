@@ -68,6 +68,7 @@ export const roleAccess: Record<AdminRole, string[]> = {
   content: [
     "/admin",
     "/admin/home",
+    "/admin/header-menu",
     "/admin/category-pages",
     "/admin/custom-pages",
     "/admin/products-list",

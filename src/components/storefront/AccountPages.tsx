@@ -20,6 +20,7 @@ import {
   clientAuthHeaders,
   clientAuthJsonHeaders,
   clientAuthToken,
+  logoutClientSession,
 } from "@/lib/client-auth-browser";
 import {
   isGstVerifiedOnFile,
@@ -106,8 +107,12 @@ const nav: Array<{
     shortLabel: "Tracking",
     icon: "icon-shipping",
   },
-  { href: "/login", label: "Logout", icon: "icon-arrLeft" },
 ];
+
+const logoutNavItem = {
+  label: "Logout",
+  icon: "icon-arrLeft",
+} as const;
 
 function money(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -258,6 +263,18 @@ function AccountFrame({
                       )}
                     </li>
                   ))}
+                  <li>
+                    <button
+                      type="button"
+                      className="my-account-nav-item sarjan-account-nav-item sarjan-account-nav-logout w-100 border-0 bg-transparent text-start"
+                      onClick={() => logoutClientSession()}
+                    >
+                      <i className={`icon ${logoutNavItem.icon}`} aria-hidden />
+                      <span className="sarjan-account-nav-label">
+                        {logoutNavItem.label}
+                      </span>
+                    </button>
+                  </li>
                 </ul>
               </div>
             </div>

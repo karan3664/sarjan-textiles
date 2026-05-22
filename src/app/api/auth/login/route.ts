@@ -1,4 +1,6 @@
+import { NextResponse } from "next/server";
 import { clientStatusAuthError } from "@/lib/client-approved-session";
+import { setClientSessionCookie } from "@/lib/client-session-cookie";
 import { loginClient, publicClient } from "@/lib/local-db";
 import { createClientToken } from "@/lib/client-token";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
@@ -25,15 +27,11 @@ export async function POST(request: Request) {
       clientId: client.id,
       email: client.email,
     });
-    const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-    const response = Response.json({
+    const response = NextResponse.json({
       client: publicClient(client),
       token,
     });
-    response.headers.append(
-      "Set-Cookie",
-      `sarjan-client-token=${encodeURIComponent(token)}; Path=/; HttpOnly${secure}; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`,
-    );
+    setClientSessionCookie(response, token);
     return response;
   } catch (error) {
     return Response.json(

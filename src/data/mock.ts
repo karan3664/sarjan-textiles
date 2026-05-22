@@ -57,6 +57,7 @@ export const sarjanRegisteredAddress =
 export const sarjanDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(sarjanRegisteredAddress)}`;
 
 import { defaultAuthBanners } from "@/lib/auth-banner-defaults";
+import { defaultHeaderNavigation } from "@/lib/header-navigation";
 
 export const siteSettings = {
   /** India GST identification number (invoices / compliance). */
@@ -96,6 +97,8 @@ export const siteSettings = {
   },
   /** Login / register / forgot side banners (CMS-editable, WebP + AVIF + blur). */
   authBanners: defaultAuthBanners,
+  /** Top nav bar — reorder, hide, or link any page (Admin → Header menu). */
+  headerNavigation: defaultHeaderNavigation,
 };
 
 export const navigation = [
@@ -107,6 +110,22 @@ export const navigation = [
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
+];
+
+/** Footer “Information” column — includes pages not shown in the top nav. */
+export const footerInformationLinks = [
+  { label: "Home", href: "/" },
+  { label: "Products", href: "/products" },
+  { label: "Categories", href: "/categories" },
+  { label: "Collections", href: "/collections" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "FAQs", href: "/faqs" },
+  { label: "Inquiry", href: "/inquiry" },
+  { label: "Certifications", href: "/certifications" },
+  { label: "Infrastructure", href: "/infrastructure" },
+  { label: "Process", href: "/process" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const baseProducts: Product[] = [

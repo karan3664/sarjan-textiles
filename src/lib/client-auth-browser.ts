@@ -54,11 +54,34 @@ export function catalogFetchInit(init?: RequestInit): RequestInit {
   };
 }
 
+export function clearClientSessionLocal() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("sarjan-client");
+  localStorage.removeItem("sarjan-client-token");
+  window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+}
+
+/**
+ * Clears local session and navigates through /api/auth/logout so the HttpOnly
+ * cookie is removed before landing on login (avoids middleware redirect loop).
+ */
+export function logoutClientSession(redirectTo = "/login") {
+  clearClientSessionLocal();
+  const params = new URLSearchParams({ redirect: "1" });
+  if (redirectTo && redirectTo !== "/login") {
+    params.set("next", redirectTo);
+  }
+  window.location.assign(`/api/auth/logout?${params.toString()}`);
+}
+
 export function persistClientSession(token: string, client: StoredClient) {
   if (typeof window === "undefined") return;
   localStorage.setItem("sarjan-client-token", token);
   localStorage.setItem("sarjan-client", JSON.stringify(client));
   window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+  void import("@/lib/cart-client")
+    .then(({ syncCartWithApi }) => syncCartWithApi())
+    .catch(() => undefined);
 }
 
 export type ClientLoginResult =

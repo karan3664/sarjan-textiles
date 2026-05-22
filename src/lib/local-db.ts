@@ -16,6 +16,7 @@ import {
   reserveInventoryForOrder,
   syncInventoryForOrderStatusChange,
 } from "@/lib/order-inventory";
+import { assertProductionDatabase } from "@/lib/database-status";
 
 export type LocalClient = {
   id: string;
@@ -331,7 +332,20 @@ export async function readLocalDb(): Promise<LocalDb> {
   }
 }
 
+function canWriteJsonDbFile() {
+  if (supabaseAdmin()) return false;
+  if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME)
+    return false;
+  return true;
+}
+
 export async function writeLocalDb(db: LocalDb) {
+  if (!canWriteJsonDbFile()) {
+    assertProductionDatabase();
+    throw new Error(
+      "Cannot write local-db.json in this environment. Use Supabase (SUPABASE_ENABLED=true) and apply pending migrations.",
+    );
+  }
   await mkdir(path.dirname(dbPath), { recursive: true });
   await writeFile(dbPath, JSON.stringify(db, null, 2));
 }
@@ -771,23 +785,58 @@ export async function updateClientPassword(
   currentPassword: string,
   newPassword: string,
 ) {
-  const db = await readLocalDb();
-  const client = db.clients.find((item) => item.id === id);
+  const client = await getClient(id);
   if (!client) throw new Error("Client not found");
   if (!verifyPassword(currentPassword, client.passwordHash))
     throw new Error("Current password is incorrect");
-  client.passwordHash = hashPassword(newPassword);
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("clients")
+      .update({ password_hash: hashPassword(newPassword) })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return mapClient(data);
+  }
+
+  const db = await readLocalDb();
+  const row = db.clients.find((item) => item.id === id);
+  if (!row) throw new Error("Client not found");
+  row.passwordHash = hashPassword(newPassword);
   await writeLocalDb(db);
-  return client;
+  return row;
 }
 
 export async function createResetRequest(email: string) {
-  const db = await readLocalDb();
   const request = {
     id: randomUUID(),
     email: email.trim().toLowerCase(),
     createdAt: new Date().toISOString(),
   };
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("password_reset_requests")
+      .insert({
+        id: request.id,
+        email: request.email,
+        created_at: request.createdAt,
+      })
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return {
+      id: String(data.id ?? request.id),
+      email: String(data.email ?? request.email),
+      createdAt: String(data.created_at ?? request.createdAt),
+    };
+  }
+
+  const db = await readLocalDb();
   db.resetRequests.push(request);
   await writeLocalDb(db);
   return request;
@@ -1241,6 +1290,24 @@ export async function updateOrderAdmin(
 }
 
 export async function getCart(clientId: string) {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("client_carts")
+      .select("items")
+      .eq("client_id", clientId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return Array.isArray(data?.items)
+      ? (data.items as Array<{
+          slug: string;
+          quantity: number;
+          color: string;
+          sizes: string[];
+        }>)
+      : [];
+  }
+
   const db = await readLocalDb();
   return db.carts?.[clientId] ?? [];
 }
@@ -1254,6 +1321,31 @@ export async function saveCart(
     sizes: string[];
   }>,
 ) {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("client_carts")
+      .upsert(
+        {
+          client_id: clientId,
+          items,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "client_id" },
+      )
+      .select("items")
+      .single();
+    if (error) throw new Error(error.message);
+    return Array.isArray(data?.items)
+      ? (data.items as Array<{
+          slug: string;
+          quantity: number;
+          color: string;
+          sizes: string[];
+        }>)
+      : items;
+  }
+
   const db = await readLocalDb();
   db.carts = db.carts ?? {};
   db.carts[clientId] = items;

@@ -64,6 +64,7 @@ type AdminActiveSection =
   | "inventory"
   | "pricing"
   | "home"
+  | "headerMenu"
   | "testimonials"
   | "products"
   | "studio"
@@ -168,6 +169,12 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-edit",
     label: "CMS / Home Page",
     section: "home",
+  },
+  {
+    href: "/admin/header-menu",
+    icon: "icon-list",
+    label: "Header menu",
+    section: "headerMenu",
   },
   {
     href: "/admin/about",

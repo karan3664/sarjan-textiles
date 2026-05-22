@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { AdminRole } from "@/lib/admin-token";
 import { getAllBlogComments } from "@/lib/blog-comments-store";
 import { readLocalDb } from "@/lib/local-db";
@@ -28,23 +29,109 @@ type StateFile = {
   listClearedBefore: string | null;
 };
 
-async function readState(): Promise<StateFile> {
+function supabaseEnabled() {
+  const v = (process.env.SUPABASE_ENABLED ?? "").trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
+function supabaseDb() {
+  if (!supabaseEnabled()) return null;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createSupabaseClient(url, key, {
+    auth: { persistSession: false },
+  });
+}
+
+function canWriteJsonStateFile() {
+  if (supabaseDb()) return false;
+  if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME)
+    return false;
+  return true;
+}
+
+function normalizeState(raw: Partial<StateFile> | null | undefined): StateFile {
+  return {
+    readIds: Array.isArray(raw?.readIds) ? raw.readIds.map(String) : [],
+    listClearedBefore:
+      typeof raw?.listClearedBefore === "string" ? raw.listClearedBefore : null,
+  };
+}
+
+async function readStateFromFile(): Promise<StateFile> {
   try {
     const raw = await readFile(STATE_FILE, "utf8");
-    const j = JSON.parse(raw) as StateFile;
-    return {
-      readIds: Array.isArray(j.readIds) ? j.readIds : [],
-      listClearedBefore:
-        typeof j.listClearedBefore === "string" ? j.listClearedBefore : null,
-    };
+    return normalizeState(JSON.parse(raw) as StateFile);
   } catch {
     return { readIds: [], listClearedBefore: null };
   }
 }
 
-async function writeState(state: StateFile) {
+async function readStateFromSupabase(): Promise<StateFile | null> {
+  const supabase = supabaseDb();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("admin_notification_state")
+    .select("read_ids, list_cleared_before")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return { readIds: [], listClearedBefore: null };
+  return normalizeState({
+    readIds: Array.isArray(data.read_ids) ? data.read_ids : [],
+    listClearedBefore:
+      data.list_cleared_before != null
+        ? String(data.list_cleared_before)
+        : null,
+  });
+}
+
+async function readState(): Promise<StateFile> {
+  try {
+    const fromDb = await readStateFromSupabase();
+    if (fromDb) return fromDb;
+  } catch {
+    /* fall through to JSON for local dev */
+  }
+  return readStateFromFile();
+}
+
+async function writeStateToFile(state: StateFile) {
+  if (!canWriteJsonStateFile()) {
+    throw new Error(
+      "Cannot persist admin notification state to disk. Enable Supabase and run migration 20260521150000_admin_notification_state.sql.",
+    );
+  }
   await mkdir(path.dirname(STATE_FILE), { recursive: true });
   await writeFile(STATE_FILE, JSON.stringify(state, null, 2), "utf8");
+}
+
+async function writeStateToSupabase(state: StateFile) {
+  const supabase = supabaseDb();
+  if (!supabase) {
+    await writeStateToFile(state);
+    return;
+  }
+  const { error } = await supabase.from("admin_notification_state").upsert(
+    {
+      id: 1,
+      read_ids: state.readIds,
+      list_cleared_before: state.listClearedBefore,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+async function writeState(state: StateFile) {
+  const supabase = supabaseDb();
+  if (supabase) {
+    await writeStateToSupabase(state);
+    return;
+  }
+  await writeStateToFile(state);
 }
 
 function passesClearFilter(createdAt: string, clearedBefore: string | null) {

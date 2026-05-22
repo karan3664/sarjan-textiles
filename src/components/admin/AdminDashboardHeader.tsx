@@ -9,6 +9,7 @@ import {
 import {
   ADMIN_NOTIF_CHANNEL,
   ADMIN_NOTIF_REFRESH_EVENT,
+  requestAdminNotificationRefresh,
 } from "@/lib/admin-notification-live";
 import {
   playAdminNotificationChime,
@@ -164,8 +165,11 @@ export function AdminDashboardHeader() {
         setError(data.error ?? "Could not update notifications.");
         return;
       }
-      setItems(data.items ?? []);
+      const nextItems = data.items ?? [];
+      ingestNotifications(nextItems);
+      setItems(nextItems);
       setUnread(data.unreadCount ?? 0);
+      requestAdminNotificationRefresh();
     } catch {
       setError("Network error.");
     } finally {

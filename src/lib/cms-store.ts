@@ -12,6 +12,10 @@ import {
 import type { Product } from "@/data/mock";
 import type { CmsCustomSection } from "@/types/cms-custom";
 import type { CmsInstagramFeed } from "@/lib/instagram-types";
+import {
+  defaultHeaderNavigation,
+  normalizeHeaderNavigation,
+} from "@/lib/header-navigation";
 import { slugifyCmsSegment } from "@/lib/slug";
 import {
   dedupeBlogsByTitle,
@@ -678,6 +682,11 @@ function migrateSiteSettings(merged: CmsSiteSettings): CmsSiteSettings {
       ...(merged.authBanners?.forgot ?? {}),
     },
   };
+
+  next.headerNavigation = normalizeHeaderNavigation(
+    merged.headerNavigation,
+    defaultHeaderNavigation,
+  );
 
   return next;
 }

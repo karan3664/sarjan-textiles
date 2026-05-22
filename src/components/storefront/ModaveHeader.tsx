@@ -4,8 +4,10 @@ import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { usePathname } from "next/navigation";
-import { navigation, siteSettings } from "@/data/site";
-import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
+import { siteSettings } from "@/data/site";
+import { legacyHeaderNavLinks } from "@/lib/header-navigation";
+import { logoutClientSession } from "@/lib/client-auth-browser";
+import { cartItemCount, syncCartWithApi } from "@/lib/cart-client";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { refreshWishlistFromCatalog } from "@/lib/wishlist-client";
 
@@ -18,6 +20,12 @@ type CatalogCategory = {
 type CategoryHubNav = {
   title: string;
   slug: string;
+};
+
+type HeaderNavLink = {
+  label: string;
+  href: string;
+  showCategoriesDropdown?: boolean;
 };
 
 function catalogCategoryHref(slug: string) {
@@ -39,6 +47,9 @@ export function ModaveHeader() {
   const [hubs, setHubs] = useState<CategoryHubNav[]>([]);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
+  const [navItems, setNavItems] = useState<HeaderNavLink[]>(
+    legacyHeaderNavLinks(),
+  );
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -65,6 +76,17 @@ export function ModaveHeader() {
       window.removeEventListener("sarjan-auth-updated", sync);
       window.removeEventListener("storage", sync);
     };
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/navigation")
+      .then((res) => res.json())
+      .then((data: { items?: HeaderNavLink[] }) => {
+        if (Array.isArray(data.items) && data.items.length) {
+          setNavItems(data.items);
+        }
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -100,30 +122,29 @@ export function ModaveHeader() {
       void syncCounts();
     };
     const onCartUpdated = () => {
-      setCartCount(cartItemCount(readCart()));
+      void syncCounts();
+    };
+    const onAuthUpdated = () => {
+      void syncCounts();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void syncCounts();
     };
 
     window.addEventListener("sarjan-wishlist-updated", onWishlistUpdated);
     window.addEventListener("sarjan-cart-updated", onCartUpdated);
+    window.addEventListener("sarjan-auth-updated", onAuthUpdated);
     window.addEventListener("storage", onWishlistUpdated);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       window.removeEventListener("sarjan-wishlist-updated", onWishlistUpdated);
       window.removeEventListener("sarjan-cart-updated", onCartUpdated);
+      window.removeEventListener("sarjan-auth-updated", onAuthUpdated);
       window.removeEventListener("storage", onWishlistUpdated);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
-
-  const logout = () => {
-    void fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    }).catch(() => undefined);
-    localStorage.removeItem("sarjan-client");
-    localStorage.removeItem("sarjan-client-token");
-    window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
-    window.location.assign("/login");
-  };
 
   return (
     <header id="header" className="header-default header-style-4">
@@ -213,7 +234,7 @@ export function ModaveHeader() {
                           <button
                             type="button"
                             className="body-text-1 link sarjan-logout-btn"
-                            onClick={logout}
+                            onClick={() => logoutClientSession()}
                           >
                             Logout
                           </button>
@@ -280,8 +301,8 @@ export function ModaveHeader() {
           <div className="wrapper-header d-flex justify-content-center align-items-center">
             <nav className="box-navigation text-center">
               <ul className="box-nav-ul d-flex align-items-center justify-content-center d-none d-xl-flex">
-                {navigation.map((item) => (
-                  <Fragment key={item.href}>
+                {navItems.map((item) => (
+                  <Fragment key={`${item.href}-${item.label}`}>
                     <li
                       className={`menu-item${isActive(item.href) ? " active" : ""}`}
                     >
@@ -289,7 +310,7 @@ export function ModaveHeader() {
                         {item.label}
                       </a>
                     </li>
-                    {item.href === "/products" ? (
+                    {item.showCategoriesDropdown ? (
                       <li
                         className={`menu-item position-relative${categoriesMenuActive ? " active" : ""}`}
                         key="nav-categories"
@@ -416,7 +437,7 @@ export function ModaveHeader() {
                       type="button"
                       className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--logout sarjan-logout-btn"
                       onClick={() => {
-                        logout();
+                        logoutClientSession();
                       }}
                     >
                       Logout
@@ -460,31 +481,35 @@ export function ModaveHeader() {
             <nav className="sarjan-mobile-menu__nav" aria-label="Mobile">
               <p className="sarjan-mobile-menu__section-label">Menu</p>
               <ul className="nav-ul-mb sarjan-mobile-menu__links">
-                {navigation.map((item) => (
-                  <li
-                    className={`nav-mb-item${isActive(item.href) ? " active" : ""}`}
-                    key={item.href}
-                  >
-                    <a
-                      href={item.href}
-                      className="mb-menu-link"
-                      data-bs-dismiss="offcanvas"
+                {navItems.map((item) => (
+                  <Fragment key={`mb-${item.href}-${item.label}`}>
+                    <li
+                      className={`nav-mb-item${isActive(item.href) ? " active" : ""}`}
                     >
-                      <span>{item.label}</span>
-                    </a>
-                  </li>
+                      <a
+                        href={item.href}
+                        className="mb-menu-link"
+                        data-bs-dismiss="offcanvas"
+                      >
+                        <span>{item.label}</span>
+                      </a>
+                    </li>
+                    {item.showCategoriesDropdown &&
+                    !navItems.some((entry) => entry.href === "/categories") ? (
+                      <li
+                        className={`nav-mb-item${categoriesMenuActive ? " active" : ""}`}
+                      >
+                        <Link
+                          href="/categories"
+                          className="mb-menu-link"
+                          data-bs-dismiss="offcanvas"
+                        >
+                          <span>Categories</span>
+                        </Link>
+                      </li>
+                    ) : null}
+                  </Fragment>
                 ))}
-                <li
-                  className={`nav-mb-item${categoriesMenuActive ? " active" : ""}`}
-                >
-                  <Link
-                    href="/categories"
-                    className="mb-menu-link"
-                    data-bs-dismiss="offcanvas"
-                  >
-                    <span>Categories</span>
-                  </Link>
-                </li>
               </ul>
 
               <details className="sarjan-mobile-menu__details">

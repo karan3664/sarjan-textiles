@@ -113,13 +113,24 @@ export function ModaveModals() {
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
-    const sync = () => applyCart(readCart());
-    void syncCartWithApi().then(applyCart).catch(sync);
-    window.addEventListener("sarjan-cart-updated", sync);
-    window.addEventListener("storage", sync);
+    const syncFromApi = () => {
+      void syncCartWithApi()
+        .then(applyCart)
+        .catch(() => applyCart(readCart()));
+    };
+    syncFromApi();
+    window.addEventListener("sarjan-cart-updated", syncFromApi);
+    window.addEventListener("sarjan-auth-updated", syncFromApi);
+    window.addEventListener("storage", syncFromApi);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") syncFromApi();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("sarjan-cart-updated", sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("sarjan-cart-updated", syncFromApi);
+      window.removeEventListener("sarjan-auth-updated", syncFromApi);
+      window.removeEventListener("storage", syncFromApi);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

@@ -33,26 +33,39 @@ export function CartPageClient() {
   const hasB2BSession = useClientHasB2BToken();
 
   useEffect(() => {
-    const sync = () => {
-      const next = readCart();
+    const applyCart = (next: StoredCartItem[]) => {
       setCart((current) =>
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
+    const syncFromApi = () => {
+      void syncCartWithApi()
+        .then(applyCart)
+        .catch(() => applyCart(readCart()));
+    };
 
     const syncClient = () =>
       setClientGst(storedClientGstNumber(readStoredClient()));
+    const onAuthUpdated = () => {
+      syncClient();
+      syncFromApi();
+    };
     syncClient();
-    syncCartWithApi().then(sync).catch(sync);
-    window.addEventListener("sarjan-cart-updated", sync);
-    window.addEventListener("storage", sync);
+    syncFromApi();
+    window.addEventListener("sarjan-cart-updated", syncFromApi);
+    window.addEventListener("sarjan-auth-updated", onAuthUpdated);
+    window.addEventListener("storage", syncFromApi);
     window.addEventListener("storage", syncClient);
-    window.addEventListener("sarjan-auth-updated", syncClient);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") syncFromApi();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("sarjan-cart-updated", sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("sarjan-cart-updated", syncFromApi);
+      window.removeEventListener("sarjan-auth-updated", onAuthUpdated);
+      window.removeEventListener("storage", syncFromApi);
       window.removeEventListener("storage", syncClient);
-      window.removeEventListener("sarjan-auth-updated", syncClient);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

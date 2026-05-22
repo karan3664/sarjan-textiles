@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { navigation, siteSettings } from "@/data/mock";
+import { footerInformationLinks, siteSettings } from "@/data/mock";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { FooterNewsletterForm } from "./FooterNewsletterForm";
 
@@ -15,7 +15,7 @@ export async function ModaveFooter() {
         <div className="footer-body">
           <div className="container">
             <div className="row g-4 g-lg-3 align-items-start sarjan-footer-top">
-              <div className="col-12 col-lg-3">
+              <div className="col-12 col-lg-2">
                 <div className="footer-infor">
                   <div className="footer-logo">
                     <Link href="/">
@@ -92,15 +92,15 @@ export async function ModaveFooter() {
                   </ul>
                 </div>
               </div>
-              <div className="col-12 col-lg-2">
+              <div className="col-12 col-lg-3">
                 <div className="footer-menu footer-menu-sarjan-split">
-                  <div className="footer-col-block">
+                  <div className="footer-col-block sarjan-footer-info-block">
                     <div className="footer-heading text-button footer-heading-mobile">
                       {settings.footerInfoHeading ?? "Information"}
                     </div>
                     <div className="tf-collapse-content">
                       <ul className="footer-menu-list">
-                        {navigation.map((item) => (
+                        {footerInformationLinks.map((item) => (
                           <li className="text-caption-1" key={item.href}>
                             <Link href={item.href} className="footer-menu_item">
                               {item.label}

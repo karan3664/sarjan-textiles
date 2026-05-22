@@ -70,7 +70,12 @@ export function CheckoutPageClient() {
   }>({ tone: "muted", text: "" });
 
   useEffect(() => {
-    const sync = () => setCart(readCart());
+    const applyCart = (next: StoredCartItem[]) => setCart(next);
+    const syncFromApi = () => {
+      void syncCartWithApi()
+        .then(applyCart)
+        .catch(() => applyCart(readCart()));
+    };
     const syncClient = () => {
       try {
         const token = localStorage.getItem("sarjan-client-token")?.trim();
@@ -83,17 +88,26 @@ export function CheckoutPageClient() {
         setClient(null);
       }
     };
+    const onAuthUpdated = () => {
+      syncClient();
+      syncFromApi();
+    };
     syncClient();
-    syncCartWithApi().then(sync).catch(sync);
-    window.addEventListener("sarjan-cart-updated", sync);
-    window.addEventListener("storage", sync);
+    syncFromApi();
+    window.addEventListener("sarjan-cart-updated", syncFromApi);
+    window.addEventListener("storage", syncFromApi);
     window.addEventListener("storage", syncClient);
-    window.addEventListener("sarjan-auth-updated", syncClient);
+    window.addEventListener("sarjan-auth-updated", onAuthUpdated);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") syncFromApi();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("sarjan-cart-updated", sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("sarjan-cart-updated", syncFromApi);
+      window.removeEventListener("storage", syncFromApi);
       window.removeEventListener("storage", syncClient);
-      window.removeEventListener("sarjan-auth-updated", syncClient);
+      window.removeEventListener("sarjan-auth-updated", onAuthUpdated);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
