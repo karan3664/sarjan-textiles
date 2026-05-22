@@ -7,10 +7,16 @@ import {
   parseSizeRun,
   readCart,
   sameCartLine,
+  scheduleCartApiSync,
   syncCartWithApi,
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
+import {
+  cacheCatalogProducts,
+  getCachedProducts,
+  slugsMissingFromCache,
+} from "@/lib/catalog-product-cache";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { productSetPrice } from "@/lib/product-pricing";
 import { isProductSoldOut } from "@/lib/product-availability";
@@ -113,23 +119,32 @@ export function ModaveModals() {
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
-    const syncFromApi = () => {
+    const syncFromApi = (opts?: { backgroundOnly?: boolean }) => {
+      applyCart(readCart());
+      if (opts?.backgroundOnly) {
+        scheduleCartApiSync();
+        return;
+      }
       void syncCartWithApi()
         .then(applyCart)
         .catch(() => applyCart(readCart()));
     };
+    const onCartUpdated = () => syncFromApi({ backgroundOnly: true });
+    const onStorageCart = () => syncFromApi({ backgroundOnly: true });
+    const onAuthCart = () => syncFromApi();
+
     syncFromApi();
-    window.addEventListener("sarjan-cart-updated", syncFromApi);
-    window.addEventListener("sarjan-auth-updated", syncFromApi);
-    window.addEventListener("storage", syncFromApi);
+    window.addEventListener("sarjan-cart-updated", onCartUpdated);
+    window.addEventListener("sarjan-auth-updated", onAuthCart);
+    window.addEventListener("storage", onStorageCart);
     const onVisible = () => {
       if (document.visibilityState === "visible") syncFromApi();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("sarjan-cart-updated", syncFromApi);
-      window.removeEventListener("sarjan-auth-updated", syncFromApi);
-      window.removeEventListener("storage", syncFromApi);
+      window.removeEventListener("sarjan-cart-updated", onCartUpdated);
+      window.removeEventListener("sarjan-auth-updated", onAuthCart);
+      window.removeEventListener("storage", onStorageCart);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
@@ -196,40 +211,63 @@ export function ModaveModals() {
       return;
     }
 
-    const ids = Array.from(new Set(cart.map((item) => item.slug))).join(",");
+    const slugs = Array.from(new Set(cart.map((item) => item.slug)));
+
+    const applyHydrated = (
+      normalizedCart: StoredCartItem[],
+      products: Product[],
+    ) => {
+      cacheCatalogProducts(products);
+      const bySlug = new Map<Product["slug"], Product>(
+        products.map((product) => [product.slug, product]),
+      );
+      setItems(
+        normalizedCart
+          .map((item) => {
+            const product = bySlug.get(item.slug);
+            if (!product) return null;
+            const setPrice = productSetPrice(product, item.color, item.sizes);
+            return {
+              ...item,
+              product,
+              setPrice,
+              lineTotal: item.quantity * setPrice,
+            };
+          })
+          .filter(Boolean) as HydratedCartItem[],
+      );
+    };
+
+    const missing = slugsMissingFromCache(slugs);
+    if (!missing.length) {
+      const products = getCachedProducts(slugs);
+      const normalizedCart = normalizeCartSlugs(cart, products);
+      if (JSON.stringify(normalizedCart) !== JSON.stringify(cart)) {
+        writeCart(normalizedCart);
+        return;
+      }
+      applyHydrated(normalizedCart, products);
+      return;
+    }
+
+    const fetchIds = missing.join(",");
     fetch(
-      `/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`,
+      `/api/catalog/products?ids=${encodeURIComponent(fetchIds)}&limit=60`,
       catalogFetchInit(),
     )
       .then((res) => res.json())
       .then((data) => {
-        const products = Array.isArray(data.items)
+        const fetched = Array.isArray(data.items)
           ? (data.items as Product[])
           : [];
+        cacheCatalogProducts(fetched);
+        const products = getCachedProducts(slugs);
         const normalizedCart = normalizeCartSlugs(cart, products);
         if (JSON.stringify(normalizedCart) !== JSON.stringify(cart)) {
           writeCart(normalizedCart);
           return;
         }
-
-        const bySlug = new Map<Product["slug"], Product>(
-          products.map((product) => [product.slug, product]),
-        );
-        setItems(
-          normalizedCart
-            .map((item) => {
-              const product = bySlug.get(item.slug);
-              if (!product) return null;
-              const setPrice = productSetPrice(product, item.color, item.sizes);
-              return {
-                ...item,
-                product,
-                setPrice,
-                lineTotal: item.quantity * setPrice,
-              };
-            })
-            .filter(Boolean) as HydratedCartItem[],
-        );
+        applyHydrated(normalizedCart, products);
       })
       .catch(() => setItems([]));
   }, [cart]);

@@ -10,7 +10,7 @@ import {
   logoutClientSession,
   restoreClientSessionFromCookie,
 } from "@/lib/client-auth-browser";
-import { cartItemCount, syncCartWithApi } from "@/lib/cart-client";
+import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import {
   readWishlist,
@@ -133,7 +133,7 @@ export function ModaveHeader() {
       setWishlistCount(readWishlist().length);
     };
     const onCartUpdated = () => {
-      void syncCounts();
+      setCartCount(cartItemCount(readCart()));
     };
     const onAuthUpdated = () => {
       void syncCounts();

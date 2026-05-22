@@ -70,7 +70,10 @@ export function writeCart(
     window.localStorage.setItem(CART_KEY, JSON.stringify(next));
     window.dispatchEvent(new CustomEvent("sarjan-cart-updated"));
   }
-  if (options.syncApi !== false) persistCartToApi(next);
+  if (options.syncApi !== false) {
+    persistCartToApi(next);
+    scheduleCartApiSync();
+  }
 }
 
 export function sameCartLine(a: StoredCartItem, b: StoredCartItem) {
@@ -83,6 +86,18 @@ export function sameCartLine(a: StoredCartItem, b: StoredCartItem) {
 
 export function cartItemCount(cart: StoredCartItem[]) {
   return cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+let cartApiSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Debounced server merge — use after optimistic local cart updates. */
+export function scheduleCartApiSync(delayMs = 350) {
+  if (typeof window === "undefined") return;
+  if (cartApiSyncTimer) clearTimeout(cartApiSyncTimer);
+  cartApiSyncTimer = setTimeout(() => {
+    cartApiSyncTimer = null;
+    void syncCartWithApi();
+  }, delayMs);
 }
 
 /** Map legacy SEO slugs to current product slugs; drop deleted products. */

@@ -165,16 +165,60 @@ async function fetchPublicWebProfilePosts(
   limit: number,
 ): Promise<InstagramPost[]> {
   const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`;
-  const response = await fetch(url, {
-    headers: instagramWebHeaders,
-    cache: "no-store",
-    signal: AbortSignal.timeout(8000),
-  }).catch(() => null);
 
-  if (!response?.ok) return [];
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(url, {
+      headers: instagramWebHeaders,
+      cache: "no-store",
+      signal: AbortSignal.timeout(attempt === 0 ? 12_000 : 18_000),
+    }).catch(() => null);
 
-  const data = await response.json().catch(() => null);
-  return parseWebProfilePosts(data, limit);
+    if (!response?.ok) continue;
+
+    const data = await response.json().catch(() => null);
+    const posts = parseWebProfilePosts(data, limit);
+    if (posts.length) return posts;
+  }
+
+  return [];
+}
+
+async function fetchGraphPosts(
+  limit: number,
+  options: {
+    token: string;
+    ownerUserId?: string;
+    username: string;
+    profileUrl: string;
+  },
+): Promise<InstagramPost[]> {
+  const { token, ownerUserId, username, profileUrl } = options;
+
+  if (ownerUserId) {
+    const direct = await fetchDirectMedia(
+      token,
+      ownerUserId,
+      limit,
+      profileUrl,
+    );
+    if (direct.length) return direct;
+  }
+
+  const me = await fetchMeMedia(token, limit, profileUrl);
+  if (me.length) return me;
+
+  if (ownerUserId) {
+    const discovered = await fetchBusinessDiscovery(
+      token,
+      ownerUserId,
+      username,
+      limit,
+      profileUrl,
+    );
+    if (discovered.length) return discovered;
+  }
+
+  return [];
 }
 
 async function fetchLiveInstagramPosts(
@@ -189,33 +233,16 @@ async function fetchLiveInstagramPosts(
   const token = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
   const ownerUserId = process.env.INSTAGRAM_USER_ID?.trim();
 
-  if (token) {
-    if (ownerUserId) {
-      const direct = await fetchDirectMedia(
-        token,
-        ownerUserId,
-        limit,
-        profileUrl,
-      );
-      if (direct.length) return direct;
-    }
+  const webPromise = fetchPublicWebProfilePosts(username, limit);
+  const graphPromise = token
+    ? fetchGraphPosts(limit, { token, ownerUserId, username, profileUrl })
+    : Promise.resolve([] as InstagramPost[]);
 
-    const me = await fetchMeMedia(token, limit, profileUrl);
-    if (me.length) return me;
+  const [webPosts, graphPosts] = await Promise.all([webPromise, graphPromise]);
+  if (graphPosts.length) return graphPosts;
+  if (webPosts.length) return webPosts;
 
-    if (ownerUserId) {
-      const discovered = await fetchBusinessDiscovery(
-        token,
-        ownerUserId,
-        username,
-        limit,
-        profileUrl,
-      );
-      if (discovered.length) return discovered;
-    }
-  }
-
-  return fetchPublicWebProfilePosts(username, limit);
+  return [];
 }
 
 async function readCachedInstagramPosts(
@@ -258,6 +285,8 @@ export async function getInstagramPosts(
   limit = 12,
   options?: GetInstagramOptions,
 ): Promise<InstagramPost[]> {
+  const cached = await readCachedInstagramPosts(limit);
+
   const live = await fetchLiveInstagramPosts(limit, options);
   if (live.length) {
     try {
@@ -268,5 +297,20 @@ export async function getInstagramPosts(
     return live;
   }
 
-  return readCachedInstagramPosts(limit);
+  return cached;
+}
+
+/** Force refresh from Instagram and persist to CMS (admin/cron). */
+export async function refreshInstagramFeedCache(
+  limit = 12,
+  options?: GetInstagramOptions,
+): Promise<{ posts: InstagramPost[]; source: "live" | "cache" | "none" }> {
+  const live = await fetchLiveInstagramPosts(limit, options);
+  if (live.length) {
+    await writeInstagramFeedCache(live);
+    return { posts: live, source: "live" };
+  }
+  const cached = await readCachedInstagramPosts(limit);
+  if (cached.length) return { posts: cached, source: "cache" };
+  return { posts: [], source: "none" };
 }

@@ -4,17 +4,23 @@ import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { isProductSoldOut } from "@/lib/product-availability";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
   readCart,
   sameCartLine,
+  scheduleCartApiSync,
   syncCartWithApi,
   type StoredCartItem,
   writeCart,
 } from "@/lib/cart-client";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import {
+  cacheCatalogProducts,
+  getCachedProducts,
+  slugsMissingFromCache,
+} from "@/lib/catalog-product-cache";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { productSetPrice } from "@/lib/product-pricing";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
@@ -31,6 +37,7 @@ export function CartPageClient() {
   const [loading, setLoading] = useState(true);
   const [clientGst, setClientGst] = useState("");
   const hasB2BSession = useClientHasB2BToken();
+  const cartHydrateFetchRef = useRef(0);
 
   useEffect(() => {
     const applyCart = (next: StoredCartItem[]) => {
@@ -38,7 +45,12 @@ export function CartPageClient() {
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
-    const syncFromApi = () => {
+    const syncFromApi = (opts?: { backgroundOnly?: boolean }) => {
+      applyCart(readCart());
+      if (opts?.backgroundOnly) {
+        scheduleCartApiSync();
+        return;
+      }
       void syncCartWithApi()
         .then(applyCart)
         .catch(() => applyCart(readCart()));
@@ -50,20 +62,23 @@ export function CartPageClient() {
       syncClient();
       syncFromApi();
     };
+    const onCartUpdated = () => syncFromApi({ backgroundOnly: true });
+    const onStorageCart = () => syncFromApi({ backgroundOnly: true });
+
     syncClient();
     syncFromApi();
-    window.addEventListener("sarjan-cart-updated", syncFromApi);
+    window.addEventListener("sarjan-cart-updated", onCartUpdated);
     window.addEventListener("sarjan-auth-updated", onAuthUpdated);
-    window.addEventListener("storage", syncFromApi);
+    window.addEventListener("storage", onStorageCart);
     window.addEventListener("storage", syncClient);
     const onVisible = () => {
       if (document.visibilityState === "visible") syncFromApi();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("sarjan-cart-updated", syncFromApi);
+      window.removeEventListener("sarjan-cart-updated", onCartUpdated);
       window.removeEventListener("sarjan-auth-updated", onAuthUpdated);
-      window.removeEventListener("storage", syncFromApi);
+      window.removeEventListener("storage", onStorageCart);
       window.removeEventListener("storage", syncClient);
       document.removeEventListener("visibilitychange", onVisible);
     };
@@ -76,35 +91,59 @@ export function CartPageClient() {
       return;
     }
 
-    const ids = Array.from(new Set(cart.map((item) => item.slug))).join(",");
+    const slugs = Array.from(new Set(cart.map((item) => item.slug)));
+
+    const applyLines = (products: Product[]) => {
+      cacheCatalogProducts(products);
+      const bySlug = new Map<Product["slug"], Product>(
+        products.map((product) => [product.slug, product]),
+      );
+      setLines(
+        cart
+          .map((item) => {
+            const product = bySlug.get(item.slug);
+            if (!product) return null;
+            const setPrice = productSetPrice(product, item.color, item.sizes);
+            return {
+              ...item,
+              product,
+              setPrice,
+              lineTotal: setPrice * item.quantity,
+            };
+          })
+          .filter(Boolean) as CartLine[],
+      );
+    };
+
+    const missing = slugsMissingFromCache(slugs);
+    if (!missing.length) {
+      applyLines(getCachedProducts(slugs));
+      setLoading(false);
+      return;
+    }
+
+    const fetchId = ++cartHydrateFetchRef.current;
     setLoading(true);
+
     fetch(
-      `/api/catalog/products?ids=${encodeURIComponent(ids)}&limit=60`,
+      `/api/catalog/products?ids=${encodeURIComponent(missing.join(","))}&limit=60`,
       catalogFetchInit(),
     )
       .then((res) => res.json())
       .then((data) => {
-        const bySlug = new Map<Product["slug"], Product>(
-          (data.items ?? []).map((product: Product) => [product.slug, product]),
-        );
-        setLines(
-          cart
-            .map((item) => {
-              const product = bySlug.get(item.slug);
-              if (!product) return null;
-              const setPrice = productSetPrice(product, item.color, item.sizes);
-              return {
-                ...item,
-                product,
-                setPrice,
-                lineTotal: setPrice * item.quantity,
-              };
-            })
-            .filter(Boolean) as CartLine[],
-        );
+        if (fetchId !== cartHydrateFetchRef.current) return;
+        const fetched = Array.isArray(data.items)
+          ? (data.items as Product[])
+          : [];
+        cacheCatalogProducts(fetched);
+        applyLines(getCachedProducts(slugs));
       })
-      .catch(() => setLines([]))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (fetchId === cartHydrateFetchRef.current) setLines([]);
+      })
+      .finally(() => {
+        if (fetchId === cartHydrateFetchRef.current) setLoading(false);
+      });
   }, [cart]);
 
   const subtotal = useMemo(

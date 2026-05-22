@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { InstagramProfileEmbed } from "@/components/storefront/InstagramProfileEmbed";
 import { fetchInstagramPostsInBrowser } from "@/lib/instagram-parse";
 import type { InstagramPost } from "@/lib/instagram-types";
 
@@ -237,18 +238,21 @@ export function InstagramPostsCarousel({
 
   if (!posts.length) {
     return (
-      <div className="sarjan-instagram-empty text-center">
-        <p className="text-secondary mb_20">
-          Instagram posts could not be loaded right now.
+      <div className="sarjan-instagram-empty">
+        <p className="text-secondary text-center mb_20">
+          Live gallery is updating — showing posts from Instagram directly.
         </p>
-        <Link
-          href={profileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="tf-btn btn-fill radius-4"
-        >
-          <span className="text text-button">Follow @{handle}</span>
-        </Link>
+        <InstagramProfileEmbed profileUrl={profileUrl} />
+        <div className="text-center mt_20">
+          <Link
+            href={profileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tf-btn btn-fill radius-4"
+          >
+            <span className="text text-button">Follow @{handle}</span>
+          </Link>
+        </div>
       </div>
     );
   }
