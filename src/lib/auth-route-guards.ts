@@ -23,6 +23,7 @@ export const CLIENT_PUBLIC_API_PREFIXES = [
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
+  "/api/auth/session",
   "/api/auth/send-otp",
   "/api/auth/verify-otp",
   "/api/auth/forgot",

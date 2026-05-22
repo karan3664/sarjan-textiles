@@ -88,6 +88,25 @@ export type ClientLoginResult =
   | { ok: true; client: StoredClient; token: string }
   | { ok: false; error: string };
 
+/** Sync localStorage from HttpOnly cookie (after login redirect or stale local cache). */
+export async function restoreClientSessionFromCookie(): Promise<ClientLoginResult> {
+  const res = await fetch("/api/auth/session", { credentials: "include" });
+  let data: { error?: string; token?: string; client?: StoredClient } = {};
+  try {
+    data = await res.json();
+  } catch {
+    return { ok: false, error: "Session check failed" };
+  }
+  if (!res.ok) {
+    return { ok: false, error: data.error ?? "Not signed in" };
+  }
+  if (!data.token || !data.client) {
+    return { ok: false, error: "Session check failed" };
+  }
+  persistClientSession(data.token, data.client);
+  return { ok: true, client: data.client, token: data.token };
+}
+
 /** POST /api/auth/login and save session in localStorage + cookie. */
 export async function loginClientSession(
   email: string,

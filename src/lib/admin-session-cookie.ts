@@ -1,15 +1,18 @@
 import type { NextResponse } from "next/server";
+import { productionSessionCookieDomain } from "@/lib/session-cookie-domain";
 
 export const ADMIN_SESSION_COOKIE_NAME = "sarjan-admin-session";
 
 export const ADMIN_SESSION_MAX_AGE_SEC = 60 * 60 * 8;
 
 export function adminSessionCookieBase() {
+  const domain = productionSessionCookieDomain();
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
+    ...(domain ? { domain } : {}),
   };
 }
 

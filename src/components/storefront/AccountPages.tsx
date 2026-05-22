@@ -21,6 +21,7 @@ import {
   clientAuthJsonHeaders,
   clientAuthToken,
   logoutClientSession,
+  restoreClientSessionFromCookie,
 } from "@/lib/client-auth-browser";
 import {
   isGstVerifiedOnFile,
@@ -152,39 +153,69 @@ function useClientAndOrders() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = readClient();
-    const token = localStorage.getItem("sarjan-client-token")?.trim();
-    if (!stored?.id || !token) {
-      setClient(null);
-      setLoading(false);
-      window.location.assign("/login");
-      return;
-    }
+    let cancelled = false;
 
-    setClient(stored);
+    const loadOrders = (clientId: string, stored: Client) => {
+      Promise.all([
+        fetch(`/api/clients/${encodeURIComponent(clientId)}`)
+          .then((res) => res.json())
+          .catch(() => null),
+        fetch("/api/client/orders", {
+          headers: clientAuthHeaders(),
+          credentials: "include",
+        })
+          .then((res) => res.json())
+          .catch(() => ({ orders: [] })),
+      ])
+        .then(([clientData, orderData]) => {
+          if (cancelled) return;
+          const freshClient = clientData?.client ?? stored;
+          const normalized: Client = {
+            ...freshClient,
+            avatarUrl: stripAvatarCacheQuery(freshClient?.avatarUrl),
+          };
+          setClient(normalized);
+          localStorage.setItem("sarjan-client", JSON.stringify(normalized));
+          setOrders(orderData.orders ?? []);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    };
 
-    Promise.all([
-      fetch(`/api/clients/${encodeURIComponent(stored.id)}`)
-        .then((res) => res.json())
-        .catch(() => null),
-      fetch("/api/client/orders", {
-        headers: clientAuthHeaders(),
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .catch(() => ({ orders: [] })),
-    ])
-      .then(([clientData, orderData]) => {
-        const freshClient = clientData?.client ?? stored;
-        const normalized: Client = {
-          ...freshClient,
-          avatarUrl: stripAvatarCacheQuery(freshClient?.avatarUrl),
-        };
-        setClient(normalized);
-        localStorage.setItem("sarjan-client", JSON.stringify(normalized));
-        setOrders(orderData.orders ?? []);
-      })
-      .finally(() => setLoading(false));
+    void (async () => {
+      let stored = readClient();
+      let token = localStorage.getItem("sarjan-client-token")?.trim();
+
+      if (!stored?.id || !token) {
+        const restored = await restoreClientSessionFromCookie();
+        if (cancelled) return;
+        if (!restored.ok) {
+          setClient(null);
+          setLoading(false);
+          logoutClientSession("/login");
+          return;
+        }
+        stored = restored.client as Client;
+        token = restored.token;
+      }
+
+      if (!stored?.id || !token) {
+        if (!cancelled) {
+          setClient(null);
+          setLoading(false);
+          logoutClientSession("/login");
+        }
+        return;
+      }
+
+      if (!cancelled) setClient(stored);
+      loadOrders(stored.id, stored);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { client, orders, loading, setClient };
