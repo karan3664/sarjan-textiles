@@ -9,7 +9,6 @@ import type { Product } from "@/data/mock";
 import {
   readCart,
   sameCartLine,
-  scheduleCartApiSync,
   syncCartWithApi,
   type StoredCartItem,
   writeCart,
@@ -45,12 +44,7 @@ export function CartPageClient() {
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
-    const syncFromApi = (opts?: { backgroundOnly?: boolean }) => {
-      applyCart(readCart());
-      if (opts?.backgroundOnly) {
-        scheduleCartApiSync();
-        return;
-      }
+    const syncFromApi = () => {
       void syncCartWithApi()
         .then(applyCart)
         .catch(() => applyCart(readCart()));
@@ -62,8 +56,8 @@ export function CartPageClient() {
       syncClient();
       syncFromApi();
     };
-    const onCartUpdated = () => syncFromApi({ backgroundOnly: true });
-    const onStorageCart = () => syncFromApi({ backgroundOnly: true });
+    const onCartUpdated = () => applyCart(readCart());
+    const onStorageCart = () => applyCart(readCart());
 
     syncClient();
     syncFromApi();

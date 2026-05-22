@@ -47,16 +47,27 @@ export function readCart(): StoredCartItem[] {
   }
 }
 
-function persistCartToApi(items: StoredCartItem[]) {
+async function persistCartToApiAwait(
+  items: StoredCartItem[],
+): Promise<boolean> {
   const clientId = readStoredClientId();
-  if (!clientId) return;
+  if (!clientId) return false;
 
-  void fetch("/api/cart", {
-    method: "POST",
-    headers: clientAuthJsonHeaders(),
-    credentials: "include",
-    body: JSON.stringify({ clientId, items }),
-  }).catch(() => undefined);
+  try {
+    const response = await fetch("/api/cart", {
+      method: "POST",
+      headers: clientAuthJsonHeaders(),
+      credentials: "include",
+      body: JSON.stringify({ clientId, items }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+function persistCartToApi(items: StoredCartItem[]) {
+  void persistCartToApiAwait(items);
 }
 
 export function writeCart(
@@ -72,7 +83,6 @@ export function writeCart(
   }
   if (options.syncApi !== false) {
     persistCartToApi(next);
-    scheduleCartApiSync();
   }
 }
 
@@ -88,16 +98,26 @@ export function cartItemCount(cart: StoredCartItem[]) {
   return cart.reduce((sum, item) => sum + item.quantity, 0);
 }
 
-let cartApiSyncTimer: ReturnType<typeof setTimeout> | null = null;
+/** Restore server-only lines on login; never re-add lines the user removed locally. */
+export function mergeCartLinesPull(
+  local: StoredCartItem[],
+  server: StoredCartItem[],
+): StoredCartItem[] {
+  const next: StoredCartItem[] = local
+    .map(normalizeCartItem)
+    .filter(Boolean) as StoredCartItem[];
 
-/** Debounced server merge — use after optimistic local cart updates. */
-export function scheduleCartApiSync(delayMs = 350) {
-  if (typeof window === "undefined") return;
-  if (cartApiSyncTimer) clearTimeout(cartApiSyncTimer);
-  cartApiSyncTimer = setTimeout(() => {
-    cartApiSyncTimer = null;
-    void syncCartWithApi();
-  }, delayMs);
+  for (const raw of server) {
+    const entry = normalizeCartItem(raw);
+    if (!entry) continue;
+    const existing = next.find((item) => sameCartLine(item, entry));
+    if (existing) {
+      existing.quantity = Math.max(existing.quantity, entry.quantity);
+    } else {
+      next.push({ ...entry });
+    }
+  }
+  return next;
 }
 
 /** Map legacy SEO slugs to current product slugs; drop deleted products. */
@@ -128,6 +148,15 @@ export function normalizeCartSlugs(
   return next;
 }
 
+export function parseSizeRun(value?: string) {
+  const sizes =
+    value
+      ?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean) ?? [];
+  return sizes.length ? sizes : FULL_SIZE_RUN;
+}
+
 async function fetchProductsForCart(cart: StoredCartItem[]) {
   const ids = Array.from(new Set(cart.map((item) => item.slug)));
   if (!ids.length) return [] as Product[];
@@ -155,71 +184,66 @@ export async function reconcileCartWithCatalog(
 
   const normalized = normalizeCartSlugs(cart, products);
   if (JSON.stringify(normalized) !== JSON.stringify(cart)) {
-    writeCart(normalized);
+    writeCart(normalized, { syncApi: false });
   }
   return normalized;
 }
 
-export function parseSizeRun(value?: string) {
-  const sizes =
-    value
-      ?.split(",")
-      .map((item) => item.trim())
-      .filter(Boolean) ?? [];
-  return sizes.length ? sizes : FULL_SIZE_RUN;
-}
+let cartSyncInFlight: Promise<StoredCartItem[]> | null = null;
 
-/** Union local + server lines; same variant keeps the higher quantity. */
-export function mergeCartLines(
-  local: StoredCartItem[],
-  server: StoredCartItem[],
-): StoredCartItem[] {
-  const next: StoredCartItem[] = [];
-  for (const raw of [...local, ...server]) {
-    const entry = normalizeCartItem(raw);
-    if (!entry) continue;
-    const existing = next.find((item) => sameCartLine(item, entry));
-    if (existing) {
-      existing.quantity = Math.max(existing.quantity, entry.quantity);
-    } else {
-      next.push({ ...entry });
-    }
-  }
-  return next;
-}
-
-export async function syncCartWithApi(): Promise<StoredCartItem[]> {
-  const clientId = readStoredClientId();
-  const local = readCart();
-
-  if (!clientId) {
-    return reconcileCartWithCatalog(local);
-  }
-
-  let server: StoredCartItem[] = [];
+async function fetchServerCart(clientId: string): Promise<StoredCartItem[]> {
   try {
     const response = await fetch(
       `/api/cart?clientId=${encodeURIComponent(clientId)}`,
       catalogFetchInit(),
     );
-    if (response.ok) {
-      const data = await response.json();
-      server = Array.isArray(data.items)
-        ? (data.items
-            .map(normalizeCartItem)
-            .filter(Boolean) as StoredCartItem[])
-        : [];
-    }
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data.items)
+      ? (data.items.map(normalizeCartItem).filter(Boolean) as StoredCartItem[])
+      : [];
   } catch {
+    return [];
+  }
+}
+
+export async function syncCartWithApi(): Promise<StoredCartItem[]> {
+  if (cartSyncInFlight) return cartSyncInFlight;
+
+  cartSyncInFlight = (async () => {
+    const clientId = readStoredClientId();
+    let local = readCart();
+
+    if (!clientId) {
+      return reconcileCartWithCatalog(local);
+    }
+
+    // Push local cart first so removals are saved before we read the server.
+    await persistCartToApiAwait(local);
+
+    const server = await fetchServerCart(clientId);
+
+    let next: StoredCartItem[];
+    if (local.length === 0 && server.length > 0) {
+      next = server;
+    } else if (local.length > 0) {
+      next = local;
+      if (JSON.stringify(server) !== JSON.stringify(local)) {
+        await persistCartToApiAwait(local);
+      }
+    } else {
+      next = mergeCartLinesPull(local, server);
+    }
+
+    if (JSON.stringify(next) !== JSON.stringify(readCart())) {
+      writeCart(next, { syncApi: false });
+      local = next;
+    }
+
     return reconcileCartWithCatalog(local);
-  }
+  })().finally(() => {
+    cartSyncInFlight = null;
+  });
 
-  const merged = mergeCartLines(local, server);
-  if (JSON.stringify(merged) !== JSON.stringify(readCart())) {
-    writeCart(merged);
-  } else if (merged.length > 0) {
-    persistCartToApi(merged);
-  }
-
-  return reconcileCartWithCatalog(merged);
+  return cartSyncInFlight;
 }

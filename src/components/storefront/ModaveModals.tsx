@@ -7,7 +7,6 @@ import {
   parseSizeRun,
   readCart,
   sameCartLine,
-  scheduleCartApiSync,
   syncCartWithApi,
   type StoredCartItem,
   writeCart,
@@ -119,18 +118,13 @@ export function ModaveModals() {
         JSON.stringify(current) === JSON.stringify(next) ? current : next,
       );
     };
-    const syncFromApi = (opts?: { backgroundOnly?: boolean }) => {
-      applyCart(readCart());
-      if (opts?.backgroundOnly) {
-        scheduleCartApiSync();
-        return;
-      }
+    const syncFromApi = () => {
       void syncCartWithApi()
         .then(applyCart)
         .catch(() => applyCart(readCart()));
     };
-    const onCartUpdated = () => syncFromApi({ backgroundOnly: true });
-    const onStorageCart = () => syncFromApi({ backgroundOnly: true });
+    const onCartUpdated = () => applyCart(readCart());
+    const onStorageCart = () => applyCart(readCart());
     const onAuthCart = () => syncFromApi();
 
     syncFromApi();

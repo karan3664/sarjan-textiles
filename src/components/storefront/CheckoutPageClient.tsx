@@ -94,7 +94,8 @@ export function CheckoutPageClient() {
     };
     syncClient();
     syncFromApi();
-    window.addEventListener("sarjan-cart-updated", syncFromApi);
+    const onCartUpdated = () => applyCart(readCart());
+    window.addEventListener("sarjan-cart-updated", onCartUpdated);
     window.addEventListener("storage", syncFromApi);
     window.addEventListener("storage", syncClient);
     window.addEventListener("sarjan-auth-updated", onAuthUpdated);
@@ -103,7 +104,7 @@ export function CheckoutPageClient() {
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("sarjan-cart-updated", syncFromApi);
+      window.removeEventListener("sarjan-cart-updated", onCartUpdated);
       window.removeEventListener("storage", syncFromApi);
       window.removeEventListener("storage", syncClient);
       window.removeEventListener("sarjan-auth-updated", onAuthUpdated);
