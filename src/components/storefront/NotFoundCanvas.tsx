@@ -95,7 +95,6 @@ export default function NotFoundCanvas() {
     scene.add(key);
     scene.add(new THREE.AmbientLight(0xffe8e8, 0.35));
 
-    let frame = 0;
     let raf = 0;
     const clock = new THREE.Clock();
 
@@ -121,7 +120,6 @@ export default function NotFoundCanvas() {
         particles.rotation.y = t * 0.05;
       }
       renderer.render(scene, camera);
-      frame += 1;
     };
     animate();
 

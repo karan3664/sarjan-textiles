@@ -7,6 +7,7 @@ import type { ReportKey } from "@/lib/admin-report-charts";
 import {
   REPORT_IMAGE_KEY,
   absoluteReportImageUrl,
+  normalizeAdminImageSrc,
   downloadXlsxPlain,
   downloadXlsxWithImages,
   printPdfWithImages,
@@ -197,7 +198,7 @@ export function AdminReportsClient({ data }: { data: AdminReportsData }) {
                 <tr className="tf-table-item item-row" key={index}>
                   {headers.map((header) => {
                     if (header === REPORT_IMAGE_KEY) {
-                      const src = absoluteReportImageUrl(
+                      const src = normalizeAdminImageSrc(
                         String(row[header] ?? ""),
                       );
                       return (

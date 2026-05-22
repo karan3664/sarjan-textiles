@@ -1,6 +1,6 @@
 "use client";
 
-import { absoluteReportImageUrl } from "@/lib/admin-report-export";
+import { normalizeAdminImageSrc } from "@/lib/admin-report-export";
 
 export function AdminOrderItemImage({
   src,
@@ -11,7 +11,7 @@ export function AdminOrderItemImage({
   alt: string;
   size?: number;
 }) {
-  const url = absoluteReportImageUrl(src);
+  const url = normalizeAdminImageSrc(src);
   if (!url) {
     return (
       <span

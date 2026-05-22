@@ -123,9 +123,9 @@ export function AdminBackupsClient({
     <>
       <div className="sarjan-home-kpi-grid sarjan-products-kpi-grid">
         {[
-          ["Backup Mode", "Supabase Production", "icon-database"],
-          ["Daily Backup", "02:00 IST", "icon-timer"],
-          ["Manual Restore", "JSON / Saved Backup", "icon-refresh"],
+          ["Backup Mode", "Supabase Production", "icon-archive"],
+          ["Daily Backup", "02:00 IST", "icon-calendar"],
+          ["Manual Restore", "JSON / Saved Backup", "icon-folders"],
           [
             "Retention View",
             `${backups.length} backups`,
@@ -219,7 +219,7 @@ export function AdminBackupsClient({
                         className="item eye"
                         href={`/api/admin/backups?id=${encodeURIComponent(backup.id)}`}
                       >
-                        <i className="icon-download" />
+                        <i className="icon-attach" />
                       </a>
                       <button
                         type="button"
@@ -227,7 +227,7 @@ export function AdminBackupsClient({
                         onClick={() => restoreBackup(backup.id)}
                         disabled={Boolean(busy)}
                       >
-                        <i className="icon-refresh" />
+                        <i className="icon-check-circle" />
                       </button>
                       <button
                         type="button"
@@ -235,7 +235,7 @@ export function AdminBackupsClient({
                         onClick={() => deleteBackup(backup.id)}
                         disabled={Boolean(busy)}
                       >
-                        <i className="icon-trash-2" />
+                        <i className="icon-trash" />
                       </button>
                     </div>
                   </td>

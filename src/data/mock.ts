@@ -57,7 +57,10 @@ export const sarjanRegisteredAddress =
 export const sarjanDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(sarjanRegisteredAddress)}`;
 
 import { defaultAuthBanners } from "@/lib/auth-banner-defaults";
-import { defaultHeaderNavigation } from "@/lib/header-navigation";
+import {
+  defaultHeaderNavigation,
+  legacyNavigation,
+} from "@/lib/header-navigation";
 
 export const siteSettings = {
   /** India GST identification number (invoices / compliance). */
@@ -101,16 +104,7 @@ export const siteSettings = {
   headerNavigation: defaultHeaderNavigation,
 };
 
-export const navigation = [
-  { label: "Home", href: "/" },
-  { label: "Products", href: "/products" },
-  { label: "Categories", href: "/categories" },
-  { label: "Collections", href: "/collections" },
-  { label: "Process", href: "/process" },
-  { label: "Blog", href: "/blog" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
+export const navigation = legacyNavigation;
 
 /** Footer “Information” column — includes pages not shown in the top nav. */
 export const footerInformationLinks = [

@@ -2,12 +2,21 @@
 
 export const REPORT_IMAGE_KEY = "image";
 
-export function absoluteReportImageUrl(path: string) {
+/** SSR-safe path for admin UI `<img>` — always relative (or already absolute). */
+export function normalizeAdminImageSrc(path: string) {
   const trimmed = path?.trim() ?? "";
   if (!trimmed) return "";
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  if (typeof window === "undefined") return trimmed;
-  return `${window.location.origin}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+/** Full URL for exports (Excel/PDF/CSV) — uses `window` in the browser only. */
+export function absoluteReportImageUrl(path: string) {
+  const relative = normalizeAdminImageSrc(path);
+  if (!relative) return "";
+  if (/^https?:\/\//i.test(relative)) return relative;
+  if (typeof window === "undefined") return relative;
+  return `${window.location.origin}${relative}`;
 }
 
 function escapeHtml(value: string) {

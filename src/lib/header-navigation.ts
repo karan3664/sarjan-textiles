@@ -1,5 +1,16 @@
 import type { CmsSiteSettings } from "@/lib/cms-store";
-import { navigation as legacyNavigation } from "@/data/mock";
+
+/** Default top nav when CMS has no custom menu (also exported from mock as `navigation`). */
+export const legacyNavigation = [
+  { label: "Home", href: "/" },
+  { label: "Products", href: "/products" },
+  { label: "Categories", href: "/categories" },
+  { label: "Collections", href: "/collections" },
+  { label: "Process", href: "/process" },
+  { label: "Blog", href: "/blog" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
 
 export type HeaderNavItem = {
   id: string;

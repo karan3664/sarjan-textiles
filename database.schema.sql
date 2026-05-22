@@ -144,6 +144,32 @@ create table if not exists analytics_events (
   created_at timestamptz not null default now()
 );
 
+-- Cart + forgot-password (production when local-db.json is read-only)
+create table if not exists password_reset_requests (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists client_carts (
+  client_id uuid primary key references clients(id) on delete cascade,
+  items jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+-- Admin bell read/clear state (singleton)
+create table if not exists admin_notification_state (
+  id integer primary key default 1,
+  read_ids jsonb not null default '[]'::jsonb,
+  list_cleared_before timestamptz,
+  updated_at timestamptz not null default now(),
+  constraint admin_notification_state_singleton check (id = 1)
+);
+
+insert into admin_notification_state (id, read_ids, list_cleared_before)
+values (1, '[]'::jsonb, null)
+on conflict (id) do nothing;
+
 create index if not exists idx_orders_client_id on orders(client_id);
 create index if not exists idx_orders_status on orders(status);
 create index if not exists idx_feedbacks_status on feedbacks(status);
@@ -155,3 +181,6 @@ create index if not exists idx_app_backups_source on app_backups(source);
 create index if not exists idx_analytics_events_created_at on analytics_events(created_at desc);
 create index if not exists idx_analytics_events_visitor_id on analytics_events(visitor_id);
 create index if not exists idx_analytics_events_path on analytics_events(path);
+create index if not exists idx_password_reset_requests_email on password_reset_requests(email);
+create index if not exists idx_password_reset_requests_created_at on password_reset_requests(created_at desc);
+create index if not exists idx_client_carts_updated_at on client_carts(updated_at desc);

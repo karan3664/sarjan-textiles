@@ -332,8 +332,8 @@ export function buildSarjanEmailHtml(opts: SarjanEmailLayoutOptions): string {
       <td align="center" style="padding:32px 12px;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e8e2d9;box-shadow:0 8px 28px rgba(20,20,20,0.06);">
           <tr>
-            <td style="background:#141414;padding:22px 24px;text-align:center;">
-              <img src="${logoSrc}" alt="${brand}" width="200" height="48" style="display:block;margin:0 auto;max-width:200px;height:auto;border:0;outline:none;text-decoration:none;" />
+            <td bgcolor="#ffffff" style="background:#ffffff;padding:22px 24px;text-align:center;border-bottom:1px solid #e8e2d9;">
+              <img src="${logoSrc}" alt="${brand}" width="200" height="48" style="display:block;margin:0 auto;max-width:200px;height:auto;border:0;outline:none;text-decoration:none;background-color:#ffffff;" />
             </td>
           </tr>
           <tr>

@@ -157,13 +157,17 @@ export function ModaveHeader() {
             <div className="col-md-4 col-3 d-xl-none">
               <a
                 href="#mobileMenu"
-                className="mobile-menu"
+                className="mobile-menu sarjan-mobile-menu-trigger"
                 data-bs-toggle="offcanvas"
                 data-bs-target="#mobileMenu"
                 aria-controls="mobileMenu"
                 aria-label="Open menu"
               >
-                <i className="icon icon-categories" />
+                <span className="sarjan-mobile-menu-trigger__icon" aria-hidden>
+                  <span />
+                  <span />
+                  <span />
+                </span>
               </a>
             </div>
             <div className="col-xl-2 col-md-4 col-6 text-center">

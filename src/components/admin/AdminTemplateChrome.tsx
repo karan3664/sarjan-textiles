@@ -172,7 +172,7 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
   },
   {
     href: "/admin/header-menu",
-    icon: "icon-list",
+    icon: "icon-more-horizontal",
     label: "Header menu",
     section: "headerMenu",
   },
@@ -254,7 +254,7 @@ const SIDEBAR_SYSTEM_ITEMS: SidebarNavItem[] = [
   },
   {
     href: "/admin/backups",
-    icon: "icon-database",
+    icon: "icon-archive",
     label: "DB Backup / Restore",
     section: "backups",
   },
