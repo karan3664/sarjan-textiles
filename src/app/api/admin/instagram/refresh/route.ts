@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verifyAdminToken } from "@/lib/admin-token";
 import {
@@ -9,9 +10,9 @@ import { getCmsSnapshot } from "@/lib/cms-store";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export async function POST() {
   const session = await verifyAdminToken(
-    request.cookies.get("sarjan-admin-session")?.value,
+    (await cookies()).get("sarjan-admin-session")?.value,
   );
   if (!session) {
     return NextResponse.json(
