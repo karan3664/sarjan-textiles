@@ -21,30 +21,30 @@ export type NewsletterTemplate = {
 };
 
 function p(text: string) {
-  return `<p style="margin:0 0 16px;color:#4d4843;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">${plainTextToEmailHtml(text)}</p>`;
+  return `<p style="margin:0 0 8px;color:#4d4843;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">${plainTextToEmailHtml(text)}</p>`;
 }
 
 function h2(text: string) {
-  return `<h2 style="margin:0 0 12px;font-size:18px;line-height:1.4;color:#141414;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(text)}</h2>`;
+  return `<h2 style="margin:0 0 6px;font-size:18px;line-height:1.35;color:#141414;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(text)}</h2>`;
 }
 
 function cta(text: string, url: string) {
   const label = escapeHtml(text);
   const href = escapeHtml(url);
-  return `<p style="margin:22px 0 8px;text-align:center;font-family:Arial,Helvetica,sans-serif;">
-  <a href="${href}" style="display:inline-block;padding:14px 28px;background:#8b1e2d;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;">${label}</a>
+  return `<p style="margin:11px 0 4px;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+  <a href="${href}" style="display:inline-block;padding:10px 22px;background:#8b1e2d;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;">${label}</a>
 </p>`;
 }
 
 function heroImage(url: string, alt: string) {
   if (!url.trim()) return "";
-  return `<p style="margin:0 0 20px;text-align:center;">
+  return `<p style="margin:0 0 10px;text-align:center;">
   <img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" width="552" style="max-width:100%;height:auto;border-radius:12px;border:1px solid #e8e2d9;" />
 </p>`;
 }
 
 function card(inner: string) {
-  return `<div style="margin:0 0 18px;padding:18px 16px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;">${inner}</div>`;
+  return `<div style="margin:0 0 9px;padding:10px 12px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;">${inner}</div>`;
 }
 
 const baseFields: NewsletterTemplateField[] = [
@@ -167,7 +167,7 @@ export const NEWSLETTER_TEMPLATES: NewsletterTemplate[] = [
         h2(v.headline),
         p(v.subheadline),
         card(
-          `<p style="margin:0 0 8px;font-weight:700;color:#8b1e2d;">${escapeHtml(v.offer_note)}</p>${p(v.body)}`,
+          `<p style="margin:0 0 4px;font-weight:700;color:#8b1e2d;">${escapeHtml(v.offer_note)}</p>${p(v.body)}`,
         ),
         cta(v.cta_text, v.cta_url),
       ].join(""),
@@ -330,7 +330,7 @@ export const NEWSLETTER_TEMPLATES: NewsletterTemplate[] = [
       [
         h2(v.headline),
         card(
-          `<p style="margin:0 0 10px;"><strong>Tip 1:</strong> ${escapeHtml(v.tip_one)}</p><p style="margin:0;"><strong>Tip 2:</strong> ${escapeHtml(v.tip_two)}</p>`,
+          `<p style="margin:0 0 5px;"><strong>Tip 1:</strong> ${escapeHtml(v.tip_one)}</p><p style="margin:0;"><strong>Tip 2:</strong> ${escapeHtml(v.tip_two)}</p>`,
         ),
         p(v.body),
       ].join(""),
@@ -432,7 +432,7 @@ export function renderNewsletterTemplateBody(
 
 export function newsletterUnsubscribeFooterHtml(unsubscribeUrl: string) {
   const href = escapeHtml(unsubscribeUrl);
-  return `<p style="margin:24px 0 0;padding-top:16px;border-top:1px solid #e8e2d9;font-size:12px;line-height:1.5;color:#6f6a64;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+  return `<p style="margin:12px 0 0;padding-top:8px;border-top:1px solid #e8e2d9;font-size:12px;line-height:1.5;color:#6f6a64;text-align:center;font-family:Arial,Helvetica,sans-serif;">
   You received this because you subscribed on sarjantextiles.com.<br />
   <a href="${href}" style="color:#8b1e2d;text-decoration:underline;">Unsubscribe</a> from future newsletters.
 </p>`;

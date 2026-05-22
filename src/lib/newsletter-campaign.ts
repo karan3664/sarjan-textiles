@@ -42,6 +42,7 @@ function buildSubscriberEmail(
     eyebrow: template.eyebrow,
     heading: fields.headline || subject,
     innerHtml,
+    compact: true,
   });
   const text = [
     fields.headline || subject,
@@ -141,5 +142,6 @@ export function buildNewsletterPreviewHtml(
     eyebrow: template.eyebrow,
     heading: fields.headline || subject,
     innerHtml: `${html}${newsletterUnsubscribeFooterHtml(sampleUnsub)}`,
+    compact: true,
   });
 }

@@ -52,7 +52,11 @@ export default async function AdminLoginPage({
       >
         {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
 
-        <img src="/sarjan-assets/sarjan-logo-icon.png" alt="Sarjan Textiles" />
+        <img
+          src="/sarjan-assets/sarjan-logo-full.png"
+          alt="Sarjan Textiles"
+          className="sarjan-admin-login-logo"
+        />
         <h3>Admin Login</h3>
         <p>Protected Sarjan Textiles operating system.</p>
 
