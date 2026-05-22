@@ -12,7 +12,10 @@ import {
 } from "@/lib/client-auth-browser";
 import { cartItemCount, syncCartWithApi } from "@/lib/cart-client";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
-import { refreshWishlistFromCatalog } from "@/lib/wishlist-client";
+import {
+  readWishlist,
+  refreshWishlistFromCatalog,
+} from "@/lib/wishlist-client";
 
 type CatalogCategory = {
   name: string;
@@ -127,7 +130,7 @@ export function ModaveHeader() {
 
     void syncCounts();
     const onWishlistUpdated = () => {
-      void syncCounts();
+      setWishlistCount(readWishlist().length);
     };
     const onCartUpdated = () => {
       void syncCounts();

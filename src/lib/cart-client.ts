@@ -64,8 +64,12 @@ export function writeCart(
   options: { syncApi?: boolean } = {},
 ) {
   const next = items.map(normalizeCartItem).filter(Boolean) as StoredCartItem[];
-  window.localStorage.setItem(CART_KEY, JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent("sarjan-cart-updated"));
+  const current = readCart();
+  const unchanged = JSON.stringify(current) === JSON.stringify(next);
+  if (!unchanged) {
+    window.localStorage.setItem(CART_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("sarjan-cart-updated"));
+  }
   if (options.syncApi !== false) persistCartToApi(next);
 }
 

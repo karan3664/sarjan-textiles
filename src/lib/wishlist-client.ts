@@ -1,5 +1,11 @@
 export const WISHLIST_KEY = "sarjan-wishlist";
 
+function slugSetsEqual(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const set = new Set(b);
+  return a.every((slug) => set.has(slug));
+}
+
 export function readWishlist(): string[] {
   if (typeof window === "undefined") return [];
   try {
@@ -22,6 +28,8 @@ export function readWishlist(): string[] {
 export function writeWishlist(slugs: string[]) {
   if (typeof window === "undefined") return;
   const next = Array.from(new Set(slugs.filter(Boolean)));
+  const current = readWishlist();
+  if (slugSetsEqual(current, next)) return;
   window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("sarjan-wishlist-updated"));
 }
@@ -58,10 +66,7 @@ export async function resolveWishlistSlugs(slugs: string[]) {
 export async function refreshWishlistFromCatalog() {
   const current = readWishlist();
   const valid = await resolveWishlistSlugs(current);
-  if (
-    valid.length !== current.length ||
-    valid.some((slug, index) => slug !== current[index])
-  ) {
+  if (!slugSetsEqual(current, valid)) {
     writeWishlist(valid);
   }
   return valid;

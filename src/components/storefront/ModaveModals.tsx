@@ -284,11 +284,17 @@ export function ModaveModals() {
   }, []);
 
   useEffect(() => {
+    const applyWishlistSlugs = (slugs: string[]) => {
+      setWishlistSlugs(slugs);
+      syncWishlistButtonStates(slugs.length);
+    };
+
     const syncWishlistButtons = () => {
-      void refreshWishlistFromCatalog().then((valid) => {
-        setWishlistSlugs(valid);
-        syncWishlistButtonStates(valid.length);
-      });
+      applyWishlistSlugs(readWishlist());
+    };
+
+    const syncWishlistFromCatalog = () => {
+      void refreshWishlistFromCatalog().then(applyWishlistSlugs);
     };
 
     const onWishlist = (event: Event) => {
@@ -305,7 +311,7 @@ export function ModaveModals() {
       showWishlistModal();
     };
 
-    syncWishlistButtons();
+    syncWishlistFromCatalog();
     document.addEventListener("click", onWishlist, true);
     window.addEventListener("sarjan-wishlist-updated", syncWishlistButtons);
     window.addEventListener("storage", syncWishlistButtons);
