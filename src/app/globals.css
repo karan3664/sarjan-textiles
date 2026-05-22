@@ -24,7 +24,9 @@ body {
   background: #fff;
 }
 
+/* Spinner is visual only — never block taps/clicks on the page beneath */
 body.preload-wrapper .preload.preload-container {
+  pointer-events: none !important;
   animation: sarjanPreloadFallback 0.25s ease 1.8s forwards;
 }
 
@@ -151,6 +153,7 @@ body.preload-wrapper .preload.preload-container {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    display: none;
   }
 }
 

@@ -158,7 +158,7 @@ export function CompareDrawer() {
                           </span>
                           <button
                             type="button"
-                            className="icon-close remove"
+                            className="icon-close sarjan-compare-remove"
                             onClick={() =>
                               setSlugs(removeCompare(product.slug))
                             }
@@ -229,7 +229,7 @@ export function CompareDrawer() {
                       <button
                         type="button"
                         className={withBtnIcon(
-                          "tf-compapre-button-clear-all clear-file-delete tf-btn w-100 btn-white radius-4 has-border",
+                          "tf-compapre-button-clear-all tf-btn w-100 btn-white radius-4 has-border",
                         )}
                         onClick={() => setSlugs(writeCompare([]))}
                       >

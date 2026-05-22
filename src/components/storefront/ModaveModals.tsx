@@ -657,7 +657,7 @@ export function ModaveModals() {
                                   </div>
                                   <button
                                     type="button"
-                                    className="text-button tf-btn-remove remove border-0 bg-transparent p-0"
+                                    className="text-button tf-btn-remove border-0 bg-transparent p-0"
                                     onClick={() => removeItem(item)}
                                   >
                                     Remove
@@ -929,7 +929,7 @@ export function ModaveModals() {
                                 </div>
                                 <button
                                   type="button"
-                                  className="text-button tf-btn-remove remove border-0 bg-transparent p-0"
+                                  className="text-button tf-btn-remove border-0 bg-transparent p-0"
                                   onClick={() =>
                                     removeWishlistItem(product.slug)
                                   }

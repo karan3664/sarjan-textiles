@@ -61,5 +61,11 @@ export function OffcanvasRouteGuard() {
     stripOffcanvasHash();
   }, [pathname]);
 
+  useEffect(() => {
+    OFFCANVAS_IDS.forEach(closeOffcanvas);
+    clearOffcanvasSideEffects();
+    stripOffcanvasHash();
+  }, []);
+
   return null;
 }

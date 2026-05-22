@@ -6,7 +6,10 @@ import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { usePathname } from "next/navigation";
 import { siteSettings } from "@/data/site";
 import { legacyHeaderNavLinks } from "@/lib/header-navigation";
-import { logoutClientSession } from "@/lib/client-auth-browser";
+import {
+  logoutClientSession,
+  restoreClientSessionFromCookie,
+} from "@/lib/client-auth-browser";
 import { cartItemCount, syncCartWithApi } from "@/lib/cart-client";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { refreshWishlistFromCatalog } from "@/lib/wishlist-client";
@@ -70,6 +73,11 @@ export function ModaveHeader() {
       }
     };
     sync();
+    if (!localStorage.getItem("sarjan-client-token")?.trim()) {
+      void restoreClientSessionFromCookie().then((restored) => {
+        if (restored.ok) sync();
+      });
+    }
     window.addEventListener("sarjan-auth-updated", sync);
     window.addEventListener("storage", sync);
     return () => {

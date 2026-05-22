@@ -89,10 +89,12 @@ export function TemplateScripts() {
               document.querySelectorAll(".preload").forEach(function (node) {
                 node.style.opacity = "0";
                 node.style.pointerEvents = "none";
+                node.style.display = "none";
                 setTimeout(function () {
                   if (node && node.parentNode) node.parentNode.removeChild(node);
                 }, 250);
               });
+              document.body.classList.remove("preload-wrapper");
             }
             if (document.readyState === "complete" || document.readyState === "interactive") {
               setTimeout(hideLoader, 250);
@@ -109,9 +111,11 @@ export function TemplateScripts() {
           document.addEventListener("click", function (event) {
             var anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
             if (!anchor) return;
+            if (event.target && event.target.closest && event.target.closest("button, input, textarea, select, label")) return;
             if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
             if (anchor.target || anchor.hasAttribute("download")) return;
             if (anchor.getAttribute("data-bs-toggle") || anchor.closest("[data-bs-toggle]")) return;
+            if (anchor.hasAttribute("data-sarjan-react")) return;
             var href = anchor.getAttribute("href") || "";
             if (!href || href.charAt(0) === "#" || href.indexOf("mailto:") === 0 || href.indexOf("tel:") === 0) return;
             var url;
@@ -121,6 +125,24 @@ export function TemplateScripts() {
             event.preventDefault();
             window.location.assign(url.pathname + url.search + url.hash);
           }, true);
+        `}
+      </Script>
+      <Script id="sarjan-disable-legacy-delete" strategy="afterInteractive">
+        {`
+          (function () {
+            function disableLegacyDeleteHandlers() {
+              var jq = window.jQuery;
+              if (!jq) return;
+              jq(document).off("click", ".remove");
+              jq(".remove").off("click");
+              jq(".clear-file-delete").off("click");
+            }
+            disableLegacyDeleteHandlers();
+            document.addEventListener("DOMContentLoaded", disableLegacyDeleteHandlers);
+            window.addEventListener("load", disableLegacyDeleteHandlers);
+            setTimeout(disableLegacyDeleteHandlers, 400);
+            setTimeout(disableLegacyDeleteHandlers, 2000);
+          })();
         `}
       </Script>
       <Script id="sarjan-product-detail-actions" strategy="afterInteractive">
