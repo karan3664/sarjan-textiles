@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sarjan Textiles — QA Testing Guide</title>
+  <style>
+    :root {
+      --bg: #0f1419; --surface: #1a2332; --surface2: #243044; --text: #e8edf4; --muted: #9aa8bc;
+      --accent: #c45c3e; --accent2: #e8a87c; --green: #3d9a6a; --blue: #4a90d9; --purple: #8b6fd4;
+      --yellow: #d4a017; --radius: 12px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: linear-gradient(160deg, #0f1419 0%, #1a1a2e 40%, #16213e 100%); color: var(--text); line-height: 1.55; }
+    .hero { background: linear-gradient(135deg, #c45c3e 0%, #8b3a2a 50%, #1a2332 100%); padding: 2.5rem 1.5rem 2rem; text-align: center; border-bottom: 4px solid var(--accent2); }
+    .hero h1 { margin: 0 0 0.5rem; font-size: clamp(1.5rem, 4vw, 2.25rem); }
+    .hero p { margin: 0; opacity: 0.95; max-width: 640px; margin-inline: auto; }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 1rem; }
+    .badge { background: rgba(0,0,0,0.25); padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+    .launch { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.5rem; border-radius: var(--radius); font-weight: 700; text-decoration: none; font-size: 1rem; transition: transform 0.15s, box-shadow 0.15s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+    .btn-store { background: var(--blue); color: #fff; }
+    .btn-admin { background: var(--green); color: #fff; }
+    .cred-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; max-width: 1100px; margin: -1.5rem auto 2rem; padding: 0 1rem; position: relative; z-index: 2; }
+    .cred-card { background: var(--surface); border: 1px solid var(--surface2); border-radius: var(--radius); padding: 1.25rem; box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .cred-card h3 { margin: 0 0 0.75rem; font-size: 1rem; color: var(--accent2); }
+    .cred-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .cred-label { color: var(--muted); min-width: 5rem; }
+    .cred-value { font-family: ui-monospace, monospace; background: var(--surface2); padding: 0.2rem 0.5rem; border-radius: 6px; word-break: break-all; color: var(--accent2); text-decoration: none; }
+    a.cred-value:hover { text-decoration: underline; }
+    .warn { background: rgba(212, 160, 23, 0.15); border: 1px solid var(--yellow); color: #f5e6b8; padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.85rem; margin-top: 0.75rem; }
+    .layout { display: grid; grid-template-columns: 260px 1fr; gap: 0; max-width: 1400px; margin: 0 auto; padding: 0 1rem 3rem; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .nav { position: static !important; max-height: none !important; } }
+    .nav { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow-y: auto; background: var(--surface); border-radius: var(--radius); padding: 1rem; border: 1px solid var(--surface2); margin-top: 1rem; }
+    .nav h4 { margin: 0 0 0.75rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .nav a { display: block; color: var(--muted); text-decoration: none; font-size: 0.82rem; padding: 0.35rem 0.5rem; border-radius: 6px; margin-bottom: 2px; }
+    .nav a:hover { background: var(--surface2); color: var(--text); }
+    .content { background: var(--surface); border-radius: var(--radius); padding: 1.5rem 2rem 2.5rem; margin-top: 1rem; border: 1px solid var(--surface2); min-width: 0; }
+    .content h2 { color: var(--accent2); border-bottom: 2px solid var(--accent); padding-bottom: 0.35rem; margin-top: 2rem; font-size: 1.35rem; }
+    .content h2:first-child { margin-top: 0; }
+    .content h3 { color: #b8d4f0; margin-top: 1.5rem; font-size: 1.1rem; }
+    .content table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 1rem 0; display: block; overflow-x: auto; }
+    .content th { background: var(--purple); color: #fff; text-align: left; padding: 0.55rem 0.65rem; white-space: nowrap; }
+    .content td { border-bottom: 1px solid var(--surface2); padding: 0.5rem 0.65rem; vertical-align: top; }
+    .content tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+    .content code { background: var(--surface2); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.85em; }
+    .code-block { background: #0d1117; border: 1px solid var(--surface2); padding: 1rem; border-radius: var(--radius); overflow-x: auto; font-size: 0.8rem; color: #c9d1d9; }
+    .content ul { padding-left: 1.25rem; }
+    .footer-note { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header class="hero" id="top">
+    <h1>Sarjan Textiles — QA Testing Guide</h1>
+    <p>Complete frontend &amp; admin testing handbook · Version 1.0</p>
+    <div class="hero-badges"><span class="badge">B2B Wholesale</span><span class="badge">Confidential — Testers Only</span></div>
+    <div class="launch">
+      <a class="btn btn-store" href="https://sarjantextiles.com/" target="_blank" rel="noopener">Open Frontend</a>
+      <a class="btn btn-admin" href="https://sarjantextiles.com/admin/" target="_blank" rel="noopener">Open Admin Panel</a>
+    </div>
+  </header>
+  <div class="cred-grid">
+    <div class="cred-card"><h3>Production URLs</h3>
+      <div class="cred-row"><span class="cred-label">Frontend</span><a class="cred-value" href="https://sarjantextiles.com/" target="_blank">https://sarjantextiles.com/</a></div>
+      <div class="cred-row"><span class="cred-label">Admin</span><a class="cred-value" href="https://sarjantextiles.com/admin/" target="_blank">https://sarjantextiles.com/admin/</a></div>
+    </div>
+    <div class="cred-card"><h3>Admin login</h3>
+      <div class="cred-row"><span class="cred-label">Email</span><span class="cred-value">admin@sarjantextiles.com</span></div>
+      <div class="cred-row"><span class="cred-label">Password</span><span class="cred-value">Sarjantex@2024</span></div>
+      <p class="warn">Keep this URL private. Do not paste passwords in public bug tickets.</p>
+    </div>
+    <div class="cred-card"><h3>B2B client login</h3>
+      <p style="margin:0;font-size:0.9rem;color:var(--muted)">Register at <a href="https://sarjantextiles.com/register">https://sarjantextiles.com/register</a> → Admin approves in <strong>Customers</strong> → then login at <a href="https://sarjantextiles.com/login">https://sarjantextiles.com/login</a>.</p>
+    </div>
+  </div>
+  <div class="layout">
+    <nav class="nav"><h4>Contents</h4>
+      <a href="#1-purpose-of-this-document">1. Purpose</a>
+      <a href="#2-what-is-being-tested">2. Overview</a>
+      <a href="#3-test-environment-and-access">3. Access</a>
+      <a href="#4-bug-reporting">4. Bugs</a>
+      <a href="#5-storefront-frontend-site-map-and-features">5. Storefront</a>
+      <a href="#6-admin-panel-backend-overview">6. Admin</a>
+      <a href="#7-admin-modules-detailed-test-cases">7. Admin tests</a>
+      <a href="#8-end-to-end-flows-cross-system">8. E2E</a>
+      <a href="#12-test-execution-plan-suggested-order">12. Plan</a>
+      <a href="#13-sign-off-checklist">13. Sign-off</a>
+    </nav>
+    <main class="content"><p><strong>Document version:</strong> 1.0  </p>
+<p><strong>Last updated:</strong> May 2026  </p>
+<p><strong>Audience:</strong> External QA / testers (no prior knowledge of the project assumed)</p>
+
+<hr />
+
+<h2 id="1-purpose-of-this-document">1. Purpose of this document</h2>
+
+<p>This guide explains <strong>what</strong> the Sarjan Textiles website and admin panel are, <strong>how</strong> they work, and <strong>exactly what</strong> you must test. You do not need any briefing from the development team beyond:</p>
+
+<ul><li>The <strong>test website URL</strong> (provided separately)</li>
+<li><strong>Login credentials</strong> for admin and B2B client accounts (provided separately)</li>
+<li>This document</li>
+</ul>
+<p>Report every issue using the <strong>Bug report template</strong> in Section 4.</p>
+
+<hr />
+
+<h2 id="2-what-is-being-tested">2. What is being tested?</h2>
+
+<h3 id="2-1-product-summary">2.1 Product summary</h3>
+
+<p><strong>Sarjan Textiles</strong> is a <strong>B2B wholesale textile e-commerce platform</strong> for Ajrakh and related fabrics/apparel. It is <strong>not</strong> a typical retail “buy now with card payment” shop.</p>
+
+<table><thead><tr><th>Area</th><th>URL pattern</th><th>Who uses it</th></tr></thead><tbody><tr><td><strong>Storefront (frontend)</strong></td><td><code>https://[domain]/</code></td><td>Public visitors, wholesale buyers (B2B clients)</td></tr><tr><td><strong>Admin panel (backend)</strong></td><td><code>https://[domain]/admin</code></td><td>Internal staff (sales, dispatch, accounts, content, admins)</td></tr></tbody></table>
+
+<h3 id="2-2-business-model-important-for-testing">2.2 Business model (important for testing)</h3>
+
+<ul><li><strong>Guests</strong> can browse products, use cart/wishlist locally, but <strong>cannot see prices</strong> or <strong>place orders</strong>.</li>
+<li><strong>New businesses register</strong> with company details + <strong>GST number</strong> + email OTP.</li>
+<li><strong>Admin approves</strong> the client account.</li>
+<li><strong>Approved B2B clients</strong> can log in, see <strong>custom wholesale prices</strong>, add sets to cart, and submit <strong>order requests</strong> (not instant online payment).</li>
+<li><strong>Admin</strong> manages orders (approve/reject), dispatch (LR/courier), payments (cheque/credit), inventory, CMS content, blogs, newsletter, etc.</li>
+</ul>
+<h3 id="2-3-what-success-looks-like">2.3 What “success” looks like</h3>
+
+<ul><li>No broken pages, console errors blocking flows, or infinite loading loops</li>
+<li>Correct behavior for <strong>guest vs pending client vs approved client</strong></li>
+<li>Admin actions save correctly and appear on the live site where applicable</li>
+<li>Emails send when expected (if test SMTP is configured)</li>
+<li>Mobile and desktop layouts usable</li>
+</ul>
+<hr />
+
+<h2 id="3-test-environment-and-access">3. Test environment and access</h2>
+
+<h3 id="3-1-urls-and-interactive-guide">3.1 URLs and interactive guide</h3>
+
+<table><thead><tr><th>Environment</th><th>Storefront URL</th><th>Admin URL</th></tr></thead><tbody><tr><td><strong>Production</strong></td><td>https://sarjantextiles.com/</td><td>https://sarjantextiles.com/admin/</td></tr></tbody></table>
+
+<p><strong>Colorful HTML guide for testers (open in browser):</strong>  </p>
+<p>https://sarjantextiles.com/qa-testing-guide.html</p>
+
+<p>Regenerate after editing this markdown: <code>node scripts/build-qa-html.mjs</code></p>
+
+<h3 id="3-2-browsers-and-devices-minimum">3.2 Browsers and devices (minimum)</h3>
+
+<p>Test each <strong>critical path</strong> on:</p>
+
+<ul><li><strong>Desktop:</strong> Chrome (latest), Safari (latest)</li>
+<li><strong>Mobile:</strong> Chrome on Android <strong>or</strong> Safari on iPhone</li>
+<li><strong>Tablet:</strong> optional but recommended for admin panel</li>
+</ul>
+<p>Use both <strong>normal</strong> and <strong>private/incognito</strong> window where noted (especially cart/session tests).</p>
+
+<h3 id="3-3-test-accounts-provided-separately-do-not-share-publicly">3.3 Test accounts (provided separately — do not share publicly)</h3>
+
+<p>You should receive a table like this. <strong>Do not commit passwords to bug trackers in plain text</strong> — use “credentials as provided in secure sheet.”</p>
+
+<h4>B2B client (storefront) accounts</h4>
+
+<table><thead><tr><th>Account label</th><th>Email</th><th>Password</th><th>Status</th><th>Use for</th></tr></thead><tbody><tr><td>Approved client</td><td></td><td></td><td><code>approved</code></td><td>Prices, cart sync, checkout, account pages</td></tr><tr><td>Pending client</td><td></td><td></td><td><code>pending</code></td><td>Login must fail with “under review” message</td></tr><tr><td>Rejected client</td><td></td><td></td><td><code>rejected</code></td><td>Login must fail with rejection message</td></tr><tr><td>New registration</td><td>Use a <strong>new</strong> email each run</td><td>—</td><td>—</td><td>Full registration flow</td></tr></tbody></table>
+
+<h4>Admin panel — primary test account</h4>
+
+<table><thead><tr><th>Role</th><th>Email</th><th>Password</th><th>Can access (summary)</th></tr></thead><tbody><tr><td><strong>Super Admin</strong></td><td><code>admin@sarjantextiles.com</code></td><td><code>Sarjantex@2024</code></td><td>Full admin panel</td></tr></tbody></table>
+
+<p>Additional role accounts (sales, dispatch, content, etc.) — provide separately if needed for RBAC testing.</p>
+
+<table><thead><tr><th>Role</th><th>Email</th><th>Password</th><th>Can access (summary)</th></tr></thead><tbody><tr><td>Admin</td><td></td><td></td><td>Everything except some super-only screens</td></tr><tr><td>Sales</td><td></td><td></td><td>Clients, orders, pricing, reports</td></tr><tr><td>Dispatch</td><td></td><td></td><td>Dispatch, orders, inventory, reports</td></tr><tr><td>Accounts</td><td></td><td></td><td>Payments, reports</td></tr><tr><td>Content</td><td></td><td></td><td>CMS, products, blogs, SEO, newsletter</td></tr></tbody></table>
+
+<h3 id="3-4-clear-cache-between-tests-when-needed">3.4 Clear cache between tests (when needed)</h3>
+
+<p>On mobile or after major fixes, testers should:</p>
+
+<ul><li>Clear site data / cache for the domain, <strong>or</strong></li>
+<li>Use a fresh incognito session</li>
+</ul>
+<p>This avoids old cart/wishlist/login state causing false results.</p>
+
+<hr />
+
+<h2 id="4-bug-reporting">4. Bug reporting</h2>
+
+<h3 id="4-1-severity">4.1 Severity</h3>
+
+<table><thead><tr><th>Level</th><th>Meaning</th><th>Example</th></tr></thead><tbody><tr><td><strong>P1 — Blocker</strong></td><td>Core flow cannot complete</td><td>Cannot login, cannot place order, admin cannot save product</td></tr><tr><td><strong>P2 — Major</strong></td><td>Feature broken but workaround exists</td><td>Search wrong results, price wrong for approved client</td></tr><tr><td><strong>P3 — Minor</strong></td><td>UI/copy/layout issue</td><td>Spacing, typo, alignment</td></tr><tr><td><strong>P4 — Trivial</strong></td><td>Cosmetic</td><td>Color shade, non-blocking console warning</td></tr></tbody></table>
+
+<h3 id="4-2-bug-report-template-copy-for-each-issue">4.2 Bug report template (copy for each issue)</h3>
+
+<pre class="code-block">Bug ID: (your tracker ID)
+Title: Short summary
+Severity: P1 / P2 / P3 / P4
+Area: Storefront / Admin / Both
+Module: e.g. Checkout, Orders, Home CMS
+URL: Full URL where issue occurred
+Role/User: Guest / Approved client / Admin (sales) / etc.
+Browser/Device: Chrome 136 / iPhone Safari 17 / etc.
+
+Steps to reproduce:
+1.
+2.
+3.
+
+Expected result:
+
+
+Actual result:
+
+
+Screenshots/screen recording: (attach)
+Console errors (F12 → Console): (paste if any)
+Network failed requests (F12 → Network, red rows): (optional)</pre>
+
+<hr />
+
+<h2 id="5-storefront-frontend-site-map-and-features">5. Storefront (frontend) — site map and features</h2>
+
+<h3 id="5-1-global-layout-every-page">5.1 Global layout (every page)</h3>
+
+<p>The public site uses a common shell:</p>
+
+<ul><li><strong>Header:</strong> Logo, navigation menu, search, account icon, wishlist, cart</li>
+<li><strong>Footer:</strong> Links, newsletter signup, contact/social</li>
+<li><strong>Side panels (offcanvas):</strong> Mobile menu, mini cart, wishlist, quick view, compare</li>
+</ul>
+<p><strong>Test once on homepage:</strong></p>
+
+<table><thead><tr><th>ID</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-GLOBAL-01</td><td>Open homepage on desktop</td><td>Header/footer load; no horizontal scroll</td></tr><tr><td>TC-GLOBAL-02</td><td>Resize to mobile width</td><td>Hamburger menu works; cart/wishlist icons visible</td></tr><tr><td>TC-GLOBAL-03</td><td>Click each main nav link</td><td>Correct page opens; no 404</td></tr><tr><td>TC-GLOBAL-04</td><td>Search from header with keyword “shirt”</td><td>Lands on product listing with search results</td></tr><tr><td>TC-GLOBAL-05</td><td>Open cart icon without items</td><td>Empty cart message or “no items” state</td></tr><tr><td>TC-GLOBAL-06</td><td>Scroll homepage to Instagram section</td><td>Image carousel shows photos (not broken icons + long text only)</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-2-homepage">5.2 Homepage (<code>/</code>)</h3>
+
+<p><strong>Purpose:</strong> Marketing homepage — hero, featured products, categories, brands, Instagram gallery, CMS-driven sections.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-HOME-01</td><td>P1</td><td>Load <code>/</code> as guest</td><td>Page loads under 10s; no blank white screen</td></tr><tr><td>TC-HOME-02</td><td>P2</td><td>Click hero CTA buttons</td><td>Valid destination (products/collection/contact)</td></tr><tr><td>TC-HOME-03</td><td>P2</td><td>Click featured product cards</td><td>Opens correct product detail page</td></tr><tr><td>TC-HOME-04</td><td>P2</td><td>Click category blocks</td><td>Opens category/collection listing</td></tr><tr><td>TC-HOME-05</td><td>P3</td><td>Verify Instagram carousel</td><td>6 slides visible on large desktop; swipe works on mobile</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-3-product-catalog-products">5.3 Product catalog (<code>/products</code>)</h3>
+
+<p><strong>Purpose:</strong> Full product listing with filters, sort, pagination.</p>
+
+<p><strong>Query parameters:</strong> <code>page</code>, <code>sort</code>, <code>q</code> (search), <code>category</code>, <code>fabric</code>, <code>color</code>, <code>size</code>, <code>stock</code>, <code>minPrice</code>, <code>maxPrice</code></p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-CAT-01</td><td>P1</td><td>Open <code>/products</code> as guest</td><td>Grid of products; <strong>prices hidden</strong> (“Login for price” or similar)</td></tr><tr><td>TC-CAT-02</td><td>P1</td><td>Open <code>/products</code> as <strong>approved client</strong></td><td><strong>Prices visible</strong> in INR</td></tr><tr><td>TC-CAT-03</td><td>P2</td><td>Apply category filter</td><td>List updates; URL reflects filter</td></tr><tr><td>TC-CAT-04</td><td>P2</td><td>Apply “in stock” / “out of stock” filter</td><td>Only matching products shown</td></tr><tr><td>TC-CAT-05</td><td>P2</td><td>Change sort (e.g. price, newest)</td><td>Order changes</td></tr><tr><td>TC-CAT-06</td><td>P2</td><td>Go to page 2 via pagination</td><td>Page 2 loads; browser back returns to page 1</td></tr><tr><td>TC-CAT-07</td><td>P2</td><td>Click product card</td><td>Opens <code>/products/[slug]</code></td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-4-product-detail-page-products-slug">5.4 Product detail page (<code>/products/[slug]</code>)</h3>
+
+<p><strong>Purpose:</strong> Single product — images, colors, set quantity, size run, add to cart, wishlist, compare.</p>
+
+<p><strong>Notes:</strong></p>
+
+<ul><li>Orders are in <strong>sets</strong> (default size run: S, M, L, XL, XXL, 3XL, 4XL, 5XL unless product specifies otherwise).</li>
+<li><strong>Sold out</strong> products must not allow add to cart.</li>
+</ul>
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-PDP-01</td><td>P1</td><td>Open any in-stock product as guest</td><td>Images load; price hidden; Add to cart may work locally</td></tr><tr><td>TC-PDP-02</td><td>P1</td><td>Same product as approved client</td><td>Price visible; set price updates when color/qty changes</td></tr><tr><td>TC-PDP-03</td><td>P1</td><td>Increase quantity, click Add to cart</td><td>Item appears in mini cart; count in header updates</td></tr><tr><td>TC-PDP-04</td><td>P2</td><td>Change color variant</td><td>Image/price updates if applicable</td></tr><tr><td>TC-PDP-05</td><td>P2</td><td>Click wishlist heart</td><td>Wishlist count increases; item in wishlist panel</td></tr><tr><td>TC-PDP-06</td><td>P2</td><td>Add to compare (max 3 products)</td><td>Compare drawer shows product; 4th compare blocked or replaced</td></tr><tr><td>TC-PDP-07</td><td>P1</td><td>Open <strong>sold out</strong> product</td><td>“Out of stock” shown; add to cart disabled</td></tr><tr><td>TC-PDP-08</td><td>P2</td><td>Invalid slug <code>/products/this-does-not-exist-xyz</code></td><td>Custom 404 page (not generic server error)</td></tr></tbody></table>
+
+<p><strong>SEO category hubs (not a single product):</strong></p>
+
+<ul><li><code>/products/shirts</code>, <code>/products/kurtas</code>, <code>/products/jackets</code> → filtered listing pages. Verify they list products, not a broken PDP.</li>
+</ul>
+<hr />
+
+<h3 id="5-5-collections-and-categories">5.5 Collections and categories</h3>
+
+<table><thead><tr><th>Path</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/collections</code></td><td>Collection index</td></tr><tr><td><code>/collections/ajrakh</code>, <code>/mashru</code>, <code>/block-print</code></td><td>Curated listings</td></tr><tr><td><code>/categories</code></td><td>Category hub index</td></tr><tr><td><code>/categories/[slug]</code></td><td>CMS category landing page</td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-COLL-01</td><td>P2</td><td>Open each collection link</td><td>Products relevant to collection</td></tr><tr><td>TC-COLL-02</td><td>P2</td><td>Open <code>/categories</code> and a sub-page</td><td>Hero + product links work</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-6-search">5.6 Search</h3>
+
+<table><thead><tr><th>Entry point</th><th>Behavior</th></tr></thead><tbody><tr><td>Header search</td><td>Usually goes to <code>/products?q=keyword</code></td></tr><tr><td><code>/search-result?q=keyword</code></td><td>Dedicated search results page</td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-SRCH-01</td><td>P2</td><td>Search “ajrakh” from header</td><td>Relevant products</td></tr><tr><td>TC-SRCH-02</td><td>P2</td><td>Search nonsense string “zzzxxyy”</td><td>Empty state message, no crash</td></tr><tr><td>TC-SRCH-03</td><td>P3</td><td>Open <code>/search-result?q=shirt</code></td><td>Same or consistent results as header search</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-7-cart-cart-or-shopping-cart">5.7 Cart (<code>/cart</code> or <code>/shopping-cart</code>)</h3>
+
+<p><strong>Purpose:</strong> Review cart lines, quantities, subtotal, GST (for B2B), proceed to checkout.</p>
+
+<p><strong>Technical note:</strong> Guest cart lives in <strong>browser local storage</strong>. Approved client cart also syncs to <strong>server</strong>.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-CART-01</td><td>P1</td><td>Add 2 different products; open <code>/cart</code></td><td>Both lines show with image, name, qty</td></tr><tr><td>TC-CART-02</td><td>P1</td><td>Increase/decrease quantity</td><td>Line total updates</td></tr><tr><td>TC-CART-03</td><td>P1</td><td>Remove one line</td><td>Line disappears; <strong>does not reappear</strong> after 5 seconds (no API loop)</td></tr><tr><td>TC-CART-04</td><td>P2</td><td>Guest cart</td><td>Subtotal may show but GST hidden or N/A</td></tr><tr><td>TC-CART-05</td><td>P2</td><td>Approved client cart</td><td>GST line visible if applicable</td></tr><tr><td>TC-CART-06</td><td>P1</td><td>Open cart page; watch Network tab (F12) 30 sec</td><td><code>/api/cart</code> should <strong>not</strong> fire continuously in a loop</td></tr><tr><td>TC-CART-07</td><td>P2</td><td>Login as approved client after adding items as guest</td><td>Cart merges or syncs sensibly (document behavior)</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-8-wishlist-wishlist">5.8 Wishlist (<code>/wishlist</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-WISH-01</td><td>P2</td><td>Add 3 products to wishlist; open <code>/wishlist</code></td><td>All 3 visible with images</td></tr><tr><td>TC-WISH-02</td><td>P1</td><td>Open wishlist on mobile Chrome</td><td>Page loads; <strong>no “page unresponsive”</strong> freeze</td></tr><tr><td>TC-WISH-03</td><td>P2</td><td>Remove item from wishlist page</td><td>Item removed; header count updates</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-9-compare-compare-products">5.9 Compare (<code>/compare-products</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-CMP-01</td><td>P2</td><td>Compare 2–3 products via <code>?ids=slug1,slug2</code></td><td>Comparison table loads</td></tr><tr><td>TC-CMP-02</td><td>P3</td><td>Try 4th product in compare</td><td>Blocked or oldest removed (document)</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-10-registration-register">5.10 Registration (<code>/register</code>)</h3>
+
+<p><strong>Purpose:</strong> New wholesale account application.</p>
+
+<p><strong>Required:</strong> Company name, contact, email, phone, GSTIN, state/city, password, email OTP, GST verification (portal or manual fallback).</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-REG-01</td><td>P1</td><td>Complete registration with <strong>new</strong> email</td><td>OTP sends; GST validates or manual path works</td></tr><tr><td>TC-REG-02</td><td>P1</td><td>Submit valid form</td><td>Redirect to <code>/registration-thank-you</code>; <strong>no auto-login</strong></td></tr><tr><td>TC-REG-03</td><td>P1</td><td>Try login immediately with new account</td><td><strong>Blocked</strong> — pending approval message</td></tr><tr><td>TC-REG-04</td><td>P2</td><td>Duplicate email</td><td>Clear error</td></tr><tr><td>TC-REG-05</td><td>P2</td><td>Invalid GST format</td><td>Validation error</td></tr><tr><td>TC-REG-06</td><td>P2</td><td>Mismatched password / confirm</td><td>Validation error</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-11-login-logout-login">5.11 Login / logout (<code>/login</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-LOGIN-01</td><td>P1</td><td>Login as <strong>approved</strong> client</td><td>Redirect to <code>/my-account</code> or <code>?next=</code> URL</td></tr><tr><td>TC-LOGIN-02</td><td>P1</td><td>Login as <strong>pending</strong> client</td><td>Error: under review (no session)</td></tr><tr><td>TC-LOGIN-03</td><td>P1</td><td>Wrong password</td><td>Error message; no login</td></tr><tr><td>TC-LOGIN-04</td><td>P2</td><td>Visit <code>/login</code> when already logged in</td><td>Redirect to account</td></tr><tr><td>TC-LOGIN-05</td><td>P2</td><td>Logout from account menu</td><td>Session cleared; prices hidden again</td></tr><tr><td>TC-LOGIN-06</td><td>P2</td><td><code>/forgot-password</code></td><td>Reset email flow or form works</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-12-checkout-checkout">5.12 Checkout (<code>/checkout</code>)</h3>
+
+<p><strong>Purpose:</strong> Submit <strong>order request</strong> (B2B). Not a payment gateway checkout.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-CHK-01</td><td>P1</td><td>Checkout as <strong>guest</strong> with items in cart</td><td>Cannot complete order; login/register prompt</td></tr><tr><td>TC-CHK-02</td><td>P1</td><td>Checkout as <strong>approved</strong> client with valid address/pincode</td><td>Order submits; redirect to confirmation</td></tr><tr><td>TC-CHK-03</td><td>P2</td><td>Invalid pincode for selected state</td><td>Validation error before submit</td></tr><tr><td>TC-CHK-04</td><td>P2</td><td>Empty cart checkout</td><td>Blocked or redirect to cart</td></tr><tr><td>TC-CHK-05</td><td>P2</td><td>After success</td><td>Cart cleared; confirmation shows order ID</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-13-order-confirmation-and-tracking">5.13 Order confirmation and tracking</h3>
+
+<table><thead><tr><th>Path</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/payment-confirmation?orderId=</code></td><td>Success page after checkout</td></tr><tr><td><code>/payment-failure</code></td><td>Failure fallback</td></tr><tr><td><code>/order-tracking</code></td><td>Guest lookup by Order ID + email</td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ORD-01</td><td>P2</td><td>Open confirmation with valid <code>orderId</code></td><td>Order details or thank-you message</td></tr><tr><td>TC-ORD-02</td><td>P2</td><td>Track order with ID + billing email</td><td>Status shown</td></tr><tr><td>TC-ORD-03</td><td>P2</td><td>Wrong email for order ID</td><td>Error, no data leak</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-14-my-account-requires-login-middleware-protected">5.14 My account (requires login — middleware protected)</h3>
+
+<table><thead><tr><th>Path</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/my-account</code> or <code>/profile</code></td><td>Dashboard</td></tr><tr><td><code>/my-account-orders</code></td><td>Order list</td></tr><tr><td><code>/my-account-orders-details?orderId=</code></td><td>Single order</td></tr><tr><td><code>/my-account-address</code></td><td>Address + GST</td></tr><tr><td><code>/my-account-testimonials</code></td><td>Submit testimonial</td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ACC-01</td><td>P1</td><td>Open <code>/my-account</code> as guest</td><td>Redirect to <code>/login?next=...</code></td></tr><tr><td>TC-ACC-02</td><td>P1</td><td>Open each account sub-page as approved client</td><td>Pages load; data consistent with orders</td></tr><tr><td>TC-ACC-03</td><td>P2</td><td>Update address on <code>/my-account-address</code></td><td>Saves; used on next checkout</td></tr><tr><td>TC-ACC-04</td><td>P2</td><td>Submit testimonial</td><td>Success message; appears in admin after approval</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-15-blog-blog-blog-slug">5.15 Blog (<code>/blog</code>, <code>/blog/[slug]</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-BLOG-01</td><td>P2</td><td>Open blog list</td><td>Posts paginate</td></tr><tr><td>TC-BLOG-02</td><td>P2</td><td>Open article</td><td>Content, images, share bar</td></tr><tr><td>TC-BLOG-03</td><td>P2</td><td>Submit comment as guest (name, email, message)</td><td>Success; comment <strong>pending</strong> until admin approves</td></tr><tr><td>TC-BLOG-04</td><td>P3</td><td>Share buttons</td><td>Open correct share intent/URL</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-16-contact-and-inquiry">5.16 Contact and inquiry</h3>
+
+<table><thead><tr><th>Path</th><th>Purpose</th></tr></thead><tbody><tr><td><code>/contact</code></td><td>Contact page + form</td></tr><tr><td><code>/inquiry</code></td><td>Standalone wholesale inquiry</td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-CONT-01</td><td>P2</td><td>Submit contact form with valid data</td><td>Success message; admin receives inquiry (verify with admin user)</td></tr><tr><td>TC-CONT-02</td><td>P2</td><td>Submit with invalid email</td><td>Validation error</td></tr><tr><td>TC-CONT-03</td><td>P2</td><td>Map/directions link</td><td>Opens Google Maps or valid URL</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-17-newsletter">5.17 Newsletter</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-NEWS-01</td><td>P2</td><td>Subscribe from footer with new email</td><td>Success message</td></tr><tr><td>TC-NEWS-02</td><td>P2</td><td>Subscribe same email twice</td><td>Sensible message (already subscribed)</td></tr><tr><td>TC-NEWS-03</td><td>P2</td><td>Open unsubscribe link from email (<code>/newsletter/unsubscribe?token=</code>)</td><td>Unsubscribe confirmed</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="5-18-static-policy-pages">5.18 Static / policy pages</h3>
+
+<p>Verify each loads and readable (no 404):</p>
+
+<ul><li><code>/about</code></li>
+<li><code>/process</code></li>
+<li><code>/infrastructure</code></li>
+<li><code>/certifications</code></li>
+<li><code>/faqs</code> (also <code>/FAQs</code> should work)</li>
+<li><code>/privacy-policy</code></li>
+<li><code>/term-of-use</code> (<code>/terms</code> redirects here)</li>
+<li><code>/refund-policy</code></li>
+<li><code>/shipping-policy</code></li>
+<li><code>/product-out-of-stock</code></li>
+<li><code>/order-feedback</code></li>
+<li><code>/site-map</code></li>
+<li><code>/site/[custom-slug]</code> — use a slug provided in test data sheet</li>
+</ul>
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-STATIC-01</td><td>P3</td><td>Open each URL above</td><td>200 OK, content renders</td></tr><tr><td>TC-STATIC-02</td><td>P3</td><td>Check mobile readability</td><td>No text cut off</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="6-admin-panel-backend-overview">6. Admin panel (backend) — overview</h2>
+
+<h3 id="6-1-what-the-admin-panel-is">6.1 What the admin panel is</h3>
+
+<p>A <strong>password-protected</strong> internal dashboard at <code>/admin</code> for staff to:</p>
+
+<ul><li>Approve wholesale clients</li>
+<li>Manage products, stock, and pricing</li>
+<li>Process orders, dispatch, and payments</li>
+<li>Edit website content (home, about, contact, blogs, SEO)</li>
+<li>Send newsletters</li>
+<li>View reports and audit logs</li>
+<li>Backup/restore CMS data (super admin)</li>
+</ul>
+<h3 id="6-2-login">6.2 Login</h3>
+
+<table><thead><tr><th>Item</th><th>Detail</th></tr></thead><tbody><tr><td>URL</td><td><code>/admin/login</code></td></tr><tr><td>Session</td><td>8 hours; cookie <code>sarjan-admin-session</code></td></tr><tr><td>Logout</td><td>Sidebar or <code>/api/admin/auth/logout</code></td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-LOGIN-01</td><td>P1</td><td>Valid admin credentials</td><td>Redirect to <code>/admin</code> dashboard</td></tr><tr><td>TC-ADM-LOGIN-02</td><td>P1</td><td>Invalid password</td><td>Error on login page</td></tr><tr><td>TC-ADM-LOGIN-03</td><td>P2</td><td>Open <code>/admin</code> without login</td><td>Redirect to login</td></tr><tr><td>TC-ADM-LOGIN-04</td><td>P2</td><td>“Front Store” link in sidebar</td><td>Opens public site in same/new tab</td></tr></tbody></table>
+
+<h3 id="6-3-roles-and-access-control-must-test">6.3 Roles and access control (must test)</h3>
+
+<p>The sidebar shows <strong>all menu items to every role</strong>, but <strong>middleware blocks</strong> unauthorized pages.</p>
+
+<p>When testing a limited role (e.g. <strong>Content</strong>), click <strong>every</strong> sidebar link and record:</p>
+
+<ul><li><strong>Pass:</strong> page loads</li>
+<li><strong>Fail:</strong> redirect to dashboard <code>/admin</code> or blank forbidden behavior</li>
+</ul>
+<table><thead><tr><th>Role</th><th>Should access (high level)</th><th>Must NOT access (examples)</th></tr></thead><tbody><tr><td><strong>super_admin</strong></td><td>All modules</td><td>—</td></tr><tr><td><strong>admin</strong></td><td>All except some super-only</td><td>backups, roles (verify)</td></tr><tr><td><strong>sales</strong></td><td>Clients, orders, pricing, reports, account</td><td>CMS home, inventory, payments</td></tr><tr><td><strong>dispatch</strong></td><td>Dispatch, orders, inventory, reports</td><td>CMS, clients create, payments</td></tr><tr><td><strong>accounts</strong></td><td>Payments, reports, orders (payment fields)</td><td>CMS, products create</td></tr><tr><td><strong>content</strong></td><td>CMS, products, blogs, SEO, newsletter</td><td>Orders, dispatch, payments, pricing</td></tr></tbody></table>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-RBAC-01</td><td>P1</td><td>For each role account, open <code>/admin/backups</code></td><td>Only <strong>super_admin</strong> allowed</td></tr><tr><td>TC-RBAC-02</td><td>P1</td><td>Content user opens <code>/admin/orders</code></td><td>Redirect or block</td></tr><tr><td>TC-RBAC-03</td><td>P1</td><td>Sales user opens <code>/admin/customers</code></td><td>Allowed</td></tr><tr><td>TC-RBAC-04</td><td>P2</td><td>Dispatch user opens <code>/admin/products-low</code></td><td>Allowed</td></tr><tr><td>TC-RBAC-05</td><td>P2</td><td>Accounts user opens <code>/admin/payments</code></td><td>Allowed</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="7-admin-modules-detailed-test-cases">7. Admin modules — detailed test cases</h2>
+
+<h3 id="7-1-dashboard-admin">7.1 Dashboard (<code>/admin</code>)</h3>
+
+<p><strong>Purpose:</strong> KPIs, charts, recent orders, alerts.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-DASH-01</td><td>P2</td><td>Load dashboard</td><td>Charts/cards load without error</td></tr><tr><td>TC-ADM-DASH-02</td><td>P2</td><td>Click recent order</td><td>Opens order detail or orders list</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-2-customer-management-admin-customers">7.2 Customer management (<code>/admin/customers</code>)</h3>
+
+<p><strong>Purpose:</strong> List B2B clients; approve/reject pending; edit profile; view order history; export PDF.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-CL-01</td><td>P1</td><td>Find <strong>pending</strong> registration from TC-REG-01</td><td>Client visible with pending status</td></tr><tr><td>TC-ADM-CL-02</td><td>P1</td><td><strong>Approve</strong> pending client</td><td>Status = approved</td></tr><tr><td>TC-ADM-CL-03</td><td>P1</td><td>Client logs in on storefront</td><td>Login succeeds</td></tr><tr><td>TC-ADM-CL-04</td><td>P2</td><td><strong>Reject</strong> a test client</td><td>Login blocked with rejection message</td></tr><tr><td>TC-ADM-CL-05</td><td>P2</td><td>Edit client GST/address</td><td>Saves; reflects on storefront account</td></tr><tr><td>TC-ADM-CL-06</td><td>P2</td><td>Export client PDF</td><td>File downloads</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-3-orders-admin-orders">7.3 Orders (<code>/admin/orders</code>)</h3>
+
+<p><strong>Purpose:</strong> View/filter orders; change approval status; edit line items; add notes.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-ORD-01</td><td>P1</td><td>Find order from checkout test</td><td>Order present with correct items/qty</td></tr><tr><td>TC-ADM-ORD-02</td><td>P1</td><td>Change approval status (approve/reject)</td><td>Saves; client sees updated status if applicable</td></tr><tr><td>TC-ADM-ORD-03</td><td>P2</td><td>Filter by status/date</td><td>Filters work</td></tr><tr><td>TC-ADM-ORD-04</td><td>P2</td><td>Add internal note</td><td>Saves</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-4-dispatch-admin-dispatch">7.4 Dispatch (<code>/admin/dispatch</code>)</h3>
+
+<p><strong>Purpose:</strong> Dispatch-focused view — dates, transport, LR number, courier, vehicle, tracking history.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-DSP-01</td><td>P2</td><td>Open approved order</td><td>Dispatch fields editable</td></tr><tr><td>TC-ADM-DSP-02</td><td>P2</td><td>Enter LR + courier; save</td><td>Data persists on reload</td></tr><tr><td>TC-ADM-DSP-03</td><td>P2</td><td>Client views order on storefront</td><td>Tracking/dispatch info visible if implemented</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-5-payments-admin-payments">7.5 Payments (<code>/admin/payments</code>)</h3>
+
+<p><strong>Purpose:</strong> Payment status, paid amount, cheque details, deposit status.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-PAY-01</td><td>P2</td><td>Mark payment received partially</td><td>Saves</td></tr><tr><td>TC-ADM-PAY-02</td><td>P2</td><td>Enter cheque number/date</td><td>Saves</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-6-inventory-admin-products-low">7.6 Inventory (<code>/admin/products-low</code>)</h3>
+
+<p><strong>Purpose:</strong> Stock levels; movements (add, reduce, adjust, return, damage).</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-INV-01</td><td>P2</td><td>View low stock list</td><td>Products below threshold listed</td></tr><tr><td>TC-ADM-INV-02</td><td>P2</td><td>Add stock movement</td><td>Quantity updates; log entry created</td></tr><tr><td>TC-ADM-INV-03</td><td>P1</td><td>Product at 0 stock on storefront</td><td>Shows sold out</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-7-products-admin-products-list-admin-products-create">7.7 Products (<code>/admin/products-list</code>, <code>/admin/products-create</code>)</h3>
+
+<p><strong>Purpose:</strong> Create/edit/delete products; bulk Excel import preview.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-PR-01</td><td>P1</td><td>Create new test product with images</td><td>Saves; appears on <code>/products</code></td></tr><tr><td>TC-ADM-PR-02</td><td>P1</td><td>Edit product title/price/slug</td><td>Saves; PDP updates</td></tr><tr><td>TC-ADM-PR-03</td><td>P2</td><td>Delete/archive test product</td><td>Removed from catalog</td></tr><tr><td>TC-ADM-PR-04</td><td>P2</td><td>Bulk import preview (Excel sample if provided)</td><td>Preview rows without crash</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-8-client-pricing-admin-pricing">7.8 Client pricing (<code>/admin/pricing</code>)</h3>
+
+<p><strong>Purpose:</strong> Per-client discounts and special prices.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-PRC-01</td><td>P1</td><td>Set special price for test client + product</td><td>Approved client sees different price on PDP</td></tr><tr><td>TC-ADM-PRC-02</td><td>P2</td><td>Set category-level rule</td><td>Applies to multiple products</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-9-reports-admin-reports">7.9 Reports (<code>/admin/reports</code>)</h3>
+
+<p><strong>Purpose:</strong> Export orders, clients, inventory, finance, dispatch reports (CSV/XLSX/PDF).</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-RPT-01</td><td>P2</td><td>Generate each report type</td><td>File downloads; not empty</td></tr><tr><td>TC-ADM-RPT-02</td><td>P3</td><td>Date range filter</td><td>Data scoped correctly</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-10-order-feedback-inquiries-admin-contact-inquiries">7.10 Order feedback / inquiries (<code>/admin/contact-inquiries</code>)</h3>
+
+<p><strong>Purpose:</strong> Contact form submissions; reply by email; mark replied.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-INQ-01</td><td>P2</td><td>Find inquiry from TC-CONT-01</td><td>Listed</td></tr><tr><td>TC-ADM-INQ-02</td><td>P2</td><td>Send reply email</td><td>Status updated; email sent if SMTP on</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-11-commerce-hub-admin-commerce-hub-super-admin-admin-only">7.11 Commerce hub (<code>/admin/commerce-hub</code>) — super_admin / admin only</h3>
+
+<p><strong>Purpose:</strong> Risk signals — duplicate orders, rapid orders, credit alerts.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-HUB-01</td><td>P3</td><td>Page loads</td><td>Widgets/cards visible</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-12-home-page-cms-admin-home">7.12 Home page CMS (<code>/admin/home</code>)</h3>
+
+<p><strong>Purpose:</strong> Edit homepage sections — hero, categories, marquee, featured, Instagram gallery title, custom blocks.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-CMS-H-01</td><td>P1</td><td>Change hero headline text; save</td><td>Public homepage shows new text after refresh</td></tr><tr><td>TC-ADM-CMS-H-02</td><td>P2</td><td>Reorder or toggle section (if UI allows)</td><td>Homepage reflects change</td></tr><tr><td>TC-ADM-CMS-H-03</td><td>P2</td><td>Upload hero image/video</td><td>Media displays on site</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-13-header-menu-admin-header-menu">7.13 Header menu (<code>/admin/header-menu</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-MENU-01</td><td>P2</td><td>Add/edit menu item</td><td>Storefront header nav updates</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-14-about-contact-cms-admin-about-admin-contact">7.14 About / Contact CMS (<code>/admin/about</code>, <code>/admin/contact</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-PG-01</td><td>P2</td><td>Edit paragraph; save</td><td><code>/about</code> or <code>/contact</code> updated</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-15-blogs-admin-blogs-list-admin-blogs-create">7.15 Blogs (<code>/admin/blogs-list</code>, <code>/admin/blogs-create</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-BLOG-01</td><td>P2</td><td>Create draft/published post</td><td>Appears on <code>/blog</code> when published</td></tr><tr><td>TC-ADM-BLOG-02</td><td>P2</td><td>Delete test post</td><td>Removed from list</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-16-blog-comments-admin-blog-comments">7.16 Blog comments (<code>/admin/blog-comments</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-CMT-01</td><td>P1</td><td>Approve comment from TC-BLOG-03</td><td>Visible on public blog post</td></tr><tr><td>TC-ADM-CMT-02</td><td>P2</td><td>Reject/delete comment</td><td>Not visible publicly</td></tr><tr><td>TC-ADM-CMT-03</td><td>P2</td><td>Admin reply</td><td>Reply shows on blog</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-17-testimonials-admin-testimonials">7.17 Testimonials (<code>/admin/testimonials</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-TST-01</td><td>P2</td><td>Approve client testimonial</td><td>Shows on site if configured</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-18-newsletter-admin-newsletter">7.18 Newsletter (<code>/admin/newsletter</code>)</h3>
+
+<p><strong>Purpose:</strong> Subscriber list, email templates, send campaign, preview.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-NL-01</td><td>P2</td><td>View subscribers</td><td>Includes email from TC-NEWS-01</td></tr><tr><td>TC-ADM-NL-02</td><td>P2</td><td>Preview template</td><td>HTML preview renders</td></tr><tr><td>TC-ADM-NL-03</td><td>P2</td><td>Send test campaign to test email</td><td>Email received (if SMTP enabled)</td></tr><tr><td>TC-ADM-NL-04</td><td>P2</td><td>Unsubscribe link in email works</td><td>TC-NEWS-03</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-19-category-pages-admin-category-pages">7.19 Category pages (<code>/admin/category-pages</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-CAT-01</td><td>P2</td><td>Edit category hub</td><td><code>/categories/[slug]</code> updated</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-20-custom-pages-admin-custom-pages">7.20 Custom pages (<code>/admin/custom-pages</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-CUST-01</td><td>P2</td><td>Create page with slug <code>qa-test-page</code></td><td><code>/site/qa-test-page</code> loads</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-21-product-filters-admin-product-filters">7.21 Product filters (<code>/admin/product-filters</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-FLT-01</td><td>P2</td><td>Change filter label/order</td><td>Shop filters update</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-22-seo-admin-seo">7.22 SEO (<code>/admin/seo</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-SEO-01</td><td>P2</td><td>Set meta title for homepage</td><td>View page source / SEO extension shows title</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-23-ai-product-studio-admin-ai-product-studio-admin-only">7.23 AI Product Studio (<code>/admin/ai-product-studio</code>) — admin only</h3>
+
+<p><strong>Purpose:</strong> Upload raw photos; AI processing; approve outputs.</p>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-AI-01</td><td>P3</td><td>Upload sample image (if AI keys configured)</td><td>Job processes or clear error if not configured</td></tr><tr><td>TC-ADM-AI-02</td><td>P3</td><td>Non-admin role opens URL</td><td>Blocked</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-24-account-security-admin-account">7.24 Account & security (<code>/admin/account</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-ACC-01</td><td>P2</td><td>Change display name</td><td>Saves; header shows new name</td></tr><tr><td>TC-ADM-ACC-02</td><td>P1</td><td>Change password (eye toggle shows/hides password)</td><td>Success message; login with new password works</td></tr><tr><td>TC-ADM-ACC-03</td><td>P1</td><td>Wrong current password</td><td>Error message (not generic “Network error”)</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-25-roles-admin-roles-super-admin-only">7.25 Roles (<code>/admin/roles</code>) — super_admin only</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-ROLE-01</td><td>P3</td><td>View permissions matrix</td><td>Readable table</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-26-backups-admin-backups-super-admin-only">7.26 Backups (<code>/admin/backups</code>) — super_admin only</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-BAK-01</td><td>P2</td><td>Create backup</td><td>Download link works</td></tr><tr><td>TC-ADM-BAK-02</td><td>P3</td><td>Restore on <strong>staging only</strong> (if instructed)</td><td>Site data restores</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-27-audit-logs-admin-audit">7.27 Audit logs (<code>/admin/audit</code>)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-AUD-01</td><td>P3</td><td>Filter logs after product edit</td><td>Entry present with actor email</td></tr></tbody></table>
+
+<hr />
+
+<h3 id="7-28-notifications-header-bell">7.28 Notifications (header bell)</h3>
+
+<table><thead><tr><th>ID</th><th>Priority</th><th>Steps</th><th>Expected</th></tr></thead><tbody><tr><td>TC-ADM-NOT-01</td><td>P2</td><td>Place new order on storefront</td><td>Bell shows new notification (within ~30s)</td></tr><tr><td>TC-ADM-NOT-02</td><td>P2</td><td>Mark all read</td><td>Clears unread state</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="8-end-to-end-flows-cross-system">8. End-to-end flows (cross-system)</h2>
+
+<p>Run these <strong>after</strong> individual modules pass.</p>
+
+<table><thead><tr><th>ID</th><th>Flow</th><th>Steps summary</th><th>Expected</th></tr></thead><tbody><tr><td>E2E-01</td><td><strong>New B2B buyer</strong></td><td>Register → admin approve → login → see prices → add to cart → checkout → admin approve order</td><td>Full path without blocker</td></tr><tr><td>E2E-02</td><td><strong>Dispatch</strong></td><td>Approved order → dispatch fills LR → client tracks order</td><td>Tracking info consistent</td></tr><tr><td>E2E-03</td><td><strong>Content publish</strong></td><td>Admin edits homepage hero → hard refresh storefront</td><td>Change live</td></tr><tr><td>E2E-04</td><td><strong>Blog moderation</strong></td><td>Guest comment → admin approve → visible on blog</td><td>Comment public</td></tr><tr><td>E2E-05</td><td><strong>Pricing</strong></td><td>Admin sets client price → client sees price on PDP and cart</td><td>Numbers match</td></tr><tr><td>E2E-06</td><td><strong>Stock</strong></td><td>Admin sets stock 0 → PDP sold out → cannot checkout that SKU</td><td>Consistent</td></tr><tr><td>E2E-07</td><td><strong>Newsletter</strong></td><td>Footer subscribe → admin send campaign → unsubscribe</td><td>Full email cycle</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="9-performance-and-stability-checks">9. Performance and stability checks</h2>
+
+<table><thead><tr><th>ID</th><th>Check</th><th>How</th><th>Pass criteria</th></tr></thead><tbody><tr><td>PERF-01</td><td>Homepage load</td><td>Mobile 4G throttle (DevTools)</td><td>Usable within 15s</td></tr><tr><td>PERF-02</td><td>Cart API loop</td><td>Network tab on cart page 30s</td><td>No endless <code>/api/cart</code> calls</td></tr><tr><td>PERF-03</td><td>Wishlist mobile</td><td>Open wishlist on phone</td><td>No browser freeze</td></tr><tr><td>PERF-04</td><td>Admin orders list</td><td>500+ orders env if available</td><td>Page still usable or paginates</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="10-security-smoke-tests-non-expert">10. Security smoke tests (non-expert)</h2>
+
+<table><thead><tr><th>ID</th><th>Test</th><th>Expected</th></tr></thead><tbody><tr><td>SEC-01</td><td><code>/admin</code> without login</td><td>Redirect login</td></tr><tr><td>SEC-02</td><td><code>/my-account</code> without login</td><td>Redirect login</td></tr><tr><td>SEC-03</td><td>SQL injection in search <code>?q=' OR 1=1--</code></td><td>No error dump; safe handling</td></tr><tr><td>SEC-04</td><td>XSS in blog comment <code><script>alert(1)</script></code></td><td>Escaped/not executed</td></tr><tr><td>SEC-05</td><td>Pending client cannot access <code>/api/orders</code> POST via DevTools</td><td>401/403</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="11-known-limitations-not-bugs-unless-spec-says-otherwise">11. Known limitations (not bugs unless spec says otherwise)</h2>
+
+<ul><li><strong>No guest checkout</strong> — by design; guests must register and get approved.</li>
+<li><strong>Prices hidden</strong> until B2B approval — by design.</li>
+<li><strong>Payment</strong> is order request + offline cheque/credit — not Razorpay/Stripe on checkout.</li>
+<li><strong>Instagram feed</strong> may use cached local images if Meta API token not configured.</li>
+<li><strong>Admin sidebar</strong> shows all links; unauthorized roles are blocked on click.</li>
+<li><strong>Two search URLs</strong> (<code>/products?q=</code> and <code>/search-result</code>) — both valid.</li>
+</ul>
+<hr />
+
+<h2 id="12-test-execution-plan-suggested-order">12. Test execution plan (suggested order)</h2>
+
+<table><thead><tr><th>Phase</th><th>Days</th><th>Focus</th></tr></thead><tbody><tr><td><strong>Phase 1</strong></td><td>Day 1–2</td><td>Storefront guest: browse, search, cart, wishlist, static pages</td></tr><tr><td><strong>Phase 2</strong></td><td>Day 2–3</td><td>Registration, login states, approved client, checkout</td></tr><tr><td><strong>Phase 3</strong></td><td>Day 3–4</td><td>Account area, blog, contact, newsletter</td></tr><tr><td><strong>Phase 4</strong></td><td>Day 4–6</td><td>Admin: clients, orders, dispatch, payments, inventory, products</td></tr><tr><td><strong>Phase 5</strong></td><td>Day 6–7</td><td>Admin: CMS, blogs, newsletter, SEO</td></tr><tr><td><strong>Phase 6</strong></td><td>Day 7–8</td><td>RBAC per role, E2E flows, regression</td></tr><tr><td><strong>Phase 7</strong></td><td>Day 8</td><td>Sign-off report</td></tr></tbody></table>
+
+<hr />
+
+<h2 id="13-sign-off-checklist">13. Sign-off checklist</h2>
+
+<p>Tester completes and sends to project owner:</p>
+
+<ul><li>[ ] All <strong>P1</strong> test cases executed</li>
+<li>[ ] All <strong>P2</strong> test cases executed or explicitly skipped with reason</li>
+<li>[ ] E2E-01 through E2E-07 executed</li>
+<li>[ ] RBAC tested for every role account provided</li>
+<li>[ ] Mobile + desktop smoke done</li>
+<li>[ ] Bug list exported with template from Section 4</li>
+<li>[ ] <strong>Open P1 count:</strong> <strong>\_\_</strong></li>
+<li>[ ] <strong>Recommendation:</strong> Pass / Pass with issues / Fail</li>
+</ul>
+<p><strong>Tester name:</strong> <strong>\*\*\*\</strong>*\_\_\_\_<strong>\*\*\*\</strong>*  </p>
+<p><strong>Date:</strong> <strong>\*\*\*\</strong>*\_\_\_\_<strong>\*\*\*\</strong>*  </p>
+<p><strong>Build/version tested:</strong> <strong>\*\*\*\</strong>*\_\_\_\_<strong>\*\*\*\</strong>*  </p>
+<p><strong>Environment URL:</strong> <strong>\*\*\*\</strong>*\_\_\_\_<strong>\*\*\*\</strong>*</p>
+
+<hr />
+
+<h2 id="14-appendix-quick-url-reference">14. Appendix — quick URL reference</h2>
+
+<h3 id="storefront">Storefront</h3>
+
+<pre class="code-block">/                          Homepage
+/products                  Catalog
+/products/{slug}           Product detail
+/cart                      Cart
+/checkout                  Checkout
+/login, /register          Auth
+/my-account                Account (protected)
+/wishlist                  Wishlist
+/blog                      Blog
+/contact                   Contact
+/order-tracking            Track order</pre>
+
+<h3 id="admin">Admin</h3>
+
+<pre class="code-block">/admin/login               Admin login
+/admin                     Dashboard
+/admin/customers           Clients
+/admin/orders              Orders
+/admin/dispatch            Dispatch
+/admin/payments            Payments
+/admin/products-list       Products
+/admin/products-low        Inventory
+/admin/pricing             Client pricing
+/admin/home                Home CMS
+/admin/newsletter          Newsletter
+/admin/account             Account settings</pre>
+
+<hr />
+
+<p>_End of document — copy into Google Docs and fill Section 3 credentials table from your secure handover sheet._</p>
+</main>
+  </div>
+  <p class="footer-note">Sarjan Textiles QA Guide · <a href="https://sarjantextiles.com/">sarjantextiles.com</a></p>
+</body>
+</html>
