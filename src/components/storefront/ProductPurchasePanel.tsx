@@ -8,6 +8,7 @@ import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import { isWishlisted } from "@/lib/wishlist-client";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type ProductPurchasePanelProps = {
@@ -72,12 +73,13 @@ function ProductWishlistCompareIcons({
 
 export function ProductPurchasePanel({
   product,
-  wishlistActive = false,
+  wishlistActive: wishlistActiveProp,
   showViewDetailsLink = false,
   colorIndex: controlledIndex,
   onColorIndexChange,
 }: ProductPurchasePanelProps) {
   const [internalIndex, setInternalIndex] = useState(0);
+  const [localWishlisted, setLocalWishlisted] = useState(false);
   const colorIndex = controlledIndex ?? internalIndex;
   const setColorIndex = onColorIndexChange ?? setInternalIndex;
   const colors = productColorList(product);
@@ -85,12 +87,24 @@ export function ProductPurchasePanel({
   const sizeRun = productSizeRun(product);
   const setPrice = productSetPrice(product, activeColor, sizeRun);
   const soldOut = isProductSoldOut(product);
+  const wishlistActive = wishlistActiveProp ?? localWishlisted;
 
   useEffect(() => {
     if (controlledIndex === undefined) {
       setInternalIndex(0);
     }
   }, [product.slug, controlledIndex]);
+
+  useEffect(() => {
+    const sync = () => setLocalWishlisted(isWishlisted(product.slug));
+    sync();
+    window.addEventListener("sarjan-wishlist-updated", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("sarjan-wishlist-updated", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [product.slug]);
 
   return (
     <div className="tf-product-info-choose-option">
@@ -178,13 +192,22 @@ export function ProductPurchasePanel({
                 data-product-slug={product.slug}
                 data-product-size-run={sizeRun.join(",")}
               >
-                <i className="icon icon-tag sarjan-tf-btn-icon" aria-hidden />
-                <span className="text text-button sarjan-all-colors-label">
+                <i
+                  className="icon icon-squares-four sarjan-tf-btn-icon"
+                  aria-hidden
+                />
+                <span className="sarjan-all-colors-btn__inner text text-button sarjan-all-colors-label">
                   <span className="sarjan-all-colors-label--long">
                     Add all colors
                   </span>
                   <span className="sarjan-all-colors-label--short">
                     All colors
+                  </span>
+                  <span
+                    className="sarjan-all-colors-price-spacer"
+                    aria-hidden="true"
+                  >
+                    &nbsp;
                   </span>
                 </span>
               </a>

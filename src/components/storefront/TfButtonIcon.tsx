@@ -33,6 +33,8 @@ export function withBtnIcon(className = "") {
     .replace(/\bbtn-fill\b/g, "")
     .replace(/\bbtn-reset\b/g, "")
     .replace(/\bbtn-white\b/g, "")
+    .replace(/\bbtn-style-2\b/g, "")
+    .replace(/\bbtn-style-3\b/g, "")
     .replace(/\s+/g, " ")
     .trim();
   return sarjanButtonClass("sarjan-has-btn-icon", stripped || undefined);

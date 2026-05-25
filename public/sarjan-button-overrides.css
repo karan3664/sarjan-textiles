@@ -1,0 +1,140 @@
+/**
+ * Loaded after Modave styles.css — fixes CTA hover (white/red) sitewide.
+ * Keep in sync when changing button tokens in src/app/storefront-buttons.css.
+ */
+body.sarjan-storefront {
+  --sarjan-btn-hover-bg: var(--sarjan-accent, #8b1e2d);
+  --sarjan-btn-hover-color: #ffffff;
+  --sarjan-btn-hover-border: var(--sarjan-accent, #8b1e2d);
+}
+
+/* Kill Modave skew wipe on storefront CTAs */
+body.sarjan-storefront
+  #wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    .tf-btn,
+    a.tf-btn,
+    button.tf-btn,
+    .btn-style-2,
+    a.btn-style-2,
+    .btn-style-3,
+    a.btn-style-3,
+    .btn-main-product,
+    a.btn-main-product
+  ):not(.btn-line):not(.btn-reset)::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Default: white pill, dark text (beats Modave black default) */
+body.sarjan-storefront
+  #wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    .tf-btn,
+    a.tf-btn,
+    button.tf-btn,
+    .btn-style-2,
+    a.btn-style-2,
+    button.btn-style-2,
+    .btn-style-3,
+    a.btn-style-3,
+    button.btn-style-3,
+    .btn-main-product,
+    a.btn-main-product
+  ):not(.btn-line):not(.btn-reset):not(.btn-close):not(.btn-quantity):not(
+    .btn-decrease
+  ):not(.btn-increase):not(.tf-btn-remove):not(.tf-btn-filter):not(
+    .subscribe-button
+  ):not(.sarjan-emoji-trigger):not(:disabled):not([aria-disabled="true"]):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered) {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #181818 !important;
+  border: 1px solid #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+/* Hover + JS fallback class */
+body.sarjan-storefront
+  #wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    .tf-btn,
+    a.tf-btn,
+    button.tf-btn,
+    .btn-style-2,
+    a.btn-style-2,
+    button.btn-style-2,
+    .btn-style-3,
+    a.btn-style-3,
+    button.btn-style-3,
+    .btn-main-product,
+    a.btn-main-product
+  ):not(.btn-line):not(.btn-reset):not(.btn-close):not(.btn-quantity):not(
+    .btn-decrease
+  ):not(.btn-increase):not(.tf-btn-remove):not(.tf-btn-filter):not(
+    .subscribe-button
+  ):not(.sarjan-emoji-trigger):not(:disabled):not([aria-disabled="true"]):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ),
+body.sarjan-storefront
+  .modal
+  :is(a.sarjan-btn, button.sarjan-btn, .tf-btn, a.tf-btn):not(.btn-close):not(
+    :disabled
+  ):is(:hover, :focus-visible, .is-hovered),
+body.sarjan-storefront
+  .offcanvas
+  :is(a.sarjan-btn, .tf-btn, a.tf-btn):not(.btn-close):not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ) {
+  border-radius: var(--sarjan-btn-radius, 999px) !important;
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  background-image: none !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+body.sarjan-storefront
+  #wrapper
+  :is(.sarjan-btn, .tf-btn, .btn-style-2, .btn-style-3, .btn-main-product):is(
+    :hover,
+    .is-hovered
+  )
+  :is(.text, .text-button, span, i.icon, .sarjan-tf-btn-icon),
+body.sarjan-storefront
+  .modal
+  :is(.sarjan-btn, .tf-btn):is(:hover, .is-hovered)
+  :is(.text, span, i.icon) {
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+/* Modave bare `button:hover { background: transparent }` breaks `<button class="tf-btn">` */
+body.sarjan-storefront
+  #wrapper
+  button:is(
+    .tf-btn,
+    .sarjan-btn,
+    .btn-style-2,
+    .btn-style-3,
+    .btn-main-product
+  ):not(.btn-line):not(:disabled):is(:hover, :focus-visible, .is-hovered) {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}

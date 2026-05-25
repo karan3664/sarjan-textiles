@@ -1,4 +1,5 @@
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
+import { sortOrdersNewestFirst } from "@/lib/client-orders-sort";
 import { readLocalDb } from "@/lib/local-db";
 
 export async function GET(request: Request) {
@@ -6,7 +7,8 @@ export async function GET(request: Request) {
   if (auth instanceof Response) return auth;
   const { session } = auth;
   const db = await readLocalDb();
-  return Response.json({
-    orders: db.orders.filter((order) => order.clientId === session.clientId),
-  });
+  const orders = sortOrdersNewestFirst(
+    db.orders.filter((order) => order.clientId === session.clientId),
+  );
+  return Response.json({ orders });
 }

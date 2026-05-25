@@ -56,8 +56,20 @@ export async function generateMetadata({
 
 export default async function ProductSlugPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    page?: string;
+    sort?: string;
+    category?: string;
+    fabric?: string;
+    color?: string;
+    size?: string;
+    stock?: string;
+    minPrice?: string;
+    maxPrice?: string;
+  }>;
 }) {
   const { slug } = await params;
   const product = await loadProductForSlug(slug);
@@ -77,6 +89,17 @@ export default async function ProductSlugPage({
 
   const categoryRoute = getProductCategoryRoute(slug);
   if (categoryRoute) {
+    const {
+      page,
+      sort,
+      category,
+      fabric,
+      color,
+      size,
+      stock,
+      minPrice,
+      maxPrice,
+    } = await searchParams;
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -100,8 +123,21 @@ export default async function ProductSlugPage({
         <ProductSeoListingPage
           title={categoryRoute.title}
           subtitle={categoryRoute.description}
-          filters={categoryRoute.filters}
+          page={Number(page ?? 1)}
+          sort={sort}
+          filters={{
+            ...categoryRoute.filters,
+            category,
+            fabric,
+            color,
+            size,
+            stock,
+            minPrice: minPrice ? Number(minPrice) : undefined,
+            maxPrice: maxPrice ? Number(maxPrice) : undefined,
+          }}
           q={categoryRoute.q}
+          basePath={`/products/${categoryRoute.slug}`}
+          crumbs={["Home", "Products", categoryRoute.title]}
         />
       </ModaveShell>
     );

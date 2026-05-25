@@ -2,7 +2,10 @@ import { ModaveFooter } from "./ModaveFooter";
 import { ModaveHeader } from "./ModaveHeader";
 import { ModaveModals } from "./ModaveModals";
 import { CompareDrawer } from "./CompareDrawer";
+import { ModavePreload } from "./ModavePreload";
 import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
+import { OrderBotWidget } from "./OrderBotWidget";
+import { SarjanButtonHoverFix } from "./SarjanButtonHoverFix";
 import { TemplateScripts } from "./TemplateScripts";
 
 export function ModaveShell({ children }: { children: React.ReactNode }) {
@@ -25,11 +28,7 @@ export function ModaveShell({ children }: { children: React.ReactNode }) {
           />
         </svg>
       </button>
-      <div className="preload preload-container">
-        <div className="preload-logo">
-          <div className="spinner" />
-        </div>
-      </div>
+      <ModavePreload />
       <div id="wrapper">
         <OffcanvasRouteGuard />
         <ModaveHeader />
@@ -39,6 +38,8 @@ export function ModaveShell({ children }: { children: React.ReactNode }) {
         <TemplateScripts />
       </div>
       <ModaveModals />
+      <SarjanButtonHoverFix />
+      <OrderBotWidget />
     </>
   );
 }

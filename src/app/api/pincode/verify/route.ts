@@ -1,9 +1,12 @@
 import {
   isValidIndianPincodeFormat,
-  lookupIndianPincode,
   normalizeIndianPincode,
+  pincodeLookupErrorMessage,
   verifyPincodeAgainstLocation,
 } from "@/lib/india-pincode";
+import { lookupIndianPincode } from "@/lib/india-pincode-lookup";
+
+export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
@@ -54,8 +57,7 @@ export async function GET(request: Request) {
         valid: false,
         formatValid: false,
         locationMatch: false,
-        message:
-          error instanceof Error ? error.message : "PIN verification failed.",
+        message: pincodeLookupErrorMessage(error),
         pincode: "",
       },
       { status: 502 },

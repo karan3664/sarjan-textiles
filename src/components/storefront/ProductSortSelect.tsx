@@ -6,9 +6,11 @@ import { useSearchParams } from "next/navigation";
 function ProductSortSelectInner({
   value,
   labels,
+  basePath,
 }: {
   value: string;
   labels: Record<string, string>;
+  basePath: string;
 }) {
   const searchParams = useSearchParams();
 
@@ -21,7 +23,8 @@ function ProductSortSelectInner({
           const params = new URLSearchParams(searchParams.toString());
           params.set("sort", event.target.value);
           params.set("page", "1");
-          window.location.assign(`/products?${params.toString()}`);
+          const query = params.toString();
+          window.location.assign(query ? `${basePath}?${query}` : basePath);
         }}
       >
         {Object.entries(labels).map(([optionValue, label]) => (
@@ -38,9 +41,11 @@ function ProductSortSelectInner({
 export function ProductSortSelect({
   value,
   labels,
+  basePath = "/products",
 }: {
   value: string;
   labels: Record<string, string>;
+  basePath?: string;
 }) {
   return (
     <Suspense
@@ -57,7 +62,11 @@ export function ProductSortSelect({
         </div>
       }
     >
-      <ProductSortSelectInner value={value} labels={labels} />
+      <ProductSortSelectInner
+        value={value}
+        labels={labels}
+        basePath={basePath}
+      />
     </Suspense>
   );
 }

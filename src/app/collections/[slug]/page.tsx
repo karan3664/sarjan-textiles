@@ -29,12 +29,35 @@ export async function generateMetadata({
 
 export default async function CollectionDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    page?: string;
+    sort?: string;
+    category?: string;
+    fabric?: string;
+    color?: string;
+    size?: string;
+    stock?: string;
+    minPrice?: string;
+    maxPrice?: string;
+  }>;
 }) {
   const { slug } = await params;
   const route = getCollectionRoute(slug);
   if (!route) notFound();
+  const {
+    page,
+    sort,
+    category,
+    fabric,
+    color,
+    size,
+    stock,
+    minPrice,
+    maxPrice,
+  } = await searchParams;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -57,8 +80,21 @@ export default async function CollectionDetailPage({
       <ProductSeoListingPage
         title={route.title}
         subtitle={route.description}
-        filters={route.filters}
+        page={Number(page ?? 1)}
+        sort={sort}
+        filters={{
+          ...route.filters,
+          category,
+          fabric,
+          color,
+          size,
+          stock,
+          minPrice: minPrice ? Number(minPrice) : undefined,
+          maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        }}
         q={route.q}
+        basePath={`/collections/${route.slug}`}
+        crumbs={["Home", "Collections", route.title]}
       />
     </ModaveShell>
   );

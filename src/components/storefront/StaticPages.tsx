@@ -8,6 +8,7 @@ import { PageTitle } from "./PageTitle";
 import { PaymentConfirmationClient } from "./PaymentConfirmationClient";
 import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
+import { FaqAccordion } from "./FaqAccordion";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 export function DynamicInfoPage({
@@ -242,46 +243,17 @@ export function FaqPage() {
       "Can ERP sync later?",
       "Yes. Order and invoice data are structured for Tally/AWS migration later.",
     ],
-  ];
+  ] as const;
 
   return (
-    <>
+    <div className="sarjan-faqs-page sarjan-policy-page">
       <PageTitle title="FAQs" crumbs={["Homepage", "FAQs"]} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-faqs-content">
         <div className="container">
-          <div className="widget-accordion">
-            {items.map(([title, text], index) => (
-              <div className="accordion-item" key={title}>
-                <h2 className="accordion-header">
-                  <button
-                    className={
-                      index === 0
-                        ? "accordion-button"
-                        : "accordion-button collapsed"
-                    }
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target={`#faq-${index}`}
-                  >
-                    {title}
-                  </button>
-                </h2>
-                <div
-                  id={`faq-${index}`}
-                  className={
-                    index === 0
-                      ? "accordion-collapse collapse show"
-                      : "accordion-collapse collapse"
-                  }
-                >
-                  <div className="accordion-body">{text}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <FaqAccordion items={items} />
         </div>
       </section>
-    </>
+    </div>
   );
 }
 

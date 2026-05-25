@@ -6,7 +6,8 @@
  * Docs: docs/STOREFRONT-BUTTONS.md
  */
 
-body.preload-wrapper {
+/* Scoped to persistent body class — not preload-wrapper (removed after load). */
+body.sarjan-storefront {
   --sarjan-brand: var(--sarjan-accent, #8b1e2d);
   --sarjan-btn-bg: #ffffff;
   --sarjan-btn-color: #181818;
@@ -18,7 +19,7 @@ body.preload-wrapper {
 }
 
 /* btn-line uses gradient text — keep readable */
-body.preload-wrapper .tf-btn.btn-line {
+body.sarjan-storefront .tf-btn.btn-line {
   -webkit-text-fill-color: var(--sarjan-btn-color) !important;
   background: var(--sarjan-btn-bg) !important;
   background-image: none !important;
@@ -28,7 +29,7 @@ body.preload-wrapper .tf-btn.btn-line {
   color: var(--sarjan-btn-color) !important;
 }
 
-body.preload-wrapper .tf-btn.btn-line:hover {
+body.sarjan-storefront .tf-btn.btn-line:hover {
   background-color: var(--sarjan-btn-hover-bg) !important;
   color: var(--sarjan-btn-hover-color) !important;
   border-color: var(--sarjan-btn-hover-border) !important;
@@ -36,7 +37,7 @@ body.preload-wrapper .tf-btn.btn-line:hover {
 }
 
 /* Shared CTA selector list */
-body.preload-wrapper
+body.sarjan-storefront
   .sarjan-cta:not(.btn-line):not(.btn-icon-action):not(.box-icon):not(
     .btn-quantity
   ):not(.btn-decrease):not(.btn-increase):not(.sarjan-color-swatch-btn):not(
@@ -48,7 +49,7 @@ body.preload-wrapper
   ):not(.sarjan-sitemap-toggle):not(.bg-transparent):not(.btn.p-1):not(
     .btn-sold-out
   ):not(:disabled):not([aria-disabled="true"])::after,
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .sarjan-btn,
     a.sarjan-btn,
@@ -61,6 +62,9 @@ body.preload-wrapper
     .modal .tf-btn,
     .modal a.tf-btn,
     .modal button.tf-btn,
+    .modal .sarjan-btn,
+    .modal a.sarjan-btn,
+    .modal button.sarjan-btn,
     .offcanvas .tf-btn,
     .offcanvas a.tf-btn,
     .sarjan-cookie-consent .tf-btn,
@@ -91,7 +95,7 @@ body.preload-wrapper
   display: none !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .sarjan-btn,
     a.sarjan-btn,
@@ -104,6 +108,9 @@ body.preload-wrapper
     .modal .tf-btn,
     .modal a.tf-btn,
     .modal button.tf-btn,
+    .modal .sarjan-btn,
+    .modal a.sarjan-btn,
+    .modal button.sarjan-btn,
     .offcanvas .tf-btn,
     .offcanvas a.tf-btn,
     .sarjan-cookie-consent .tf-btn,
@@ -133,7 +140,7 @@ body.preload-wrapper
     .sarjan-sitemap-toggle
   ):not(.bg-transparent):not(.btn.p-1):not(.btn-sold-out):not(:disabled):not(
     [aria-disabled="true"]
-  ) {
+  ):not(:hover):not(:focus-visible):not(.is-hovered) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -161,7 +168,7 @@ body.preload-wrapper
   -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .sarjan-btn,
     a.sarjan-btn,
@@ -202,7 +209,7 @@ body.preload-wrapper
   -webkit-text-fill-color: inherit !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .sarjan-btn,
     a.sarjan-btn,
@@ -227,14 +234,15 @@ body.preload-wrapper
     .tf-btn-remove
   ):not(.btn-close):not(.subscribe-button):not(.btn-sold-out):not(
     :disabled
-  ):not([aria-disabled="true"]):hover {
+  ):not([aria-disabled="true"]):is(:hover, :focus-visible, .is-hovered) {
+  border-radius: var(--sarjan-btn-radius) !important;
   background-color: var(--sarjan-btn-hover-bg) !important;
   border-color: var(--sarjan-btn-hover-border) !important;
   color: var(--sarjan-btn-hover-color) !important;
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .sarjan-btn,
     a.sarjan-btn,
@@ -247,7 +255,11 @@ body.preload-wrapper
     #wrapper .btn-main-product,
     .modal .btn-style-2,
     .modal .btn-style-3
-  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]):hover
+  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  )
   > :is(
     .text,
     .text-button,
@@ -261,7 +273,7 @@ body.preload-wrapper
 }
 
 /* btn-fill / btn-white / btn-reset — same default look */
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .tf-btn.btn-fill,
     .tf-btn.btn-white,
@@ -273,7 +285,7 @@ body.preload-wrapper
   border: 1px solid var(--sarjan-btn-border) !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .tf-btn.btn-fill,
     .tf-btn.btn-white,
@@ -286,37 +298,120 @@ body.preload-wrapper
 }
 
 /* Modave bare `button { background: var(--main) }` on CTAs */
-body.preload-wrapper button.tf-btn:not(.btn-line):not(:disabled):hover,
-body.preload-wrapper button.btn-style-2:not(:disabled):hover,
-body.preload-wrapper button.btn-style-3:not(:disabled):hover {
+body.sarjan-storefront button.tf-btn:not(.btn-line):not(:disabled):hover,
+body.sarjan-storefront button.btn-style-2:not(:disabled):hover,
+body.sarjan-storefront button.btn-style-3:not(:disabled):hover {
   background-color: var(--sarjan-btn-hover-bg) !important;
   color: var(--sarjan-btn-hover-color) !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(.tf-btn, .btn-style-2, .btn-style-3, .btn-main-product).w-100,
-body.preload-wrapper :is(a.tf-btn, a.btn-style-2).w-100 {
+body.sarjan-storefront :is(a.tf-btn, a.btn-style-2).w-100 {
   width: 100% !important;
 }
 
-body.preload-wrapper .modal-shopping-cart .sarjan-mini-cart-actions > .tf-btn,
-body.preload-wrapper
+body.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  > :is(.sarjan-btn, .tf-btn),
+body.sarjan-storefront
   .modal-shopping-cart
   .sarjan-mini-cart-actions__auth
-  .tf-btn,
-body.preload-wrapper .sarjan-cart-page-actions .tf-btn {
+  :is(.sarjan-btn, .tf-btn),
+body.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions
+  > :is(.sarjan-btn, .tf-btn, a.sarjan-btn),
+body.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions__auth
+  :is(.sarjan-btn, .tf-btn, a.sarjan-btn) {
   width: 100% !important;
   min-height: 48px !important;
+  margin: 0 !important;
   border-radius: var(--sarjan-btn-radius) !important;
 }
 
+body.sarjan-storefront .modal-shopping-cart .sarjan-mini-cart-actions,
+body.sarjan-storefront .sarjan-cart-page .sarjan-cart-page-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+body.sarjan-storefront .modal-shopping-cart .sarjan-mini-cart-actions__auth,
+body.sarjan-storefront .sarjan-cart-page .sarjan-cart-page-actions__auth {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+@media (min-width: 576px) {
+  body.sarjan-storefront .modal-shopping-cart .sarjan-mini-cart-actions__auth,
+  body.sarjan-storefront .sarjan-cart-page .sarjan-cart-page-actions__auth {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+body.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  > :is(.sarjan-btn, .tf-btn):is(:hover, :focus-visible, :active),
+body.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions__auth
+  :is(.sarjan-btn, .tf-btn):is(:hover, :focus-visible, :active),
+body.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions
+  > :is(.sarjan-btn, .tf-btn, a.sarjan-btn):is(:hover, :focus-visible, :active),
+body.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions__auth
+  :is(.sarjan-btn, .tf-btn, a.sarjan-btn):is(:hover, :focus-visible, :active) {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+body.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  > :is(.sarjan-btn, .tf-btn):is(:hover, :focus-visible, :active)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions__auth
+  :is(.sarjan-btn, .tf-btn):is(:hover, :focus-visible, :active)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions
+  > :is(.sarjan-btn, .tf-btn, a.sarjan-btn):is(:hover, :focus-visible, :active)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions__auth
+  :is(.sarjan-btn, .tf-btn, a.sarjan-btn):is(:hover, :focus-visible, :active)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
 /* Auth page explicit */
-body.preload-wrapper
+body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions
   .tf-btn:not(:disabled),
-body.preload-wrapper .sarjan-auth-page .sarjan-auth-submit:not(:disabled),
-body.preload-wrapper
+body.sarjan-storefront .sarjan-auth-page .sarjan-auth-submit:not(:disabled),
+body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-gst-captcha-panel
   .tf-btn:not(:disabled) {
@@ -327,12 +422,14 @@ body.preload-wrapper
   -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions
   .tf-btn:not(:disabled):hover,
-body.preload-wrapper .sarjan-auth-page .sarjan-auth-submit:not(:disabled):hover,
-body.preload-wrapper
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-auth-submit:not(:disabled):hover,
+body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-gst-captcha-panel
   .tf-btn:not(:disabled):hover {
@@ -342,7 +439,7 @@ body.preload-wrapper
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }
 
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .tf-btn,
     .btn-style-2,
@@ -350,7 +447,7 @@ body.preload-wrapper
     .btn-main-product,
     .sarjan-btn
   ):disabled,
-body.preload-wrapper
+body.sarjan-storefront
   :is(
     .tf-btn,
     .btn-style-2,
@@ -363,14 +460,364 @@ body.preload-wrapper
 }
 
 /* Product card ATC — keep flex */
-body.preload-wrapper #wrapper .card-product .btn-main-product,
-body.preload-wrapper #wrapper a.btn-main-product {
+body.sarjan-storefront #wrapper .card-product .btn-main-product,
+body.sarjan-storefront #wrapper a.btn-main-product {
   display: inline-flex !important;
   -webkit-line-clamp: unset !important;
   -webkit-box-orient: unset !important;
 }
 
-body.preload-wrapper .sarjan-product-action-buttons .btn-style-2,
-body.preload-wrapper .sarjan-product-action-buttons .btn-style-3 {
+body.sarjan-storefront .sarjan-product-action-buttons .btn-style-2,
+body.sarjan-storefront .sarjan-product-action-buttons .btn-style-3 {
   border: 1px solid var(--sarjan-btn-border) !important;
+}
+
+/* Shop filter drawer — Apply price / Reset filters */
+body.sarjan-storefront .canvas-filter .sarjan-filter-apply-btn,
+body.sarjan-storefront .canvas-filter #reset-filter.sarjan-btn,
+body.sarjan-storefront .canvas-filter a.sarjan-filter-reset-btn {
+  width: 100% !important;
+  min-height: 48px !important;
+  border-radius: var(--sarjan-btn-radius) !important;
+  background-color: var(--sarjan-btn-bg) !important;
+  color: var(--sarjan-btn-color) !important;
+  border: 1px solid var(--sarjan-btn-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+body.sarjan-storefront
+  .canvas-filter
+  .sarjan-filter-apply-btn:is(:hover, :focus-visible, :active),
+body.sarjan-storefront
+  .canvas-filter
+  #reset-filter.sarjan-btn:is(:hover, :focus-visible, :active),
+body.sarjan-storefront
+  .canvas-filter
+  a.sarjan-filter-reset-btn:is(:hover, :focus-visible, :active),
+body.sarjan-storefront .canvas-filter .sarjan-filter-apply-btn.is-hovered,
+body.sarjan-storefront .canvas-filter #reset-filter.sarjan-btn.is-hovered {
+  background-color: #8b1e2d !important;
+  color: #ffffff !important;
+  border-color: #8b1e2d !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.sarjan-storefront
+  .canvas-filter
+  .sarjan-filter-apply-btn:is(:hover, :focus-visible, :active)
+  .text,
+body.sarjan-storefront
+  .canvas-filter
+  #reset-filter.sarjan-btn:is(:hover, :focus-visible, :active)
+  .text,
+body.sarjan-storefront .canvas-filter .sarjan-filter-apply-btn.is-hovered .text,
+body.sarjan-storefront
+  .canvas-filter
+  #reset-filter.sarjan-btn.is-hovered
+  .text {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Compare drawer — Compare / Clear all CTAs */
+body.sarjan-storefront .offcanvas-compare .tf-compare-buttons .sarjan-btn,
+body.sarjan-storefront
+  .offcanvas-compare
+  .tf-compare-buttons
+  .sarjan-compare-cta {
+  width: 100% !important;
+  min-height: 48px !important;
+  border-radius: var(--sarjan-btn-radius) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+body.sarjan-storefront
+  .offcanvas-compare
+  .tf-compare-buttons
+  .sarjan-btn:is(:hover, :focus-visible, :active),
+body.sarjan-storefront
+  .offcanvas-compare
+  .tf-compare-buttons
+  .sarjan-btn.is-hovered {
+  background-color: #8b1e2d !important;
+  color: #ffffff !important;
+  border-color: #8b1e2d !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.sarjan-storefront
+  .offcanvas-compare
+  .tf-compare-buttons
+  .sarjan-btn:is(:hover, :focus-visible, :active)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .offcanvas-compare
+  .tf-compare-buttons
+  .sarjan-btn.is-hovered
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Sticky bottom bar — Add to cart */
+body.sarjan-storefront .tf-sticky-atc-btns .sarjan-btn,
+body.sarjan-storefront .tf-sticky-atc-btns a.sarjan-sticky-atc-btn {
+  width: 100% !important;
+  min-height: 48px !important;
+  border-radius: var(--sarjan-btn-radius) !important;
+  text-transform: uppercase !important;
+}
+
+body.sarjan-storefront .tf-sticky-atc-btns .sarjan-btn.sarjan-has-btn-icon {
+  gap: 8px;
+}
+
+/* Product detail — Buy it now (pill, not Modave btn-style-3 red) */
+body.sarjan-storefront .tf-product-info-list .sarjan-buy-now-btn,
+body.sarjan-storefront .flat-single-home .sarjan-buy-now-btn,
+body.sarjan-storefront .tf-main-product .sarjan-buy-now-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 60px !important;
+  height: 60px !important;
+  max-height: 60px !important;
+  border-radius: var(--sarjan-btn-radius) !important;
+  margin-top: 0;
+}
+
+/* JS fallback (.is-hovered via SarjanButtonHoverFix) when :hover is blocked */
+body.sarjan-storefront .sarjan-btn.is-hovered,
+body.sarjan-storefront a.sarjan-btn.is-hovered,
+body.sarjan-storefront button.sarjan-btn.is-hovered,
+body.sarjan-storefront #wrapper .tf-btn.is-hovered,
+body.sarjan-storefront #wrapper a.tf-btn.is-hovered,
+body.sarjan-storefront #wrapper button.tf-btn.is-hovered,
+body.sarjan-storefront #wrapper .btn-style-2.is-hovered,
+body.sarjan-storefront #wrapper .btn-style-3.is-hovered,
+body.sarjan-storefront #wrapper .btn-main-product.is-hovered,
+body.sarjan-storefront #wrapper a.btn-main-product.is-hovered {
+  background-color: #8b1e2d !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: #8b1e2d !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.sarjan-storefront
+  .sarjan-btn.is-hovered
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  a.sarjan-btn.is-hovered
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* LAST — cart/modal CTA hover (wins over duplicate defaults above) */
+body.sarjan-storefront.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  :is(a.sarjan-btn, button.sarjan-btn, .tf-btn):is(
+    :hover,
+    :focus-visible,
+    :active
+  ),
+body.sarjan-storefront.sarjan-storefront
+  .tf-sticky-atc-btns
+  :is(a.sarjan-btn, a.sarjan-sticky-atc-btn):is(
+    :hover,
+    :focus-visible,
+    :active
+  ),
+body.sarjan-storefront.sarjan-storefront
+  .sarjan-cart-page
+  .box-progress-checkout
+  .sarjan-cart-page-actions
+  :is(a.sarjan-btn, button.sarjan-btn, .tf-btn):is(
+    :hover,
+    :focus-visible,
+    :active
+  ) {
+  background-color: #8b1e2d !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: #8b1e2d !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  :is(a.sarjan-btn, button.sarjan-btn, .tf-btn):is(
+    :hover,
+    :focus-visible,
+    :active
+  )
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront.sarjan-storefront
+  .tf-sticky-atc-btns
+  :is(a.sarjan-btn, a.sarjan-sticky-atc-btn):is(:hover, :focus-visible, :active)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront.sarjan-storefront
+  .sarjan-cart-page
+  .sarjan-cart-page-actions
+  :is(a.sarjan-btn, button.sarjan-btn, .tf-btn):is(
+    :hover,
+    :focus-visible,
+    :active
+  )
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* LAST — product PDP / quick view: Add set + All colors (beats Modave + layout) */
+body.sarjan-storefront.sarjan-storefront
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn).sarjan-add-set-btn:not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+body.sarjan-storefront.sarjan-storefront
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn).sarjan-all-colors-btn:not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn).sarjan-add-set-btn:not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn).sarjan-all-colors-btn:not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered) {
+  border-radius: var(--sarjan-btn-radius) !important;
+  background-color: var(--sarjan-btn-bg) !important;
+  background-image: none !important;
+  color: var(--sarjan-btn-color) !important;
+  border: 1px solid var(--sarjan-btn-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ):is(:hover, :focus-visible, .is-hovered),
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ):is(:hover, :focus-visible, .is-hovered) {
+  border-radius: var(--sarjan-btn-radius) !important;
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  background-image: none !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+/* Modave .radius-4 (=4px) must not square-off pills on hover */
+body.sarjan-storefront.sarjan-storefront
+  #wrapper
+  :is(a.sarjan-btn, button.sarjan-btn).radius-4,
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  :is(a.sarjan-btn, button.sarjan-btn).radius-4 {
+  border-radius: var(--sarjan-btn-radius) !important;
+}
+
+/* PDP CTAs: equal height + label size */
+body.sarjan-storefront.sarjan-storefront
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ),
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ),
+body.sarjan-storefront.sarjan-storefront
+  .tf-product-info-list
+  a.sarjan-buy-now-btn,
+body.sarjan-storefront.sarjan-storefront
+  .flat-single-home
+  a.sarjan-buy-now-btn {
+  box-sizing: border-box !important;
+  min-height: 60px !important;
+  height: 60px !important;
+  max-height: 60px !important;
+  font-size: 12px !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  .tf-product-info-list
+  a.sarjan-buy-now-btn
+  :is(.text, .text-button),
+body.sarjan-storefront.sarjan-storefront
+  .flat-single-home
+  a.sarjan-buy-now-btn
+  :is(.text, .text-button) {
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  text-transform: uppercase !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ):is(:hover, :focus-visible, .is-hovered)
+  :is(
+    .text,
+    .text-button,
+    .text-btn-uppercase,
+    .sarjan-tf-btn-icon,
+    .sarjan-add-set-label,
+    .sarjan-add-set-price,
+    .sarjan-all-colors-label,
+    span,
+    i.icon
+  ),
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ):is(:hover, :focus-visible, .is-hovered)
+  :is(
+    .text,
+    .text-button,
+    .text-btn-uppercase,
+    .sarjan-tf-btn-icon,
+    .sarjan-add-set-label,
+    .sarjan-add-set-price,
+    .sarjan-all-colors-label,
+    span,
+    i.icon
+  ) {
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }

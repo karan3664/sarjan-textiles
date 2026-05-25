@@ -42,15 +42,12 @@ export default function RootLayout({
         {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
           <link key={href} rel="stylesheet" href={href} />
         ))}
-        <link rel="stylesheet" href="/storefront-buttons.css" />
         <link rel="stylesheet" href="/sarjan-hero.css" />
+        {/* After Modave — CTA defaults + hover (must load after template CSS) */}
+        <link rel="stylesheet" href="/sarjan-button-overrides.css" />
+        <link rel="stylesheet" href="/storefront-buttons.css" />
       </head>
-      <body className="preload-wrapper">
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){function d(){document.querySelectorAll(".preload").forEach(function(n){n.style.opacity="0";n.style.pointerEvents="none";n.style.display="none";if(n.parentNode)n.parentNode.removeChild(n);});document.body.classList.remove("preload-wrapper","offcanvas-open","modal-open");document.body.style.removeProperty("overflow");document.body.style.removeProperty("padding-right");document.querySelectorAll(".offcanvas-backdrop").forEach(function(n){n.remove();});document.querySelectorAll(".offcanvas.show").forEach(function(n){n.classList.remove("show");});var h=(location.hash||"").replace(/^#/,"");if(h==="mobileMenu"||h==="mbAccount"){history.replaceState(null,"",location.pathname+location.search);}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(d,300);});}else{setTimeout(d,300);}window.addEventListener("load",function(){setTimeout(d,300);});setTimeout(d,2000);})();`,
-          }}
-        />
+      <body className="sarjan-storefront" suppressHydrationWarning>
         <SiteAnalytics />
         <AnalyticsTracker />
         <CookieConsentBanner />

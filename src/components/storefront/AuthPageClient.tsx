@@ -125,6 +125,19 @@ function AuthPageClientInner({
   const normalizedGst = normalizeGstin(gst);
   const gstinReady = isValidGstin(normalizedGst);
 
+  useEffect(() => {
+    if (mode !== "login") return;
+    try {
+      const flash = sessionStorage.getItem("sarjan-login-flash")?.trim();
+      if (flash) {
+        setMessage(flash);
+        sessionStorage.removeItem("sarjan-login-flash");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [mode]);
+
   const loadGstCaptcha = useCallback(async () => {
     if (!isRegister || !isValidGstin(normalizeGstin(gst))) return;
     setCaptchaFetching(true);

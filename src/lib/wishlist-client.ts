@@ -79,6 +79,11 @@ export function setWishlistCountBadge(count: number) {
   });
 }
 
+function wishlistVisualTarget(node: HTMLElement) {
+  if (node.classList.contains("wishlist")) return node;
+  return node.querySelector<HTMLElement>(".wishlist");
+}
+
 /** Sync heart button styles with localStorage (for dynamically mounted buttons). */
 export function syncWishlistButtonStates(count = readWishlist().length) {
   if (typeof window === "undefined") return;
@@ -87,6 +92,9 @@ export function syncWishlistButtonStates(count = readWishlist().length) {
     .querySelectorAll<HTMLElement>("[data-wishlist-toggle][data-product-slug]")
     .forEach((node) => {
       const active = wishlisted.has(node.dataset.productSlug ?? "");
+      const visual = wishlistVisualTarget(node) ?? node;
+      visual.classList.toggle("active", active);
+      visual.classList.toggle("added", active);
       node.classList.toggle("active", active);
       node.classList.toggle("added", active);
       node.setAttribute("aria-pressed", String(active));

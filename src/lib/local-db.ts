@@ -17,6 +17,10 @@ import {
   syncInventoryForOrderStatusChange,
 } from "@/lib/order-inventory";
 import { assertProductionDatabase } from "@/lib/database-status";
+import {
+  normalizeOrderPlacedVia,
+  type OrderPlacedVia,
+} from "@/lib/order-placed-via";
 
 export type LocalClient = {
   id: string;
@@ -90,6 +94,7 @@ export type LocalOrder = {
   trackingNotes?: string;
   dispatchHistory?: Array<{ status: string; note?: string; createdAt: string }>;
   note?: string;
+  placedVia?: OrderPlacedVia;
   createdAt: string;
 };
 
@@ -210,6 +215,7 @@ function mapOrder(row: Record<string, unknown>): LocalOrder {
       ? row.dispatch_history
       : []) as LocalOrder["dispatchHistory"],
     note: row.note != null ? String(row.note) : undefined,
+    placedVia: normalizeOrderPlacedVia(row.placed_via),
     createdAt: String(row.created_at ?? ""),
   };
 }
@@ -236,6 +242,7 @@ function orderRow(order: Partial<LocalOrder>) {
     tracking_notes: order.trackingNotes,
     dispatch_history: order.dispatchHistory,
     note: order.note,
+    placed_via: normalizeOrderPlacedVia(order.placedVia),
   };
 }
 
@@ -968,12 +975,22 @@ async function maybeBackfillClientAddressFromDispatch(
   }
 }
 
+function orderCreatedHistoryNote(placedVia: OrderPlacedVia) {
+  return placedVia === "ai_bot"
+    ? "Order placed via Sarjan AI order assistant."
+    : "Order created by client.";
+}
+
 export async function createOrder(
   input: Omit<
     LocalOrder,
     "id" | "status" | "paymentMode" | "creditDays" | "createdAt"
   >,
+  options?: { placedVia?: OrderPlacedVia },
 ) {
+  const placedVia = normalizeOrderPlacedVia(
+    options?.placedVia ?? input.placedVia,
+  );
   const dbForClient = await readLocalDb();
   const clientRow = dbForClient.clients.find(
     (item) => item.id === input.clientId,
@@ -1000,10 +1017,11 @@ export async function createOrder(
       paymentStatus: "Pending",
       creditDays: 90,
       depositStatus: "Not deposited",
+      placedVia,
       dispatchHistory: [
         {
           status: "Pending approval",
-          note: "Order created by client.",
+          note: orderCreatedHistoryNote(placedVia),
           createdAt,
         },
       ],
@@ -1025,6 +1043,7 @@ export async function createOrder(
         dispatch_address: order.dispatchAddress,
         dispatch_history: order.dispatchHistory,
         note: order.note,
+        placed_via: placedVia,
       })
       .select("*")
       .single();
@@ -1050,10 +1069,11 @@ export async function createOrder(
     paymentStatus: "Pending",
     creditDays: 90,
     depositStatus: "Not deposited",
+    placedVia,
     dispatchHistory: [
       {
         status: "Pending approval",
-        note: "Order created by client.",
+        note: orderCreatedHistoryNote(placedVia),
         createdAt: new Date().toISOString(),
       },
     ],

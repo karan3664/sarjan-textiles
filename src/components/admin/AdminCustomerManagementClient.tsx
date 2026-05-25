@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import type { AdminCustomer } from "@/lib/admin-customers";
 import { AdminOrderItemImage } from "@/components/admin/AdminOrderItemImage";
+import { OrderPlacedViaBadge } from "@/components/storefront/OrderPlacedViaBadge";
 import {
   printClientOrdersPdf,
   type ClientOrdersPdfInput,
@@ -48,6 +49,8 @@ const orderFlow: OrderStatus[] = [
   "Dispatched",
   "Delivered",
 ];
+
+const CUSTOMER_ORDERS_PAGE_SIZE = 5;
 
 function formatInr(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -117,6 +120,7 @@ export function AdminCustomerManagementClient({
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [ordersPage, setOrdersPage] = useState(1);
   const [createAttempted, setCreateAttempted] = useState(false);
   const [newClient, setNewClient] = useState({
     companyName: "",
@@ -130,6 +134,34 @@ export function AdminCustomerManagementClient({
   });
   const selected =
     customers.find((customer) => customer.id === selectedId) ?? customers[0];
+
+  const selectedOrders = useMemo(() => {
+    if (!selected) return [];
+    return [...selected.orders].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [selected]);
+
+  const ordersTotalPages = Math.max(
+    1,
+    Math.ceil(selectedOrders.length / CUSTOMER_ORDERS_PAGE_SIZE),
+  );
+  const safeOrdersPage = Math.min(ordersPage, ordersTotalPages);
+  const ordersPageStart = (safeOrdersPage - 1) * CUSTOMER_ORDERS_PAGE_SIZE;
+  const ordersPageEnd = Math.min(
+    ordersPageStart + CUSTOMER_ORDERS_PAGE_SIZE,
+    selectedOrders.length,
+  );
+  const pagedOrders = selectedOrders.slice(ordersPageStart, ordersPageEnd);
+
+  useEffect(() => {
+    setOrdersPage(1);
+  }, [selectedId]);
+
+  useEffect(() => {
+    setOrdersPage((page) => Math.min(page, ordersTotalPages));
+  }, [ordersTotalPages]);
 
   const visibleCustomers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -688,12 +720,15 @@ export function AdminCustomerManagementClient({
               </div>
 
               <div className="sarjan-customer-orders">
-                {selected.orders.length ? (
-                  selected.orders.map((order) => (
+                {selectedOrders.length ? (
+                  pagedOrders.map((order) => (
                     <div className="sarjan-customer-order-card" key={order.id}>
                       <div className="sarjan-customer-order-top">
                         <div>
-                          <h6>{order.id}</h6>
+                          <h6>
+                            {order.id}{" "}
+                            <OrderPlacedViaBadge placedVia={order.placedVia} />
+                          </h6>
                           <div className="text-caption-1 text-secondary">
                             {formatDate(order.createdAt)} / Cheque after{" "}
                             {order.creditDays} days
@@ -818,6 +853,42 @@ export function AdminCustomerManagementClient({
                   </div>
                 )}
               </div>
+              {selectedOrders.length > CUSTOMER_ORDERS_PAGE_SIZE ? (
+                <div className="sarjan-products-pagination sarjan-customer-orders-pagination">
+                  <div className="body-text text-secondary">
+                    Showing <span>{ordersPageStart + 1}</span>–
+                    <span>{ordersPageEnd}</span> of{" "}
+                    <span>{selectedOrders.length}</span> orders (newest first)
+                  </div>
+                  <div className="sarjan-products-pagination-actions">
+                    <button
+                      type="button"
+                      className="sarjan-products-page-btn"
+                      disabled={safeOrdersPage <= 1}
+                      onClick={() =>
+                        setOrdersPage((page) => Math.max(1, page - 1))
+                      }
+                    >
+                      Previous
+                    </button>
+                    <span className="body-text text-secondary">
+                      Page {safeOrdersPage} of {ordersTotalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="sarjan-products-page-btn"
+                      disabled={safeOrdersPage >= ordersTotalPages}
+                      onClick={() =>
+                        setOrdersPage((page) =>
+                          Math.min(ordersTotalPages, page + 1),
+                        )
+                      }
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="sarjan-empty-state">No customers found.</div>

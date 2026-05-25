@@ -7,9 +7,11 @@ import { usePathname } from "next/navigation";
 import { siteSettings } from "@/data/site";
 import { legacyHeaderNavLinks } from "@/lib/header-navigation";
 import {
+  clearClientSessionLocal,
   logoutClientSession,
   restoreClientSessionFromCookie,
 } from "@/lib/client-auth-browser";
+import { isClientPublicAuthPage } from "@/lib/auth-route-guards";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import {
@@ -75,10 +77,24 @@ export function ModaveHeader() {
         setClient(null);
       }
     };
+
+    if (isClientPublicAuthPage(pathname)) {
+      /* Login/register: drop stale localStorage so header does not show Logout */
+      clearClientSessionLocal();
+      setClient(null);
+      window.addEventListener("sarjan-auth-updated", sync);
+      window.addEventListener("storage", sync);
+      return () => {
+        window.removeEventListener("sarjan-auth-updated", sync);
+        window.removeEventListener("storage", sync);
+      };
+    }
+
     sync();
     if (!localStorage.getItem("sarjan-client-token")?.trim()) {
       void restoreClientSessionFromCookie().then((restored) => {
         if (restored.ok) sync();
+        else setClient(null);
       });
     }
     window.addEventListener("sarjan-auth-updated", sync);
@@ -87,7 +103,7 @@ export function ModaveHeader() {
       window.removeEventListener("sarjan-auth-updated", sync);
       window.removeEventListener("storage", sync);
     };
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     fetch("/api/navigation")

@@ -39,6 +39,7 @@ create table if not exists orders (
   tracking_notes text,
   dispatch_history jsonb not null default '[]'::jsonb,
   note text,
+  placed_via text not null default 'storefront' check (placed_via in ('storefront', 'ai_bot')),
   created_at timestamptz not null default now()
 );
 

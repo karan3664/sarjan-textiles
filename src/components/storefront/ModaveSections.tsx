@@ -232,7 +232,7 @@ function ProductFeature({ product }: { product: Product }) {
                       href="#shoppingCart"
                       data-bs-toggle="modal"
                       className={withBtnIcon(
-                        "btn-style-3 text-btn-uppercase w-100 d-block text-center",
+                        "w-100 d-block text-center sarjan-buy-now-btn",
                       )}
                       data-cart-add
                       data-product-slug={product.slug}
@@ -1052,12 +1052,19 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       <a
                         href="#shoppingCart"
                         data-bs-toggle="modal"
-                        className="btn-style-3 text-btn-uppercase w-100 d-block text-center mt_12"
+                        className={withBtnIcon(
+                          "w-100 d-block text-center mt_12 sarjan-buy-now-btn",
+                        )}
                         data-cart-add
                         data-product-slug={product.slug}
                         data-product-size-run={sizeRun.join(",")}
                       >
-                        <span className="text text-button">Buy it now</span>
+                        <TfButtonIcon
+                          icon="icon-lightning"
+                          textClassName="text text-button"
+                        >
+                          Buy it now
+                        </TfButtonIcon>
                       </a>
                     )}
                     <ul className="tf-product-info-sku">
@@ -1156,15 +1163,20 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         <a
                           href="#shoppingCart"
                           data-bs-toggle="modal"
-                          className="tf-btn w-100 btn-fill radius-4 btn-add-to-cart"
+                          className={withBtnIcon(
+                            "w-100 btn-add-to-cart sarjan-sticky-atc-btn text-btn-uppercase",
+                          )}
                           data-cart-add
                           data-product-slug={product.slug}
                           data-product-size-run={sizeRun.join(",")}
                           data-product-color={product.colors[0]}
                         >
-                          <span className="text text-button text-btn-uppercase">
+                          <TfButtonIcon
+                            icon="icon-ShoppingBagOpen"
+                            textClassName="text text-button text-btn-uppercase"
+                          >
                             Add To Cart
-                          </span>
+                          </TfButtonIcon>
                         </a>
                       )}
                     </div>
@@ -1746,11 +1758,17 @@ function filterSlugValue(value: string) {
     .replace(/^-|-$/g, "");
 }
 
+function listingQueryHref(basePath: string, params: URLSearchParams) {
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 function productFilterHref(
   param: string,
   value: string,
   filters: CatalogFilters,
   sortValue: string,
+  basePath: string,
   q?: string,
 ) {
   const params = new URLSearchParams();
@@ -1767,15 +1785,15 @@ function productFilterHref(
   if (filters[param as keyof CatalogFilters] !== value)
     params.set(param, value);
   params.set("page", "1");
-  return `/products?${params.toString()}`;
+  return listingQueryHref(basePath, params);
 }
 
-function resetFilterHref(sortValue: string, q?: string) {
+function resetFilterHref(sortValue: string, basePath: string, q?: string) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (sortValue) params.set("sort", sortValue);
   params.set("page", "1");
-  return `/products?${params.toString()}`;
+  return listingQueryHref(basePath, params);
 }
 
 function productValueCount(
@@ -1814,12 +1832,14 @@ function ProductFilterPanel({
   filters,
   sortValue,
   q,
+  basePath,
 }: {
   filtersConfig: CmsProductFilterGroup[];
   productsList: Product[];
   filters: CatalogFilters;
   sortValue: string;
   q?: string;
+  basePath: string;
 }) {
   const enabledFilters = filtersConfig.filter((group) => group.enabled);
   const priceFilter = enabledFilters.find((group) => group.type === "price");
@@ -1846,6 +1866,7 @@ function ProductFilterPanel({
                           option.value,
                           filters,
                           sortValue,
+                          basePath,
                           q,
                         )}
                         className={`categories-item${active ? " active" : ""}`}
@@ -1866,7 +1887,7 @@ function ProductFilterPanel({
       {priceFilter ? (
         <div className="widget-facet facet-price">
           <h6 className="facet-title">{priceFilter.title}</h6>
-          <form action="/products" className="sarjan-price-filter-form">
+          <form action={basePath} className="sarjan-price-filter-form">
             {q ? <input type="hidden" name="q" value={q} /> : null}
             <input type="hidden" name="sort" value={sortValue} />
             {filters.category ? (
@@ -1907,20 +1928,20 @@ function ProductFilterPanel({
               </label>
             </div>
             <button
-              className="tf-btn btn-fill radius-4 w-100 mt_16"
               type="submit"
+              className={withBtnIcon("w-100 mt_16 sarjan-filter-apply-btn")}
             >
-              <span className="text">Apply Price</span>
+              <span className="text text-button">Apply Price</span>
             </button>
           </form>
         </div>
       ) : null}
       <Link
-        href={resetFilterHref(sortValue, q)}
+        href={resetFilterHref(sortValue, basePath, q)}
         id="reset-filter"
-        className="tf-btn btn-reset"
+        className={withBtnIcon("w-100 sarjan-filter-reset-btn")}
       >
-        Reset Filters
+        <span className="text text-button">Reset Filters</span>
       </Link>
     </div>
   );
@@ -1931,11 +1952,21 @@ export async function ProductsListingDynamic({
   sort = "best-selling",
   q,
   filters = {},
+  pageTitle = "Products",
+  pageCrumbs = ["Homepage", "Products"],
+  intro,
+  basePath = "/products",
+  showPageTitle = true,
 }: {
   page?: number;
   sort?: string;
   q?: string;
   filters?: CatalogFilters;
+  pageTitle?: string;
+  pageCrumbs?: string[];
+  intro?: string;
+  basePath?: string;
+  showPageTitle?: boolean;
 }) {
   const perPage = 24;
   const sortValue = [
@@ -2065,9 +2096,16 @@ export async function ProductsListingDynamic({
 
   return (
     <>
-      <PageTitle title="Products" crumbs={["Homepage", "Products"]} />
+      {showPageTitle ? (
+        <PageTitle title={pageTitle} crumbs={pageCrumbs} />
+      ) : null}
       <section className="flat-spacing sarjan-products-page">
         <div className="container">
+          {intro ? (
+            <p className="text-secondary sarjan-products-intro mb_24">
+              {intro}
+            </p>
+          ) : null}
           <div className="tf-shop-control sarjan-products-toolbar">
             <div className="tf-control-filter sarjan-products-toolbar__filters">
               <a
@@ -2131,10 +2169,14 @@ export async function ProductsListingDynamic({
               <p className="sarjan-products-sort-label text-caption-1">
                 Sort by:
               </p>
-              <ProductSortSelect value={sortValue} labels={sortLabels} />
+              <ProductSortSelect
+                value={sortValue}
+                labels={sortLabels}
+                basePath={basePath}
+              />
             </div>
           </div>
-          <div className="wrapper-control-shop">
+          <div className="wrapper-control-shop gridLayout-wrapper">
             <div className="meta-filter-shop">
               <div id="product-count-grid" className="count-text">
                 Showing {visibleProducts.length ? start + 1 : 0}-
@@ -2155,7 +2197,7 @@ export async function ProductsListingDynamic({
               <div id="applied-filters" />
               {activeFilterCount ? (
                 <Link
-                  href={resetFilterHref(sortValue, q)}
+                  href={resetFilterHref(sortValue, basePath, q)}
                   id="remove-all"
                   className="remove-all-filters text-btn-uppercase"
                 >
@@ -2182,7 +2224,7 @@ export async function ProductsListingDynamic({
               ))}
             </div>
             <StorefrontPagination
-              basePath="/products"
+              basePath={basePath}
               page={currentPage}
               totalPages={totalPages}
               query={{
@@ -2206,12 +2248,13 @@ export async function ProductsListingDynamic({
       </section>
       <div className="offcanvas offcanvas-start canvas-filter" id="filterShop">
         <div className="canvas-wrapper">
-          <div className="canvas-header">
+          <div className="canvas-header sarjan-filter-drawer-header">
             <h5>Filters</h5>
-            <span
-              className="icon-close icon-close-popup"
+            <button
+              type="button"
+              className="icon-close icon-close-popup sarjan-filter-drawer-close"
               data-bs-dismiss="offcanvas"
-              aria-label="Close"
+              aria-label="Close filters"
             />
           </div>
           <ProductFilterPanel
@@ -2220,6 +2263,7 @@ export async function ProductsListingDynamic({
             filters={filters}
             sortValue={sortValue}
             q={q}
+            basePath={basePath}
           />
         </div>
       </div>

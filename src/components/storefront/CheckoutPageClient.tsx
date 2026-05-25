@@ -572,15 +572,17 @@ export function CheckoutPageClient() {
                           {message}
                         </p>
                       ) : null}
-                      <button
-                        className={withBtnIcon("tf-btn btn-reset")}
-                        type="button"
-                        onClick={submitOrder}
-                      >
-                        <TfButtonIcon icon="icon-checkCircle">
-                          Submit Order Request
-                        </TfButtonIcon>
-                      </button>
+                      <div className="sarjan-checkout-submit-wrap">
+                        <button
+                          className={withBtnIcon("tf-btn btn-reset")}
+                          type="button"
+                          onClick={submitOrder}
+                        >
+                          <TfButtonIcon icon="icon-checkCircle">
+                            Submit Order Request
+                          </TfButtonIcon>
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>

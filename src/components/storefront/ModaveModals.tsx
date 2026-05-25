@@ -1018,7 +1018,7 @@ export function ModaveModals() {
                   </button>
                   <button
                     type="button"
-                    className="text-btn-uppercase border-0 bg-transparent"
+                    className="link text-btn-uppercase border-0 bg-transparent"
                     onClick={() => goFromModal("wishlist", "/products")}
                   >
                     Or continue shopping

@@ -1,5 +1,4 @@
 import { ProductsListingDynamic } from "@/components/storefront/ModaveSections";
-import { PageTitle } from "@/components/storefront/PageTitle";
 import type { CatalogFilters } from "@/lib/catalog";
 
 export function ProductSeoListingPage({
@@ -7,21 +6,31 @@ export function ProductSeoListingPage({
   subtitle,
   filters = {},
   q,
+  basePath,
+  crumbs,
+  page = 1,
+  sort,
 }: {
   title: string;
   subtitle: string;
   filters?: CatalogFilters;
   q?: string;
+  basePath: string;
+  crumbs?: string[];
+  page?: number;
+  sort?: string;
 }) {
   return (
-    <>
-      <PageTitle title={title} crumbs={["Home", "Products", title]} />
-      <section className="flat-spacing-2">
-        <div className="container">
-          <p className="text-muted mb-4">{subtitle}</p>
-          <ProductsListingDynamic filters={filters} q={q} />
-        </div>
-      </section>
-    </>
+    <ProductsListingDynamic
+      page={page}
+      sort={sort}
+      filters={filters}
+      q={q}
+      pageTitle={title}
+      pageCrumbs={crumbs ?? ["Home", "Products", title]}
+      intro={subtitle}
+      basePath={basePath}
+      showPageTitle
+    />
   );
 }

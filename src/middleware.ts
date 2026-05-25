@@ -29,6 +29,12 @@ function adminPostLoginPath(next: string | null): string {
 }
 
 function clientTokenFromRequest(request: NextRequest): string | undefined {
+  const auth = request.headers.get("authorization") ?? "";
+  if (auth.toLowerCase().startsWith("bearer ")) {
+    const bearer = auth.slice(7).trim();
+    if (bearer) return bearer;
+  }
+
   const raw = request.cookies.get(CLIENT_SESSION_COOKIE)?.value;
   if (!raw) return undefined;
   try {

@@ -3,21 +3,10 @@ import {
   verifyClientToken,
   type ClientSession,
 } from "@/lib/client-token";
+import { clientStatusAuthError } from "@/lib/client-status-auth";
 import { getClient, type LocalClient } from "@/lib/local-db";
 
-/** Non-null when the client must not use authenticated APIs or receive a JWT. */
-export function clientStatusAuthError(
-  status: LocalClient["status"],
-): string | null {
-  if (status === "approved") return null;
-  if (status === "pending") {
-    return "Your wholesale account is still under review. You will receive an email once it is approved; after that you can sign in to view prices and place orders.";
-  }
-  if (status === "rejected") {
-    return "Your registration could not be approved. Please contact Sarjan Textiles if you believe this is a mistake.";
-  }
-  return "Your account is not active. Please contact Sarjan Textiles.";
-}
+export { clientStatusAuthError } from "@/lib/client-status-auth";
 
 /**
  * Valid Bearer JWT **and** client row with `status === "approved"`.

@@ -128,12 +128,12 @@ export function CompareDrawer() {
       tabIndex={-1}
     >
       <div className="offcanvas-content">
-        <div className="header">
+        <div className="header sarjan-compare-drawer-header">
           <button
             type="button"
-            className="icon-close icon-close-popup"
+            className="icon-close icon-close-popup sarjan-compare-drawer-close"
             data-bs-dismiss="offcanvas"
-            aria-label="Close"
+            aria-label="Close compare"
           />
         </div>
         <div className="wrap">
@@ -142,9 +142,7 @@ export function CompareDrawer() {
               <div className="col-12">
                 <div className="tf-compare-list list-file-delete">
                   <div className="tf-compare-head">
-                    <h5 className="title">
-                      Compare <br /> Products
-                    </h5>
+                    <h5 className="title">Compare Products</h5>
                   </div>
                   <div className="tf-compare-wrap">
                     {products.length ? (
@@ -216,12 +214,12 @@ export function CompareDrawer() {
                         href={`/compare-products?ids=${encodeURIComponent(slugs.join(","))}`}
                         onClick={closeOffcanvas}
                         className={withBtnIcon(
-                          "tf-btn w-100 btn-fill radius-4",
+                          "w-100 sarjan-compare-cta sarjan-compare-cta--primary",
                         )}
                       >
                         <TfButtonIcon
                           icon="icon-gitDiff"
-                          textClassName="text text-btn-uppercase"
+                          textClassName="text text-button text-btn-uppercase"
                         >
                           Compare Products
                         </TfButtonIcon>
@@ -229,13 +227,13 @@ export function CompareDrawer() {
                       <button
                         type="button"
                         className={withBtnIcon(
-                          "tf-compapre-button-clear-all tf-btn w-100 btn-white radius-4 has-border",
+                          "w-100 sarjan-compare-cta sarjan-compare-clear-all",
                         )}
                         onClick={() => setSlugs(writeCompare([]))}
                       >
                         <TfButtonIcon
                           icon="icon-close"
-                          textClassName="text text-btn-uppercase"
+                          textClassName="text text-button text-btn-uppercase"
                         >
                           Clear All Products
                         </TfButtonIcon>

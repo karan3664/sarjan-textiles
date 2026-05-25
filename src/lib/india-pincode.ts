@@ -85,34 +85,21 @@ export function pincodeMatchesStateAndCity(
   return { match: true, message: "PIN code matches selected state and city." };
 }
 
-export async function lookupIndianPincode(
-  pincode: string,
-): Promise<PincodePostOffice[]> {
-  const normalized = normalizeIndianPincode(pincode);
-  const response = await fetch(
-    `https://api.postalpincode.in/pincode/${normalized}`,
-    { cache: "no-store" },
-  );
-  if (!response.ok) {
-    throw new Error("PIN lookup service unavailable. Try again.");
+export function pincodeLookupErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "PIN verification failed. Try again.";
   }
-
-  const raw = (await response.json()) as
-    | {
-        Status?: string;
-        PostOffice?: PincodePostOffice[];
-      }
-    | Array<{
-        Status?: string;
-        PostOffice?: PincodePostOffice[];
-      }>;
-
-  const data = Array.isArray(raw) ? raw[0] : raw;
-  if (data?.Status !== "Success" || !Array.isArray(data.PostOffice)) {
-    return [];
+  const msg = error.message.toLowerCase();
+  if (
+    msg === "fetch failed" ||
+    msg.includes("certificate") ||
+    msg.includes("unavailable") ||
+    msg.includes("timeout") ||
+    msg.includes("network")
+  ) {
+    return "PIN lookup is temporarily unavailable. Try again in a moment.";
   }
-
-  return data.PostOffice.filter((office) => office?.Pincode);
+  return error.message;
 }
 
 export function verifyPincodeAgainstLocation(
@@ -188,16 +175,29 @@ export async function verifyIndianPincode(
     state: state.trim(),
     city: city.trim(),
   });
-  const response = await fetch(`/api/pincode/verify?${params.toString()}`);
-  const data = (await response.json()) as PincodeVerifyResult & {
-    error?: string;
-  };
-  if (!response.ok) {
+  let response: Response;
+  try {
+    response = await fetch(`/api/pincode/verify?${params.toString()}`);
+  } catch (error) {
     return {
       valid: false,
       formatValid,
       locationMatch: false,
-      message: data.error ?? data.message ?? "PIN verification failed.",
+      message: pincodeLookupErrorMessage(error),
+      pincode: normalized,
+    };
+  }
+
+  const data = (await response.json()) as PincodeVerifyResult & {
+    error?: string;
+  };
+  if (!response.ok) {
+    const raw = data.error ?? data.message ?? "PIN verification failed.";
+    return {
+      valid: false,
+      formatValid,
+      locationMatch: false,
+      message: pincodeLookupErrorMessage(new Error(raw)),
       pincode: normalized,
     };
   }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminOrderItemImage } from "@/components/admin/AdminOrderItemImage";
+import { OrderPlacedViaBadge } from "@/components/storefront/OrderPlacedViaBadge";
 import type { AdminOrder } from "@/lib/admin-orders";
 import type { AdminCustomer } from "@/lib/admin-customers";
 import type { Product } from "@/data/mock";
@@ -30,6 +31,8 @@ const depositStatusOptions = [
   "Cleared",
   "Bounced",
 ];
+
+const ORDERS_LIST_PAGE_SIZE = 5;
 type OrderDraft = AdminOrder & Record<string, unknown>;
 type DispatchLogEntry = NonNullable<AdminOrder["dispatchHistory"]>[number];
 type OrderItemDraft = AdminOrder["items"][number];
@@ -151,6 +154,7 @@ export function AdminOrderManagementClient({
   );
   const [saving, setSaving] = useState("");
   const [notice, setNotice] = useState("");
+  const [listPage, setListPage] = useState(1);
   const productImageBySlug = useMemo(
     () => buildProductImageBySlug(products),
     [products],
@@ -173,27 +177,52 @@ export function AdminOrderManagementClient({
 
   const visibleOrders = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return orders.filter((order) => {
-      const matches =
-        !normalized ||
-        [
-          order.id,
-          order.clientName,
-          order.clientEmail,
-          order.status,
-          order.lrNumber,
-          order.chequeNumber,
-        ]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(normalized));
-      if (mode === "dispatch")
-        return (
-          matches && !["Pending approval", "Rejected"].includes(order.status)
-        );
-      if (mode === "payments") return matches && order.status !== "Rejected";
-      return matches;
-    });
+    return orders
+      .filter((order) => {
+        const matches =
+          !normalized ||
+          [
+            order.id,
+            order.clientName,
+            order.clientEmail,
+            order.status,
+            order.lrNumber,
+            order.chequeNumber,
+          ]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(normalized));
+        if (mode === "dispatch")
+          return (
+            matches && !["Pending approval", "Rejected"].includes(order.status)
+          );
+        if (mode === "payments") return matches && order.status !== "Rejected";
+        return matches;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }, [mode, orders, query]);
+
+  const listTotalPages = Math.max(
+    1,
+    Math.ceil(visibleOrders.length / ORDERS_LIST_PAGE_SIZE),
+  );
+  const safeListPage = Math.min(listPage, listTotalPages);
+  const listPageStart = (safeListPage - 1) * ORDERS_LIST_PAGE_SIZE;
+  const listPageEnd = Math.min(
+    listPageStart + ORDERS_LIST_PAGE_SIZE,
+    visibleOrders.length,
+  );
+  const pagedOrders = visibleOrders.slice(listPageStart, listPageEnd);
+
+  useEffect(() => {
+    setListPage(1);
+  }, [query, mode]);
+
+  useEffect(() => {
+    setListPage((page) => Math.min(page, listTotalPages));
+  }, [listTotalPages]);
 
   const selected =
     visibleOrders.find((order) => order.id === selectedId) ?? visibleOrders[0];
@@ -769,7 +798,7 @@ export function AdminOrderManagementClient({
             </div>
           </div>
           <div className="sarjan-order-list">
-            {visibleOrders.map((order) => (
+            {pagedOrders.map((order) => (
               <button
                 type="button"
                 className={`sarjan-order-list-item ${selected?.id === order.id ? "active" : ""}`}
@@ -777,7 +806,10 @@ export function AdminOrderManagementClient({
                 onClick={() => setSelectedId(order.id)}
               >
                 <div>
-                  <h6>{order.id}</h6>
+                  <h6>
+                    {order.id}{" "}
+                    <OrderPlacedViaBadge placedVia={order.placedVia} />
+                  </h6>
                   <p>{order.clientName}</p>
                   {order.items.length ? (
                     <div className="sarjan-order-list-thumbs">
@@ -808,6 +840,38 @@ export function AdminOrderManagementClient({
               <div className="sarjan-empty-state">No orders found.</div>
             ) : null}
           </div>
+          {visibleOrders.length > ORDERS_LIST_PAGE_SIZE ? (
+            <div className="sarjan-products-pagination sarjan-order-list-pagination">
+              <div className="body-text text-secondary">
+                Showing <span>{listPageStart + 1}</span>–
+                <span>{listPageEnd}</span> of{" "}
+                <span>{visibleOrders.length}</span> orders (newest first)
+              </div>
+              <div className="sarjan-products-pagination-actions">
+                <button
+                  type="button"
+                  className="sarjan-products-page-btn"
+                  disabled={safeListPage <= 1}
+                  onClick={() => setListPage((page) => Math.max(1, page - 1))}
+                >
+                  Previous
+                </button>
+                <span className="body-text text-secondary">
+                  Page {safeListPage} of {listTotalPages}
+                </span>
+                <button
+                  type="button"
+                  className="sarjan-products-page-btn"
+                  disabled={safeListPage >= listTotalPages}
+                  onClick={() =>
+                    setListPage((page) => Math.min(listTotalPages, page + 1))
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="wg-box">
@@ -818,7 +882,10 @@ export function AdminOrderManagementClient({
                   <div className="body-text text-secondary">
                     {draft.clientName}
                   </div>
-                  <h5>{draft.id}</h5>
+                  <h5>
+                    {draft.id}{" "}
+                    <OrderPlacedViaBadge placedVia={draft.placedVia} />
+                  </h5>
                   <div className="text-caption-1 text-secondary">
                     Created {formatDate(draft.createdAt)} / Due{" "}
                     {formatDate(draft.creditDueOn)}

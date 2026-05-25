@@ -1,6 +1,8 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { celebrateOrderPlaced } from "@/lib/order-celebration";
 import { GstVerificationFields } from "./GstVerificationFields";
 import {
   bumpClientAvatarCache,
@@ -23,6 +25,14 @@ import {
   logoutClientSession,
   restoreClientSessionFromCookie,
 } from "@/lib/client-auth-browser";
+import { readStoredClient } from "@/lib/client-session";
+import {
+  AccountSessionProvider,
+  persistAccountClient,
+  useAccountSession,
+  type AccountClient,
+  type AccountOrder,
+} from "./AccountSessionContext";
 import {
   isGstVerifiedOnFile,
   isValidGstin,
@@ -30,18 +40,10 @@ import {
 } from "@/lib/gstin-form";
 import { PageTitle } from "./PageTitle";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
+import { OrderPlacedViaBadge } from "./OrderPlacedViaBadge";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
-type Client = {
-  id: string;
-  email: string;
-  companyName: string;
-  gst?: string;
-  city?: string;
-  phone?: string;
-  address?: Address;
-  avatarUrl?: string;
-};
+type Client = AccountClient;
 
 type Address = {
   contactName?: string;
@@ -57,35 +59,7 @@ type Address = {
   ownerLegalName?: string;
 };
 
-type Order = {
-  id: string;
-  clientId: string;
-  clientEmail: string;
-  status: string;
-  paymentMode: "cheque";
-  creditDays: number;
-  subtotal: number;
-  dispatchAddress: string;
-  dispatchDate?: string;
-  transportDetails?: string;
-  lrNumber?: string;
-  courierDetails?: string;
-  vehicleDetails?: string;
-  trackingNotes?: string;
-  dispatchHistory?: Array<{ status: string; note?: string; createdAt: string }>;
-  note?: string;
-  createdAt: string;
-  items: Array<{
-    slug: string;
-    name: string;
-    color: string;
-    sizes: string[];
-    setQuantity: number;
-    piecesPerSet: number;
-    unitPrice: number;
-    lineTotal: number;
-  }>;
-};
+type Order = AccountOrder;
 
 const nav: Array<{
   href: string;
@@ -119,134 +93,49 @@ function money(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
 }
 
-function readClient() {
-  if (typeof window === "undefined") return null;
-  try {
-    return JSON.parse(
-      localStorage.getItem("sarjan-client") ?? "null",
-    ) as Client | null;
-  } catch {
-    return null;
-  }
-}
-
-function stripAvatarCacheQuery(url?: string) {
-  if (!url?.trim()) return undefined;
-  const trimmed = url.trim();
-  const index = trimmed.indexOf("?");
-  return index === -1 ? trimmed : trimmed.slice(0, index);
-}
-
-function persistClient(client: Client) {
-  const stored: Client = {
-    ...client,
-    avatarUrl: stripAvatarCacheQuery(client.avatarUrl),
-  };
-  localStorage.setItem("sarjan-client", JSON.stringify(stored));
-  window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
-  return stored;
-}
-
-function useClientAndOrders() {
-  const [client, setClient] = useState<Client | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadOrders = (clientId: string, stored: Client) => {
-      Promise.all([
-        fetch(`/api/clients/${encodeURIComponent(clientId)}`)
-          .then((res) => res.json())
-          .catch(() => null),
-        fetch("/api/client/orders", {
-          headers: clientAuthHeaders(),
-          credentials: "include",
-        })
-          .then((res) => res.json())
-          .catch(() => ({ orders: [] })),
-      ])
-        .then(([clientData, orderData]) => {
-          if (cancelled) return;
-          const freshClient = clientData?.client ?? stored;
-          const normalized: Client = {
-            ...freshClient,
-            avatarUrl: stripAvatarCacheQuery(freshClient?.avatarUrl),
-          };
-          setClient(normalized);
-          localStorage.setItem("sarjan-client", JSON.stringify(normalized));
-          setOrders(orderData.orders ?? []);
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    };
-
-    void (async () => {
-      let stored = readClient();
-      let token = localStorage.getItem("sarjan-client-token")?.trim();
-
-      if (!stored?.id || !token) {
-        const restored = await restoreClientSessionFromCookie();
-        if (cancelled) return;
-        if (!restored.ok) {
-          setClient(null);
-          setLoading(false);
-          logoutClientSession("/login");
-          return;
-        }
-        stored = restored.client as Client;
-        token = restored.token;
-      }
-
-      if (!stored?.id || !token) {
-        if (!cancelled) {
-          setClient(null);
-          setLoading(false);
-          logoutClientSession("/login");
-        }
-        return;
-      }
-
-      if (!cancelled) setClient(stored);
-      loadOrders(stored.id, stored);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { client, orders, loading, setClient };
-}
-
 function AccountFrame({
   active,
   title,
   children,
+  sectionClass = "",
 }: {
   active: string;
   title: string;
   children: React.ReactNode;
+  sectionClass?: string;
 }) {
-  const [client, setClient] = useState<Client | null>(null);
+  return (
+    <AccountSessionProvider>
+      <AccountFrameInner
+        active={active}
+        title={title}
+        sectionClass={sectionClass}
+      >
+        {children}
+      </AccountFrameInner>
+    </AccountSessionProvider>
+  );
+}
 
-  useEffect(() => {
-    const syncClient = () => setClient(readClient());
-    syncClient();
-    window.addEventListener("storage", syncClient);
-    window.addEventListener("sarjan-auth-updated", syncClient);
-    return () => {
-      window.removeEventListener("storage", syncClient);
-      window.removeEventListener("sarjan-auth-updated", syncClient);
-    };
-  }, []);
+function AccountFrameInner({
+  active,
+  title,
+  children,
+  sectionClass = "",
+}: {
+  active: string;
+  title: string;
+  children: React.ReactNode;
+  sectionClass?: string;
+}) {
+  const { client, loading } = useAccountSession();
 
   return (
     <>
       <PageTitle title={title} crumbs={["Homepage", title]} />
-      <section className="flat-spacing sarjan-account-page">
+      <section
+        className={`flat-spacing sarjan-account-page${sectionClass ? ` ${sectionClass}` : ""}`}
+      >
         <div className="container">
           <div className="my-account-wrap">
             <div className="wrap-sidebar-account">
@@ -256,10 +145,12 @@ function AccountFrame({
                     <img src={clientAvatarSrc(client?.avatarUrl)} alt="" />
                   </div>
                   <h6 className="mb_4">
-                    {client?.companyName ?? "Sarjan Client"}
+                    {loading ? "Loading…" : (client?.companyName ?? "Account")}
                   </h6>
                   <div className="body-text-1 text-secondary">
-                    {client?.email ?? "Login required"}
+                    {loading
+                      ? "Please wait"
+                      : (client?.email ?? "Sign in required")}
                   </div>
                 </div>
                 <ul className="my-account-nav">
@@ -315,6 +206,14 @@ function AccountFrame({
                     <span>{item.shortLabel ?? item.label}</span>
                   </a>
                 ))}
+                <button
+                  type="button"
+                  className="sarjan-account-mobile-nav__item sarjan-account-mobile-nav__item--logout"
+                  onClick={() => logoutClientSession()}
+                >
+                  <i className={`icon ${logoutNavItem.icon}`} aria-hidden />
+                  <span>{logoutNavItem.label}</span>
+                </button>
               </nav>
               {children}
             </div>
@@ -326,7 +225,15 @@ function AccountFrame({
 }
 
 export function AccountDashboardPage() {
-  const { client, orders, loading, setClient } = useClientAndOrders();
+  return (
+    <AccountFrame active="/my-account" title="My Account">
+      <AccountDashboardContent />
+    </AccountFrame>
+  );
+}
+
+function AccountDashboardContent() {
+  const { client, orders, loading, setClient } = useAccountSession();
   const [form, setForm] = useState({
     companyName: "",
     email: "",
@@ -448,7 +355,7 @@ export function AccountDashboardPage() {
     });
     const data = await res.json();
     if (res.ok) {
-      setClient(persistClient(data.client));
+      setClient(persistAccountClient(data.client));
       const refreshedGst = normalizeGstin(
         data.client.gst ?? data.client.address?.gst ?? "",
       );
@@ -507,7 +414,7 @@ export function AccountDashboardPage() {
 
   const applyAvatarClient = useCallback(
     (next: Client, message: string) => {
-      const stored = persistClient(next);
+      const stored = persistAccountClient(next);
       bumpClientAvatarCache();
       setClient(stored);
       setAvatarPreviewKey((key) => key + 1);
@@ -575,7 +482,7 @@ export function AccountDashboardPage() {
       }
       if (data.client) {
         bumpClientAvatarCache();
-        const stored = persistClient(data.client);
+        const stored = persistAccountClient(data.client);
         setClient(stored);
         setAvatarPreviewKey((key) => key + 1);
         setAvatarMessage("Profile photo removed.");
@@ -589,386 +496,378 @@ export function AccountDashboardPage() {
   };
 
   return (
-    <AccountFrame active="/my-account" title="My Account">
-      <div className="account-details">
-        {loading ? (
-          <p>Loading account...</p>
-        ) : client ? (
-          <>
-            <form className="form-account-details" onSubmit={saveProfile}>
-              <div className="account-info">
-                <h5 className="title">Information</h5>
-                <div className="sarjan-profile-avatar-block mb_24">
-                  <div className="text-title mb_8">Profile photo</div>
-                  <p className="text-secondary text-caption-1 mb_16">
-                    JPG, PNG, or WebP · max 4MB. Use a professional headshot
-                    (with shirt) or company logo only — nudity, shirtless, and
-                    suggestive photos are blocked automatically.
-                  </p>
-                  <div className="sarjan-profile-avatar-layout">
-                    <div className="sarjan-profile-avatar-thumb">
-                      <img
-                        key={avatarPreviewKey}
-                        src={clientAvatarSrc(client.avatarUrl)}
-                        alt=""
-                        width={100}
-                        height={100}
-                      />
-                    </div>
-                    <div className="sarjan-profile-avatar-actions">
-                      <input
-                        ref={avatarInputRef}
-                        id="sarjan-profile-avatar-input"
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                        className="d-none"
-                        disabled={avatarUploading || avatarRemoving}
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          if (file) void uploadAvatar(file);
-                          event.target.value = "";
-                        }}
-                      />
+    <div className="account-details">
+      {loading ? (
+        <p>Loading account...</p>
+      ) : client ? (
+        <>
+          <form className="form-account-details" onSubmit={saveProfile}>
+            <div className="account-info">
+              <h5 className="title">Information</h5>
+              <div className="sarjan-profile-avatar-block mb_24">
+                <div className="text-title mb_8">Profile photo</div>
+                <p className="text-secondary text-caption-1 mb_16">
+                  JPG, PNG, or WebP · max 4MB. Use a professional headshot (with
+                  shirt) or company logo only — nudity, shirtless, and
+                  suggestive photos are blocked automatically.
+                </p>
+                <div className="sarjan-profile-avatar-layout">
+                  <div className="sarjan-profile-avatar-thumb">
+                    <img
+                      key={avatarPreviewKey}
+                      src={clientAvatarSrc(client.avatarUrl)}
+                      alt=""
+                      width={100}
+                      height={100}
+                    />
+                  </div>
+                  <div className="sarjan-profile-avatar-actions">
+                    <input
+                      ref={avatarInputRef}
+                      id="sarjan-profile-avatar-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      className="d-none"
+                      disabled={avatarUploading || avatarRemoving}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) void uploadAvatar(file);
+                        event.target.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className={withBtnIcon(
+                        "tf-btn btn-white has-border radius-4",
+                      )}
+                      disabled={avatarUploading || avatarRemoving}
+                      onClick={() => avatarInputRef.current?.click()}
+                    >
+                      <TfButtonIcon icon="icon-arrowUpRight">
+                        {avatarUploading ? "Uploading…" : "Choose photo"}
+                      </TfButtonIcon>
+                    </button>
+                    {hasCustomClientAvatar(client.avatarUrl) ? (
                       <button
                         type="button"
                         className={withBtnIcon(
-                          "tf-btn btn-white has-border radius-4",
+                          "tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove",
                         )}
                         disabled={avatarUploading || avatarRemoving}
-                        onClick={() => avatarInputRef.current?.click()}
+                        onClick={() => void removeAvatar()}
                       >
-                        <TfButtonIcon icon="icon-arrowUpRight">
-                          {avatarUploading ? "Uploading…" : "Choose photo"}
+                        <TfButtonIcon icon="icon-close">
+                          {avatarRemoving
+                            ? "Removing…"
+                            : "Remove profile photo"}
                         </TfButtonIcon>
                       </button>
-                      {hasCustomClientAvatar(client.avatarUrl) ? (
-                        <button
-                          type="button"
-                          className={withBtnIcon(
-                            "tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove",
-                          )}
-                          disabled={avatarUploading || avatarRemoving}
-                          onClick={() => void removeAvatar()}
-                        >
-                          <TfButtonIcon icon="icon-close">
-                            {avatarRemoving
-                              ? "Removing…"
-                              : "Remove profile photo"}
-                          </TfButtonIcon>
-                        </button>
-                      ) : null}
-                      {avatarMessage ? (
-                        <p
-                          className={
-                            avatarMessage.includes("failed") ||
-                            avatarMessage.includes("blocked") ||
-                            avatarMessage.includes("Could not") ||
-                            avatarMessage.includes("adult") ||
-                            avatarMessage.includes("explicit") ||
-                            avatarMessage.includes("not verify")
-                              ? "text-danger text-caption-1 mt_8 mb_0"
-                              : "text-success text-caption-1 mt_8 mb_0"
-                          }
-                        >
-                          {avatarMessage}
-                        </p>
-                      ) : null}
-                    </div>
+                    ) : null}
+                    {avatarMessage ? (
+                      <p
+                        className={
+                          avatarMessage.includes("failed") ||
+                          avatarMessage.includes("blocked") ||
+                          avatarMessage.includes("Could not") ||
+                          avatarMessage.includes("adult") ||
+                          avatarMessage.includes("explicit") ||
+                          avatarMessage.includes("not verify")
+                            ? "text-danger text-caption-1 mt_8 mb_0"
+                            : "text-success text-caption-1 mt_8 mb_0"
+                        }
+                      >
+                        {avatarMessage}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
-                <div className="cols mb_20">
-                  <fieldset>
-                    <input
-                      type="text"
-                      placeholder="Company Name*"
-                      value={form.companyName}
-                      onChange={(e) =>
-                        updateForm("companyName", e.target.value)
-                      }
-                      required
-                    />
-                  </fieldset>
-                  <fieldset>
-                    <input
-                      type="email"
-                      placeholder="Username or email address*"
-                      value={form.email}
-                      readOnly
-                    />
-                  </fieldset>
-                </div>
-                <div className="cols mb_20">
-                  <fieldset>
-                    <input
-                      type="text"
-                      placeholder="Legal name / proprietor (as on GST)"
-                      value={form.ownerLegalName}
-                      onChange={(e) =>
-                        updateForm("ownerLegalName", e.target.value)
-                      }
-                    />
-                  </fieldset>
-                  <fieldset>
-                    <input
-                      type="text"
-                      placeholder="Phone*"
-                      value={form.phone}
-                      onChange={(e) => updateForm("phone", e.target.value)}
-                    />
-                  </fieldset>
-                </div>
-                <div className="mb_20">
-                  <GstVerificationFields
-                    gst={form.gst}
-                    savedGst={savedGst}
-                    allowGstEditWhenVerified
-                    onGstChange={(value) => updateForm("gst", value)}
-                    companyName={form.companyName}
-                    onCompanyNameChange={(value) =>
-                      updateForm("companyName", value)
+              </div>
+              <div className="cols mb_20">
+                <fieldset>
+                  <input
+                    type="text"
+                    placeholder="Company Name*"
+                    value={form.companyName}
+                    onChange={(e) => updateForm("companyName", e.target.value)}
+                    required
+                  />
+                </fieldset>
+                <fieldset>
+                  <input
+                    type="email"
+                    placeholder="Username or email address*"
+                    value={form.email}
+                    readOnly
+                  />
+                </fieldset>
+              </div>
+              <div className="cols mb_20">
+                <fieldset>
+                  <input
+                    type="text"
+                    placeholder="Legal name / proprietor (as on GST)"
+                    value={form.ownerLegalName}
+                    onChange={(e) =>
+                      updateForm("ownerLegalName", e.target.value)
                     }
-                    ownerLegalName={form.ownerLegalName}
-                    onOwnerLegalNameChange={(value) =>
-                      updateForm("ownerLegalName", value)
-                    }
-                    onVerifiedChange={onGstVerifiedChange}
-                    hideNameFields
+                  />
+                </fieldset>
+                <fieldset>
+                  <input
+                    type="text"
+                    placeholder="Phone*"
+                    value={form.phone}
+                    onChange={(e) => updateForm("phone", e.target.value)}
+                  />
+                </fieldset>
+              </div>
+              <div className="mb_20">
+                <GstVerificationFields
+                  gst={form.gst}
+                  savedGst={savedGst}
+                  allowGstEditWhenVerified
+                  onGstChange={(value) => updateForm("gst", value)}
+                  companyName={form.companyName}
+                  onCompanyNameChange={(value) =>
+                    updateForm("companyName", value)
+                  }
+                  ownerLegalName={form.ownerLegalName}
+                  onOwnerLegalNameChange={(value) =>
+                    updateForm("ownerLegalName", value)
+                  }
+                  onVerifiedChange={onGstVerifiedChange}
+                  hideNameFields
+                />
+              </div>
+              <IndiaStateCitySelect
+                layout="stack"
+                state={form.state}
+                city={form.city}
+                onStateChange={(value) => updateForm("state", value)}
+                onCityChange={(value) => updateForm("city", value)}
+                stateRequired
+                cityRequired
+              />
+              <div className="row mb_32">
+                <div className="col-md-4">
+                  <p className="text-secondary">Orders</p>
+                  <h5>{orders.length}</h5>
+                </div>
+              </div>
+              <div className="sarjan-account-quick-actions mb_32">
+                <a
+                  href="/my-account-address"
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4",
+                  )}
+                >
+                  <TfButtonIcon icon="icon-map-pin">
+                    Add / Edit Address
+                  </TfButtonIcon>
+                </a>
+                <a
+                  href="/my-account-orders"
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4",
+                  )}
+                >
+                  <TfButtonIcon icon="icon-ShoppingBagOpen">
+                    View Orders
+                  </TfButtonIcon>
+                </a>
+                <a
+                  href="/order-tracking"
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4",
+                  )}
+                >
+                  <TfButtonIcon icon="icon-shipping">Track Order</TfButtonIcon>
+                </a>
+                <a
+                  href="/my-account-testimonials"
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4",
+                  )}
+                >
+                  <TfButtonIcon icon="icon-star">
+                    Share Testimonial
+                  </TfButtonIcon>
+                </a>
+              </div>
+            </div>
+            {message ? (
+              <p
+                className={
+                  message.includes("failed") ||
+                  message.includes("incorrect") ||
+                  message.includes("match") ||
+                  message.includes("required")
+                    ? "text-danger mt_16"
+                    : "text-success mt_16"
+                }
+              >
+                {message}
+              </p>
+            ) : null}
+            <div className="button-submit sarjan-account-submit-actions">
+              <button
+                className={withBtnIcon("tf-btn btn-fill radius-4 w-100")}
+                type="submit"
+              >
+                <TfButtonIcon
+                  icon="icon-checkCircle"
+                  textClassName="text text-button"
+                >
+                  Update Account
+                </TfButtonIcon>
+              </button>
+              <button
+                className={withBtnIcon(
+                  "tf-btn btn-white has-border radius-4 w-100",
+                )}
+                type="button"
+                onClick={() => {
+                  setPasswordModalOpen(true);
+                  setPasswordMessage("");
+                }}
+              >
+                <TfButtonIcon
+                  icon="icon-security"
+                  textClassName="text text-button"
+                >
+                  Change Password
+                </TfButtonIcon>
+              </button>
+            </div>
+          </form>
+          {passwordModalOpen ? (
+            <div
+              className="sarjan-password-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Change Password"
+            >
+              <button
+                type="button"
+                className="sarjan-password-modal-backdrop"
+                onClick={() => setPasswordModalOpen(false)}
+                aria-label="Close password modal"
+              />
+              <form
+                className="sarjan-password-modal-card form-has-password"
+                onSubmit={savePassword}
+              >
+                <div className="flex justify-between gap12 items-center mb_20">
+                  <div>
+                    <h5 className="title mb_4">Change Password</h5>
+                    <p className="text-secondary">
+                      Password update is separate from account profile update.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="icon-close icon-close-popup sarjan-password-modal-close"
+                    onClick={() => setPasswordModalOpen(false)}
+                    aria-label="Close change password"
                   />
                 </div>
-                <IndiaStateCitySelect
-                  layout="stack"
-                  state={form.state}
-                  city={form.city}
-                  onStateChange={(value) => updateForm("state", value)}
-                  onCityChange={(value) => updateForm("city", value)}
-                  stateRequired
-                  cityRequired
-                />
-                <div className="row mb_32">
-                  <div className="col-md-4">
-                    <p className="text-secondary">Orders</p>
-                    <h5>{orders.length}</h5>
-                  </div>
+                <fieldset className="position-relative password-item mb_20">
+                  <input
+                    className="input-password"
+                    type="password"
+                    placeholder="Current Password*"
+                    value={password.currentPassword}
+                    onChange={(e) =>
+                      updatePassword("currentPassword", e.target.value)
+                    }
+                  />
+                  <span className="toggle-password unshow">
+                    <i className="icon-eye-hide-line" />
+                  </span>
+                </fieldset>
+                <fieldset className="position-relative password-item mb_20">
+                  <input
+                    className="input-password"
+                    type="password"
+                    placeholder="New Password*"
+                    value={password.newPassword}
+                    onChange={(e) =>
+                      updatePassword("newPassword", e.target.value)
+                    }
+                  />
+                  <span className="toggle-password unshow">
+                    <i className="icon-eye-hide-line" />
+                  </span>
+                </fieldset>
+                <fieldset className="position-relative password-item">
+                  <input
+                    className="input-password"
+                    type="password"
+                    placeholder="Confirm Password*"
+                    value={password.confirmPassword}
+                    onChange={(e) =>
+                      updatePassword("confirmPassword", e.target.value)
+                    }
+                  />
+                  <span className="toggle-password unshow">
+                    <i className="icon-eye-hide-line" />
+                  </span>
+                </fieldset>
+                {passwordMessage ? (
+                  <p
+                    className={
+                      passwordMessage.includes("failed") ||
+                      passwordMessage.includes("incorrect") ||
+                      passwordMessage.includes("match") ||
+                      passwordMessage.includes("required")
+                        ? "text-danger mt_16"
+                        : "text-success mt_16"
+                    }
+                  >
+                    {passwordMessage}
+                  </p>
+                ) : null}
+                <div className="button-submit d-flex gap-12 flex-wrap mt_24">
+                  <button
+                    className={withBtnIcon("tf-btn btn-fill")}
+                    type="submit"
+                  >
+                    <TfButtonIcon
+                      icon="icon-checkCircle"
+                      textClassName="text text-button"
+                    >
+                      Update Password
+                    </TfButtonIcon>
+                  </button>
+                  <button
+                    className={withBtnIcon("tf-btn btn-white has-border")}
+                    type="button"
+                    onClick={() => setPasswordModalOpen(false)}
+                  >
+                    <TfButtonIcon
+                      icon="icon-close"
+                      textClassName="text text-button"
+                    >
+                      Cancel
+                    </TfButtonIcon>
+                  </button>
                 </div>
-                <div className="sarjan-account-quick-actions mb_32">
-                  <a
-                    href="/my-account-address"
-                    className={withBtnIcon(
-                      "tf-btn btn-white has-border radius-4",
-                    )}
-                  >
-                    <TfButtonIcon icon="icon-map-pin">
-                      Add / Edit Address
-                    </TfButtonIcon>
-                  </a>
-                  <a
-                    href="/my-account-orders"
-                    className={withBtnIcon(
-                      "tf-btn btn-white has-border radius-4",
-                    )}
-                  >
-                    <TfButtonIcon icon="icon-ShoppingBagOpen">
-                      View Orders
-                    </TfButtonIcon>
-                  </a>
-                  <a
-                    href="/order-tracking"
-                    className={withBtnIcon(
-                      "tf-btn btn-white has-border radius-4",
-                    )}
-                  >
-                    <TfButtonIcon icon="icon-shipping">
-                      Track Order
-                    </TfButtonIcon>
-                  </a>
-                  <a
-                    href="/my-account-testimonials"
-                    className={withBtnIcon(
-                      "tf-btn btn-white has-border radius-4",
-                    )}
-                  >
-                    <TfButtonIcon icon="icon-star">
-                      Share Testimonial
-                    </TfButtonIcon>
-                  </a>
-                </div>
-              </div>
-              {message ? (
-                <p
-                  className={
-                    message.includes("failed") ||
-                    message.includes("incorrect") ||
-                    message.includes("match") ||
-                    message.includes("required")
-                      ? "text-danger mt_16"
-                      : "text-success mt_16"
-                  }
-                >
-                  {message}
-                </p>
-              ) : null}
-              <div className="button-submit sarjan-account-submit-actions">
-                <button
-                  className={withBtnIcon("tf-btn btn-fill radius-4 w-100")}
-                  type="submit"
-                >
-                  <TfButtonIcon
-                    icon="icon-checkCircle"
-                    textClassName="text text-button"
-                  >
-                    Update Account
-                  </TfButtonIcon>
-                </button>
-                <button
-                  className={withBtnIcon(
-                    "tf-btn btn-white has-border radius-4 w-100",
-                  )}
-                  type="button"
-                  onClick={() => {
-                    setPasswordModalOpen(true);
-                    setPasswordMessage("");
-                  }}
-                >
-                  <TfButtonIcon
-                    icon="icon-security"
-                    textClassName="text text-button"
-                  >
-                    Change Password
-                  </TfButtonIcon>
-                </button>
-              </div>
-            </form>
-            {passwordModalOpen ? (
-              <div
-                className="sarjan-password-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Change Password"
-              >
-                <button
-                  type="button"
-                  className="sarjan-password-modal-backdrop"
-                  onClick={() => setPasswordModalOpen(false)}
-                  aria-label="Close password modal"
-                />
-                <form
-                  className="sarjan-password-modal-card form-has-password"
-                  onSubmit={savePassword}
-                >
-                  <div className="flex justify-between gap12 items-center mb_20">
-                    <div>
-                      <h5 className="title mb_4">Change Password</h5>
-                      <p className="text-secondary">
-                        Password update is separate from account profile update.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="sarjan-password-modal-close"
-                      onClick={() => setPasswordModalOpen(false)}
-                      aria-label="Close"
-                    >
-                      <i className="icon-close" />
-                    </button>
-                  </div>
-                  <fieldset className="position-relative password-item mb_20">
-                    <input
-                      className="input-password"
-                      type="password"
-                      placeholder="Current Password*"
-                      value={password.currentPassword}
-                      onChange={(e) =>
-                        updatePassword("currentPassword", e.target.value)
-                      }
-                    />
-                    <span className="toggle-password unshow">
-                      <i className="icon-eye-hide-line" />
-                    </span>
-                  </fieldset>
-                  <fieldset className="position-relative password-item mb_20">
-                    <input
-                      className="input-password"
-                      type="password"
-                      placeholder="New Password*"
-                      value={password.newPassword}
-                      onChange={(e) =>
-                        updatePassword("newPassword", e.target.value)
-                      }
-                    />
-                    <span className="toggle-password unshow">
-                      <i className="icon-eye-hide-line" />
-                    </span>
-                  </fieldset>
-                  <fieldset className="position-relative password-item">
-                    <input
-                      className="input-password"
-                      type="password"
-                      placeholder="Confirm Password*"
-                      value={password.confirmPassword}
-                      onChange={(e) =>
-                        updatePassword("confirmPassword", e.target.value)
-                      }
-                    />
-                    <span className="toggle-password unshow">
-                      <i className="icon-eye-hide-line" />
-                    </span>
-                  </fieldset>
-                  {passwordMessage ? (
-                    <p
-                      className={
-                        passwordMessage.includes("failed") ||
-                        passwordMessage.includes("incorrect") ||
-                        passwordMessage.includes("match") ||
-                        passwordMessage.includes("required")
-                          ? "text-danger mt_16"
-                          : "text-success mt_16"
-                      }
-                    >
-                      {passwordMessage}
-                    </p>
-                  ) : null}
-                  <div className="button-submit d-flex gap-12 flex-wrap mt_24">
-                    <button
-                      className={withBtnIcon("tf-btn btn-fill")}
-                      type="submit"
-                    >
-                      <TfButtonIcon
-                        icon="icon-checkCircle"
-                        textClassName="text text-button"
-                      >
-                        Update Password
-                      </TfButtonIcon>
-                    </button>
-                    <button
-                      className={withBtnIcon("tf-btn btn-white has-border")}
-                      type="button"
-                      onClick={() => setPasswordModalOpen(false)}
-                    >
-                      <TfButtonIcon
-                        icon="icon-close"
-                        textClassName="text text-button"
-                      >
-                        Cancel
-                      </TfButtonIcon>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div>
-            <p className="text-secondary">Login to view B2B account.</p>
-            <a
-              href="/login"
-              className={withBtnIcon("tf-btn btn-fill radius-4 mt_16")}
-            >
-              <TfButtonIcon icon="icon-user">Login</TfButtonIcon>
-            </a>
-          </div>
-        )}
-      </div>
-    </AccountFrame>
+              </form>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div>
+          <p className="text-secondary">Login to view B2B account.</p>
+          <a
+            href="/login"
+            className={withBtnIcon("tf-btn btn-fill radius-4 mt_16")}
+          >
+            <TfButtonIcon icon="icon-user">Login</TfButtonIcon>
+          </a>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -979,16 +878,61 @@ function formatOrderStatus(status: string) {
 }
 
 export function AccountOrdersPage() {
-  const { orders, loading } = useClientAndOrders();
+  return (
+    <AccountFrame
+      active="/my-account-orders"
+      title="Your Orders"
+      sectionClass="sarjan-account-page--orders"
+    >
+      <AccountOrdersContent />
+    </AccountFrame>
+  );
+}
+
+function AccountOrdersContent() {
+  const { orders, loading } = useAccountSession();
+  const searchParams = useSearchParams();
+  const celebrationStarted = useRef(false);
+  const [placedOrderId, setPlacedOrderId] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("celebrate") !== "1" || celebrationStarted.current) {
+      return;
+    }
+    celebrationStarted.current = true;
+    const orderId = searchParams.get("orderId")?.trim() ?? "";
+    if (orderId) setPlacedOrderId(orderId);
+    const cleanup = celebrateOrderPlaced();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("celebrate");
+    url.searchParams.delete("orderId");
+    window.history.replaceState({}, "", url.pathname + url.search);
+    return cleanup;
+  }, [searchParams]);
 
   return (
-    <AccountFrame active="/my-account-orders" title="Your Orders">
+    <>
+      {placedOrderId ? (
+        <div className="sarjan-account-order-placed-banner mb_20" role="status">
+          <p className="mb_0">
+            Order request <strong>{placedOrderId}</strong> submitted
+            successfully. Our team will review stock, MOQ, and dispatch details.
+          </p>
+          <a
+            href={`/my-account-orders-details?orderId=${encodeURIComponent(placedOrderId)}`}
+            className={withBtnIcon("tf-btn btn-fill radius-4 mt_12")}
+          >
+            <TfButtonIcon icon="icon-eye">View order details</TfButtonIcon>
+          </a>
+        </div>
+      ) : null}
       <div className="account-orders sarjan-account-orders">
         <div className="wrap-account-order sarjan-account-orders-table-wrap">
           <table className="sarjan-account-orders-table">
             <thead>
               <tr>
                 <th className="fw-6">Order</th>
+                <th className="fw-6">Source</th>
                 <th className="fw-6">Date</th>
                 <th className="fw-6">Status</th>
                 <th className="fw-6">Total</th>
@@ -998,7 +942,7 @@ export function AccountOrdersPage() {
             <tbody>
               {loading ? (
                 <tr className="sarjan-account-orders-message">
-                  <td colSpan={5}>Loading orders...</td>
+                  <td colSpan={6}>Loading orders...</td>
                 </tr>
               ) : orders.length ? (
                 orders.map((order) => (
@@ -1012,10 +956,24 @@ export function AccountOrdersPage() {
                     >
                       {order.id}
                     </td>
+                    <td
+                      data-label="Source"
+                      className="sarjan-account-orders__source"
+                    >
+                      <OrderPlacedViaBadge placedVia={order.placedVia} />
+                      {!order.placedVia || order.placedVia === "storefront" ? (
+                        <span className="sarjan-account-orders__source-label text-caption-1 text-secondary">
+                          Website
+                        </span>
+                      ) : null}
+                    </td>
                     <td data-label="Date">
                       {new Date(order.createdAt).toLocaleDateString("en-IN")}
                     </td>
-                    <td data-label="Status">
+                    <td
+                      data-label="Status"
+                      className="sarjan-account-orders__status"
+                    >
                       <span className="sarjan-order-status-pill">
                         {formatOrderStatus(order.status)}
                       </span>
@@ -1041,19 +999,27 @@ export function AccountOrdersPage() {
                 ))
               ) : (
                 <tr className="sarjan-account-orders-message">
-                  <td colSpan={5}>No orders yet.</td>
+                  <td colSpan={6}>No orders yet.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-    </AccountFrame>
+    </>
   );
 }
 
 export function AccountAddressPage() {
-  const { client, orders, loading, setClient } = useClientAndOrders();
+  return (
+    <AccountFrame active="/my-account-address" title="My Address">
+      <AccountAddressContent />
+    </AccountFrame>
+  );
+}
+
+function AccountAddressContent() {
+  const { client, orders, loading, setClient } = useAccountSession();
   const [address, setAddress] = useState<Address>({});
   const [addressFromOrder, setAddressFromOrder] = useState(false);
   const [message, setMessage] = useState("");
@@ -1147,8 +1113,7 @@ export function AccountAddressPage() {
     });
     const data = await res.json();
     if (res.ok) {
-      setClient(data.client);
-      localStorage.setItem("sarjan-client", JSON.stringify(data.client));
+      setClient(persistAccountClient(data.client));
       setAddressFromOrder(false);
       setMessage("Address saved.");
     } else {
@@ -1171,8 +1136,7 @@ export function AccountAddressPage() {
     if (res.ok) {
       setAddress(emptyAddress);
       setAddressFromOrder(false);
-      setClient(data.client);
-      localStorage.setItem("sarjan-client", JSON.stringify(data.client));
+      setClient(persistAccountClient(data.client));
       setMessage("Address removed.");
     } else {
       setMessage(data.error ?? "Address remove failed.");
@@ -1180,220 +1144,214 @@ export function AccountAddressPage() {
   };
 
   return (
-    <AccountFrame active="/my-account-address" title="My Address">
-      <div className="account-address">
-        {loading ? (
-          <p>Loading address...</p>
-        ) : (
-          <div className="text-center widget-inner-address">
-            <button
-              type="button"
-              className={withBtnIcon(
-                "tf-btn btn-fill radius-4 mb_20 btn-address",
-              )}
+    <div className="account-address">
+      {loading ? (
+        <p>Loading address...</p>
+      ) : (
+        <div className="text-center widget-inner-address">
+          <button
+            type="button"
+            className={withBtnIcon(
+              "tf-btn btn-fill radius-4 mb_20 btn-address",
+            )}
+          >
+            <TfButtonIcon
+              icon="icon-map-pin"
+              textClassName="text text-caption-1"
             >
-              <TfButtonIcon
-                icon="icon-map-pin"
-                textClassName="text text-caption-1"
-              >
-                Add / Edit address
-              </TfButtonIcon>
-            </button>
-            <form
-              className="show-form-address wd-form-address sarjan-address-form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void save();
-              }}
-            >
-              <div className="title">Add a new address</div>
-              <div className="cols mb_20">
-                <fieldset>
-                  <input
-                    type="text"
-                    placeholder="Contact Name*"
-                    value={address.contactName ?? ""}
-                    onChange={(e) => update("contactName", e.target.value)}
-                  />
-                </fieldset>
-                <fieldset>
-                  <input
-                    type="text"
-                    placeholder="Phone*"
-                    value={address.phone ?? ""}
-                    onChange={(e) => update("phone", e.target.value)}
-                  />
-                </fieldset>
-              </div>
-              <div className="cols mb_20">
-                <fieldset>
-                  <input
-                    type="text"
-                    placeholder="GST Number"
-                    value={address.gst ?? ""}
-                    onChange={(e) => update("gst", e.target.value)}
-                  />
-                </fieldset>
-                <fieldset>
-                  <input
-                    type="text"
-                    placeholder="Transport"
-                    value={address.transport ?? ""}
-                    onChange={(e) => update("transport", e.target.value)}
-                  />
-                </fieldset>
-              </div>
-              <fieldset className="mb_20">
+              Add / Edit address
+            </TfButtonIcon>
+          </button>
+          <form
+            className="show-form-address wd-form-address sarjan-address-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void save();
+            }}
+          >
+            <div className="title">Add a new address</div>
+            <div className="cols mb_20">
+              <fieldset>
                 <input
                   type="text"
-                  placeholder="Address"
-                  value={address.line1 ?? ""}
-                  onChange={(e) => update("line1", e.target.value)}
+                  placeholder="Contact Name*"
+                  value={address.contactName ?? ""}
+                  onChange={(e) => update("contactName", e.target.value)}
                 />
               </fieldset>
-              <fieldset className="mb_20">
+              <fieldset>
                 <input
                   type="text"
-                  placeholder="Address line 2"
-                  value={address.line2 ?? ""}
-                  onChange={(e) => update("line2", e.target.value)}
+                  placeholder="Phone*"
+                  value={address.phone ?? ""}
+                  onChange={(e) => update("phone", e.target.value)}
                 />
               </fieldset>
-              <IndiaStateCitySelect
-                state={address.state ?? ""}
-                city={address.city ?? ""}
-                onStateChange={(value) => update("state", value)}
-                onCityChange={(value) => update("city", value)}
-                stateRequired
-                cityRequired
+            </div>
+            <div className="cols mb_20">
+              <fieldset>
+                <input
+                  type="text"
+                  placeholder="GST Number"
+                  value={address.gst ?? ""}
+                  onChange={(e) => update("gst", e.target.value)}
+                />
+              </fieldset>
+              <fieldset>
+                <input
+                  type="text"
+                  placeholder="Transport"
+                  value={address.transport ?? ""}
+                  onChange={(e) => update("transport", e.target.value)}
+                />
+              </fieldset>
+            </div>
+            <fieldset className="mb_20">
+              <input
+                type="text"
+                placeholder="Address"
+                value={address.line1 ?? ""}
+                onChange={(e) => update("line1", e.target.value)}
               />
-              <fieldset className="mb_20">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="postal-code"
-                  maxLength={6}
-                  placeholder="Postal Code*"
-                  value={address.pincode ?? ""}
-                  onChange={(e) => {
-                    update("pincode", normalizeIndianPincode(e.target.value));
-                    if (pincodeFeedback.tone !== "muted") {
-                      setPincodeFeedback({ tone: "muted", text: "" });
-                    }
-                  }}
-                  onBlur={() => void validatePincode()}
-                  required
-                />
-                {pincodeChecking || pincodeFeedback.text ? (
-                  <p
-                    className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
-                  >
-                    {pincodeChecking
-                      ? "Checking PIN code against India Post…"
-                      : pincodeFeedback.text}
-                  </p>
-                ) : null}
-              </fieldset>
-              <div className="tf-cart-checkbox mb_20">
-                <div className="tf-checkbox-wrapp">
-                  <input defaultChecked type="checkbox" id="address-default" />
-                  <div>
-                    <i className="icon-check" />
-                  </div>
-                </div>
-                <label htmlFor="address-default">Set as default address.</label>
-              </div>
-              <div className="d-flex align-items-center justify-content-center gap-20">
-                <button
-                  type="submit"
-                  className={withBtnIcon("tf-btn btn-fill radius-4")}
+            </fieldset>
+            <fieldset className="mb_20">
+              <input
+                type="text"
+                placeholder="Address line 2"
+                value={address.line2 ?? ""}
+                onChange={(e) => update("line2", e.target.value)}
+              />
+            </fieldset>
+            <IndiaStateCitySelect
+              state={address.state ?? ""}
+              city={address.city ?? ""}
+              onStateChange={(value) => update("state", value)}
+              onCityChange={(value) => update("city", value)}
+              stateRequired
+              cityRequired
+            />
+            <fieldset className="mb_20">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={6}
+                placeholder="Postal Code*"
+                value={address.pincode ?? ""}
+                onChange={(e) => {
+                  update("pincode", normalizeIndianPincode(e.target.value));
+                  if (pincodeFeedback.tone !== "muted") {
+                    setPincodeFeedback({ tone: "muted", text: "" });
+                  }
+                }}
+                onBlur={() => void validatePincode()}
+                required
+              />
+              {pincodeChecking || pincodeFeedback.text ? (
+                <p
+                  className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
                 >
-                  <TfButtonIcon icon="icon-checkCircle">
-                    Save address
-                  </TfButtonIcon>
+                  {pincodeChecking
+                    ? "Checking PIN code against India Post…"
+                    : pincodeFeedback.text}
+                </p>
+              ) : null}
+            </fieldset>
+            <div className="tf-cart-checkbox mb_20">
+              <div className="tf-checkbox-wrapp">
+                <input defaultChecked type="checkbox" id="address-default" />
+                <div>
+                  <i className="icon-check" />
+                </div>
+              </div>
+              <label htmlFor="address-default">Set as default address.</label>
+            </div>
+            <div className="d-flex align-items-center justify-content-center gap-20">
+              <button
+                type="submit"
+                className={withBtnIcon("tf-btn btn-fill radius-4")}
+              >
+                <TfButtonIcon icon="icon-checkCircle">
+                  Save address
+                </TfButtonIcon>
+              </button>
+              <button
+                type="button"
+                className={withBtnIcon("tf-btn btn-white has-border radius-4")}
+                onClick={() => {
+                  if (!client) return;
+                  const resolved = resolveAccountAddress(client, orders);
+                  setAddress(resolved.address);
+                  setAddressFromOrder(resolved.fromOrder);
+                }}
+              >
+                <TfButtonIcon icon="icon-close">Cancel</TfButtonIcon>
+              </button>
+            </div>
+            {message ? (
+              <p
+                className={
+                  message.includes("failed") || message.includes("required")
+                    ? "text-danger mt_16"
+                    : "text-success mt_16"
+                }
+              >
+                {message}
+              </p>
+            ) : null}
+          </form>
+          <div className="list-account-address">
+            <div className="account-address-item">
+              <h6 className="mb_20">Default</h6>
+              <p>
+                {address.contactName || client?.companyName || "Sarjan Client"}
+              </p>
+              <p>{address.line1 || "No address saved"}</p>
+              {addressFromOrder ? (
+                <p className="text-secondary text-caption-1 mb_8">
+                  Street address loaded from your latest order. Click Save
+                  address to store it on your profile.
+                </p>
+              ) : null}
+              {address.line2 ? <p>{address.line2}</p> : null}
+              <p>
+                {[address.city, address.state, address.pincode]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+              <p>{address.gst ? `GST: ${address.gst}` : "GST not saved"}</p>
+              <p className="mb_10">{address.phone || "Phone not saved"}</p>
+              <div className="d-flex gap-10 justify-content-center">
+                <button
+                  type="button"
+                  className={withBtnIcon(
+                    "tf-btn radius-4 btn-fill justify-content-center",
+                  )}
+                  onClick={() =>
+                    document
+                      .querySelector<HTMLInputElement>(
+                        ".sarjan-address-form input",
+                      )
+                      ?.focus()
+                  }
+                >
+                  <TfButtonIcon icon="icon-arrowUpRight">Edit</TfButtonIcon>
                 </button>
                 <button
                   type="button"
                   className={withBtnIcon(
-                    "tf-btn btn-white has-border radius-4",
+                    "tf-btn radius-4 btn-white has-border justify-content-center",
                   )}
-                  onClick={() => {
-                    if (!client) return;
-                    const resolved = resolveAccountAddress(client, orders);
-                    setAddress(resolved.address);
-                    setAddressFromOrder(resolved.fromOrder);
-                  }}
+                  onClick={remove}
                 >
-                  <TfButtonIcon icon="icon-close">Cancel</TfButtonIcon>
+                  <TfButtonIcon icon="icon-close">Delete</TfButtonIcon>
                 </button>
-              </div>
-              {message ? (
-                <p
-                  className={
-                    message.includes("failed") || message.includes("required")
-                      ? "text-danger mt_16"
-                      : "text-success mt_16"
-                  }
-                >
-                  {message}
-                </p>
-              ) : null}
-            </form>
-            <div className="list-account-address">
-              <div className="account-address-item">
-                <h6 className="mb_20">Default</h6>
-                <p>
-                  {address.contactName ||
-                    client?.companyName ||
-                    "Sarjan Client"}
-                </p>
-                <p>{address.line1 || "No address saved"}</p>
-                {addressFromOrder ? (
-                  <p className="text-secondary text-caption-1 mb_8">
-                    Street address loaded from your latest order. Click Save
-                    address to store it on your profile.
-                  </p>
-                ) : null}
-                {address.line2 ? <p>{address.line2}</p> : null}
-                <p>
-                  {[address.city, address.state, address.pincode]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-                <p>{address.gst ? `GST: ${address.gst}` : "GST not saved"}</p>
-                <p className="mb_10">{address.phone || "Phone not saved"}</p>
-                <div className="d-flex gap-10 justify-content-center">
-                  <button
-                    type="button"
-                    className={withBtnIcon(
-                      "tf-btn radius-4 btn-fill justify-content-center",
-                    )}
-                    onClick={() =>
-                      document
-                        .querySelector<HTMLInputElement>(
-                          ".sarjan-address-form input",
-                        )
-                        ?.focus()
-                    }
-                  >
-                    <TfButtonIcon icon="icon-arrowUpRight">Edit</TfButtonIcon>
-                  </button>
-                  <button
-                    type="button"
-                    className={withBtnIcon(
-                      "tf-btn radius-4 btn-white has-border justify-content-center",
-                    )}
-                    onClick={remove}
-                  >
-                    <TfButtonIcon icon="icon-close">Delete</TfButtonIcon>
-                  </button>
-                </div>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </AccountFrame>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1431,8 +1389,11 @@ function OrderView({
       <div className="wd-form-order">
         <div className="order-head">
           <div className="content">
-            <div className="badge text-btn-uppercase">Order {order.id}</div>
-            <h6 className="mt_8">
+            <div className="sarjan-order-details-meta">
+              <span className="sarjan-order-details-id">Order {order.id}</span>
+              <OrderPlacedViaBadge placedVia={order.placedVia} />
+            </div>
+            <h6 className="sarjan-order-details-lead mb_0">
               Thank you. Your B2B order request has been received.
             </h6>
           </div>
@@ -1534,22 +1495,26 @@ function OrderView({
 }
 
 export function AccountOrderDetailsPage({ orderId }: { orderId?: string }) {
-  const { client, orders, loading } = useClientAndOrders();
+  return (
+    <AccountFrame active="/my-account-orders" title="Order Details">
+      <AccountOrderDetailsContent orderId={orderId} />
+    </AccountFrame>
+  );
+}
+
+function AccountOrderDetailsContent({ orderId }: { orderId?: string }) {
+  const { client, orders, loading } = useAccountSession();
   const order = useMemo(
     () => (orderId ? orders.find((item) => item.id === orderId) : orders[0]),
     [orderId, orders],
   );
 
-  return (
-    <AccountFrame active="/my-account-orders" title="Order Details">
-      {loading ? (
-        <p>Loading order...</p>
-      ) : order ? (
-        <OrderView order={order} client={client} />
-      ) : (
-        <p className="text-secondary">No order found.</p>
-      )}
-    </AccountFrame>
+  return loading ? (
+    <p>Loading order...</p>
+  ) : order ? (
+    <OrderView order={order} client={client} />
+  ) : (
+    <p className="text-secondary">No order found.</p>
   );
 }
 
@@ -1562,9 +1527,15 @@ export function OrderTrackingPage() {
   const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
-    const stored = readClient();
-    setClient(stored);
-    setBillingEmail(stored?.email ?? "");
+    void (async () => {
+      let stored = readStoredClient() as Client | null;
+      if (!stored?.id || !stored?.email) {
+        const restored = await restoreClientSessionFromCookie();
+        if (restored.ok) stored = restored.client as Client;
+      }
+      setClient(stored);
+      setBillingEmail(stored?.email ?? "");
+    })();
   }, []);
 
   const track = async () => {
@@ -1688,28 +1659,34 @@ export function OrderTrackingPage() {
 }
 
 export function AccountTestimonialsPage() {
-  const { client, loading } = useClientAndOrders();
-
   return (
     <AccountFrame active="/my-account-testimonials" title="Share Testimonial">
-      <div className="account-details">
-        {loading ? (
-          <p>Loading…</p>
-        ) : client ? (
-          <>
-            <h5 className="title mb_8">Submit a testimonial</h5>
-            <p className="text-secondary text-caption-1 mb_24">
-              Tell other wholesale buyers about your experience with Sarjan
-              Textiles. Your quote is saved as <strong>pending</strong> until an
-              admin approves it; only then it appears in the homepage carousel.
-            </p>
-            <TestimonialSubmitForm
-              defaultAuthor={client.companyName}
-              defaultEmail={client.email}
-            />
-          </>
-        ) : null}
-      </div>
+      <AccountTestimonialsContent />
     </AccountFrame>
+  );
+}
+
+function AccountTestimonialsContent() {
+  const { client, loading } = useAccountSession();
+
+  return (
+    <div className="account-details">
+      {loading ? (
+        <p>Loading…</p>
+      ) : client ? (
+        <>
+          <h5 className="title mb_8">Submit a testimonial</h5>
+          <p className="text-secondary text-caption-1 mb_24">
+            Tell other wholesale buyers about your experience with Sarjan
+            Textiles. Your quote is saved as <strong>pending</strong> until an
+            admin approves it; only then it appears in the homepage carousel.
+          </p>
+          <TestimonialSubmitForm
+            defaultAuthor={client.companyName}
+            defaultEmail={client.email}
+          />
+        </>
+      ) : null}
+    </div>
   );
 }

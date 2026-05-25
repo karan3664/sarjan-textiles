@@ -13,7 +13,8 @@ export const orderStatuses: LocalOrder["status"][] = [
 ];
 
 function demoOrderStatus(status: string): LocalOrder["status"] {
-  if (orderStatuses.includes(status as LocalOrder["status"])) return status as LocalOrder["status"];
+  if (orderStatuses.includes(status as LocalOrder["status"]))
+    return status as LocalOrder["status"];
   return "Pending approval";
 }
 
@@ -67,14 +68,23 @@ export async function getAdminOrders() {
       courierDetails: "",
       vehicleDetails: "",
       trackingNotes: "",
-      dispatchHistory: [{ status: order.status, note: "Demo order.", createdAt: `${order.placedOn}T00:00:00.000Z` }],
+      dispatchHistory: [
+        {
+          status: order.status,
+          note: "Demo order.",
+          createdAt: `${order.placedOn}T00:00:00.000Z`,
+        },
+      ],
       note: "",
+      placedVia: "storefront" as const,
       createdAt: `${order.placedOn}T00:00:00.000Z`,
       source: "demo" as const,
     };
   });
 
-  return [...localOrders, ...demo].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return [...localOrders, ...demo].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 }
 
 export type AdminOrder = Awaited<ReturnType<typeof getAdminOrders>>[number];
