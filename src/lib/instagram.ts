@@ -1,5 +1,6 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import { bundledInstagramFeed } from "@/lib/instagram-feed-seed";
+import { withStableInstagramImages } from "@/lib/instagram-stable-images";
 import {
   instagramWebHeaders,
   parseWebProfilePosts,
@@ -252,13 +253,13 @@ async function readCachedInstagramPosts(
   const cms = await getCmsSnapshot();
   const cached = cms.instagramFeed?.posts;
   if (cached?.length) {
-    return cached
-      .filter(isValidInstagramPost)
-      .slice(0, limit) as InstagramPost[];
+    return withStableInstagramImages(
+      cached.filter(isValidInstagramPost).slice(0, limit) as InstagramPost[],
+    );
   }
-  return bundledInstagramFeed(limit).filter(
-    isValidInstagramPost,
-  ) as InstagramPost[];
+  return withStableInstagramImages(
+    bundledInstagramFeed(limit).filter(isValidInstagramPost) as InstagramPost[],
+  );
 }
 
 async function writeInstagramFeedCache(posts: InstagramPost[]) {
@@ -275,13 +276,14 @@ export function isValidInstagramPost(post: unknown): post is InstagramPost {
   if (!post || typeof post !== "object") return false;
   const item = post as InstagramPost;
   if (!item.id || !item.image || !item.href) return false;
+  if (!item.href.includes("instagram.com")) return false;
+  if (item.image.startsWith("/sarjan-assets/instagram/")) return true;
   try {
     const imageHost = new URL(item.image).hostname;
-    const hrefHost = new URL(item.href).hostname;
     return (
-      (imageHost.includes("cdninstagram.com") ||
-        imageHost.includes("fbcdn.net")) &&
-      hrefHost.includes("instagram.com")
+      imageHost.includes("cdninstagram.com") ||
+      imageHost.includes("fbcdn.net") ||
+      imageHost.includes("instagram.com")
     );
   } catch {
     return false;
@@ -296,15 +298,16 @@ export async function getInstagramPosts(
 
   const live = await fetchLiveInstagramPosts(limit, options);
   if (live.length) {
+    const stableLive = withStableInstagramImages(live);
     try {
-      await writeInstagramFeedCache(live);
+      await writeInstagramFeedCache(stableLive);
     } catch {
       // Cache write failure should not block the response.
     }
-    return live;
+    return stableLive;
   }
 
-  return cached;
+  return withStableInstagramImages(cached);
 }
 
 /** Force refresh from Instagram and persist to CMS (admin/cron). */
@@ -314,8 +317,9 @@ export async function refreshInstagramFeedCache(
 ): Promise<{ posts: InstagramPost[]; source: "live" | "cache" | "none" }> {
   const live = await fetchLiveInstagramPosts(limit, options);
   if (live.length) {
-    await writeInstagramFeedCache(live);
-    return { posts: live, source: "live" };
+    const stable = withStableInstagramImages(live);
+    await writeInstagramFeedCache(stable);
+    return { posts: stable, source: "live" };
   }
   const cached = await readCachedInstagramPosts(limit);
   if (cached.length) return { posts: cached, source: "cache" };

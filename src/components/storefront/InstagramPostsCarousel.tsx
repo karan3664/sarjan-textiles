@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { fetchInstagramPostsInBrowser } from "@/lib/instagram-parse";
+import { withStableInstagramImages } from "@/lib/instagram-stable-images";
 import type { InstagramPost } from "@/lib/instagram-types";
 
 type Props = {
@@ -22,8 +23,31 @@ type SwiperGlobal = {
   ): SwiperInstance;
 };
 
-function instagramImageSrc(url: string) {
-  return `/api/instagram/media?url=${encodeURIComponent(url)}`;
+function resolveInstagramImageSrc(url: string, useProxy: boolean) {
+  if (url.startsWith("/")) return url;
+  if (useProxy) return `/api/instagram/media?url=${encodeURIComponent(url)}`;
+  return url;
+}
+
+function InstagramPostImage({ image, alt }: { image: string; alt: string }) {
+  const [useProxy, setUseProxy] = useState(false);
+  const label =
+    alt.trim().length > 0 && alt.length <= 120
+      ? alt
+      : "Sarjan Textiles on Instagram";
+
+  return (
+    <img
+      src={resolveInstagramImageSrc(image, useProxy)}
+      alt={label}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      className="sarjan-instagram-post-img"
+      onError={() => {
+        if (!useProxy && !image.startsWith("/")) setUseProxy(true);
+      }}
+    />
+  );
 }
 
 function initInstagramSwiper(
@@ -131,12 +155,7 @@ function CarouselSlides({
                   rel="noopener noreferrer"
                   className="img-style sarjan-instagram-gallery-link"
                 >
-                  <img
-                    src={instagramImageSrc(post.image)}
-                    alt={post.alt}
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                  />
+                  <InstagramPostImage image={post.image} alt={post.alt} />
                 </a>
                 <a
                   href={post.href}
@@ -174,13 +193,15 @@ export function InstagramPostsCarousel({
 }: Props) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const swiperRef = useRef<SwiperInstance | null>(null);
-  const [posts, setPosts] = useState(initialPosts);
-  const [loading, setLoading] = useState(!initialPosts.length);
+  const stableInitial = withStableInstagramImages(initialPosts);
+  const [posts, setPosts] = useState(stableInitial);
+  const [loading, setLoading] = useState(!stableInitial.length);
   const handle = username.replace(/^@/, "");
 
   useEffect(() => {
-    setPosts(initialPosts);
-    setLoading(!initialPosts.length);
+    const nextInitial = withStableInstagramImages(initialPosts);
+    setPosts(nextInitial);
+    setLoading(!nextInitial.length);
 
     let cancelled = false;
 
@@ -198,8 +219,9 @@ export function InstagramPostsCarousel({
         if (cancelled) return;
 
         if (browserPosts.length) {
-          setPosts(browserPosts);
-          saveCache(browserPosts);
+          const stable = withStableInstagramImages(browserPosts);
+          setPosts(stable);
+          saveCache(stable);
           return;
         }
 
@@ -208,11 +230,13 @@ export function InstagramPostsCarousel({
         if (cancelled) return;
 
         if (data.posts?.length) {
-          setPosts(data.posts);
+          setPosts(withStableInstagramImages(data.posts));
           return;
         }
+
+        if (nextInitial.length) setPosts(nextInitial);
       } catch {
-        // Keep SSR/seed posts when refresh fails.
+        if (!cancelled && nextInitial.length) setPosts(nextInitial);
       } finally {
         if (!cancelled) setLoading(false);
       }
