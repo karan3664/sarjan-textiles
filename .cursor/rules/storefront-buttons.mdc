@@ -1,0 +1,15 @@
+---
+description: Sarjan storefront CTA buttons — always use shared sarjan-btn class
+globs:
+  - src/components/storefront/**
+  - src/app/**/page.tsx
+---
+
+# Storefront buttons
+
+For primary CTAs (links, submit, add-to-cart, checkout, auth):
+
+- Use `SarjanButton`, `sarjanButtonClass()`, or `withBtnIcon()` from `@/lib/sarjan-button`
+- Do **not** add new `tf-btn btn-fill` / `btn-white` / `btn-reset` combinations
+- Style: white bg + black text; hover logo red `--sarjan-accent` (#8b1e2d) + white text
+- See `docs/STOREFRONT-BUTTONS.md`

@@ -7,6 +7,7 @@ import { isProductSoldOut } from "@/lib/product-availability";
 import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type ProductPurchasePanelProps = {
@@ -139,7 +140,9 @@ export function ProductPurchasePanel({
                 href="#shoppingCart"
                 data-bs-toggle="modal"
                 className={withBtnIcon(
-                  "btn-style-2 flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart sarjan-add-set-btn",
+                  sarjanButtonClass(
+                    "flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart sarjan-add-set-btn",
+                  ),
                 )}
                 data-cart-add
                 data-product-slug={product.slug}
@@ -165,7 +168,9 @@ export function ProductPurchasePanel({
                 href="#shoppingCart"
                 data-bs-toggle="modal"
                 className={withBtnIcon(
-                  "btn-style-3 flex-grow-1 text-btn-uppercase sarjan-all-colors-btn",
+                  sarjanButtonClass(
+                    "flex-grow-1 text-btn-uppercase sarjan-all-colors-btn",
+                  ),
                 )}
                 data-cart-add
                 data-product-all-colors="true"
@@ -192,10 +197,7 @@ export function ProductPurchasePanel({
         />
       </div>
       {showViewDetailsLink ? (
-        <a
-          href={`/products/${product.slug}`}
-          className={withBtnIcon("tf-btn w-100 btn-fill radius-4")}
-        >
+        <a href={`/products/${product.slug}`} className={withBtnIcon("w-100")}>
           <TfButtonIcon icon="icon-eye">View Full Details</TfButtonIcon>
         </a>
       ) : null}

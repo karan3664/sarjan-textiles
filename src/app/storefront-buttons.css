@@ -1,38 +1,316 @@
 /**
  * Sarjan storefront — unified CTA buttons (full site).
- * Default: white pill + black text. Hover: red (--main) + white text.
- * New markup: sarjanButtonClass() from @/lib/sarjan-button or <SarjanButton>.
+ * Default: white + black text. Hover: logo red + white text. No diagonal wipe.
+ *
+ * Dev: use sarjanButtonClass() or <SarjanButton> from @/components/storefront/SarjanButton
+ * Docs: docs/STOREFRONT-BUTTONS.md
  */
 
-/* tf-btn + btn-line = invisible text (gradient clip). Use sarjanButtonClass() instead. */
-body.preload-wrapper .tf-btn.btn-line {
-  -webkit-text-fill-color: var(--sarjan-btn-color, #181818) !important;
-  background: var(--sarjan-btn-bg, #fff) !important;
-  background-image: none !important;
-  border: 1px solid var(--sarjan-btn-border, #181818) !important;
-  border-radius: var(--sarjan-btn-radius, 999px) !important;
-  padding: 12px 28px !important;
-  color: var(--sarjan-btn-color, #181818) !important;
-}
-
-body.preload-wrapper .tf-btn.btn-line:hover {
-  background-color: var(--sarjan-btn-hover-bg, var(--main)) !important;
-  color: var(--sarjan-btn-hover-color, #fff) !important;
-  border-color: var(--sarjan-btn-hover-border, var(--main)) !important;
-  -webkit-text-fill-color: var(--sarjan-btn-hover-color, #fff) !important;
-}
-
 body.preload-wrapper {
+  --sarjan-brand: var(--sarjan-accent, #8b1e2d);
   --sarjan-btn-bg: #ffffff;
   --sarjan-btn-color: #181818;
   --sarjan-btn-border: #181818;
-  --sarjan-btn-hover-bg: var(--main);
+  --sarjan-btn-hover-bg: var(--sarjan-brand);
   --sarjan-btn-hover-color: #ffffff;
-  --sarjan-btn-hover-border: var(--main);
+  --sarjan-btn-hover-border: var(--sarjan-brand);
   --sarjan-btn-radius: 999px;
 }
 
-/* Auth OTP + register CTAs (explicit — nesting may not apply in static CSS) */
+/* btn-line uses gradient text — keep readable */
+body.preload-wrapper .tf-btn.btn-line {
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+  background: var(--sarjan-btn-bg) !important;
+  background-image: none !important;
+  border: 1px solid var(--sarjan-btn-border) !important;
+  border-radius: var(--sarjan-btn-radius) !important;
+  padding: 12px 28px !important;
+  color: var(--sarjan-btn-color) !important;
+}
+
+body.preload-wrapper .tf-btn.btn-line:hover {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+/* Shared CTA selector list */
+body.preload-wrapper
+  .sarjan-cta:not(.btn-line):not(.btn-icon-action):not(.box-icon):not(
+    .btn-quantity
+  ):not(.btn-decrease):not(.btn-increase):not(.sarjan-color-swatch-btn):not(
+    .color-btn
+  ):not(.tf-btn-remove):not(.tf-btn-filter):not(.tf-btn-loading):not(
+    .tf-btn-discount
+  ):not(.tf-btn-default):not(.btn-close):not(.subscribe-button):not(
+    .sarjan-emoji-trigger
+  ):not(.sarjan-sitemap-toggle):not(.bg-transparent):not(.btn.p-1):not(
+    .btn-sold-out
+  ):not(:disabled):not([aria-disabled="true"])::after,
+body.preload-wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    #wrapper .tf-btn,
+    #wrapper a.tf-btn,
+    #wrapper button.tf-btn,
+    #header .tf-btn,
+    #header a.tf-btn,
+    .modal .tf-btn,
+    .modal a.tf-btn,
+    .modal button.tf-btn,
+    .offcanvas .tf-btn,
+    .offcanvas a.tf-btn,
+    .sarjan-cookie-consent .tf-btn,
+    #wrapper .btn-style-2,
+    #wrapper a.btn-style-2,
+    #wrapper .btn-style-3,
+    #wrapper a.btn-style-3,
+    #wrapper .btn-main-product,
+    #wrapper a.btn-main-product,
+    .modal .btn-style-2,
+    .modal a.btn-style-2,
+    .modal .btn-style-3,
+    .modal a.btn-style-3,
+    .modal .btn-main-product,
+    .modal a.btn-main-product
+  ):not(.btn-line):not(.btn-icon-action):not(.box-icon):not(.btn-quantity):not(
+    .btn-decrease
+  ):not(.btn-increase):not(.sarjan-color-swatch-btn):not(.color-btn):not(
+    .tf-btn-remove
+  ):not(.tf-btn-filter):not(.tf-btn-loading):not(.tf-btn-discount):not(
+    .tf-btn-default
+  ):not(.btn-close):not(.subscribe-button):not(.sarjan-emoji-trigger):not(
+    .sarjan-sitemap-toggle
+  ):not(.bg-transparent):not(.btn.p-1):not(.btn-sold-out):not(:disabled):not(
+    [aria-disabled="true"]
+  )::after {
+  content: none !important;
+  display: none !important;
+}
+
+body.preload-wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    #wrapper .tf-btn,
+    #wrapper a.tf-btn,
+    #wrapper button.tf-btn,
+    #header .tf-btn,
+    #header a.tf-btn,
+    .modal .tf-btn,
+    .modal a.tf-btn,
+    .modal button.tf-btn,
+    .offcanvas .tf-btn,
+    .offcanvas a.tf-btn,
+    .sarjan-cookie-consent .tf-btn,
+    #wrapper .btn-style-2,
+    #wrapper a.btn-style-2,
+    #wrapper .btn-style-3,
+    #wrapper a.btn-style-3,
+    #wrapper .btn-main-product,
+    #wrapper a.btn-main-product,
+    .modal .btn-style-2,
+    .modal a.btn-style-2,
+    .modal .btn-style-3,
+    .modal a.btn-style-3,
+    .modal .btn-main-product,
+    .modal a.btn-main-product,
+    .form-leave-comment .button-submit .tf-btn,
+    .form-leave-comment .button-submit button.tf-btn,
+    .button-submit button.tf-btn,
+    .button-submit a.tf-btn
+  ):not(.btn-line):not(.btn-icon-action):not(.box-icon):not(.btn-quantity):not(
+    .btn-decrease
+  ):not(.btn-increase):not(.sarjan-color-swatch-btn):not(.color-btn):not(
+    .tf-btn-remove
+  ):not(.tf-btn-filter):not(.tf-btn-loading):not(.tf-btn-discount):not(
+    .tf-btn-default
+  ):not(.btn-close):not(.subscribe-button):not(.sarjan-emoji-trigger):not(
+    .sarjan-sitemap-toggle
+  ):not(.bg-transparent):not(.btn.p-1):not(.btn-sold-out):not(:disabled):not(
+    [aria-disabled="true"]
+  ) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px;
+  padding: 12px 28px !important;
+  min-height: 48px;
+  border-radius: var(--sarjan-btn-radius) !important;
+  border: 1px solid var(--sarjan-btn-border) !important;
+  background-color: var(--sarjan-btn-bg) !important;
+  background-image: none !important;
+  color: var(--sarjan-btn-color) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: capitalize !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  position: relative;
+  overflow: hidden;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+body.preload-wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    #wrapper .tf-btn,
+    #wrapper a.tf-btn,
+    #wrapper button.tf-btn,
+    #header .tf-btn,
+    .modal .tf-btn,
+    .offcanvas .tf-btn,
+    #wrapper .btn-style-2,
+    #wrapper a.btn-style-2,
+    #wrapper .btn-style-3,
+    #wrapper a.btn-style-3,
+    #wrapper .btn-main-product,
+    #wrapper a.btn-main-product,
+    .modal .btn-style-2,
+    .modal .btn-style-3,
+    .modal .btn-main-product,
+    .form-leave-comment .button-submit .tf-btn,
+    .button-submit a.tf-btn
+  ):not(.btn-line):not(.btn-icon-action):not(.box-icon):not(.btn-quantity):not(
+    .btn-decrease
+  ):not(.btn-increase):not(.tf-btn-remove):not(.btn-close):not(
+    .subscribe-button
+  ):not(.btn-sold-out):not(:disabled):not([aria-disabled="true"])
+  > :is(
+    .text,
+    .text-button,
+    .text-btn-uppercase,
+    span,
+    i.icon,
+    .sarjan-tf-btn-icon
+  ) {
+  color: inherit !important;
+  position: relative;
+  z-index: 1;
+  -webkit-text-fill-color: inherit !important;
+}
+
+body.preload-wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    #wrapper .tf-btn,
+    #wrapper a.tf-btn,
+    #wrapper button.tf-btn,
+    .modal .tf-btn,
+    .modal a.tf-btn,
+    #wrapper .btn-style-2,
+    #wrapper a.btn-style-2,
+    #wrapper .btn-style-3,
+    #wrapper a.btn-style-3,
+    #wrapper .btn-main-product,
+    #wrapper a.btn-main-product,
+    .modal .btn-style-2,
+    .modal .btn-style-3,
+    .modal .btn-main-product,
+    .form-leave-comment .button-submit .tf-btn,
+    .button-submit a.tf-btn
+  ):not(.btn-line):not(.btn-icon-action):not(.box-icon):not(.btn-quantity):not(
+    .tf-btn-remove
+  ):not(.btn-close):not(.subscribe-button):not(.btn-sold-out):not(
+    :disabled
+  ):not([aria-disabled="true"]):hover {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+body.preload-wrapper
+  :is(
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    #wrapper .tf-btn,
+    #wrapper a.tf-btn,
+    .modal .tf-btn,
+    #wrapper .btn-style-2,
+    #wrapper .btn-style-3,
+    #wrapper .btn-main-product,
+    .modal .btn-style-2,
+    .modal .btn-style-3
+  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]):hover
+  > :is(
+    .text,
+    .text-button,
+    .text-btn-uppercase,
+    span,
+    i.icon,
+    .sarjan-tf-btn-icon
+  ) {
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+/* btn-fill / btn-white / btn-reset — same default look */
+body.preload-wrapper
+  :is(
+    .tf-btn.btn-fill,
+    .tf-btn.btn-white,
+    .tf-btn.btn-reset,
+    a.tf-btn.btn-fill
+  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--sarjan-btn-bg) !important;
+  color: var(--sarjan-btn-color) !important;
+  border: 1px solid var(--sarjan-btn-border) !important;
+}
+
+body.preload-wrapper
+  :is(
+    .tf-btn.btn-fill,
+    .tf-btn.btn-white,
+    .tf-btn.btn-reset,
+    a.tf-btn.btn-fill
+  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]):hover {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+}
+
+/* Modave bare `button { background: var(--main) }` on CTAs */
+body.preload-wrapper button.tf-btn:not(.btn-line):not(:disabled):hover,
+body.preload-wrapper button.btn-style-2:not(:disabled):hover,
+body.preload-wrapper button.btn-style-3:not(:disabled):hover {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+}
+
+body.preload-wrapper
+  :is(.tf-btn, .btn-style-2, .btn-style-3, .btn-main-product).w-100,
+body.preload-wrapper :is(a.tf-btn, a.btn-style-2).w-100 {
+  width: 100% !important;
+}
+
+body.preload-wrapper .modal-shopping-cart .sarjan-mini-cart-actions > .tf-btn,
+body.preload-wrapper
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions__auth
+  .tf-btn,
+body.preload-wrapper .sarjan-cart-page-actions .tf-btn {
+  width: 100% !important;
+  min-height: 48px !important;
+  border-radius: var(--sarjan-btn-radius) !important;
+}
+
+/* Auth page explicit */
 body.preload-wrapper
   .sarjan-auth-page
   .sarjan-otp-actions
@@ -65,331 +343,6 @@ body.preload-wrapper
 }
 
 body.preload-wrapper
-  .sarjan-auth-page
-  .sarjan-otp-actions
-  .tf-btn:not(:disabled):hover
-  > .text,
-body.preload-wrapper
-  .sarjan-auth-page
-  .sarjan-auth-submit:not(:disabled):hover
-  > .text {
-  color: var(--sarjan-btn-hover-color) !important;
-  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
-}
-
-/* ── CTA scope (storefront + modals + cookie bar) ── */
-body.preload-wrapper
-  :is(#wrapper, #header, .modal, .offcanvas, .sarjan-cookie-consent) {
-  /* Kill Modave skew wipe on all Sarjan CTAs */
-  :is(
-      .sarjan-btn,
-      a.sarjan-btn,
-      button.sarjan-btn,
-      .tf-btn:not(.btn-line):not(.btn-reset),
-      a.tf-btn:not(.btn-line):not(.btn-reset),
-      button.tf-btn:not(.btn-line):not(.btn-reset),
-      .btn-style-2,
-      a.btn-style-2,
-      button.btn-style-2,
-      .btn-style-3,
-      a.btn-style-3,
-      button.btn-style-3,
-      .btn-main-product,
-      a.btn-main-product,
-      .form-leave-comment .button-submit .tf-btn,
-      .form-leave-comment .button-submit button.tf-btn,
-      .button-submit button.tf-btn,
-      .button-submit a.tf-btn
-    ):not(
-      .btn-line,
-      .btn-icon-action,
-      .box-icon,
-      .btn-quantity,
-      .btn-decrease,
-      .btn-increase,
-      .sarjan-color-swatch-btn,
-      .color-btn,
-      .tf-btn-remove,
-      .tf-btn-filter,
-      .tf-btn-loading,
-      .tf-btn-discount,
-      .tf-btn-default,
-      .btn-close,
-      .subscribe-button,
-      .sarjan-emoji-trigger,
-      .sarjan-sitemap-toggle,
-      .bg-transparent,
-      .btn.p-1,
-      .btn-sold-out
-    ):not(:disabled):not([aria-disabled="true"])::after {
-    content: none !important;
-    display: none !important;
-  }
-
-  :is(
-      .sarjan-btn,
-      a.sarjan-btn,
-      button.sarjan-btn,
-      .tf-btn,
-      a.tf-btn,
-      button.tf-btn,
-      .btn-style-2,
-      a.btn-style-2,
-      button.btn-style-2,
-      .btn-style-3,
-      a.btn-style-3,
-      button.btn-style-3,
-      .btn-main-product,
-      a.btn-main-product,
-      .form-leave-comment .button-submit .tf-btn,
-      .form-leave-comment .button-submit button.tf-btn,
-      .button-submit button.tf-btn,
-      .button-submit a.tf-btn
-    ):not(
-      .btn-line,
-      .btn-icon-action,
-      .box-icon,
-      .btn-quantity,
-      .btn-decrease,
-      .btn-increase,
-      .sarjan-color-swatch-btn,
-      .color-btn,
-      .tf-btn-remove,
-      .tf-btn-filter,
-      .tf-btn-loading,
-      .tf-btn-discount,
-      .tf-btn-default,
-      .btn-close,
-      .subscribe-button,
-      .sarjan-emoji-trigger,
-      .sarjan-sitemap-toggle,
-      .bg-transparent,
-      .btn.p-1,
-      .btn-sold-out
-    ):not(:disabled):not([aria-disabled="true"]) {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px;
-    padding: 12px 28px !important;
-    min-height: 48px;
-    border-radius: var(--sarjan-btn-radius) !important;
-    border: 1px solid var(--sarjan-btn-border) !important;
-    background-color: var(--sarjan-btn-bg) !important;
-    color: var(--sarjan-btn-color) !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    line-height: 1.35 !important;
-    letter-spacing: 0.04em !important;
-    text-transform: capitalize !important;
-    text-decoration: none !important;
-    box-shadow: none !important;
-    position: relative;
-    overflow: hidden;
-    transition:
-      color 0.25s ease,
-      background-color 0.25s ease,
-      border-color 0.25s ease !important;
-    -webkit-text-fill-color: var(--sarjan-btn-color) !important;
-    background-image: none !important;
-  }
-
-  :is(
-      .sarjan-btn,
-      a.sarjan-btn,
-      button.sarjan-btn,
-      .tf-btn,
-      a.tf-btn,
-      button.tf-btn,
-      .btn-style-2,
-      a.btn-style-2,
-      button.btn-style-2,
-      .btn-style-3,
-      a.btn-style-3,
-      button.btn-style-3,
-      .btn-main-product,
-      a.btn-main-product,
-      .form-leave-comment .button-submit .tf-btn,
-      .form-leave-comment .button-submit button.tf-btn,
-      .button-submit button.tf-btn,
-      .button-submit a.tf-btn
-    ):not(
-      .btn-line,
-      .btn-icon-action,
-      .box-icon,
-      .btn-quantity,
-      .btn-decrease,
-      .btn-increase,
-      .sarjan-color-swatch-btn,
-      .color-btn,
-      .tf-btn-remove,
-      .tf-btn-filter,
-      .tf-btn-loading,
-      .tf-btn-discount,
-      .tf-btn-default,
-      .btn-close,
-      .subscribe-button,
-      .sarjan-emoji-trigger,
-      .sarjan-sitemap-toggle,
-      .bg-transparent,
-      .btn.p-1,
-      .btn-sold-out
-    ):not(:disabled):not([aria-disabled="true"])
-    > :is(.text, .text-button, .text-btn-uppercase, span, i.icon) {
-    color: inherit !important;
-    position: relative;
-    z-index: 1;
-    -webkit-text-fill-color: inherit !important;
-  }
-
-  :is(
-      .sarjan-btn,
-      a.sarjan-btn,
-      button.sarjan-btn,
-      .tf-btn,
-      a.tf-btn,
-      button.tf-btn,
-      .btn-style-2,
-      a.btn-style-2,
-      button.btn-style-2,
-      .btn-style-3,
-      a.btn-style-3,
-      button.btn-style-3,
-      .btn-main-product,
-      a.btn-main-product,
-      .form-leave-comment .button-submit .tf-btn,
-      .form-leave-comment .button-submit button.tf-btn,
-      .button-submit button.tf-btn,
-      .button-submit a.tf-btn
-    ):not(
-      .btn-line,
-      .btn-icon-action,
-      .box-icon,
-      .btn-quantity,
-      .btn-decrease,
-      .btn-increase,
-      .sarjan-color-swatch-btn,
-      .color-btn,
-      .tf-btn-remove,
-      .tf-btn-filter,
-      .tf-btn-loading,
-      .tf-btn-discount,
-      .tf-btn-default,
-      .btn-close,
-      .subscribe-button,
-      .sarjan-emoji-trigger,
-      .sarjan-sitemap-toggle,
-      .bg-transparent,
-      .btn.p-1,
-      .btn-sold-out
-    ):not(:disabled):not([aria-disabled="true"]):hover {
-    background-color: var(--sarjan-btn-hover-bg) !important;
-    border-color: var(--sarjan-btn-hover-border) !important;
-    color: var(--sarjan-btn-hover-color) !important;
-    -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
-  }
-
-  :is(
-      .sarjan-btn,
-      a.sarjan-btn,
-      button.sarjan-btn,
-      .tf-btn,
-      a.tf-btn,
-      button.tf-btn,
-      .btn-style-2,
-      a.btn-style-2,
-      button.btn-style-2,
-      .btn-style-3,
-      a.btn-style-3,
-      button.btn-style-3,
-      .btn-main-product,
-      a.btn-main-product,
-      .form-leave-comment .button-submit .tf-btn,
-      .form-leave-comment .button-submit button.tf-btn,
-      .button-submit button.tf-btn,
-      .button-submit a.tf-btn
-    ):not(
-      .btn-line,
-      .btn-icon-action,
-      .box-icon,
-      .btn-quantity,
-      .btn-decrease,
-      .btn-increase,
-      .sarjan-color-swatch-btn,
-      .color-btn,
-      .tf-btn-remove,
-      .tf-btn-filter,
-      .tf-btn-loading,
-      .tf-btn-discount,
-      .tf-btn-default,
-      .btn-close,
-      .subscribe-button,
-      .sarjan-emoji-trigger,
-      .sarjan-sitemap-toggle,
-      .bg-transparent,
-      .btn.p-1,
-      .btn-sold-out
-    ):not(:disabled):not([aria-disabled="true"]):hover
-    > :is(.text, .text-button, .text-btn-uppercase, span, i.icon) {
-    color: var(--sarjan-btn-hover-color) !important;
-    -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
-  }
-
-  /* btn-reset / btn-white / btn-fill — same look */
-  :is(.tf-btn.btn-reset, .tf-btn.btn-white, .tf-btn.btn-fill):not(
-      .btn-line
-    ):not(:disabled):not([aria-disabled="true"]) {
-    background-color: var(--sarjan-btn-bg) !important;
-    color: var(--sarjan-btn-color) !important;
-    border: 1px solid var(--sarjan-btn-border) !important;
-  }
-
-  :is(.tf-btn.btn-reset, .tf-btn.btn-white, .tf-btn.btn-fill):not(
-      .btn-line
-    ):not(:disabled):not([aria-disabled="true"]):hover {
-    background-color: var(--sarjan-btn-hover-bg) !important;
-    color: var(--sarjan-btn-hover-color) !important;
-    border-color: var(--sarjan-btn-hover-border) !important;
-  }
-
-  /* Override Modave bare `button { background: var(--main) }` on CTAs */
-  button.tf-btn:not(.btn-line):not(:disabled):hover,
-  button.btn-style-2:not(:disabled):hover,
-  button.btn-style-3:not(:disabled):hover {
-    background-color: var(--sarjan-btn-hover-bg) !important;
-  }
-
-  /* Product card ATC — keep flex layout */
-  :is(.btn-main-product, a.btn-main-product):not([aria-disabled="true"]) {
-    display: inline-flex !important;
-    -webkit-box-orient: unset !important;
-    -webkit-line-clamp: unset !important;
-    width: 100%;
-  }
-
-  /* Full-width CTAs */
-  :is(.tf-btn, a.tf-btn, button.tf-btn, .btn-style-2, .btn-style-3).w-100 {
-    width: 100% !important;
-  }
-
-  /* Modal footers */
-  .modal .tf-mini-cart-bottom .tf-btn,
-  .modal .tf-mini-cart-bottom .btn-style-2 {
-    border-radius: var(--sarjan-btn-radius) !important;
-  }
-
-  .modal-shopping-cart .sarjan-mini-cart-actions > .tf-btn,
-  .modal-shopping-cart .sarjan-mini-cart-actions__auth .tf-btn {
-    width: 100% !important;
-    min-height: 48px !important;
-    border-radius: var(--sarjan-btn-radius) !important;
-  }
-
-  .modal .tf-mini-cart-bottom {
-    overflow: visible;
-  }
-
-  /* Disabled */
   :is(
     .tf-btn,
     .btn-style-2,
@@ -397,6 +350,7 @@ body.preload-wrapper
     .btn-main-product,
     .sarjan-btn
   ):disabled,
+body.preload-wrapper
   :is(
     .tf-btn,
     .btn-style-2,
@@ -404,7 +358,19 @@ body.preload-wrapper
     .btn-main-product,
     .sarjan-btn
   )[aria-disabled="true"] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Product card ATC — keep flex */
+body.preload-wrapper #wrapper .card-product .btn-main-product,
+body.preload-wrapper #wrapper a.btn-main-product {
+  display: inline-flex !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: unset !important;
+}
+
+body.preload-wrapper .sarjan-product-action-buttons .btn-style-2,
+body.preload-wrapper .sarjan-product-action-buttons .btn-style-3 {
+  border: 1px solid var(--sarjan-btn-border) !important;
 }

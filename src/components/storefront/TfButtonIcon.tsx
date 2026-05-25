@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
 
 type TfButtonIconProps = {
   /** Modave icon class, e.g. `icon-user` */
@@ -22,7 +23,17 @@ export function TfButtonIcon({
   );
 }
 
-/** Add to button/link className so icon + text align (flex + gap). */
+/**
+ * Icon + label CTA wrapper. Strips legacy Modave btn-fill/btn-white (black/red split).
+ * Example: withBtnIcon("w-100") or withBtnIcon(sarjanButtonClass("mt_24")).
+ */
 export function withBtnIcon(className = "") {
-  return [className, "sarjan-has-btn-icon"].filter(Boolean).join(" ");
+  const stripped = className
+    .replace(/\btf-btn\b/g, "")
+    .replace(/\bbtn-fill\b/g, "")
+    .replace(/\bbtn-reset\b/g, "")
+    .replace(/\bbtn-white\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return sarjanButtonClass("sarjan-has-btn-icon", stripped || undefined);
 }
