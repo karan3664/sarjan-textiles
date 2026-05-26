@@ -153,10 +153,8 @@ export function ProductPurchasePanel({
               <a
                 href="#shoppingCart"
                 data-bs-toggle="modal"
-                className={withBtnIcon(
-                  sarjanButtonClass(
-                    "flex-grow-1 text-btn-uppercase fw-6 btn-add-to-cart sarjan-add-set-btn",
-                  ),
+                className={sarjanButtonClass(
+                  "text-btn-uppercase fw-6 btn-add-to-cart sarjan-add-set-btn sarjan-pdp-cta-btn",
                 )}
                 data-cart-add
                 data-product-slug={product.slug}
@@ -164,11 +162,10 @@ export function ProductPurchasePanel({
                 data-product-color={activeColor}
                 data-set-price={setPrice}
               >
-                <i
-                  className="icon icon-ShoppingBagOpen sarjan-tf-btn-icon"
-                  aria-hidden
-                />
-                <span className="sarjan-add-set-btn__inner">
+                <span className="sarjan-pdp-cta-btn__icon" aria-hidden>
+                  <i className="icon icon-ShoppingBagOpen sarjan-tf-btn-icon" />
+                </span>
+                <span className="sarjan-pdp-cta-btn__body sarjan-add-set-btn__inner">
                   <span className="sarjan-add-set-label text text-button">
                     Add 1 set
                   </span>
@@ -181,10 +178,8 @@ export function ProductPurchasePanel({
               <a
                 href="#shoppingCart"
                 data-bs-toggle="modal"
-                className={withBtnIcon(
-                  sarjanButtonClass(
-                    "flex-grow-1 text-btn-uppercase sarjan-all-colors-btn",
-                  ),
+                className={sarjanButtonClass(
+                  "text-btn-uppercase sarjan-all-colors-btn sarjan-pdp-cta-btn",
                 )}
                 data-cart-add
                 data-product-all-colors="true"
@@ -192,22 +187,15 @@ export function ProductPurchasePanel({
                 data-product-slug={product.slug}
                 data-product-size-run={sizeRun.join(",")}
               >
-                <i
-                  className="icon icon-squares-four sarjan-tf-btn-icon"
-                  aria-hidden
-                />
-                <span className="sarjan-all-colors-btn__inner text text-button sarjan-all-colors-label">
+                <span className="sarjan-pdp-cta-btn__icon" aria-hidden>
+                  <i className="icon icon-squares-four sarjan-tf-btn-icon" />
+                </span>
+                <span className="sarjan-pdp-cta-btn__body sarjan-all-colors-btn__inner text text-button sarjan-all-colors-label">
                   <span className="sarjan-all-colors-label--long">
                     Add all colors
                   </span>
                   <span className="sarjan-all-colors-label--short">
                     All colors
-                  </span>
-                  <span
-                    className="sarjan-all-colors-price-spacer"
-                    aria-hidden="true"
-                  >
-                    &nbsp;
                   </span>
                 </span>
               </a>

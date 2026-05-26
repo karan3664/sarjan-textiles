@@ -1945,6 +1945,31 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: var(--White, #fff) !important;
 }
 
+/* Long labels (e.g. DB Backup / Restore) — template clips with nowrap + line-clamp */
+.section-menu-left .menu-item a .text,
+.section-menu-left .menu-item .menu-item-button .text,
+.section-menu-left .menu-item .menu-item-button .text.text-title {
+  white-space: normal !important;
+  overflow: visible !important;
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: initial !important;
+  line-height: 1.35 !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.section-menu-left .menu-item a,
+.section-menu-left .menu-item .menu-item-button {
+  align-items: flex-start !important;
+}
+
+.section-menu-left .menu-item a .icon,
+.section-menu-left .menu-item .menu-item-button .icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .section-menu-left .menu-item .menu-item-button .icon i {
   color: var(--White, #fff) !important;
 }
@@ -6177,10 +6202,13 @@ blockquote.sarjan-emoji-text,
 
 .sarjan-product-action-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
   gap: 10px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .sarjan-product-action-buttons .btn-style-2,
@@ -6229,23 +6257,16 @@ blockquote.sarjan-emoji-text,
   line-height: 1 !important;
 }
 
-.sarjan-product-action-buttons .sarjan-add-set-btn {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0 !important;
-}
-
-.sarjan-product-action-buttons .sarjan-add-set-btn.sarjan-has-btn-icon {
-  flex-direction: row !important;
-  gap: 8px !important;
-}
+/* PDP CTA layout: public/sarjan-pdp-cta.css (grid icon | label | balance) */
 
 /* Match icon slot: bag + all-colors (Modave squares-four) */
 .sarjan-product-action-buttons
   :is(.sarjan-add-set-btn, .sarjan-all-colors-btn)
-  .sarjan-tf-btn-icon {
+  .sarjan-pdp-cta-btn__icon
+  .sarjan-tf-btn-icon,
+.sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn)
+  > .sarjan-tf-btn-icon {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -6256,7 +6277,7 @@ blockquote.sarjan-emoji-text,
   font-size: 20px !important;
   line-height: 1 !important;
   border: 1px solid var(--line, #dedede);
-  border-radius: 8px;
+  border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.65);
   color: var(--main, #181818) !important;
   -webkit-text-fill-color: var(--main, #181818) !important;
@@ -6264,18 +6285,11 @@ blockquote.sarjan-emoji-text,
 
 .sarjan-product-action-buttons
   :is(.sarjan-add-set-btn, .sarjan-all-colors-btn):is(:hover, .is-hovered)
-  .sarjan-tf-btn-icon {
+  :is(.sarjan-pdp-cta-btn__icon, .sarjan-tf-btn-icon) {
   border-color: rgba(255, 255, 255, 0.4);
   background-color: rgba(255, 255, 255, 0.12);
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-}
-
-.sarjan-product-action-buttons
-  .sarjan-add-set-btn.sarjan-has-btn-icon
-  .sarjan-add-set-btn__inner {
-  align-items: center;
-  text-align: center;
 }
 
 .sarjan-add-set-btn__inner {
@@ -6306,14 +6320,6 @@ blockquote.sarjan-emoji-text,
 
 .sarjan-add-set-price:empty {
   display: none;
-}
-
-.sarjan-product-action-buttons .sarjan-all-colors-btn {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
 }
 
 .sarjan-all-colors-btn__inner {
@@ -6505,9 +6511,9 @@ blockquote.sarjan-emoji-text,
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 767px) {
   .sarjan-product-action-buttons {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: 8px;
   }
 
@@ -6518,6 +6524,15 @@ blockquote.sarjan-emoji-text,
   .sarjan-all-colors-label--short {
     display: block;
     white-space: nowrap;
+  }
+
+  .sarjan-all-colors-price-spacer {
+    display: none !important;
+  }
+
+  .sarjan-all-colors-btn__inner {
+    min-height: 0 !important;
+    gap: 0 !important;
   }
 }
 
@@ -8724,19 +8739,19 @@ button.accordion-button:not(.collapsed),
 
 /* Storefront buttons — icon + label */
 :is(
-  .tf-btn,
-  a.tf-btn,
-  button.tf-btn,
-  .btn-style-2,
-  a.btn-style-2,
-  .btn-style-3,
-  a.btn-style-3,
-  .sarjan-btn,
-  a.sarjan-btn,
-  button.sarjan-btn,
-  .btn-main-product,
-  a.btn-main-product
-).sarjan-has-btn-icon {
+    .tf-btn,
+    a.tf-btn,
+    button.tf-btn,
+    .btn-style-2,
+    a.btn-style-2,
+    .btn-style-3,
+    a.btn-style-3,
+    .sarjan-btn,
+    a.sarjan-btn,
+    button.sarjan-btn,
+    .btn-main-product,
+    a.btn-main-product
+  ).sarjan-has-btn-icon:not(.sarjan-pdp-cta-btn) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -9618,15 +9633,68 @@ button.accordion-button:not(.collapsed),
   margin-top: 20px;
 }
 
-.modal-quick-view .tf-product-info-by-btn.sarjan-product-action-row {
-  display: flex;
-  flex-direction: column;
+.modal-quick-view .tf-product-info-by-btn.sarjan-product-action-row,
+.modal-quick-view
+  .tf-product-info-list
+  .tf-product-info-by-btn.sarjan-product-action-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
   gap: 14px;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  overflow-x: visible;
+}
+
+.modal-quick-view .tf-product-info-choose-option,
+.modal-quick-view .tf-product-info-list {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: visible;
+  box-sizing: border-box;
+}
+
+.modal-quick-view .sarjan-product-action-buttons {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex: none !important;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.modal-quick-view .sarjan-product-action-buttons > :is(a, button, .sarjan-btn) {
+  flex-grow: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 .modal-quick-view .tf-product-info-by-btn .sarjan-add-set-btn {
   min-height: 52px;
+}
+
+/* Quick view: never use PDP row layout (buttons beside icon strip) below desktop */
+@media (max-width: 991px) {
+  .modal-quick-view .sarjan-product-action-row,
+  .modal-quick-view .tf-product-info-by-btn.sarjan-product-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .modal-quick-view .sarjan-product-action-buttons {
+    display: grid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
 }
 
 @media (max-width: 991px) {
@@ -9685,18 +9753,6 @@ button.accordion-button:not(.collapsed),
     word-break: break-word;
   }
 
-  .modal-quick-view .tf-product-info-by-btn.sarjan-product-action-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-
-  .modal-quick-view .sarjan-product-action-buttons {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-  }
-
   .modal-quick-view .sarjan-product-action-buttons .btn-style-2,
   .modal-quick-view .sarjan-product-action-buttons .btn-style-3 {
     min-height: 48px;
@@ -9705,8 +9761,10 @@ button.accordion-button:not(.collapsed),
   }
 
   .modal-quick-view .sarjan-product-action-icons {
-    justify-content: center;
-    width: 100%;
+    justify-content: center !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .modal-quick-view .tf-btn.w-100.btn-fill.radius-4 {
@@ -9723,9 +9781,10 @@ button.accordion-button:not(.collapsed),
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 640px) {
   .modal-quick-view .sarjan-product-action-buttons {
     grid-template-columns: 1fr !important;
+    gap: 8px;
   }
 }
 

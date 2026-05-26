@@ -16,10 +16,11 @@ export function orderPlacedNavActions(orderId: string): BotNavAction[] {
   ];
 }
 
+/** User closed the widget — no auto-open on reload until they open it manually. */
 export function suppressOrderBotAutoOpen() {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(ORDER_BOT_SUPPRESS_AUTO_OPEN_KEY, "1");
+    localStorage.setItem(ORDER_BOT_SUPPRESS_AUTO_OPEN_KEY, "1");
   } catch {
     /* ignore */
   }
@@ -28,7 +29,7 @@ export function suppressOrderBotAutoOpen() {
 export function clearOrderBotAutoOpenSuppress() {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.removeItem(ORDER_BOT_SUPPRESS_AUTO_OPEN_KEY);
+    localStorage.removeItem(ORDER_BOT_SUPPRESS_AUTO_OPEN_KEY);
   } catch {
     /* ignore */
   }
@@ -37,7 +38,7 @@ export function clearOrderBotAutoOpenSuppress() {
 export function isOrderBotAutoOpenSuppressed() {
   if (typeof window === "undefined") return false;
   try {
-    return sessionStorage.getItem(ORDER_BOT_SUPPRESS_AUTO_OPEN_KEY) === "1";
+    return localStorage.getItem(ORDER_BOT_SUPPRESS_AUTO_OPEN_KEY) === "1";
   } catch {
     return false;
   }

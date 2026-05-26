@@ -2,7 +2,10 @@ import { getCatalogProducts } from "@/lib/catalog";
 import { buildValidatedOrderPayload } from "@/lib/order-pricing";
 import { productSetPrice } from "@/lib/product-pricing";
 import { createOrder } from "@/lib/local-db";
-import { siteSettings } from "@/data/site";
+import {
+  buildWebsiteInfoReply,
+  type WebsiteInfoTopic,
+} from "@/lib/order-bot/site-policies";
 import {
   browseBotCatalog,
   listBotCategories,
@@ -241,43 +244,28 @@ export async function executeBotTool(
     }
 
     case "website_info": {
-      const topic = String(args.topic ?? "general").toLowerCase();
-      switch (topic) {
-        case "contact":
-          return [
-            `${siteSettings.brandName}`,
-            `Phone: ${siteSettings.phone}`,
-            `Email: ${siteSettings.email}`,
-            `Address: ${siteSettings.address}`,
-            `Hours: ${siteSettings.openTimeWeekday}; ${siteSettings.openTimeSunday}`,
-            `Contact page: /contact`,
-          ].join("\n");
-        case "credit":
-          return `Approved B2B clients get **${siteSettings.creditTermDays}-day credit** on cheque workflow. Payment and deposit status show on each order in **/account**.`;
-        case "moq":
-          return "Each product has a **MOQ** (minimum sets per line). MOQ is shown in catalog and when you browse products. Admin confirms stock on approval.";
-        case "register":
-          return "New clients: **/register** with GST verification. After admin approval you can order here and on the storefront.";
-        case "tracking":
-          return "Track orders: **/order-tracking** (lookup by order ID) or **/account** → Your Orders for full timeline, LR number, and dispatch updates.";
-        case "pages":
-          return [
-            "Key pages:",
-            "• /products — catalog",
-            "• /categories — categories",
-            "• /collections — curated collections",
-            "• /account — orders & profile",
-            "• /order-tracking — track by order ID",
-            "• /cart — shopping cart",
-            "• /contact — contact us",
-          ].join("\n");
-        default:
-          return [
-            siteSettings.seo.description,
-            "",
-            "I help with catalog, cart, placing B2B orders, and order tracking for logged-in clients only.",
-          ].join("\n");
-      }
+      const raw = String(args.topic ?? "general").toLowerCase();
+      const topic = (
+        [
+          "contact",
+          "credit",
+          "payment",
+          "moq",
+          "register",
+          "tracking",
+          "pages",
+          "shipping",
+          "terms",
+          "process",
+          "collections",
+          "faq",
+          "refund",
+          "general",
+        ] as const
+      ).includes(raw as WebsiteInfoTopic)
+        ? (raw as WebsiteInfoTopic)
+        : "general";
+      return buildWebsiteInfoReply(topic);
     }
 
     default:

@@ -1,3 +1,4 @@
+import { answerWebsitePolicyQuestion } from "@/lib/order-bot/site-policies";
 import type { BotSession } from "@/lib/order-bot/session-store";
 import type { BotProductPreview } from "@/lib/order-bot/types";
 
@@ -205,7 +206,13 @@ export function answerCatalogQuestion(
         "4. **cart** → **place order**",
       ].join("\n");
     case "capabilities":
-      return "I help with Sarjan B2B ordering: browse categories, search products, add sets to cart, check MOQ/stock, and place orders. Ask naturally — e.g. product name, **yes** after a suggestion, or **add 2 100 sets**.";
+      return [
+        "I help with Sarjan B2B:",
+        "• **Products** — categories, collections, search, MOQ, stock, cart, place order",
+        "• **Your orders** — track status, dispatch, payment on account",
+        "• **Website** — payment terms, shipping, process, terms, FAQs, contact, collections",
+        "Ask e.g. *payment condition*, *shipping policy*, or **show Kurtas**.",
+      ].join("\n");
     case "price":
       if (focus)
         return `${focus.name}: **${money(focus.setPrice)}/set** (${focus.category}).`;
@@ -236,6 +243,9 @@ export function answerCatalogQuestion(
 }
 
 export function contextualFallback(session: BotSession, text: string) {
+  const policy = answerWebsitePolicyQuestion(text);
+  if (policy) return policy;
+
   const qa = answerCatalogQuestion(session, text);
   if (qa) return qa;
 

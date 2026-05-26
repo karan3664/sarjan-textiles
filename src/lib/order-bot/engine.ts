@@ -7,6 +7,7 @@ import {
   resolveProductFromSession,
   searchBotProducts,
 } from "@/lib/order-bot/catalog-tools";
+import { answerWebsitePolicyQuestion } from "@/lib/order-bot/site-policies";
 import {
   answerCatalogQuestion,
   clearProductPickPending,
@@ -222,12 +223,30 @@ const DEFAULT_QUICK_REPLIES = [
   "My orders",
 ];
 
-/** Cart / yes / pick — must run before LLM so short replies are not lost. */
+const POLICY_QUICK_REPLIES = [
+  "Payment terms",
+  "Shipping policy",
+  "How to order",
+  "Collections",
+];
+
+/** Cart / yes / pick / site policies — must run before LLM so short replies are not lost. */
 async function tryPreLlmOrderBotHandlers(
   session: BotSession,
   text: string,
 ): Promise<BotChatResponse | null> {
   const quickReplies = DEFAULT_QUICK_REPLIES;
+
+  const policyReply = answerWebsitePolicyQuestion(text);
+  if (policyReply) {
+    touchBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: policyReply,
+      cart: session.cart,
+      quickReplies: POLICY_QUICK_REPLIES,
+    };
+  }
 
   const cartQtyUpdate = parseCartQuantityUpdate(text, session.cart.length);
   if (cartQtyUpdate) {
@@ -379,6 +398,22 @@ export async function handleOrderBotMessage(input: {
         );
       }
     }
+  }
+
+  const policyQa = answerWebsitePolicyQuestion(text);
+  if (policyQa) {
+    touchBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: policyQa,
+      cart: session.cart,
+      quickReplies: [
+        "Payment terms",
+        "Shipping policy",
+        "How to order",
+        ...quickReplies,
+      ].slice(0, 4),
+    };
   }
 
   const qa = answerCatalogQuestion(session, text);

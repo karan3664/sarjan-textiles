@@ -138,9 +138,11 @@ body.sarjan-storefront
     .tf-btn-default
   ):not(.btn-close):not(.subscribe-button):not(.sarjan-emoji-trigger):not(
     .sarjan-sitemap-toggle
-  ):not(.bg-transparent):not(.btn.p-1):not(.btn-sold-out):not(:disabled):not(
-    [aria-disabled="true"]
-  ):not(:hover):not(:focus-visible):not(.is-hovered) {
+  ):not(.bg-transparent):not(.btn.p-1):not(.btn-sold-out):not(
+    .sarjan-pdp-cta-btn
+  ):not(:disabled):not([aria-disabled="true"]):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -820,4 +822,76 @@ body.sarjan-storefront.sarjan-storefront
   ) {
   color: var(--sarjan-btn-hover-color) !important;
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+/* PDP CTA layout: /sarjan-pdp-cta.css (loaded after this file) */
+
+body.sarjan-storefront.sarjan-storefront
+  .sarjan-product-action-buttons
+  > a.sarjan-all-colors-btn.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--short,
+body.sarjan-storefront.sarjan-storefront
+  .modal.modal-quick-view
+  .sarjan-product-action-buttons
+  > a.sarjan-all-colors-btn.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--short {
+  line-height: 1.25 !important;
+}
+
+body.sarjan-storefront
+  .modal-quick-view
+  .tf-product-info-list
+  .tf-product-info-by-btn,
+body.sarjan-storefront
+  .modal-quick-view
+  .tf-product-info-by-btn.sarjan-product-action-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+body.sarjan-storefront .modal-quick-view .sarjan-product-action-buttons {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex: none !important;
+}
+
+body.sarjan-storefront .modal-quick-view .sarjan-product-action-icons {
+  align-self: stretch !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  body.sarjan-storefront .modal-quick-view .sarjan-product-action-row,
+  body.sarjan-storefront
+    .modal-quick-view
+    .tf-product-info-by-btn.sarjan-product-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  body.sarjan-storefront .modal-quick-view .sarjan-product-action-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  body.sarjan-storefront .sarjan-product-action-buttons,
+  body.sarjan-storefront .modal-quick-view .sarjan-product-action-buttons {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  body.sarjan-storefront .sarjan-all-colors-price-spacer {
+    display: none !important;
+  }
 }

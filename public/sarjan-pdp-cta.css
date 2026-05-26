@@ -1,0 +1,265 @@
+/**
+ * PDP + quick-view product CTAs — load LAST (after storefront-buttons.css).
+ * Grid layout: icon | label | balance — no absolute positioning, no overflow clip.
+ */
+
+/* Stop parent chain from clipping pill borders on mobile */
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons,
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .tf-product-info-by-btn,
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .tf-product-info-choose-option,
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .tf-product-info-list,
+body.sarjan-storefront.sarjan-storefront
+  .tf-product-info-list
+  .sarjan-product-action-buttons,
+body.sarjan-storefront.sarjan-storefront
+  .tf-product-info-list
+  .tf-product-info-by-btn,
+body.sarjan-storefront.sarjan-storefront
+  .tf-product-info-list
+  .tf-product-info-choose-option {
+  overflow: visible !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .tf-product-info-wrap {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* PDP: Add set + All colors stacked full width (beats 768px flex side-by-side) */
+body.sarjan-storefront.sarjan-storefront .sarjan-product-action-buttons,
+body.sarjan-storefront.sarjan-storefront
+  .modal-quick-view
+  .sarjan-product-action-buttons {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  flex: none !important;
+}
+
+/* PDP CTA pill */
+body.sarjan-storefront.sarjan-storefront
+  .sarjan-product-action-buttons
+  > a.sarjan-pdp-cta-btn,
+body.sarjan-storefront.sarjan-storefront
+  .modal.modal-quick-view
+  .sarjan-product-action-buttons
+  > a.sarjan-pdp-cta-btn {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) 52px !important;
+  align-items: center !important;
+  justify-items: center !important;
+  gap: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  padding: 8px 14px 8px 16px !important;
+  min-height: 60px !important;
+  height: 60px !important;
+  max-height: 60px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1.25 !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  border-radius: 999px !important;
+  position: relative !important;
+  flex: none !important;
+  flex-grow: 0 !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-pdp-cta-btn__icon {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center !important;
+  justify-self: end;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  margin: 0 !important;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  border: 1px solid var(--line, #dedede);
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.65);
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-pdp-cta-btn__body,
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  :is(.sarjan-add-set-btn__inner, .sarjan-all-colors-btn__inner) {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  pointer-events: none;
+}
+
+/* Modave .text-button tall line-height — center label block with icon */
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  :is(.sarjan-add-set-btn__inner, .sarjan-all-colors-btn__inner).text-button,
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  :is(.sarjan-add-set-label, .sarjan-add-set-price) {
+  line-height: 1.2 !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-all-colors-btn.sarjan-pdp-cta-btn
+  .sarjan-all-colors-btn__inner {
+  min-height: 0 !important;
+  gap: 0 !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-all-colors-btn.sarjan-pdp-cta-btn
+  .sarjan-pdp-cta-btn__icon
+  :is(.sarjan-tf-btn-icon, i.icon) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+/* Only ONE of long / short visible (never inline-flex both) */
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--long,
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--short {
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--short {
+  display: none !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--long {
+  display: block !important;
+}
+
+@media (max-width: 767px) {
+  body.sarjan-storefront.sarjan-storefront
+    a.sarjan-pdp-cta-btn
+    .sarjan-all-colors-label--long {
+    display: none !important;
+  }
+
+  body.sarjan-storefront.sarjan-storefront
+    a.sarjan-pdp-cta-btn
+    .sarjan-all-colors-label--short {
+    display: block !important;
+  }
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn:is(:hover, :focus-visible, .is-hovered)
+  .sarjan-pdp-cta-btn__icon {
+  border-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-add-set-label,
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--short,
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-label--long {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1.25 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-add-set-price {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  line-height: 1.25 !important;
+}
+
+body.sarjan-storefront.sarjan-storefront
+  a.sarjan-pdp-cta-btn
+  .sarjan-all-colors-price-spacer {
+  display: none !important;
+}
+
+@media (max-width: 520px) {
+  body.sarjan-storefront.sarjan-storefront
+    .sarjan-product-action-buttons
+    > a.sarjan-pdp-cta-btn,
+  body.sarjan-storefront.sarjan-storefront
+    .modal.modal-quick-view
+    .sarjan-product-action-buttons
+    > a.sarjan-pdp-cta-btn {
+    grid-template-columns: 46px minmax(0, 1fr) 46px !important;
+    padding: 8px 12px 8px 14px !important;
+  }
+
+  body.sarjan-storefront.sarjan-storefront
+    a.sarjan-pdp-cta-btn
+    .sarjan-pdp-cta-btn__icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 18px !important;
+    justify-self: end;
+  }
+}

@@ -46,6 +46,7 @@ export default function RootLayout({
         {/* After Modave — CTA defaults + hover (must load after template CSS) */}
         <link rel="stylesheet" href="/sarjan-button-overrides.css" />
         <link rel="stylesheet" href="/storefront-buttons.css" />
+        <link rel="stylesheet" href="/sarjan-pdp-cta.css?v=20260526d" />
       </head>
       <body className="sarjan-storefront" suppressHydrationWarning>
         <SiteAnalytics />

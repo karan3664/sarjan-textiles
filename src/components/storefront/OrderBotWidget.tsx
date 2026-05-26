@@ -472,7 +472,10 @@ export function OrderBotWidget() {
               type="button"
               className="sarjan-order-bot-close"
               aria-label="Close chat"
-              onClick={() => setVisible(false)}
+              onClick={() => {
+                suppressOrderBotAutoOpen();
+                setVisible(false);
+              }}
             >
               ×
             </button>
@@ -646,6 +649,8 @@ export function OrderBotWidget() {
               clearOrderBotAutoOpenSuppress();
               unlockOrderBotAudio();
               playOrderBotOpenSound();
+            } else {
+              suppressOrderBotAutoOpen();
             }
             return next;
           });

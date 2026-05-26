@@ -172,7 +172,7 @@ const OPENAI_TOOLS = [
     function: {
       name: "website_info",
       description:
-        "Sarjan website info: contact, credit, MOQ, registration, tracking pages, site map.",
+        "Official Sarjan website policies and help: payment/credit, shipping/dispatch, terms, B2B process, collections, FAQs, refunds, contact, MOQ, registration, tracking, page list. Use for any non-catalog site question.",
       parameters: {
         type: "object",
         properties: {
@@ -181,10 +181,17 @@ const OPENAI_TOOLS = [
             enum: [
               "contact",
               "credit",
+              "payment",
               "moq",
               "register",
               "tracking",
               "pages",
+              "shipping",
+              "terms",
+              "process",
+              "collections",
+              "faq",
+              "refund",
               "general",
             ],
           },
@@ -216,10 +223,11 @@ function systemPrompt() {
     "• Product catalog: categories, collections, search, prices per set, MOQ, stock",
     "• Cart and placing wholesale orders for the logged-in approved client",
     "• Order tracking: status, dispatch, LR/transport, payment — ONLY this client's orders",
-    "• Website help: contact, credit terms, registration, /account, /order-tracking, /products",
+    "• Website help: payment terms, credit, shipping/dispatch, terms & conditions, B2B process, collections, FAQs, refunds, contact, registration, /account, /order-tracking",
     "",
     "RULES:",
-    "• Always use tools for catalog, cart, orders, and site facts — never invent SKUs, prices, or order IDs.",
+    "• For payment, shipping, terms, process, collections, or FAQ questions — call **website_info** with the right topic. Summarize tool output; add page links (/faqs, /terms, /shipping-policy, /process).",
+    "• Always use tools for catalog, cart, orders, and site facts — never invent SKUs, prices, order IDs, or policy details.",
     "• When the user says yes/haan/ok after products, call add_to_cart. For **1 23** or **1 23 yes**, use add_to_cart with product_index=1, sets=23, replace=true.",
     "• Low stock: add_to_cart/update_cart_line auto-cap qty; explain the adjustment to the user.",
     "• To change cart qty: update_cart_line (line_index, sets) or user says **update cart 1 30**.",
