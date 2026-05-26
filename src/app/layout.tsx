@@ -23,8 +23,27 @@ export const metadata: Metadata = {
   }),
   metadataBase: new URL(`https://${siteSettings.domain}`),
   icons: {
-    icon: siteSettings.favicon,
-    apple: siteSettings.favicon,
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      {
+        url: siteSettings.logoIcon,
+        type: "image/png",
+        sizes: "192x192",
+      },
+      {
+        url: siteSettings.favicon,
+        type: "image/png",
+        sizes: "512x512",
+      },
+    ],
+    apple: [
+      {
+        url: "/sarjan-assets/sarjan-favicon-192.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/favicon.ico",
   },
   category: "B2B Textile Platform",
   applicationName: siteSettings.brandName,
