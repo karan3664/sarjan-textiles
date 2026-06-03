@@ -181,6 +181,11 @@ export async function ModaveFooter() {
                           </Link>
                         </li>
                         <li className="text-caption-1">
+                          <Link href="/download" className="footer-menu_item">
+                            Download Android App
+                          </Link>
+                        </li>
+                        <li className="text-caption-1">
                           <Link href="/cart" className="footer-menu_item">
                             Order Cart
                           </Link>
