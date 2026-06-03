@@ -18,6 +18,7 @@
     "canvas-confetti": "^1.9.4",
     "emoji-picker-react": "^4.19.1",
     "exceljs": "^4.4.0",
+    "firebase-admin": "^13.0.2",
     "framer-motion": "^12.39.0",
     "google-auth-library": "^10.6.2",
     "india-pincode": "^2.5.9",

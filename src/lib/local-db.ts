@@ -1194,6 +1194,7 @@ export async function updateOrderStatus(
         (existing.status as LocalOrder["status"]) ?? "Pending approval",
         status,
       );
+      notifyOrderStatusPush(mapped);
       return mapped;
     } catch {
       // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
@@ -1211,7 +1212,18 @@ export async function updateOrderStatus(
   ];
   await syncInventoryForOrderStatusChange(order, previousStatus, status);
   await writeLocalDb(db);
+  notifyOrderStatusPush(order);
   return order;
+}
+
+/**
+ * Fire-and-forget push notification on order status change. Dynamic import
+ * avoids a static dependency cycle and keeps push fully optional.
+ */
+function notifyOrderStatusPush(order: LocalOrder) {
+  void import("@/lib/push-notifications")
+    .then((mod) => mod.sendOrderStatusPush(order))
+    .catch((error) => console.error("Order status push failed", error));
 }
 
 export async function updateOrderAdmin(
@@ -1279,6 +1291,7 @@ export async function updateOrderAdmin(
           existing.status as LocalOrder["status"],
           input.status,
         );
+        notifyOrderStatusPush(mapped);
       }
       return mapped;
     } catch {
@@ -1304,6 +1317,7 @@ export async function updateOrderAdmin(
       previousStatus,
       input.status,
     );
+    notifyOrderStatusPush(order);
   }
   await writeLocalDb(db);
   return order;

@@ -3,6 +3,7 @@ import { notifyEInvoiceOrderCreated } from "@/lib/compliance-webhooks";
 import { buildValidatedOrderPayload } from "@/lib/order-pricing";
 import { createOrder, readLocalDb } from "@/lib/local-db";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
+import { sendOrderPlacedPush } from "@/lib/push-notifications";
 import { after } from "next/server";
 
 export async function GET(request: Request) {
@@ -77,6 +78,11 @@ export async function POST(request: Request) {
     after(() =>
       sendOrderPlacedEmail(order).catch((error) =>
         console.error("Order placed email failed", error),
+      ),
+    );
+    after(() =>
+      sendOrderPlacedPush(order).catch((error) =>
+        console.error("Order placed push failed", error),
       ),
     );
     after(() => notifyEInvoiceOrderCreated(order));
