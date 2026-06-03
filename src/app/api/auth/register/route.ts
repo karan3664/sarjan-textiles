@@ -80,6 +80,20 @@ export async function POST(request: Request) {
       gst: String(body.gst),
       city: body.city != null ? String(body.city).trim() : undefined,
       state: body.state != null ? String(body.state).trim() : undefined,
+      phone:
+        body.mobile != null
+          ? String(body.mobile).replace(/[\s+]/g, "").replace(/^91/, "")
+          : body.phone != null
+            ? String(body.phone).trim()
+            : undefined,
+      line1: body.address != null ? String(body.address).trim() : undefined,
+      pincode: body.pincode != null ? String(body.pincode).trim() : undefined,
+      contactName:
+        body.fullName != null
+          ? String(body.fullName).trim()
+          : body.contactName != null
+            ? String(body.contactName).trim()
+            : undefined,
       ownerLegalName: String(body.ownerLegalName ?? "").trim() || undefined,
     });
     return Response.json({

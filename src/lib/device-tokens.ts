@@ -1,8 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  getLocalClientDeviceTokens,
+  registerLocalDeviceToken,
+  removeLocalDeviceTokens,
+} from "@/lib/device-tokens-store";
 
 /**
  * Storage for mobile-app FCM device tokens (Supabase table `device_tokens`).
- * No-ops gracefully when Supabase is not configured so local/dev stays usable.
+ * Falls back to JSON file storage when Supabase is not configured.
  */
 function supabaseAdmin() {
   if (process.env.SUPABASE_ENABLED !== "true") return null;
@@ -20,37 +25,45 @@ export async function registerDeviceToken(input: {
   platform: DevicePlatform;
 }) {
   const supabase = supabaseAdmin();
-  if (!supabase) return;
-  const now = new Date().toISOString();
-  await supabase.from("device_tokens").upsert(
-    {
-      token: input.token,
-      client_id: input.clientId,
-      platform: input.platform,
-      updated_at: now,
-    },
-    { onConflict: "token" },
-  );
+  if (supabase) {
+    const now = new Date().toISOString();
+    await supabase.from("device_tokens").upsert(
+      {
+        token: input.token,
+        client_id: input.clientId,
+        platform: input.platform,
+        updated_at: now,
+      },
+      { onConflict: "token" },
+    );
+    return;
+  }
+  await registerLocalDeviceToken(input);
 }
 
 export async function getClientDeviceTokens(
   clientId: string,
 ): Promise<string[]> {
   const supabase = supabaseAdmin();
-  if (!supabase) return [];
-  const { data } = await supabase
-    .from("device_tokens")
-    .select("token")
-    .eq("client_id", clientId);
-  return (data ?? [])
-    .map((row: { token?: unknown }) => String(row.token ?? "").trim())
-    .filter(Boolean);
+  if (supabase) {
+    const { data } = await supabase
+      .from("device_tokens")
+      .select("token")
+      .eq("client_id", clientId);
+    return (data ?? [])
+      .map((row: { token?: unknown }) => String(row.token ?? "").trim())
+      .filter(Boolean);
+  }
+  return getLocalClientDeviceTokens(clientId);
 }
 
 /** Remove tokens FCM reported as stale/unregistered. */
 export async function removeDeviceTokens(tokens: string[]) {
   if (!tokens.length) return;
   const supabase = supabaseAdmin();
-  if (!supabase) return;
-  await supabase.from("device_tokens").delete().in("token", tokens);
+  if (supabase) {
+    await supabase.from("device_tokens").delete().in("token", tokens);
+    return;
+  }
+  await removeLocalDeviceTokens(tokens);
 }

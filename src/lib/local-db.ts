@@ -372,6 +372,12 @@ export async function createClient(input: {
   gst?: string;
   city?: string;
   state?: string;
+  phone?: string;
+  /** Street / shop address line. */
+  line1?: string;
+  pincode?: string;
+  /** Contact person name at registration. */
+  contactName?: string;
   /** GST legal / proprietor name (lgnm); stored in address JSON. */
   ownerLegalName?: string;
 }) {
@@ -384,17 +390,24 @@ export async function createClient(input: {
   if (supabase) {
     try {
       const addressPayload: NonNullable<LocalClient["address"]> = {};
+      if (input.contactName?.trim()) {
+        addressPayload.contactName = input.contactName.trim();
+      }
       if (input.ownerLegalName?.trim()) {
         addressPayload.ownerLegalName = input.ownerLegalName.trim();
       }
+      if (input.line1?.trim()) addressPayload.line1 = input.line1.trim();
+      if (input.pincode?.trim()) addressPayload.pincode = input.pincode.trim();
       if (input.city?.trim()) addressPayload.city = input.city.trim();
       if (input.state?.trim()) addressPayload.state = input.state.trim();
+      if (input.phone?.trim()) addressPayload.phone = input.phone.trim();
       const row = {
         email: input.email.trim().toLowerCase(),
         password_hash: hashPassword(input.password),
         company_name: input.companyName.trim(),
         gst: input.gst?.trim(),
         city: input.city?.trim(),
+        phone: input.phone?.trim(),
         status: "pending",
         address: Object.keys(addressPayload).length ? addressPayload : {},
       };
@@ -419,14 +432,27 @@ export async function createClient(input: {
     companyName: input.companyName.trim(),
     gst: input.gst?.trim(),
     city: input.city?.trim(),
+    phone: input.phone?.trim(),
     address:
-      input.ownerLegalName?.trim() || input.city?.trim() || input.state?.trim()
+      input.ownerLegalName?.trim() ||
+      input.contactName?.trim() ||
+      input.line1?.trim() ||
+      input.pincode?.trim() ||
+      input.city?.trim() ||
+      input.state?.trim() ||
+      input.phone?.trim()
         ? {
+            ...(input.contactName?.trim()
+              ? { contactName: input.contactName.trim() }
+              : {}),
             ...(input.ownerLegalName?.trim()
               ? { ownerLegalName: input.ownerLegalName.trim() }
               : {}),
+            ...(input.line1?.trim() ? { line1: input.line1.trim() } : {}),
+            ...(input.pincode?.trim() ? { pincode: input.pincode.trim() } : {}),
             ...(input.city?.trim() ? { city: input.city.trim() } : {}),
             ...(input.state?.trim() ? { state: input.state.trim() } : {}),
+            ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}),
           }
         : undefined,
     status: "pending",

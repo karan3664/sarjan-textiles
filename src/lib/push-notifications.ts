@@ -1,3 +1,4 @@
+import { createClientNotification } from "@/lib/client-notifications";
 import { getClientDeviceTokens, removeDeviceTokens } from "@/lib/device-tokens";
 import { getFcm } from "@/lib/firebase-admin";
 import type { LocalOrder } from "@/lib/local-db";
@@ -54,11 +55,20 @@ async function pushToClient(
   message: {
     title: string;
     body: string;
+    type: "order" | "dispatch" | "payment" | "general";
     data: Record<string, string>;
   },
 ) {
+  await createClientNotification({
+    clientId,
+    title: message.title,
+    body: message.body,
+    type: message.type,
+    data: message.data,
+  }).catch(() => undefined);
+
   const fcm = getFcm();
-  if (!fcm) return; // push not configured — silently skip
+  if (!fcm) return; // push not configured — inbox still updated above
   const tokens = await getClientDeviceTokens(clientId);
   if (!tokens.length) return;
 
@@ -93,6 +103,7 @@ export async function sendOrderPlacedPush(order: LocalOrder) {
   await pushToClient(order.clientId, {
     title: "Order placed 🎉",
     body: `Order ${order.id} placed for ${formatInr(order.subtotal)}. We'll review it shortly.`,
+    type: "order",
     data: { type: "order", id: order.id, screen: "OrderDetail" },
   });
 }
@@ -100,9 +111,11 @@ export async function sendOrderPlacedPush(order: LocalOrder) {
 export async function sendOrderStatusPush(order: LocalOrder) {
   const copy = statusCopy[order.status];
   if (!copy) return;
+  const pushType = order.status === "Dispatched" ? "dispatch" : "order";
   await pushToClient(order.clientId, {
     title: copy.title,
     body: copy.body(order),
-    data: { type: "order", id: order.id, screen: "OrderDetail" },
+    type: pushType,
+    data: { type: pushType, id: order.id, screen: "OrderDetail" },
   });
 }
