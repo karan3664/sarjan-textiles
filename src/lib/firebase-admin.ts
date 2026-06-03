@@ -6,6 +6,7 @@ import {
   type ServiceAccount,
 } from "firebase-admin/app";
 import { getMessaging, type Messaging } from "firebase-admin/messaging";
+import { getAuth, type Auth } from "firebase-admin/auth";
 
 /**
  * Lazily-initialised Firebase Admin messaging client.
@@ -16,6 +17,7 @@ import { getMessaging, type Messaging } from "firebase-admin/messaging";
  *   - or `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY`.
  */
 let cached: Messaging | null | undefined;
+let cachedAuth: Auth | null | undefined;
 
 function loadServiceAccount(): ServiceAccount | null {
   const raw =
@@ -52,11 +54,21 @@ function loadServiceAccount(): ServiceAccount | null {
   return null;
 }
 
+/** Initialises (or reuses) the shared Firebase Admin app, or `null`. */
+function getAdminApp(): App | null {
+  const serviceAccount = loadServiceAccount();
+  if (!serviceAccount) return null;
+  return (
+    getApps().find((existing) => existing.name === "fcm") ??
+    initializeApp({ credential: cert(serviceAccount) }, "fcm")
+  );
+}
+
 /** Returns the Admin Messaging client, or `null` when push is not configured. */
 export function getFcm(): Messaging | null {
   if (cached !== undefined) return cached;
-  const serviceAccount = loadServiceAccount();
-  if (!serviceAccount) {
+  const app = getAdminApp();
+  if (!app) {
     if (process.env.NODE_ENV !== "production") {
       console.warn(
         "[firebase-admin] Push disabled — set FIREBASE_SERVICE_ACCOUNT to enable.",
@@ -65,11 +77,28 @@ export function getFcm(): Messaging | null {
     cached = null;
     return cached;
   }
-  const app: App =
-    getApps().find((existing) => existing.name === "fcm") ??
-    initializeApp({ credential: cert(serviceAccount) }, "fcm");
   cached = getMessaging(app);
   return cached;
+}
+
+/**
+ * Returns the Admin Auth client (used to verify phone-login ID tokens),
+ * or `null` when Firebase credentials are not configured.
+ */
+export function getFirebaseAuth(): Auth | null {
+  if (cachedAuth !== undefined) return cachedAuth;
+  const app = getAdminApp();
+  if (!app) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "[firebase-admin] Auth disabled — set FIREBASE_SERVICE_ACCOUNT to enable.",
+      );
+    }
+    cachedAuth = null;
+    return cachedAuth;
+  }
+  cachedAuth = getAuth(app);
+  return cachedAuth;
 }
 
 export function isPushConfigured(): boolean {

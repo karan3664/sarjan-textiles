@@ -26,12 +26,32 @@ export async function POST(request: Request) {
     );
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
+    const mode = body.mode === "login" ? "login" : "register";
+
     const db = await readLocalDb();
-    const duplicate = findClientFieldDuplicate(db.clients, {
-      email: normalizeClientEmail(email),
-    });
-    if (duplicate) {
-      return Response.json({ error: duplicate.message }, { status: 400 });
+    if (mode === "login") {
+      // Login OTP: the email MUST belong to an existing account.
+      const exists = db.clients.some(
+        (client) =>
+          normalizeClientEmail(client.email) === normalizeClientEmail(email),
+      );
+      if (!exists) {
+        return Response.json(
+          {
+            error: "No account found with this email. Please register first.",
+            code: "NOT_REGISTERED",
+          },
+          { status: 404 },
+        );
+      }
+    } else {
+      // Registration OTP: the email must NOT already be registered.
+      const duplicate = findClientFieldDuplicate(db.clients, {
+        email: normalizeClientEmail(email),
+      });
+      if (duplicate) {
+        return Response.json({ error: duplicate.message }, { status: 400 });
+      }
     }
 
     const otp = generateEmailOtp();
@@ -42,6 +62,11 @@ export async function POST(request: Request) {
       (process.env.SMTP_DEV_CONSOLE_OTP === "1" ||
         process.env.SMTP_DEV_CONSOLE_OTP === "true");
 
+    const isLogin = mode === "login";
+    const actionText = isLogin
+      ? "Use the verification code below to sign in to your Sarjan Textiles account."
+      : "Use the verification code below to continue your Sarjan Textiles registration.";
+
     if (devConsoleOtp) {
       console.warn(
         `[sarjan-dev] Email OTP for ${email} (not sent — SMTP_DEV_CONSOLE_OTP): ${otp}`,
@@ -49,7 +74,7 @@ export async function POST(request: Request) {
     } else {
       const otpInner = `
         <p style="margin:0 0 16px;color:#4d4843;line-height:1.6;">
-          Use the verification code below to continue your Sarjan Textiles registration.
+          ${escapeHtml(actionText)}
         </p>
         <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:24px auto;">
           <tr>
@@ -62,22 +87,24 @@ export async function POST(request: Request) {
           This code expires in <strong>10 minutes</strong>.
         </p>
         <p style="margin:0;font-size:13px;color:#6f6a64;line-height:1.5;">
-          If you did not request this registration, you can ignore this email.
+          If you did not request this ${isLogin ? "login" : "registration"}, you can ignore this email.
         </p>
       `;
       await sendDomainMail({
         to: email,
-        subject: "Sarjan Textiles email verification OTP",
+        subject: isLogin
+          ? "Sarjan Textiles login verification code"
+          : "Sarjan Textiles email verification OTP",
         text: [
           `Your Sarjan Textiles verification OTP is ${otp}.`,
           "",
           "This OTP is valid for 10 minutes.",
-          "If you did not request this registration, please ignore this email.",
+          `If you did not request this ${isLogin ? "login" : "registration"}, please ignore this email.`,
         ].join("\n"),
         html: buildSarjanEmailHtml({
           preheader: `Your code: ${otp}`,
-          eyebrow: "Registration",
-          heading: "Your verification code",
+          eyebrow: isLogin ? "Login" : "Registration",
+          heading: isLogin ? "Your login code" : "Your verification code",
           innerHtml: otpInner,
         }),
       });
