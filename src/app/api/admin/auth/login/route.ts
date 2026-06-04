@@ -32,6 +32,8 @@ export async function POST(request: Request) {
     });
     const response = NextResponse.json({
       admin: { email: admin.email, name: admin.name, role: admin.role },
+      /** Mobile admin app — use as Bearer token or WebView session cookie value. */
+      token,
     });
     setAdminSessionCookie(response, token);
     return response;

@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { verifyAdminToken } from "@/lib/admin-token";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 import { readLocalDb } from "@/lib/local-db";
 import {
   sendAdminClientPush,
@@ -10,13 +9,9 @@ export const runtime = "nodejs";
 
 const PROMO_TYPES = new Set(["collection", "arrival", "offer", "general"]);
 
-async function session() {
-  return verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
-}
-
 /** POST /api/admin/client-notifications — send push + inbox (all users or one client). */
 export async function POST(request: Request) {
-  const s = await session();
+  const s = await getAdminRouteSession(request);
   if (!s) {
     return Response.json({ error: "Admin login required" }, { status: 401 });
   }

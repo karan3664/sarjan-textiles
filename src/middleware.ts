@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { roleCanAccess, verifyAdminToken } from "@/lib/admin-token";
+import { verifyAdminFromRequest } from "@/lib/admin-session-resolve";
+import { roleCanAccess } from "@/lib/admin-token";
 import {
   clientPostLoginPath,
   isClientProtectedApi,
@@ -70,7 +71,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const session = await verifyAdminToken(
+    const session = await verifyAdminFromRequest(
+      request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
     );
     if (session) {
@@ -80,7 +82,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if ((isAdminPage || isAdminApi) && !isAdminAuth) {
-    const session = await verifyAdminToken(
+    const session = await verifyAdminFromRequest(
+      request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
     );
     if (!session) {

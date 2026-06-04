@@ -7,8 +7,8 @@ import {
 } from "@/lib/compliance-webhooks";
 import { createAdminOrder, updateOrderAdmin } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
-import { cookies } from "next/headers";
 import { after } from "next/server";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 
 const paymentStatuses = ["Pending", "Partial", "Paid", "Overdue"];
 const depositStatuses = ["Not deposited", "Deposited", "Cleared", "Bounced"];
@@ -21,8 +21,8 @@ const dispatchStatuses = [
   "Delivered",
 ];
 
-async function adminSession() {
-  return verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
+async function adminSession(request: Request) {
+  return getAdminRouteSession(request);
 }
 
 function patchForRole(role: AdminRole, body: Record<string, unknown>) {
@@ -90,7 +90,11 @@ function withoutUndefined<T extends Record<string, unknown>>(input: T) {
   ) as T;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await getAdminRouteSession(request);
+  if (!session) {
+    return Response.json({ error: "Admin login required" }, { status: 401 });
+  }
   return Response.json({ orders: await getAdminOrders() });
 }
 
@@ -135,7 +139,7 @@ function normalizeItems(raw: unknown) {
 
 export async function POST(request: Request) {
   try {
-    const session = await adminSession();
+    const session = await adminSession(request);
     if (!session)
       return Response.json({ error: "Admin login required" }, { status: 401 });
     if (!["super_admin", "admin", "sales"].includes(session.role))
@@ -178,7 +182,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await adminSession();
+    const session = await adminSession(request);
     if (!session)
       return Response.json({ error: "Admin login required" }, { status: 401 });
     const body = (await request.json()) as Record<string, unknown>;

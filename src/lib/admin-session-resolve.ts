@@ -1,0 +1,13 @@
+import type { NextRequest } from "next/server";
+import { getAdminApiSession } from "@/lib/admin-api-session";
+import { verifyAdminToken, type AdminSession } from "@/lib/admin-token";
+
+/** Cookie (web) or Authorization Bearer (native admin app). */
+export async function verifyAdminFromRequest(
+  request: NextRequest,
+  cookieToken?: string,
+): Promise<AdminSession | null> {
+  const fromBearer = await getAdminApiSession(request);
+  if (fromBearer) return fromBearer;
+  return verifyAdminToken(cookieToken);
+}

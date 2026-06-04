@@ -1,7 +1,6 @@
 import { getAdminCustomers } from "@/lib/admin-customers";
 import { orderStatuses } from "@/lib/admin-orders";
 import { appendAuditLog } from "@/lib/cms-store";
-import { verifyAdminToken } from "@/lib/admin-token";
 import { sendClientAccountApprovedEmail } from "@/lib/client-account-emails";
 import {
   createAdminClient,
@@ -12,7 +11,7 @@ import {
   type LocalClient,
 } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
-import { cookies } from "next/headers";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 import { after } from "next/server";
 
 const clientStatuses: LocalClient["status"][] = [
@@ -22,15 +21,17 @@ const clientStatuses: LocalClient["status"][] = [
   "inactive",
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await getAdminRouteSession(request);
+  if (!session) {
+    return Response.json({ error: "Admin login required" }, { status: 401 });
+  }
   return Response.json({ customers: await getAdminCustomers() });
 }
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminToken(
-      (await cookies()).get("sarjan-admin-session")?.value,
-    );
+    const session = await getAdminRouteSession(request);
     if (!session)
       return Response.json({ error: "Admin login required" }, { status: 401 });
     if (!["super_admin", "admin", "sales"].includes(session.role))
@@ -75,9 +76,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await verifyAdminToken(
-      (await cookies()).get("sarjan-admin-session")?.value,
-    );
+    const session = await getAdminRouteSession(request);
     if (!session)
       return Response.json({ error: "Admin login required" }, { status: 401 });
     if (!["super_admin", "admin", "sales"].includes(session.role))
@@ -169,9 +168,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await verifyAdminToken(
-      (await cookies()).get("sarjan-admin-session")?.value,
-    );
+    const session = await getAdminRouteSession(request);
     if (!session)
       return Response.json({ error: "Admin login required" }, { status: 401 });
     if (!["super_admin", "admin", "sales"].includes(session.role))
