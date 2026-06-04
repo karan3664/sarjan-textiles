@@ -7,7 +7,9 @@
     "dev:clean": "rm -rf .next && next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "test:notifications": "tsx --env-file=.env.local scripts/test-client-notifications.ts",
+    "test:admin-send": "tsx --env-file=.env.local scripts/test-admin-send-notification.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
