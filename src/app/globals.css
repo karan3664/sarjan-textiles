@@ -5360,6 +5360,121 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   font-weight: 600;
 }
 
+/* Send app notification admin */
+.sarjan-admin-send-notification {
+  max-width: 720px;
+}
+
+.sarjan-admin-send-notification__intro {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.sarjan-admin-send-notification__form.wg-box {
+  padding: 24px 28px;
+}
+
+.sarjan-admin-send-notification .form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--main, #181818);
+}
+
+.sarjan-admin-send-notification__audience {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sarjan-admin-send-notification__audience .form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+.sarjan-admin-send-notification__audience .form-check-input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.sarjan-admin-send-notification__audience .form-check-label {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--main, #181818);
+}
+
+.sarjan-admin-send-notification__form .form-control,
+.sarjan-admin-send-notification__form .form-select,
+.sarjan-admin-send-notification__form textarea.form-control {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--main, #181818);
+  box-shadow: none;
+}
+
+.sarjan-admin-send-notification__form textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.sarjan-admin-send-notification__form .form-control:focus,
+.sarjan-admin-send-notification__form .form-select:focus {
+  border-color: #181818;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
+}
+
+.sarjan-admin-send-notification__form .form-select {
+  padding-right: 36px;
+  appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.sarjan-admin-send-notification__actions {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.sarjan-admin-send-notification__submit.tf-button.style-1 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  min-height: 48px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.sarjan-admin-send-notification__submit.tf-button.style-1:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 /* Newsletter admin — form fields (match account / blog-comments panels) */
 .sarjan-admin-newsletter .form-label {
   display: block;

@@ -95,9 +95,8 @@ export function AdminSendNotificationClient({
   };
 
   return (
-    <div className="d-flex flex-column gap-4">
-      <div>
-        <h4 className="mb-1">Send app notification</h4>
+    <div className="sarjan-admin-send-notification">
+      <div className="sarjan-admin-send-notification__intro mb-4">
         <p className="text-muted mb-0">
           Push to mobile devices and save in the in-app notification centre.
           Choose <strong>All users</strong> for offers, new posts, and promos
@@ -109,17 +108,17 @@ export function AdminSendNotificationClient({
 
       {notice ? (
         <div
-          className={`alert ${notice.kind === "ok" ? "alert-success" : "alert-danger"}`}
+          className={`alert ${notice.kind === "ok" ? "alert-success" : "alert-danger"} mb-4`}
           role="alert"
         >
           {notice.text}
         </div>
       ) : null}
 
-      <div className="card p-4 border">
+      <div className="wg-box sarjan-admin-send-notification__form">
         <div className="mb-3">
-          <label className="form-label fw-bold">Audience</label>
-          <div className="d-flex flex-wrap gap-3">
+          <span className="form-label d-block">Audience</span>
+          <div className="sarjan-admin-send-notification__audience">
             <label className="form-check">
               <input
                 className="form-check-input"
@@ -128,7 +127,7 @@ export function AdminSendNotificationClient({
                 checked={audience === "all"}
                 onChange={() => setAudience("all")}
               />
-              <span className="form-check-label ms-1">
+              <span className="form-check-label">
                 All app users (logged in + guests)
               </span>
             </label>
@@ -140,7 +139,7 @@ export function AdminSendNotificationClient({
                 checked={audience === "client"}
                 onChange={() => setAudience("client")}
               />
-              <span className="form-check-label ms-1">One client only</span>
+              <span className="form-check-label">One client only</span>
             </label>
           </div>
         </div>
@@ -227,14 +226,16 @@ export function AdminSendNotificationClient({
           />
         </div>
 
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={busy}
-          onClick={() => void send()}
-        >
-          {busy ? "Sending…" : "Send notification"}
-        </button>
+        <div className="sarjan-admin-send-notification__actions">
+          <button
+            type="button"
+            className="tf-button style-1 sarjan-admin-send-notification__submit"
+            disabled={busy}
+            onClick={() => void send()}
+          >
+            {busy ? "Sending…" : "Send notification"}
+          </button>
+        </div>
       </div>
     </div>
   );

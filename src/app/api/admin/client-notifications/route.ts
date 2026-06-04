@@ -99,11 +99,17 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Admin client notification send failed", error);
     const raw = error instanceof Error ? error.message : "";
+    const readOnly =
+      raw.includes("EROFS") || raw.includes("read-only file system");
     return Response.json(
       {
-        error: raw.includes("Firebase")
-          ? "Push is not configured. Inbox entry was still saved if possible."
-          : raw || "Could not send notification",
+        error: readOnly
+          ? "Notifications must be stored in Supabase on production. Set SUPABASE_ENABLED=true, run migration 20260604140000_client_notifications.sql, and redeploy."
+          : raw.includes("Firebase")
+            ? "Push is not configured. Inbox entry was still saved if possible."
+            : raw.includes("client_notifications")
+              ? "Database table missing. Run Supabase migration 20260604140000_client_notifications.sql."
+              : raw || "Could not send notification",
       },
       { status: 500 },
     );
