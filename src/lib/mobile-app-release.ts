@@ -38,14 +38,15 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.11";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "12");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.12";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "13");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
+      "Fix version-check loop: compare native build number, not stale JS config.",
       "Maroon commerce UI across home, search, PDP, cart and checkout.",
       "Photo search from camera; improved product gallery and out-of-stock badges.",
       "5% GST shown on cart, checkout and orders; credit order payment for now.",
