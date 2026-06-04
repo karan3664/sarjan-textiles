@@ -98,3 +98,17 @@ export async function markClientNotificationRead(
   await writeAll(next);
   return updated;
 }
+
+export async function deleteClientNotification(
+  clientId: string,
+  notificationId: string,
+) {
+  const all = await readAll();
+  const before = all.length;
+  const next = all.filter(
+    (item) => !(item.id === notificationId && item.clientId === clientId),
+  );
+  if (next.length === before) return false;
+  await writeAll(next);
+  return true;
+}

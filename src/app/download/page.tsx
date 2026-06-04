@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getMobileAppRelease } from "@/lib/mobile-app-release";
+import { DownloadProductActions } from "./DownloadProductActions";
 
 export const metadata = {
   title: "Download Sarjan Textiles App",
@@ -8,9 +9,18 @@ export const metadata = {
     "Install the Sarjan Textiles wholesale Android app. Scan the QR code or download the APK.",
 };
 
-export default function DownloadAppPage() {
+type Props = {
+  searchParams: Promise<{ product?: string }>;
+};
+
+export default async function DownloadAppPage({ searchParams }: Props) {
+  const { product } = await searchParams;
   const release = getMobileAppRelease();
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(release.apkUrl)}`;
+  const productRef = product?.trim() || "";
+  const productLink = productRef
+    ? `https://sarjantextiles.com/app/product/${encodeURIComponent(productRef)}`
+    : "";
 
   return (
     <ModaveShell>
@@ -23,11 +33,27 @@ export default function DownloadAppPage() {
                   Wholesale B2B · Android
                 </p>
                 <h1 className="heading mb-3">Sarjan Textiles App</h1>
-                <p className="text-secondary mb-4">
-                  Scan the QR code on your phone to download the latest APK, or
-                  use the button below. After installing, open the app and sign
-                  in with your wholesale account.
-                </p>
+                {productRef ? (
+                  <p className="text-secondary mb-4">
+                    Install the app, then open the shared product. After
+                    install, tap <strong>Open Product</strong> below or open the
+                    product link again from WhatsApp.
+                  </p>
+                ) : (
+                  <p className="text-secondary mb-4">
+                    Scan the QR code on your phone to download the latest APK,
+                    or use the button below. After installing, open the app and
+                    sign in with your wholesale account.
+                  </p>
+                )}
+
+                {productRef ? (
+                  <DownloadProductActions
+                    productRef={productRef}
+                    productLink={productLink}
+                    downloadUrl={release.downloadPageUrl}
+                  />
+                ) : null}
 
                 <div className="sarjan-download-qr-wrap mx-auto mb-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -77,6 +103,12 @@ export default function DownloadAppPage() {
                       Open <strong>Sarjan Textiles</strong> and log in with
                       mobile OTP or email.
                     </li>
+                    {productRef ? (
+                      <li className="mb-2">
+                        Tap <strong>Open Product</strong> above to view the
+                        shared item in the app.
+                      </li>
+                    ) : null}
                     <li>
                       Already installed? Open the app — if an update is
                       available you will see a prompt to download the latest

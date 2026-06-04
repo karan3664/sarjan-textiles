@@ -78,7 +78,10 @@ async function pushToClient(
     data: message.data,
     android: {
       priority: "high",
-      notification: { sound: "default" },
+      notification: {
+        sound: "default",
+        channelId: "sarjan_default",
+      },
     },
     apns: { payload: { aps: { sound: "default" } } },
   });

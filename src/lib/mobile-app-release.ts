@@ -38,14 +38,14 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.2";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "3");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.4";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "5");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
-    "Notifications inbox, checkout address save, website parity (blogs, testimonials, feedback), and registration fixes.";
+    "Share products with deep links, foreground notifications, and tap-to-open routing.";
 
   return {
     latestVersion,
