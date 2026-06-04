@@ -38,16 +38,17 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.7";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "8");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.8";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "9");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
+      "App tour spotlight and tooltip fixes on Android (Redmi and large phones).",
       "Notifications: full order updates when logged in; offers & news for guests.",
-      "App tour and home layout fixes (testimonials, Instagram, large phones).",
+      "App tour and home layout fixes (testimonials, Instagram).",
       "Hindi & Gujarati notification strings.",
       "Smoother navigation, shimmer loading, blogs, and deep links.",
     ].join(" ");
