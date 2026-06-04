@@ -38,8 +38,8 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.9";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "10");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.10";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "11");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
