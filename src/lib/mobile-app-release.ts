@@ -38,18 +38,18 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.6";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "7");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.7";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "8");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Smoother navigation — Edit Profile and menu screens no longer hang.",
-      "App tour stops blocking when you open other screens.",
-      "Home layout, footer tabs, and city picker performance fixes.",
-      "Hindi & Gujarati, notifications, shimmer loading, and v1.0.5 features included.",
+      "Notifications: full order updates when logged in; offers & news for guests.",
+      "App tour and home layout fixes (testimonials, Instagram, large phones).",
+      "Hindi & Gujarati notification strings.",
+      "Smoother navigation, shimmer loading, blogs, and deep links.",
     ].join(" ");
 
   return {
