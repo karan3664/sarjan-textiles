@@ -1,9 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import {
+  getLocalAllDeviceTokens,
   getLocalClientDeviceTokens,
   registerLocalDeviceToken,
   removeLocalDeviceTokens,
 } from "@/lib/device-tokens-store";
+
+/** Guest / logged-out app installs (marketing push only). */
+export const ANONYMOUS_CLIENT_ID = "__anonymous__";
 
 /**
  * Storage for mobile-app FCM device tokens (Supabase table `device_tokens`).
@@ -41,6 +45,17 @@ export async function registerDeviceToken(input: {
   await registerLocalDeviceToken(input);
 }
 
+export async function registerAnonymousDeviceToken(input: {
+  token: string;
+  platform: DevicePlatform;
+}) {
+  return registerDeviceToken({
+    clientId: ANONYMOUS_CLIENT_ID,
+    token: input.token,
+    platform: input.platform,
+  });
+}
+
 export async function getClientDeviceTokens(
   clientId: string,
 ): Promise<string[]> {
@@ -55,6 +70,21 @@ export async function getClientDeviceTokens(
       .filter(Boolean);
   }
   return getLocalClientDeviceTokens(clientId);
+}
+
+export async function getAllPushDeviceTokens(): Promise<string[]> {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data } = await supabase.from("device_tokens").select("token");
+    return Array.from(
+      new Set(
+        (data ?? [])
+          .map((row: { token?: unknown }) => String(row.token ?? "").trim())
+          .filter(Boolean),
+      ),
+    );
+  }
+  return getLocalAllDeviceTokens();
 }
 
 /** Remove tokens FCM reported as stale/unregistered. */

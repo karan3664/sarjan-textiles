@@ -1,16 +1,35 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
-import { listClientNotifications } from "@/lib/client-notifications";
+import {
+  isBroadcastNotification,
+  listBroadcastNotifications,
+  listInboxForClient,
+} from "@/lib/client-notifications";
 
-/** GET /api/notifications — inbox for the signed-in client. */
+function toPublicNotification(
+  item: Awaited<ReturnType<typeof listBroadcastNotifications>>[number],
+) {
+  const { clientId: _clientId, ...rest } = item;
+  return {
+    ...rest,
+    audience: isBroadcastNotification(item) ? "broadcast" : "client",
+  };
+}
+
+/** GET /api/notifications — inbox (logged-in: orders + offers; guest: broadcasts only). */
 export async function GET(request: Request) {
   const session = await verifyClientToken(bearerToken(request));
-  if (!session) {
-    return Response.json(
-      { error: "Valid client token required" },
-      { status: 401 },
-    );
+
+  if (session) {
+    const notifications = await listInboxForClient(session.clientId);
+    return Response.json({
+      notifications: notifications.map(toPublicNotification),
+      mode: "authenticated",
+    });
   }
 
-  const notifications = await listClientNotifications(session.clientId);
-  return Response.json({ notifications });
+  const notifications = await listBroadcastNotifications();
+  return Response.json({
+    notifications: notifications.map(toPublicNotification),
+    mode: "guest",
+  });
 }

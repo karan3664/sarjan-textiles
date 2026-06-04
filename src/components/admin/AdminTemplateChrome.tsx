@@ -83,6 +83,7 @@ type AdminActiveSection =
   | "commerceHub"
   | "blogComments"
   | "newsletter"
+  | "sendNotifications"
   | "account";
 
 type SidebarNavItem = {
@@ -212,6 +213,12 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-send",
     label: "Newsletter",
     section: "newsletter",
+  },
+  {
+    href: "/admin/send-notifications",
+    icon: "icon-bell",
+    label: "App notifications",
+    section: "sendNotifications",
   },
   {
     href: "/admin/category-pages",

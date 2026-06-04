@@ -53,6 +53,13 @@ export async function getLocalClientDeviceTokens(
     .filter(Boolean);
 }
 
+export async function getLocalAllDeviceTokens(): Promise<string[]> {
+  const all = await readAll();
+  return Array.from(
+    new Set(all.map((row) => row.token.trim()).filter(Boolean)),
+  );
+}
+
 export async function removeLocalDeviceTokens(tokens: string[]) {
   if (!tokens.length) return;
   const stale = new Set(tokens.map((token) => token.trim()).filter(Boolean));

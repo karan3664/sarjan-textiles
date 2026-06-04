@@ -1,21 +1,16 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
-import { registerDeviceToken, type DevicePlatform } from "@/lib/device-tokens";
+import {
+  registerAnonymousDeviceToken,
+  registerDeviceToken,
+  type DevicePlatform,
+} from "@/lib/device-tokens";
 
 /**
  * POST /api/notifications/register-device
  * Body: { token: string, platform?: "android" | "ios" }
- * Auth: Bearer client JWT. Stores the device's FCM token against the client so
- * order notifications can be delivered to their phone(s).
+ * Auth optional: logged-in clients link token to account; guests register for promos.
  */
 export async function POST(request: Request) {
-  const session = await verifyClientToken(bearerToken(request));
-  if (!session) {
-    return Response.json(
-      { error: "Valid client token required" },
-      { status: 401 },
-    );
-  }
-
   const body = (await request.json().catch(() => null)) as {
     token?: unknown;
     platform?: unknown;
@@ -30,9 +25,19 @@ export async function POST(request: Request) {
       ? "ios"
       : "android";
 
+  const session = await verifyClientToken(bearerToken(request));
+
   try {
-    await registerDeviceToken({ clientId: session.clientId, token, platform });
-    return Response.json({ ok: true });
+    if (session) {
+      await registerDeviceToken({
+        clientId: session.clientId,
+        token,
+        platform,
+      });
+      return Response.json({ ok: true, mode: "authenticated" });
+    }
+    await registerAnonymousDeviceToken({ token, platform });
+    return Response.json({ ok: true, mode: "guest" });
   } catch (error) {
     return Response.json(
       {

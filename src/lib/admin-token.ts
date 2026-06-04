@@ -23,8 +23,8 @@ export type ConfiguredAdmin = {
 };
 
 export const roleAccess: Record<AdminRole, string[]> = {
-  super_admin: ["/admin", "/api/admin"],
-  admin: ["/admin", "/api/admin"],
+  super_admin: ["/admin", "/api/admin", "/admin/send-notifications"],
+  admin: ["/admin", "/api/admin", "/admin/send-notifications"],
   sales: [
     "/admin",
     "/admin/account",
@@ -84,16 +84,19 @@ export const roleAccess: Record<AdminRole, string[]> = {
     "/admin/seo",
     "/admin/blog-comments",
     "/admin/newsletter",
+    "/admin/send-notifications",
     "/admin/account",
     "/api/admin/dashboard",
     "/api/admin/account",
     "/api/admin/notifications",
+    "/api/admin/client-notifications",
     "/api/admin/cms",
     "/api/admin/uploads",
     "/api/admin/testimonials",
     "/api/admin/inquiries",
     "/api/admin/blog-comments",
     "/api/admin/newsletter",
+    "/api/admin/client-notifications",
   ],
 };
 
