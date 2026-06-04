@@ -1,4 +1,5 @@
 import { getCatalogProducts } from "@/lib/catalog";
+import { computeGstOnSubtotal } from "@/lib/gst-display";
 import { productSetPrice } from "@/lib/product-pricing";
 import type { LocalOrder } from "@/lib/local-db";
 
@@ -55,6 +56,9 @@ export async function buildValidatedOrderPayload(
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  const gst = computeGstOnSubtotal(subtotal, null, { b2bPricing: true });
+  const tax = gst.amount;
+  const total = subtotal + tax;
   return {
     clientId,
     clientEmail: input.clientEmail,
@@ -62,5 +66,7 @@ export async function buildValidatedOrderPayload(
     note: input.note?.trim(),
     items,
     subtotal,
+    tax,
+    total,
   };
 }

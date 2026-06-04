@@ -4,6 +4,7 @@ import {
   sendAdminClientPush,
   sendBroadcastPush,
 } from "@/lib/push-notifications";
+import { notificationDataFromLinkUrl } from "@/lib/notification-link-data";
 
 export const runtime = "nodejs";
 
@@ -47,7 +48,9 @@ export async function POST(request: Request) {
   }
 
   const data: Record<string, string> = { type, scope: "admin" };
-  if (linkUrl) data.url = linkUrl;
+  if (linkUrl) {
+    Object.assign(data, notificationDataFromLinkUrl(linkUrl));
+  }
 
   try {
     if (audience === "client") {

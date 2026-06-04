@@ -121,10 +121,38 @@ Use Railway if you prefer it over Vercel for this app (same repo, same env vars)
 - [ ] `NEXT_PUBLIC_SITE_URL` matches the live domain (OAuth/callbacks if you add later).
 - [ ] SMTP tested from **Admin → system test email** (if exposed).
 - [ ] Production deploy: `npm run build` passes (run locally before tagging release).
+- [ ] **Mobile visual search:** `POST /api/search/visual` is live (included in this repo). Set `OPENAI_API_KEY` on the server for best results (GPT-4o-mini vision). Without it, the API falls back to basic color matching. Redeploy after pulling the latest backend.
 
 ---
 
-## 6. Git push
+## 6. Mobile visual search API
+
+The Sarjan Textiles app calls **`POST /api/search/visual`** with multipart form data:
+
+| Field  | Required | Notes                                   |
+| ------ | -------- | --------------------------------------- |
+| `file` | Yes      | Product photo (JPEG/PNG/WEBP, max 6 MB) |
+| `q`    | No       | Optional text to refine image results   |
+
+**Response:** `{ items, total, keywords, colors, terms, source }` — product rows from the CMS catalogue, ranked by visual/text match.
+
+**Env (optional but recommended):**
+
+| Variable              | Purpose                                                   |
+| --------------------- | --------------------------------------------------------- |
+| `OPENAI_API_KEY`      | Vision analysis via `gpt-4o-mini` (same key as order bot) |
+| `VISUAL_SEARCH_MODEL` | Override model (default `gpt-4o-mini`)                    |
+
+After deploy, smoke test:
+
+```bash
+curl -s -X POST "https://YOUR_DOMAIN/api/search/visual" \
+  -F "file=@/path/to/fabric-sample.jpg" | head -c 400
+```
+
+---
+
+## 7. Git push
 
 Push your branch (e.g. `development` or `main`) to GitHub; Vercel/Railway then redeploy from the connected branch.
 

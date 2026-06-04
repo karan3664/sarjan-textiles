@@ -21,6 +21,7 @@ import {
   normalizeOrderPlacedVia,
   type OrderPlacedVia,
 } from "@/lib/order-placed-via";
+import { computeGstOnSubtotal } from "@/lib/gst-display";
 
 export type LocalClient = {
   id: string;
@@ -73,6 +74,8 @@ export type LocalOrder = {
   depositStatus?: "Not deposited" | "Deposited" | "Cleared" | "Bounced";
   paymentReceivedAt?: string;
   subtotal: number;
+  tax?: number;
+  total?: number;
   items: Array<{
     slug: string;
     name: string;
@@ -198,6 +201,8 @@ function mapOrder(row: Record<string, unknown>): LocalOrder {
         ? String(row.payment_received_at)
         : undefined,
     subtotal: Number(row.subtotal ?? 0),
+    tax: row.tax != null ? Number(row.tax) : undefined,
+    total: row.total != null ? Number(row.total) : undefined,
     items: (Array.isArray(row.items) ? row.items : []) as LocalOrder["items"],
     dispatchAddress: String(row.dispatch_address ?? ""),
     dispatchDate:
@@ -1127,6 +1132,8 @@ export async function createAdminOrder(input: {
   const client = db.clients.find((item) => item.id === input.clientId);
   if (!client) throw new Error("Client not found");
   const createdAt = new Date().toISOString();
+  const subtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
+  const gst = computeGstOnSubtotal(subtotal, null, { b2bPricing: true });
   const order: LocalOrder = {
     id: `ST-${Date.now()}`,
     clientId: client.id,
@@ -1136,7 +1143,9 @@ export async function createAdminOrder(input: {
     paymentStatus: "Pending",
     creditDays: 90,
     depositStatus: "Not deposited",
-    subtotal: input.items.reduce((sum, item) => sum + item.lineTotal, 0),
+    subtotal,
+    tax: gst.amount,
+    total: subtotal + gst.amount,
     items: input.items,
     dispatchAddress: hasMeaningfulDispatchAddress(input.dispatchAddress)
       ? input.dispatchAddress!.trim()
