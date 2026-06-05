@@ -1,6 +1,7 @@
 import { translateEnglishBatch } from "@/lib/auto-translate";
 import {
   coerceLocalized,
+  markTranslationAttempted,
   mergeTranslation,
   needsTranslation,
   type LocalizedText,
@@ -58,10 +59,11 @@ export async function applyTranslationJobsStep(
   const next = { ...fields };
   for (const key of Object.keys(jobs)) {
     const text = fields[key];
+    if (!text) continue;
     const translated = translations[key];
-    if (text && translated) {
-      next[key] = mergeTranslation(text, translated.hi, translated.gu);
-    }
+    next[key] = translated
+      ? mergeTranslation(text, translated.hi, translated.gu)
+      : markTranslationAttempted(text);
   }
 
   const hasMore = Object.values(next).some((text) => needsTranslation(text));

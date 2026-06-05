@@ -5,6 +5,8 @@ export type LocalizedText = {
   en: string;
   hi: string;
   gu: string;
+  /** Set after machine translation runs — avoids infinite retry when hi/gu match English. */
+  mt?: boolean;
 };
 
 export function isAppLocale(value: string): value is AppLocale {
@@ -54,7 +56,7 @@ export function coerceLocalized(
   const en = String(value.en ?? "").trim();
   const hi = String(value.hi ?? en).trim();
   const gu = String(value.gu ?? en).trim();
-  return { en, hi, gu };
+  return { en, hi, gu, ...(value.mt ? { mt: true as const } : {}) };
 }
 
 export function localizedFromEnglish(
@@ -73,6 +75,7 @@ export function localizedFromEnglish(
 export function needsTranslation(text: LocalizedText): boolean {
   const en = text.en.trim();
   if (!en) return false;
+  if (text.mt) return false;
   const hi = text.hi.trim();
   const gu = text.gu.trim();
   if (!hi || !gu) return true;
@@ -80,10 +83,14 @@ export function needsTranslation(text: LocalizedText): boolean {
   return false;
 }
 
+export function markTranslationAttempted(text: LocalizedText): LocalizedText {
+  return { ...text, mt: true };
+}
+
 export function mergeTranslation(
   current: LocalizedText,
   hi: string,
   gu: string,
 ): LocalizedText {
-  return localizedFromEnglish(current.en, hi, gu);
+  return { ...localizedFromEnglish(current.en, hi, gu), mt: true };
 }

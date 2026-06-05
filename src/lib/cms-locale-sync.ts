@@ -37,6 +37,7 @@ import {
 } from "@/lib/product-localize";
 import {
   ensureMobileAppLocalized,
+  ensureMobileAppLocalizedStep,
   mobileAppHasPendingTranslations,
 } from "@/lib/mobile-app-cms";
 
@@ -264,15 +265,16 @@ export async function ensureCmsLocalizedStep(
     }
     case "mobileApp": {
       if (mobileAppHasPendingTranslations(cms.mobileApp)) {
-        next = {
-          ...next,
-          mobileApp: await ensureMobileAppLocalized(
-            cms.mobileApp,
-            cms.siteSettings,
-            cms.home,
-          ),
-        };
-        changed = true;
+        const stepped = await ensureMobileAppLocalizedStep(
+          cms.mobileApp,
+          cms.siteSettings,
+          cms.home,
+          maxKeys,
+        );
+        if (stepped.changed) {
+          next = { ...next, mobileApp: stepped.mobileApp };
+          changed = true;
+        }
       }
       break;
     }

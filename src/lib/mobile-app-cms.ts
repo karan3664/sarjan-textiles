@@ -3,6 +3,7 @@ import { translateEnglishBatch } from "@/lib/auto-translate";
 import {
   coerceLocalized,
   localizedFromEnglish,
+  markTranslationAttempted,
   mergeTranslation,
   needsTranslation,
   pickLocalized,
@@ -524,11 +525,13 @@ function queueText(
 function applyTranslations(
   stored: MobileAppConfigStored,
   translations: Record<string, { hi: string; gu: string }>,
+  attemptedKeys?: Set<string>,
 ): MobileAppConfigStored {
   const pick = (key: string, text: LocalizedText) => {
     const translated = translations[key];
-    if (!translated) return text;
-    return mergeTranslation(text, translated.hi, translated.gu);
+    if (translated) return mergeTranslation(text, translated.hi, translated.gu);
+    if (attemptedKeys?.has(key)) return markTranslationAttempted(text);
+    return text;
   };
 
   return {
@@ -757,17 +760,58 @@ export function buildMobileConfigResponse(
   };
 }
 
+function mobileAppBaseForLocalization(
+  stored: MobileAppConfigStored,
+  site: CmsSiteSettings,
+  home: CmsHome,
+): MobileAppConfigStored {
+  return {
+    ...stored,
+    localizedExtras: buildLocalizedExtrasFromHome(
+      site,
+      home,
+      stored.localizedExtras,
+    ),
+  };
+}
+
 /** Ensure legacy snapshots get Hindi/Gujarati without admin re-save. */
 export async function ensureMobileAppLocalized(
   stored: MobileAppConfigStored,
   site: CmsSiteSettings,
   home: CmsHome,
 ): Promise<MobileAppConfigStored> {
-  const normalized = normalizeMobileAppConfig(stored, site, home);
-  const jobs = collectTranslationJobs(normalized);
-  if (!Object.keys(jobs).length) return normalized;
-  const translations = await translateEnglishBatch(jobs);
-  return applyTranslations(normalized, translations);
+  let current = mobileAppBaseForLocalization(stored, site, home);
+  while (mobileAppHasPendingTranslations(current)) {
+    const step = await ensureMobileAppLocalizedStep(current, site, home);
+    current = step.mobileApp;
+    if (!step.changed) break;
+  }
+  return current;
+}
+
+/** Bounded batch for admin translate-all steps. */
+export async function ensureMobileAppLocalizedStep(
+  stored: MobileAppConfigStored,
+  site: CmsSiteSettings,
+  home: CmsHome,
+  maxKeys = 24,
+): Promise<{ mobileApp: MobileAppConfigStored; changed: boolean }> {
+  const base = mobileAppBaseForLocalization(stored, site, home);
+  const allJobs = collectTranslationJobs(base);
+  const keys = Object.keys(allJobs);
+  if (!keys.length) {
+    return { mobileApp: base, changed: false };
+  }
+
+  const batchKeys = keys.slice(0, maxKeys);
+  const batch = Object.fromEntries(batchKeys.map((key) => [key, allJobs[key]]));
+  const translations = await translateEnglishBatch(batch);
+  const attempted = new Set(batchKeys);
+  return {
+    mobileApp: applyTranslations(base, translations, attempted),
+    changed: true,
+  };
 }
 
 export function mobileAppHasPendingTranslations(stored: MobileAppConfigStored) {
