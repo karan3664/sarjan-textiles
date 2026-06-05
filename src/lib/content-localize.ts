@@ -1,11 +1,15 @@
 import type { CmsBlog, CmsHome, CmsTestimonial } from "@/lib/cms-store";
 import {
   applyTranslationJobs,
+  applyTranslationJobsStep,
   hasPendingTranslations,
   readEnglish,
   toLocalizedField,
   toLocalizedList,
 } from "@/lib/cms-localize";
+
+/** Max fields translated per home save — avoids serverless timeouts on bulk MyMemory runs. */
+const HOME_SAVE_TRANSLATE_MAX_KEYS = 20;
 import {
   pickLocalized,
   needsTranslation,
@@ -253,11 +257,7 @@ export async function localizeHomeOnSave(
 
   for (const [key, text] of Object.entries(nextFields)) {
     const old = prevFields[key];
-    if (
-      old &&
-      readEnglish(old) === readEnglish(text) &&
-      !needsTranslation(old)
-    ) {
+    if (old && readEnglish(old) === readEnglish(text)) {
       nextFields[key] = old;
     }
   }
@@ -267,7 +267,10 @@ export async function localizeHomeOnSave(
   if (!hasPendingTranslations(pending)) {
     return merged;
   }
-  const translated = await applyTranslationJobs(pending);
+  const { fields: translated } = await applyTranslationJobsStep(
+    pending,
+    HOME_SAVE_TRANSLATE_MAX_KEYS,
+  );
   return applyHomeFields(merged, translated);
 }
 

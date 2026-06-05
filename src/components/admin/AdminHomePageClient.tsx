@@ -418,6 +418,7 @@ export function AdminHomePageClient({
     };
   });
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [saveError, setSaveError] = useState("");
   const [uploadState, setUploadState] = useState<UploadState>({});
   const [heroVideoUrlDraft, setHeroVideoUrlDraft] = useState("");
 
@@ -436,6 +437,7 @@ export function AdminHomePageClient({
 
   const saveHome = async () => {
     setSaveState("saving");
+    setSaveError("");
     try {
       const res = await fetch("/api/admin/cms", {
         method: "PUT",
@@ -443,10 +445,17 @@ export function AdminHomePageClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ home }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Home save failed");
-      if (!data.home) throw new Error("CMS response missing home data");
-      const saved = data.home as HomeDraft;
+      const data = (await res.json().catch(() => null)) as {
+        home?: HomeDraft;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        throw new Error(data?.error ?? `Home save failed (${res.status})`);
+      }
+      if (!data?.home) {
+        throw new Error("CMS response missing home data");
+      }
+      const saved = data.home;
       setHome({
         ...saved,
         hero: {
@@ -460,6 +469,7 @@ export function AdminHomePageClient({
       setTimeout(() => setSaveState("idle"), 2500);
     } catch (error) {
       console.error(error);
+      setSaveError(error instanceof Error ? error.message : "Home save failed");
       setSaveState("error");
     }
   };
@@ -845,7 +855,9 @@ export function AdminHomePageClient({
               <div className="sarjan-save-state success">Saved</div>
             )}
             {saveState === "error" && (
-              <div className="sarjan-save-state danger">Save failed</div>
+              <div className="sarjan-save-state danger" title={saveError}>
+                {saveError || "Save failed"}
+              </div>
             )}
             <button
               type="button"

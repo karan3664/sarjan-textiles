@@ -17,6 +17,36 @@ import {
   type ProductRecord,
 } from "@/lib/product-localize";
 
+/** Return only the sections the admin client sent — avoids multi‑MB PUT responses. */
+export function adminCmsPutResponse(
+  next: CmsSnapshot,
+  bodyKeys: string[],
+): Partial<CmsSnapshot> {
+  const flat = flattenCmsSnapshotForAdmin(next);
+  const out: Partial<CmsSnapshot> = {};
+  const keys = new Set(bodyKeys);
+
+  if (keys.has("home")) out.home = flat.home;
+  if (keys.has("mobileApp")) out.mobileApp = flat.mobileApp;
+  if (keys.has("categoryHubPages")) {
+    out.categoryHubPages = flat.categoryHubPages;
+  }
+  if (keys.has("collectionPages")) {
+    out.collectionPages = flat.collectionPages;
+  }
+  if (keys.has("seoPages")) out.seoPages = flat.seoPages;
+  if (keys.has("productFilters")) out.productFilters = flat.productFilters;
+  if (keys.has("customSitePages")) {
+    out.customSitePages = flat.customSitePages;
+  }
+  if (keys.has("pages")) out.pages = next.pages;
+  if (keys.has("products")) out.products = flat.products;
+  if (keys.has("blogs")) out.blogs = flat.blogs;
+  if (keys.has("testimonials")) out.testimonials = flat.testimonials;
+
+  return Object.keys(out).length ? out : flat;
+}
+
 /** English-only view for admin UI — localized `{en,hi,gu}` fields flattened. */
 export function flattenCmsSnapshotForAdmin(cms: CmsSnapshot): CmsSnapshot {
   return {

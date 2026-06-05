@@ -23,7 +23,7 @@ import {
   asStoredHome,
   asStoredProductFilters,
   asStoredSeoPages,
-  flattenCmsSnapshotForAdmin,
+  adminCmsPutResponse,
 } from "@/lib/cms-admin-view";
 
 export const maxDuration = 60;
@@ -107,7 +107,7 @@ export async function PUT(request: Request) {
       }).catch(() => null);
     }
 
-    return Response.json(flattenCmsSnapshotForAdmin(next));
+    return Response.json(adminCmsPutResponse(next, Object.keys(body)));
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "CMS save failed" },
