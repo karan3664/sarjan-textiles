@@ -446,11 +446,15 @@ export function AdminHomePageClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Home save failed");
       if (!data.home) throw new Error("CMS response missing home data");
+      const saved = data.home as HomeDraft;
       setHome({
-        ...data.home,
-        sections: data.home.sections?.length
-          ? data.home.sections
-          : defaultSections(),
+        ...saved,
+        hero: {
+          ...saved.hero,
+          videoUrls: getHeroVideos(saved.hero),
+          videoUrl: getHeroVideos(saved.hero)[0] ?? "",
+        },
+        sections: saved.sections?.length ? saved.sections : defaultSections(),
       });
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2500);

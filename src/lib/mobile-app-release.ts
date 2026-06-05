@@ -46,10 +46,10 @@ export function getMobileAppRelease(): MobileAppRelease {
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Order detail layout: clearer spacing for Cancel order, Order Summary, and bottom tab bar.",
-      "Offline banner with NetInfo native module linked on Android and iOS.",
-      "Collections, Category Hub, FAQs, deep links, and Hindi/Gujarati notifications.",
-      "Server cart sync, blog pagination, and storefront i18n parity on the website.",
+      "Cart fix: removed items stay removed; cart clears after successful checkout.",
+      "Checkout totals stay accurate; server cart no longer restores deleted lines.",
+      "Static maroon boot screen, order cancel API, and order detail spacing.",
+      "Collections, deep links, offline banner, and Hindi/Gujarati support.",
     ].join(" ");
 
   return {

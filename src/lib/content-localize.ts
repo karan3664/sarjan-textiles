@@ -8,6 +8,7 @@ import {
 } from "@/lib/cms-localize";
 import {
   pickLocalized,
+  needsTranslation,
   type AppLocale,
   type LocalizedText,
 } from "@/lib/localized-text";
@@ -235,6 +236,39 @@ export async function ensureHomeLocalized(
   if (!hasPendingTranslations(fields)) return normalized;
   const translated = await applyTranslationJobs(fields);
   return applyHomeFields(normalized, translated);
+}
+
+/** Admin save: merge English edits, keep existing hi/gu when en unchanged, translate new copy. */
+export async function localizeHomeOnSave(
+  input: CmsHome,
+  previous?: CmsHome,
+): Promise<LocalizedHome> {
+  const normalized = normalizeHomeRecord(input);
+  if (!previous) {
+    return ensureHomeLocalized(normalized);
+  }
+
+  const prevFields = collectHomeFields(normalizeHomeRecord(previous));
+  const nextFields = collectHomeFields(normalized);
+
+  for (const [key, text] of Object.entries(nextFields)) {
+    const old = prevFields[key];
+    if (
+      old &&
+      readEnglish(old) === readEnglish(text) &&
+      !needsTranslation(old)
+    ) {
+      nextFields[key] = old;
+    }
+  }
+
+  const merged = applyHomeFields(normalized, nextFields);
+  const pending = collectHomeFields(merged);
+  if (!hasPendingTranslations(pending)) {
+    return merged;
+  }
+  const translated = await applyTranslationJobs(pending);
+  return applyHomeFields(merged, translated);
 }
 
 export function homeNeedsLocalization(home: CmsHome): boolean {

@@ -648,6 +648,21 @@ function collectTranslationJobs(stored: MobileAppConfigStored) {
   return jobs;
 }
 
+export function syncMobileAppExtrasFromHome(
+  stored: MobileAppConfigStored,
+  site: CmsSiteSettings,
+  home: CmsHome,
+): MobileAppConfigStored {
+  return {
+    ...stored,
+    localizedExtras: buildLocalizedExtrasFromHome(
+      site,
+      home,
+      stored.localizedExtras,
+    ),
+  };
+}
+
 /** Admin save: normalize English input, auto-translate to Hindi & Gujarati. */
 export async function localizeMobileAppOnSave(
   input: Partial<MobileAppConfig>,

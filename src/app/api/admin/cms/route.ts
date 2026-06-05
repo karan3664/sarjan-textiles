@@ -6,10 +6,10 @@ import {
 } from "@/lib/cms-store";
 import { verifyAdminToken } from "@/lib/admin-token";
 import {
-  flattenMobileAppForAdmin,
   localizeMobileAppOnSave,
+  syncMobileAppExtrasFromHome,
 } from "@/lib/mobile-app-cms";
-import { ensureHomeLocalized } from "@/lib/content-localize";
+import { localizeHomeOnSave } from "@/lib/content-localize";
 import {
   localizeCategoryHubsOnSave,
   localizeCollectionsOnSave,
@@ -23,7 +23,10 @@ import {
   asStoredHome,
   asStoredProductFilters,
   asStoredSeoPages,
+  flattenCmsSnapshotForAdmin,
 } from "@/lib/cms-admin-view";
+
+export const maxDuration = 60;
 
 export async function GET() {
   return Response.json(await getCmsSnapshot());
@@ -41,7 +44,14 @@ export async function PUT(request: Request) {
       : before.home;
 
     if (body.home) {
-      body.home = asStoredHome(await ensureHomeLocalized(mergedHome));
+      body.home = asStoredHome(
+        await localizeHomeOnSave(mergedHome, before.home),
+      );
+      body.mobileApp = syncMobileAppExtrasFromHome(
+        before.mobileApp,
+        before.siteSettings,
+        body.home,
+      );
     }
 
     if (body.categoryHubPages) {
@@ -81,14 +91,8 @@ export async function PUT(request: Request) {
         mergedHome,
         before.mobileApp,
       );
-    } else if (body.home) {
-      body.mobileApp = await localizeMobileAppOnSave(
-        flattenMobileAppForAdmin(before.mobileApp),
-        before.siteSettings,
-        mergedHome,
-        before.mobileApp,
-      );
     }
+
     const next = await saveCmsSnapshot(body);
     if (session) {
       await appendAuditLog({
@@ -102,7 +106,8 @@ export async function PUT(request: Request) {
         note: Object.keys(body).join(", "),
       }).catch(() => null);
     }
-    return Response.json(next);
+
+    return Response.json(flattenCmsSnapshotForAdmin(next));
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "CMS save failed" },
