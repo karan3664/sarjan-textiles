@@ -101,13 +101,39 @@ export type LocalOrder = {
   createdAt: string;
 };
 
+type CartLine = {
+  slug: string;
+  quantity: number;
+  color: string;
+  sizes: string[];
+};
+
+type CartState = {
+  updatedAt: string;
+  reminder1SentAt?: string;
+  reminder2SentAt?: string;
+};
+
+export type CartReminderStage = 1 | 2;
+
+export type AbandonedCartCandidate = {
+  clientId: string;
+  items: CartLine[];
+  updatedAt: string;
+  stage: CartReminderStage;
+};
+
+type ClientSavedListsState = {
+  wishlist: string[];
+  compare: string[];
+};
+
 type LocalDb = {
   clients: LocalClient[];
   orders: LocalOrder[];
-  carts: Record<
-    string,
-    Array<{ slug: string; quantity: number; color: string; sizes: string[] }>
-  >;
+  carts: Record<string, CartLine[]>;
+  cartState?: Record<string, CartState>;
+  savedLists?: Record<string, ClientSavedListsState>;
   resetRequests: Array<{ id: string; email: string; createdAt: string }>;
   feedbacks: Array<{
     id: string;
@@ -1424,30 +1450,158 @@ export async function getCart(clientId: string) {
       .eq("client_id", clientId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return Array.isArray(data?.items)
-      ? (data.items as Array<{
-          slug: string;
-          quantity: number;
-          color: string;
-          sizes: string[];
-        }>)
-      : [];
+    return Array.isArray(data?.items) ? (data.items as CartLine[]) : [];
   }
 
   const db = await readLocalDb();
   return db.carts?.[clientId] ?? [];
 }
 
-export async function saveCart(
-  clientId: string,
-  items: Array<{
-    slug: string;
-    quantity: number;
-    color: string;
-    sizes: string[];
-  }>,
-) {
+async function readCartRecord(clientId: string): Promise<{
+  items: CartLine[];
+  updatedAt: string;
+  reminder1SentAt?: string;
+  reminder2SentAt?: string;
+}> {
   const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("client_carts")
+      .select("items, updated_at, reminder_1_sent_at, reminder_2_sent_at")
+      .eq("client_id", clientId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return {
+      items: Array.isArray(data?.items) ? (data.items as CartLine[]) : [],
+      updatedAt: String(data?.updated_at ?? new Date(0).toISOString()),
+      reminder1SentAt: data?.reminder_1_sent_at ?? undefined,
+      reminder2SentAt: data?.reminder_2_sent_at ?? undefined,
+    };
+  }
+
+  const db = await readLocalDb();
+  const items = db.carts?.[clientId] ?? [];
+  const state = db.cartState?.[clientId];
+  return {
+    items,
+    updatedAt: state?.updatedAt ?? new Date(0).toISOString(),
+    reminder1SentAt: state?.reminder1SentAt,
+    reminder2SentAt: state?.reminder2SentAt,
+  };
+}
+
+export async function markCartReminderSent(
+  clientId: string,
+  stage: CartReminderStage,
+) {
+  const now = new Date().toISOString();
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const patch =
+      stage === 1 ? { reminder_1_sent_at: now } : { reminder_2_sent_at: now };
+    const { error } = await supabase
+      .from("client_carts")
+      .update(patch)
+      .eq("client_id", clientId);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  const db = await readLocalDb();
+  db.cartState = db.cartState ?? {};
+  const prev = db.cartState[clientId] ?? {
+    updatedAt: now,
+  };
+  db.cartState[clientId] = {
+    ...prev,
+    ...(stage === 1 ? { reminder1SentAt: now } : { reminder2SentAt: now }),
+  };
+  await writeLocalDb(db);
+}
+
+export async function listAbandonedCartCandidates(): Promise<
+  AbandonedCartCandidate[]
+> {
+  const hourMs = 60 * 60 * 1000;
+  const dayMs = 24 * hourMs;
+  const now = Date.now();
+  const candidates: AbandonedCartCandidate[] = [];
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("client_carts")
+      .select(
+        "client_id, items, updated_at, reminder_1_sent_at, reminder_2_sent_at",
+      )
+      .order("updated_at", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    for (const row of data ?? []) {
+      const items = Array.isArray(row.items) ? (row.items as CartLine[]) : [];
+      if (!items.length) continue;
+      const updatedAt = String(row.updated_at ?? "");
+      const updatedMs = new Date(updatedAt).getTime();
+      if (!Number.isFinite(updatedMs)) continue;
+      const age = now - updatedMs;
+      const reminder1SentAt = row.reminder_1_sent_at
+        ? String(row.reminder_1_sent_at)
+        : undefined;
+      const reminder2SentAt = row.reminder_2_sent_at
+        ? String(row.reminder_2_sent_at)
+        : undefined;
+
+      if (age >= hourMs && !reminder1SentAt) {
+        candidates.push({
+          clientId: row.client_id,
+          items,
+          updatedAt,
+          stage: 1,
+        });
+        continue;
+      }
+      if (age >= dayMs && reminder1SentAt && !reminder2SentAt) {
+        candidates.push({
+          clientId: row.client_id,
+          items,
+          updatedAt,
+          stage: 2,
+        });
+      }
+    }
+    return candidates;
+  }
+
+  const db = await readLocalDb();
+  for (const [clientId, items] of Object.entries(db.carts ?? {})) {
+    if (!items.length) continue;
+    const state = db.cartState?.[clientId];
+    const updatedAt = state?.updatedAt ?? new Date(0).toISOString();
+    const updatedMs = new Date(updatedAt).getTime();
+    if (!Number.isFinite(updatedMs)) continue;
+    const age = now - updatedMs;
+
+    if (age >= hourMs && !state?.reminder1SentAt) {
+      candidates.push({ clientId, items, updatedAt, stage: 1 });
+      continue;
+    }
+    if (age >= dayMs && state?.reminder1SentAt && !state?.reminder2SentAt) {
+      candidates.push({ clientId, items, updatedAt, stage: 2 });
+    }
+  }
+
+  return candidates;
+}
+
+export async function saveCart(clientId: string, items: CartLine[]) {
+  const supabase = supabaseAdmin();
+  const previous = await readCartRecord(clientId);
+  const unchanged = JSON.stringify(previous.items) === JSON.stringify(items);
+  if (unchanged) {
+    return previous.items;
+  }
+
+  const now = new Date().toISOString();
   if (supabase) {
     const { data, error } = await supabase
       .from("client_carts")
@@ -1455,26 +1609,96 @@ export async function saveCart(
         {
           client_id: clientId,
           items,
-          updated_at: new Date().toISOString(),
+          updated_at: now,
+          reminder_1_sent_at: null,
+          reminder_2_sent_at: null,
         },
         { onConflict: "client_id" },
       )
       .select("items")
       .single();
     if (error) throw new Error(error.message);
-    return Array.isArray(data?.items)
-      ? (data.items as Array<{
-          slug: string;
-          quantity: number;
-          color: string;
-          sizes: string[];
-        }>)
-      : items;
+    return Array.isArray(data?.items) ? (data.items as CartLine[]) : items;
   }
 
   const db = await readLocalDb();
   db.carts = db.carts ?? {};
   db.carts[clientId] = items;
+  db.cartState = db.cartState ?? {};
+  if (items.length) {
+    db.cartState[clientId] = {
+      updatedAt: now,
+    };
+  } else {
+    delete db.cartState[clientId];
+  }
   await writeLocalDb(db);
   return db.carts[clientId];
+}
+
+const MAX_COMPARE_SLUGS = 3;
+
+function normalizeSlugList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return Array.from(
+    new Set(
+      raw.filter(
+        (item): item is string => typeof item === "string" && item.length > 0,
+      ),
+    ),
+  );
+}
+
+export type ClientSavedLists = ClientSavedListsState;
+
+export async function getClientSavedLists(
+  clientId: string,
+): Promise<ClientSavedLists> {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("client_saved_lists")
+      .select("wishlist_slugs, compare_slugs")
+      .eq("client_id", clientId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return {
+      wishlist: normalizeSlugList(data?.wishlist_slugs),
+      compare: normalizeSlugList(data?.compare_slugs).slice(
+        0,
+        MAX_COMPARE_SLUGS,
+      ),
+    };
+  }
+
+  const db = await readLocalDb();
+  return db.savedLists?.[clientId] ?? { wishlist: [], compare: [] };
+}
+
+export async function saveClientSavedLists(
+  clientId: string,
+  input: ClientSavedLists,
+): Promise<ClientSavedLists> {
+  const wishlist = normalizeSlugList(input.wishlist);
+  const compare = normalizeSlugList(input.compare).slice(0, MAX_COMPARE_SLUGS);
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { error } = await supabase.from("client_saved_lists").upsert(
+      {
+        client_id: clientId,
+        wishlist_slugs: wishlist,
+        compare_slugs: compare,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "client_id" },
+    );
+    if (error) throw new Error(error.message);
+    return { wishlist, compare };
+  }
+
+  const db = await readLocalDb();
+  db.savedLists = db.savedLists ?? {};
+  db.savedLists[clientId] = { wishlist, compare };
+  await writeLocalDb(db);
+  return { wishlist, compare };
 }

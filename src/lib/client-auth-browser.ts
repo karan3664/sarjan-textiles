@@ -82,6 +82,9 @@ export function persistClientSession(token: string, client: StoredClient) {
   void import("@/lib/cart-client")
     .then(({ syncCartWithApi }) => syncCartWithApi())
     .catch(() => undefined);
+  void import("@/lib/saved-lists-sync")
+    .then(({ pullSavedListsFromServer }) => pullSavedListsFromServer())
+    .catch(() => undefined);
 }
 
 export type ClientLoginResult =

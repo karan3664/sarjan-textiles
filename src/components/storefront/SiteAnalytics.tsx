@@ -3,10 +3,12 @@
 import Script from "next/script";
 import { useCallback, useEffect, useState } from "react";
 
+import { cookieConsentRequired } from "@/lib/cookie-consent-client";
+
 const CONSENT_KEY = "sarjan-cookie-consent";
 
 function consentRequired() {
-  return process.env.NEXT_PUBLIC_COOKIE_CONSENT === "true";
+  return cookieConsentRequired();
 }
 
 function hasConsent() {

@@ -240,3 +240,27 @@ export async function sendAdminClientPush(input: {
     data: input.data ?? { type: input.type, scope: "admin" },
   });
 }
+
+/** Remind approved clients to finish checkout (app push + inbox). */
+export async function sendAbandonedCartPush(input: {
+  clientId: string;
+  title: string;
+  body: string;
+  stage: 1 | 2;
+  checkoutUrl: string;
+  itemCount: string;
+}) {
+  await pushToClient(input.clientId, {
+    title: input.title,
+    body: input.body,
+    type: "cart",
+    data: {
+      type: "cart",
+      scope: "abandoned_cart",
+      stage: String(input.stage),
+      screen: "Cart",
+      url: input.checkoutUrl,
+      itemCount: input.itemCount,
+    },
+  });
+}

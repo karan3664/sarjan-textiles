@@ -155,7 +155,9 @@ create table if not exists password_reset_requests (
 create table if not exists client_carts (
   client_id uuid primary key references clients(id) on delete cascade,
   items jsonb not null default '[]'::jsonb,
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  reminder_1_sent_at timestamptz,
+  reminder_2_sent_at timestamptz
 );
 
 -- Admin bell read/clear state (singleton)

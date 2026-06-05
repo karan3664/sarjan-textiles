@@ -1,3 +1,5 @@
+import { scheduleSavedListsSync } from "@/lib/saved-lists-sync";
+
 export const WISHLIST_KEY = "sarjan-wishlist";
 
 function slugSetsEqual(a: string[], b: string[]) {
@@ -32,6 +34,7 @@ export function writeWishlist(slugs: string[]) {
   if (slugSetsEqual(current, next)) return;
   window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("sarjan-wishlist-updated"));
+  scheduleSavedListsSync();
 }
 
 export function isWishlisted(slug: string) {

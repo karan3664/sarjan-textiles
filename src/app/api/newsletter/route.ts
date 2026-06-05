@@ -43,6 +43,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const rawSource = String(
+    (body as Record<string, unknown>).source ?? "footer",
+  ).trim();
+  const source = rawSource || "footer";
+
   const limit = rateLimit(
     rateLimitKey(request, "newsletter", email),
     5,
@@ -63,7 +68,7 @@ export async function POST(request: Request) {
   let created = true;
 
   try {
-    const subscribed = await subscribeNewsletterEmail(email, "footer");
+    const subscribed = await subscribeNewsletterEmail(email, source);
     const { subscriber } = subscribed;
     created = subscribed.created;
     const unsubUrl = `${emailSiteOrigin()}/newsletter/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribeToken)}`;
@@ -93,16 +98,16 @@ export async function POST(request: Request) {
       to: notifyTo,
       subject: `Newsletter signup: ${email}`,
       text: [
-        "New footer newsletter signup.",
+        `New ${source === "app" ? "mobile app" : source} newsletter signup.`,
         "",
         `Subscriber email: ${email}`,
       ].join("\n"),
       replyTo: email,
       html: buildSarjanEmailHtml({
         preheader: `New subscriber: ${email}`,
-        eyebrow: "Website",
+        eyebrow: source === "app" ? "Mobile app" : "Website",
         heading: "Newsletter signup",
-        innerHtml: newsletterAdminNotificationInnerHtml(email),
+        innerHtml: newsletterAdminNotificationInnerHtml(email, source),
       }),
     });
   } catch (error) {

@@ -13,6 +13,7 @@ export type StoredClientNotification = {
     | "order"
     | "dispatch"
     | "payment"
+    | "cart"
     | "general";
   image?: string;
   data?: Record<string, string>;

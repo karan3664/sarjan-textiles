@@ -46,10 +46,10 @@ export function getMobileAppRelease(): MobileAppRelease {
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Boot splash: Sarjan logo and tagline on maroon (no double loader).",
-      "Home hero: banner + YouTube/MP4 video slides like the website.",
-      "YouTube opens in the YouTube app with sound; uploaded videos play muted.",
-      "Cart sync, order cancel, collections, and Hindi/Gujarati support.",
+      "Android sign-in: SMS verification code (no third-party OTP provider in app).",
+      "Home hero video carousel, category images, compare list, and cart reminder.",
+      "Product 360° spin, fabric swatch zoom, recommendations, and Hindi/Gujarati.",
+      "Accessibility improvements and clearer error/retry states across screens.",
     ].join(" ");
 
   return {

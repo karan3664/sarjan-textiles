@@ -1,5 +1,6 @@
 import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
+import { readEnglish } from "@/lib/cms-localize";
 
 /** SEO-friendly alt text for textile product images (not filenames). */
 export function buildProductImageAlt(
@@ -9,24 +10,24 @@ export function buildProductImageAlt(
   >,
   options?: { variant?: "primary" | "alternate"; index?: number },
 ): string {
-  if (product.imageAlt?.trim()) {
-    const base = product.imageAlt.trim();
+  const storedAlt = readEnglish(product.imageAlt);
+  if (storedAlt) {
     if (options?.variant === "alternate") {
-      return `${base} — alternate view`;
+      return `${storedAlt} — alternate view`;
     }
     if (options?.index != null && options.index > 0) {
-      return `${base} — view ${options.index + 1}`;
+      return `${storedAlt} — view ${options.index + 1}`;
     }
-    return base;
+    return storedAlt;
   }
 
-  const name = product.name.trim();
+  const name = readEnglish(product.name);
   const parts: string[] = [];
-  const color = product.colors?.[0]?.trim();
+  const color = readEnglish(product.colors?.[0]);
   if (color && !name.toLowerCase().includes(color.toLowerCase())) {
     parts.push(color);
   }
-  const fabric = product.fabric?.trim();
+  const fabric = readEnglish(product.fabric);
   if (fabric) {
     const fabricToken = fabric.split(/\s+/)[0];
     if (
@@ -39,7 +40,7 @@ export function buildProductImageAlt(
   parts.push(name);
 
   let label = parts.join(" ");
-  const category = product.category?.trim();
+  const category = readEnglish(product.category);
   if (category && !label.toLowerCase().includes(category.toLowerCase())) {
     label = `${label} — ${category}`;
   }

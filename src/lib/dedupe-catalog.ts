@@ -1,10 +1,20 @@
-/** Normalize catalog labels for duplicate detection. */
-export function normalizeCatalogLabel(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
+import type { LocalizedText } from "@/lib/localized-text";
+
+type CatalogLabel = string | LocalizedText | undefined | null;
+
+function catalogLabelText(value: CatalogLabel): string {
+  if (!value) return "";
+  if (typeof value === "string") return value.trim();
+  return String(value.en ?? value.hi ?? value.gu ?? "").trim();
 }
 
-type NamedItem = { name?: string; slug?: string };
-type TitledItem = { title?: string; slug?: string };
+/** Normalize catalog labels for duplicate detection. */
+export function normalizeCatalogLabel(value: CatalogLabel) {
+  return catalogLabelText(value).toLowerCase().replace(/\s+/g, " ");
+}
+
+type NamedItem = { name?: CatalogLabel; slug?: string };
+type TitledItem = { title?: CatalogLabel; slug?: string };
 
 /**
  * Keep the first item per slug and per display name (case-insensitive).

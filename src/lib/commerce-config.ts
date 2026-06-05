@@ -16,9 +16,12 @@ function envNumber(name: string, fallback: number) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-/** Show EU-style cookie consent + defer non-essential scripts until accept (future). */
+/** Show cookie consent + defer GA until accept (default on; set NEXT_PUBLIC_COOKIE_CONSENT=false to disable). */
 export function cookieConsentEnabled() {
-  return envBool("NEXT_PUBLIC_COOKIE_CONSENT", false);
+  const raw = process.env.NEXT_PUBLIC_COOKIE_CONSENT?.trim().toLowerCase();
+  if (!raw) return true;
+  if (["0", "false", "no", "off"].includes(raw)) return false;
+  return envBool("NEXT_PUBLIC_COOKIE_CONSENT", true);
 }
 
 /** When true, checkout shows guest / inquiry path; cart API still enforces auth for paid checkout. */

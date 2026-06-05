@@ -944,7 +944,8 @@ export async function upsertCmsProduct(product: Product): Promise<CmsSnapshot> {
     (item) =>
       item.slug === product.slug ||
       item.id === product.id ||
-      (nameKey && normalizeCatalogLabel(item.name ?? "") === nameKey),
+      (nameKey &&
+        normalizeCatalogLabel(readEnglish(item.name ?? "")) === nameKey),
   );
   const nextProducts = [...cms.products];
   if (index >= 0) nextProducts[index] = product;

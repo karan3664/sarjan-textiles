@@ -1,3 +1,5 @@
+import { scheduleSavedListsSync } from "@/lib/saved-lists-sync";
+
 export const COMPARE_KEY = "sarjan-compare";
 export const MAX_COMPARE_ITEMS = 3;
 
@@ -5,16 +7,24 @@ export function readCompare(): string[] {
   if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(window.localStorage.getItem(COMPARE_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string").slice(0, MAX_COMPARE_ITEMS) : [];
+    return Array.isArray(parsed)
+      ? parsed
+          .filter((item): item is string => typeof item === "string")
+          .slice(0, MAX_COMPARE_ITEMS)
+      : [];
   } catch {
     return [];
   }
 }
 
 export function writeCompare(slugs: string[]) {
-  const unique = Array.from(new Set(slugs.filter(Boolean))).slice(0, MAX_COMPARE_ITEMS);
+  const unique = Array.from(new Set(slugs.filter(Boolean))).slice(
+    0,
+    MAX_COMPARE_ITEMS,
+  );
   window.localStorage.setItem(COMPARE_KEY, JSON.stringify(unique));
   window.dispatchEvent(new CustomEvent("sarjan-compare-updated"));
+  scheduleSavedListsSync();
   return unique;
 }
 

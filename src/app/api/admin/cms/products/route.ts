@@ -22,45 +22,53 @@ export async function POST(request: Request) {
   );
   if (!session)
     return Response.json({ error: "Admin login required" }, { status: 401 });
-  const cms = await getCmsSnapshot();
-  const product = await request.json();
 
-  if (Array.isArray(product.products)) {
-    const localized = await localizeProductsOnSave(product.products);
-    const result = await upsertCmsProducts(asStoredProducts(localized));
+  try {
+    const cms = await getCmsSnapshot();
+    const product = await request.json();
+
+    if (Array.isArray(product.products)) {
+      const localized = await localizeProductsOnSave(product.products);
+      const result = await upsertCmsProducts(asStoredProducts(localized));
+      await appendAuditLog({
+        actor: session.email,
+        role: session.role,
+        action: "bulk_upsert_products",
+        entity: "product",
+        note: `${product.products.length} products`,
+      }).catch(() => null);
+      return Response.json({
+        ...result,
+        products: flattenProductsForAdmin(result.products),
+      });
+    }
+
+    const previous = cms.products.find(
+      (item) =>
+        item.slug === product.slug ||
+        item.id === product.id ||
+        readEnglish(item.name) === readEnglish(product.name),
+    );
+    const localized = await localizeProductOnSave(product, previous);
+    const result = await upsertCmsProduct(asStoredProducts([localized])[0]!);
     await appendAuditLog({
       actor: session.email,
       role: session.role,
-      action: "bulk_upsert_products",
+      action: "upsert_product",
       entity: "product",
-      note: `${product.products.length} products`,
+      entityId: product.slug || product.id,
+      after: flattenProductForAdmin(localized),
     }).catch(() => null);
     return Response.json({
       ...result,
       products: flattenProductsForAdmin(result.products),
     });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Product save failed";
+    console.error("[cms/products POST]", error);
+    return Response.json({ error: message }, { status: 500 });
   }
-
-  const previous = cms.products.find(
-    (item) =>
-      item.slug === product.slug ||
-      item.id === product.id ||
-      readEnglish(item.name) === readEnglish(product.name),
-  );
-  const localized = await localizeProductOnSave(product, previous);
-  const result = await upsertCmsProduct(asStoredProducts([localized])[0]!);
-  await appendAuditLog({
-    actor: session.email,
-    role: session.role,
-    action: "upsert_product",
-    entity: "product",
-    entityId: product.slug || product.id,
-    after: flattenProductForAdmin(localized),
-  }).catch(() => null);
-  return Response.json({
-    ...result,
-    products: flattenProductsForAdmin(result.products),
-  });
 }
 
 export async function DELETE(request: Request) {

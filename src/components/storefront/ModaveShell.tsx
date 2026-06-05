@@ -5,6 +5,8 @@ import { CompareDrawer } from "./CompareDrawer";
 import { ModavePreload } from "./ModavePreload";
 import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
 import { OrderBotWidget } from "./OrderBotWidget";
+import { AbandonedCartResumeBanner } from "./AbandonedCartResumeBanner";
+import { SavedListsSync } from "./SavedListsSync";
 import { SarjanButtonHoverFix } from "./SarjanButtonHoverFix";
 import { TemplateScripts } from "./TemplateScripts";
 import { localeFromHeaders } from "@/lib/server-locale";
@@ -43,6 +45,8 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
           initialCategories={header.categories}
           initialHubs={header.hubs}
         />
+        <AbandonedCartResumeBanner />
+        <SavedListsSync />
         {children}
         <ModaveFooter />
         <CompareDrawer />

@@ -4,6 +4,7 @@ import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { cookieConsentRequired } from "@/lib/cookie-consent-client";
 
 const STORAGE_KEY = "sarjan-cookie-consent";
 
@@ -11,7 +12,7 @@ export function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_COOKIE_CONSENT !== "true") return;
+    if (!cookieConsentRequired()) return;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) setVisible(true);

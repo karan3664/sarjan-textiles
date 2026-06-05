@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const visitorKey = "sarjan_visitor_id";
+import { cookieConsentRequired } from "@/lib/cookie-consent-client";
+
 const CONSENT_KEY = "sarjan-cookie-consent";
 
 function marketingConsentGranted() {
-  if (process.env.NEXT_PUBLIC_COOKIE_CONSENT !== "true") return true;
+  if (!cookieConsentRequired()) return true;
   try {
     return window.localStorage.getItem(CONSENT_KEY) === "accepted";
   } catch {

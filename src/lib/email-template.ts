@@ -70,9 +70,16 @@ export function newsletterSubscriberConfirmationInnerHtml(
 /** Internal notification body for orders inbox. */
 export function newsletterAdminNotificationInnerHtml(
   subscriberEmail: string,
+  source = "footer",
 ): string {
   const e = escapeHtml(subscriberEmail);
-  return `<p style="margin:0 0 12px;color:#4d4843;line-height:1.65;">New footer newsletter signup on the website.</p>
+  const channel =
+    source === "app"
+      ? "New mobile app newsletter signup."
+      : source === "footer"
+        ? "New footer newsletter signup on the website."
+        : `New newsletter signup (${escapeHtml(source)}).`;
+  return `<p style="margin:0 0 12px;color:#4d4843;line-height:1.65;">${channel}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:14px 16px;background:#fbfaf7;border-radius:10px;border:1px solid #e8e2d9;">
   <tr><td style="font-size:15px;line-height:1.5;color:#141414;"><strong>Subscriber email</strong><br /><a href="mailto:${e}" style="color:#8b1e2d;text-decoration:none;">${e}</a></td></tr>
 </table>

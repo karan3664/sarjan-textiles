@@ -35,6 +35,8 @@ import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
+import { ProductDetailImmersiveMedia } from "./ProductDetailImmersiveMedia";
+import { ProductRecentlyViewedTracker } from "./ProductRecentlyViewedTracker";
 import { ProductSortSelect } from "./ProductSortSelect";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
 import { PriceGate } from "./PriceGate";
@@ -952,72 +954,77 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
             <div className="row">
               <div className="col-md-6">
                 <div className="tf-product-media-wrap sticky-top position-relative">
-                  {soldOut ? (
-                    <div className="sarjan-oos-ribbon" role="status">
-                      Out of stock
-                    </div>
-                  ) : null}
-                  <div className="thumbs-slider">
-                    <div
-                      dir="ltr"
-                      className="swiper tf-product-media-thumbs other-image-zoom"
-                      data-direction="vertical"
-                    >
-                      <div className="swiper-wrapper stagger-wrap">
-                        {galleryImages.map((image, index) => (
-                          <div
-                            className="swiper-slide stagger-item"
-                            data-color={product.colors[
-                              index % product.colors.length
-                            ]?.toLowerCase()}
-                            key={`thumb-${image}-${index}`}
-                          >
-                            <div className="item">
-                              <img
-                                className="lazyload"
-                                data-src={image}
-                                src={image}
-                                alt={`${altText} thumbnail ${index + 1}`}
-                              />
-                            </div>
+                  <ProductDetailImmersiveMedia
+                    galleryImages={galleryImages}
+                    spin360Images={product.spin360Images}
+                    fabricSwatchImage={product.fabricSwatchImage}
+                    altText={altText}
+                    fabricLabel={product.fabric}
+                    soldOut={soldOut}
+                    gallerySlot={
+                      <div className="thumbs-slider">
+                        <div
+                          dir="ltr"
+                          className="swiper tf-product-media-thumbs other-image-zoom"
+                          data-direction="vertical"
+                        >
+                          <div className="swiper-wrapper stagger-wrap">
+                            {galleryImages.map((image, index) => (
+                              <div
+                                className="swiper-slide stagger-item"
+                                data-color={product.colors[
+                                  index % product.colors.length
+                                ]?.toLowerCase()}
+                                key={`thumb-${image}-${index}`}
+                              >
+                                <div className="item">
+                                  <img
+                                    className="lazyload"
+                                    data-src={image}
+                                    src={image}
+                                    alt={`${altText} thumbnail ${index + 1}`}
+                                  />
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div
-                      dir="ltr"
-                      className="swiper tf-product-media-main"
-                      id="gallery-swiper-started"
-                    >
-                      <div className="swiper-wrapper">
-                        {galleryImages.map((image, index) => (
-                          <div
-                            className="swiper-slide"
-                            data-color={product.colors[
-                              index % product.colors.length
-                            ]?.toLowerCase()}
-                            key={`main-${image}-${index}`}
-                          >
-                            <a
-                              href={image}
-                              target="_blank"
-                              className="item"
-                              data-pswp-width="800px"
-                              data-pswp-height="1000px"
-                            >
-                              <img
-                                className="tf-image-zoom lazyload"
-                                data-zoom={image}
-                                data-src={image}
-                                src={image}
-                                alt={`${altText} view ${index + 1}`}
-                              />
-                            </a>
+                        </div>
+                        <div
+                          dir="ltr"
+                          className="swiper tf-product-media-main"
+                          id="gallery-swiper-started"
+                        >
+                          <div className="swiper-wrapper">
+                            {galleryImages.map((image, index) => (
+                              <div
+                                className="swiper-slide"
+                                data-color={product.colors[
+                                  index % product.colors.length
+                                ]?.toLowerCase()}
+                                key={`main-${image}-${index}`}
+                              >
+                                <a
+                                  href={image}
+                                  target="_blank"
+                                  className="item"
+                                  data-pswp-width="800px"
+                                  data-pswp-height="1000px"
+                                >
+                                  <img
+                                    className="tf-image-zoom lazyload"
+                                    data-zoom={image}
+                                    data-src={image}
+                                    src={image}
+                                    alt={`${altText} view ${index + 1}`}
+                                  />
+                                </a>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    }
+                  />
                 </div>
               </div>
               <div className="col-md-6">
@@ -1473,6 +1480,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         </div>
       </div>
 
+      <ProductRecentlyViewedTracker product={product} />
       <ProductDetailRecommendations currentSlug={product.slug} />
     </>
   );
@@ -2891,293 +2899,3 @@ export function AuthDynamic({ mode }: { mode: "login" | "register" }) {
   );
 }
 
-export function CartDynamic({ checkout = false }: { checkout?: boolean }) {
-  const cartItems = getCartItems();
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item?.lineTotal ?? 0),
-    0,
-  );
-
-  if (checkout) {
-    return <CheckoutDynamic cartItems={cartItems} subtotal={subtotal} />;
-  }
-
-  return (
-    <>
-      <PageTitle
-        title="Shopping Cart"
-        crumbs={["Homepage", "Shop", "Shopping Cart"]}
-      />
-      <section className="flat-spacing">
-        <div className="container">
-          <div className="row">
-            <div className="col-xl-8">
-              <form>
-                <table className="tf-table-page-cart">
-                  <thead>
-                    <tr>
-                      <th>Products</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>Total Price</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cartItems.map((item) =>
-                      item ? (
-                        <tr
-                          className="tf-cart-item file-delete"
-                          key={`${item.productSlug}-${item.size}`}
-                        >
-                          <td className="tf-cart-item_product">
-                            <Link
-                              href={`/products/${item.product.slug}`}
-                              className="img-box position-relative d-inline-block"
-                            >
-                              {isProductSoldOut(item.product) ? (
-                                <div
-                                  className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
-                                  role="status"
-                                >
-                                  Out of stock
-                                </div>
-                              ) : null}
-                              <img
-                                src={item.product.images[0]}
-                                alt={item.product.name}
-                              />
-                            </Link>
-                            <div className="cart-info">
-                              <Link
-                                href={`/products/${item.product.slug}`}
-                                className="cart-title link"
-                              >
-                                {item.product.name}
-                              </Link>
-                              <div
-                                className="sarjan-cart-variant-row"
-                                aria-label={`Variant: ${item.color}`}
-                              >
-                                <span className="sarjan-cart-variant-pill">
-                                  {item.color}
-                                </span>
-                                <span className="sarjan-cart-variant-pill">
-                                  Full set
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td
-                            data-cart-title="Price"
-                            className="tf-cart-item_price text-center"
-                          >
-                            <div className="cart-price text-button price-on-sale">
-                              <PriceGate amount={item.unitPrice} compact />
-                            </div>
-                          </td>
-                          <td
-                            data-cart-title="Quantity"
-                            className="tf-cart-item_quantity"
-                          >
-                            <div className="wg-quantity mx-md-auto">
-                              <span className="btn-quantity btn-decrease">
-                                -
-                              </span>
-                              <input
-                                type="text"
-                                className="quantity-product"
-                                name="number"
-                                defaultValue={item.quantity}
-                              />
-                              <span className="btn-quantity btn-increase">
-                                +
-                              </span>
-                            </div>
-                          </td>
-                          <td
-                            data-cart-title="Total"
-                            className="tf-cart-item_total text-center"
-                          >
-                            <div className="cart-total text-button total-price">
-                              <PriceGate amount={item.lineTotal} compact />
-                            </div>
-                          </td>
-                          <td data-cart-title="Remove" className="remove-cart">
-                            <span className="remove icon icon-close" />
-                          </td>
-                        </tr>
-                      ) : null,
-                    )}
-                  </tbody>
-                </table>
-              </form>
-            </div>
-            <div className="col-xl-4">
-              <div className="fl-sidebar-cart">
-                <div className="box-order bg-surface">
-                  <h5 className="title">Order Summary</h5>
-                  <div className="subtotal text-button d-flex justify-content-between">
-                    <span>Subtotal</span>
-                    <PriceGate amount={subtotal} compact />
-                  </div>
-                  <Link href="/checkout" className="tf-btn btn-fill w-100">
-                    <span className="text text-button">Checkout</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-function CheckoutDynamic({
-  cartItems,
-  subtotal,
-}: {
-  cartItems: ReturnType<typeof getCartItems>;
-  subtotal: number;
-}) {
-  return (
-    <>
-      <PageTitle title="Checkout" crumbs={["Homepage", "Checkout"]} />
-      <section>
-        <div className="container">
-          <div className="row">
-            <div className="col-xl-6">
-              <div className="flat-spacing tf-page-checkout">
-                <div className="wrap">
-                  <div className="title-login">
-                    <p>Already have an account?</p>
-                    <Link href="/login" className="text-button">
-                      Login here
-                    </Link>
-                  </div>
-                  <form className="login-box">
-                    <div className="grid-2">
-                      <input type="text" placeholder="Your name/Email" />
-                      <input type="password" placeholder="Password" />
-                    </div>
-                    <button className="tf-btn" type="button">
-                      <span className="text">Login</span>
-                    </button>
-                  </form>
-                </div>
-                <div className="wrap">
-                  <h5 className="title">Information</h5>
-                  <form className="info-box">
-                    <div className="grid-2">
-                      <input type="text" placeholder="Company Name*" />
-                      <input type="text" placeholder="Contact Person*" />
-                    </div>
-                    <div className="grid-2">
-                      <input type="email" placeholder="Email Address*" />
-                      <input type="text" placeholder="Phone Number*" />
-                    </div>
-                    <div className="tf-select">
-                      <select className="text-title" defaultValue="India">
-                        <option>India</option>
-                        <option>United States</option>
-                        <option>Australia</option>
-                      </select>
-                    </div>
-                    <div className="grid-2">
-                      <input type="text" placeholder="City*" />
-                      <input type="text" placeholder="GST / Tax ID" />
-                    </div>
-                    <textarea
-                      placeholder="Dispatch notes / transport preference"
-                      rows={4}
-                    />
-                    <button className="tf-btn btn-reset" type="button">
-                      Submit Order Request
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div className="col-xl-1">
-              <div className="line-separation" />
-            </div>
-            <div className="col-xl-5">
-              <div className="flat-spacing flat-sidebar-checkout">
-                <div className="sidebar-checkout-content">
-                  <h5 className="title">Shopping Cart</h5>
-                  <div className="list-product">
-                    {cartItems.map((item) =>
-                      item ? (
-                        <div
-                          className="item-product"
-                          key={`${item.productSlug}-${item.size}`}
-                        >
-                          <Link
-                            href={`/products/${item.product.slug}`}
-                            className="img-product position-relative d-inline-block"
-                          >
-                            {isProductSoldOut(item.product) ? (
-                              <div
-                                className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
-                                role="status"
-                              >
-                                Out of stock
-                              </div>
-                            ) : null}
-                            <img
-                              src={item.product.images[0]}
-                              alt={item.product.name}
-                            />
-                          </Link>
-                          <div className="content-box">
-                            <div className="info">
-                              <Link
-                                href={`/products/${item.product.slug}`}
-                                className="name-product link text-title"
-                              >
-                                {item.product.name}
-                              </Link>
-                              <div className="variant text-caption-1 text-secondary">
-                                <span className="size">{item.size}</span>/
-                                <span className="color">{item.color}</span>
-                              </div>
-                            </div>
-                            <div className="total-price text-button">
-                              <span className="count">{item.quantity}</span>X
-                              <span className="price">
-                                <PriceGate amount={item.unitPrice} compact />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ) : null,
-                    )}
-                  </div>
-                  <div className="sec-total-price">
-                    <div className="top">
-                      <div className="item d-flex align-items-center justify-content-between text-button">
-                        <span>Subtotal</span>
-                        <PriceGate amount={subtotal} compact />
-                      </div>
-                    </div>
-                    <div className="bottom">
-                      <h5 className="d-flex justify-content-between">
-                        <span>Total</span>
-                        <PriceGate
-                          amount={subtotal}
-                          className="total-price-checkout"
-                          compact
-                        />
-                      </h5>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}

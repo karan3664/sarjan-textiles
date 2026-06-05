@@ -33,6 +33,8 @@ type ProductForm = {
   variantStock: string;
   pricingRules: string;
   images: string[];
+  spin360Images: string[];
+  fabricSwatchImage: string;
   imageAlt: string;
   metaTitle: string;
   metaDescription: string;
@@ -115,6 +117,8 @@ const emptyForm: ProductForm = {
   variantStock: "",
   pricingRules: "",
   images: [],
+  spin360Images: [],
+  fabricSwatchImage: "",
   imageAlt: "",
   metaTitle: "",
   metaDescription: "",
@@ -186,6 +190,9 @@ function productFromForm(
     images: form.images.length
       ? form.images
       : ["/sarjan-assets/sarjan-logo-icon.png"],
+    spin360Images:
+      form.spin360Images.length >= 8 ? form.spin360Images : undefined,
+    fabricSwatchImage: form.fabricSwatchImage.trim() || undefined,
     imageAlt:
       form.imageAlt.trim() ||
       buildProductImageAlt({
@@ -272,6 +279,8 @@ function formFromProduct(product?: Product): ProductForm {
         ?.map((rule) => `${rule.minQty}, ${rule.price}`)
         .join("\n") ?? "",
     images: product.images,
+    spin360Images: product.spin360Images ?? [],
+    fabricSwatchImage: product.fabricSwatchImage ?? "",
     imageAlt: product.imageAlt ?? "",
     metaTitle: product.metaTitle ?? "",
     metaDescription: product.metaDescription ?? "",
@@ -291,6 +300,8 @@ function mergeProductIdentity(product: Product, editProduct?: Product) {
   return {
     ...product,
     id: editProduct.id,
+    slug: editProduct.slug,
+    legacySlugs: editProduct.legacySlugs,
   };
 }
 
@@ -468,19 +479,58 @@ export function AdminProductCreateClient({
     setUploading(true);
     setMessage("");
     try {
-      const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
-        const body = new FormData();
-        body.append("file", file);
-        const res = await fetch("/api/admin/uploads", { method: "POST", body });
-        if (!res.ok) throw new Error("Image upload failed");
-        const data = (await res.json()) as { url: string };
-        uploaded.push(data.url);
-      }
+      const uploaded = await uploadFiles(files);
       setForm((current) => ({ ...current, images: uploaded }));
       setMessage(`${uploaded.length} image uploaded.`);
     } catch {
       setMessage("Image upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const uploadFiles = async (files: FileList | File[]) => {
+    const uploaded: string[] = [];
+    for (const file of Array.from(files)) {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/uploads", { method: "POST", body });
+      if (!res.ok) throw new Error("Image upload failed");
+      const data = (await res.json()) as { url: string };
+      uploaded.push(data.url);
+    }
+    return uploaded;
+  };
+
+  const uploadSpin360Images = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploading(true);
+    setMessage("");
+    try {
+      const uploaded = await uploadFiles(files);
+      setForm((current) => ({
+        ...current,
+        spin360Images: [...current.spin360Images, ...uploaded].slice(0, 36),
+      }));
+      setMessage(`${uploaded.length} spin frame(s) uploaded.`);
+    } catch {
+      setMessage("360° frame upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const uploadFabricSwatch = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setMessage("");
+    try {
+      const [url] = await uploadFiles([file]);
+      setForm((current) => ({ ...current, fabricSwatchImage: url }));
+      setMessage("Fabric swatch uploaded.");
+    } catch {
+      setMessage("Fabric swatch upload failed.");
     } finally {
       setUploading(false);
     }
@@ -505,10 +555,17 @@ export function AdminProductCreateClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
       });
-      if (!res.ok) throw new Error("Save failed");
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Save failed");
       setMessage(isEdit ? "Product updated." : "Product saved and published.");
-    } catch {
-      setMessage(isEdit ? "Product update failed." : "Product save failed.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : isEdit
+            ? "Product update failed."
+            : "Product save failed.",
+      );
     } finally {
       setSaving(false);
     }
@@ -695,6 +752,113 @@ export function AdminProductCreateClient({
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div className="sarjan-product-immersive-upload mt-24">
+              <h6 className="mb-12">360° Spin Frames</h6>
+              <p className="text-caption-1 text-secondary mb-16">
+                Upload 8–36 photos in rotation order (frame 1 → last). Use a
+                turntable or shoot every 10° around the product. Same background
+                and lighting for all frames.
+              </p>
+              <label className="uploadfile mb-16">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(event) => uploadSpin360Images(event.target.files)}
+                />
+                <div className="upload-btn text-button font-instrument fw-6">
+                  {uploading ? "Uploading..." : "Upload Spin Frames"}
+                </div>
+              </label>
+              {form.spin360Images.length ? (
+                <>
+                  <div className="sarjan-spin360-frame-grid mb-12">
+                    {form.spin360Images.map((image, index) => (
+                      <div
+                        className="sarjan-spin360-frame"
+                        key={`${image}-${index}`}
+                      >
+                        <span className="sarjan-spin360-frame-num">
+                          {index + 1}
+                        </span>
+                        <img src={image} alt={`Spin frame ${index + 1}`} />
+                        <button
+                          type="button"
+                          className="sarjan-spin360-frame-remove"
+                          aria-label={`Remove frame ${index + 1}`}
+                          onClick={() =>
+                            update(
+                              "spin360Images",
+                              form.spin360Images.filter((_, i) => i !== index),
+                            )
+                          }
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-caption-1 mb-12">
+                    {form.spin360Images.length} frame
+                    {form.spin360Images.length === 1 ? "" : "s"}
+                    {form.spin360Images.length < 8
+                      ? " — add at least 8 for 360° view"
+                      : " — ready for 360° view"}
+                  </p>
+                  <button
+                    type="button"
+                    className="tf-button w-100"
+                    onClick={() => update("spin360Images", [])}
+                  >
+                    Remove All Spin Frames
+                  </button>
+                </>
+              ) : null}
+            </div>
+
+            <div className="sarjan-product-immersive-upload mt-24">
+              <h6 className="mb-12">Fabric Swatch (AR / Zoom)</h6>
+              <p className="text-caption-1 text-secondary mb-16">
+                One high-resolution close-up of the fabric weave / print
+                texture. Buyers use this for zoom and live camera preview on
+                phone & web.
+              </p>
+              <div className="upload-image sarjan-product-main-upload">
+                <div className="upload-img">
+                  {form.fabricSwatchImage ? (
+                    <img
+                      src={form.fabricSwatchImage}
+                      alt="Fabric swatch preview"
+                    />
+                  ) : (
+                    <div className="sarjan-product-upload-placeholder">
+                      <i className="icon-image" />
+                      <span>No swatch uploaded</span>
+                    </div>
+                  )}
+                </div>
+                <label className="uploadfile">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => uploadFabricSwatch(event.target.files)}
+                  />
+                  <div className="upload-btn text-button font-instrument fw-6">
+                    {uploading ? "Uploading..." : "Upload Fabric Swatch"}
+                  </div>
+                </label>
+              </div>
+              {form.fabricSwatchImage ? (
+                <button
+                  type="button"
+                  className="tf-button w-100 mt-12"
+                  onClick={() => update("fabricSwatchImage", "")}
+                >
+                  Remove Fabric Swatch
+                </button>
+              ) : null}
             </div>
 
             {!isEdit ? (
@@ -1250,7 +1414,7 @@ export function AdminProductCreateClient({
                       {`${selectedColors.length} colors / ${selectedSizes.length} sizes`}
                     </span>
                   </div>
-                  <div className="sarjan-product-bulk-table">
+                  <div className="sarjan-product-bulk-table sarjan-variant-matrix-table">
                     <table>
                       <thead>
                         <tr>
@@ -1266,9 +1430,13 @@ export function AdminProductCreateClient({
                           <tr key={`${variant.color}-${variant.size}`}>
                             <td>{variant.color}</td>
                             <td>{variant.size}</td>
-                            <td>
+                            <td className="sarjan-variant-matrix-sku">
                               <input
+                                type="text"
+                                className="sarjan-variant-matrix-input"
                                 value={variant.sku}
+                                title={variant.sku}
+                                spellCheck={false}
                                 onChange={(event) =>
                                   updateVariantOverride(variant.key, {
                                     sku: event.target.value,
@@ -1279,6 +1447,7 @@ export function AdminProductCreateClient({
                             <td>
                               <input
                                 type="number"
+                                className="sarjan-variant-matrix-input sarjan-variant-matrix-input--compact"
                                 value={variant.price}
                                 onChange={(event) =>
                                   updateVariantOverride(variant.key, {
@@ -1290,6 +1459,7 @@ export function AdminProductCreateClient({
                             <td>
                               <input
                                 type="number"
+                                className="sarjan-variant-matrix-input sarjan-variant-matrix-input--compact"
                                 value={variant.stock}
                                 onChange={(event) =>
                                   updateVariantOverride(variant.key, {

@@ -21,6 +21,10 @@ export type Product = {
   colors: string[];
   sizes: string[];
   images: string[];
+  /** Ordered frames for drag-to-spin 360° view (8–36 images). */
+  spin360Images?: string[];
+  /** High-res fabric texture close-up for swatch zoom / AR preview. */
+  fabricSwatchImage?: string;
   imageAlt?: string;
   description: string;
   care: string;

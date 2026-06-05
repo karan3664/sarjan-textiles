@@ -3787,6 +3787,61 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   opacity: 0.65;
 }
 
+.sarjan-spin360-frame-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+}
+
+.sarjan-spin360-frame {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(139, 30, 45, 0.18);
+}
+
+.sarjan-spin360-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sarjan-spin360-frame-num {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+}
+
+.sarjan-spin360-frame-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(139, 30, 45, 0.92);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sarjan-product-immersive-upload {
+  padding-top: 8px;
+  border-top: 1px solid rgba(139, 30, 45, 0.12);
+}
+
 .sarjan-product-bulk-card {
   display: grid;
   gap: 18px;
@@ -3844,6 +3899,80 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   border-bottom: 1px solid var(--line);
   font-size: 13px;
   text-align: left;
+}
+
+/* Variant matrix: full SKU + visible editable inputs (admin theme only styles input[type=text]) */
+.sarjan-variant-matrix-table table {
+  table-layout: auto;
+  min-width: 720px;
+}
+
+.sarjan-variant-matrix-table th:nth-child(1),
+.sarjan-variant-matrix-table td:nth-child(1) {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.sarjan-variant-matrix-table th:nth-child(2),
+.sarjan-variant-matrix-table td:nth-child(2) {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.sarjan-variant-matrix-table th:nth-child(3),
+.sarjan-variant-matrix-table td:nth-child(3) {
+  min-width: 220px;
+}
+
+.sarjan-variant-matrix-table th:nth-child(4),
+.sarjan-variant-matrix-table td:nth-child(4),
+.sarjan-variant-matrix-table th:nth-child(5),
+.sarjan-variant-matrix-table td:nth-child(5) {
+  width: 108px;
+}
+
+.sarjan-variant-matrix-table td {
+  overflow: visible;
+  vertical-align: middle;
+}
+
+.sarjan-variant-matrix-input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--main);
+  background: var(--White);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sarjan-variant-matrix-input:hover {
+  border-color: rgba(139, 30, 45, 0.35);
+}
+
+.sarjan-variant-matrix-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(139, 30, 45, 0.12);
+}
+
+.sarjan-variant-matrix-input--compact {
+  min-width: 84px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sarjan-variant-matrix-sku .sarjan-variant-matrix-input {
+  min-width: 200px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: nowrap;
 }
 
 .sarjan-product-field-grid {
@@ -12283,6 +12412,155 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   letter-spacing: 0.05em;
 }
 
+.sarjan-product-immersive-media {
+  position: relative;
+}
+
+.sarjan-immersive-mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sarjan-immersive-mode-tabs--pdp {
+  margin-bottom: 18px;
+}
+
+.sarjan-immersive-mode-tabs button {
+  border: 1px solid rgba(139, 30, 45, 0.22);
+  background: #fff;
+  color: var(--sarjan-accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.sarjan-immersive-mode-tabs button.active,
+.sarjan-immersive-mode-tabs button:hover {
+  background: var(--sarjan-accent);
+  border-color: var(--sarjan-accent);
+  color: #fff;
+}
+
+.sarjan-spin360-viewer {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  max-height: min(78vh, 820px);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f7f2ed;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.sarjan-spin360-viewer:active {
+  cursor: grabbing;
+}
+
+.sarjan-spin360-viewer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.sarjan-spin360-hint {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.sarjan-fabric-swatch-viewer {
+  display: grid;
+  gap: 14px;
+}
+
+.sarjan-fabric-zoom-stage {
+  position: relative;
+  aspect-ratio: 1;
+  max-height: min(72vh, 720px);
+  border-radius: 8px;
+  overflow: auto;
+  background: #f7f2ed;
+  border: 1px solid rgba(139, 30, 45, 0.12);
+}
+
+.sarjan-fabric-zoom-stage img {
+  width: 100%;
+  min-width: 140%;
+  height: auto;
+  display: block;
+}
+
+.sarjan-fabric-zoom-caption,
+.sarjan-fabric-ar-caption {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #6b5b55);
+}
+
+.sarjan-fabric-ar-stage {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  max-height: min(72vh, 720px);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111;
+}
+
+.sarjan-fabric-ar-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sarjan-fabric-ar-overlay {
+  position: absolute;
+  inset: 18% 8% auto;
+  height: 42%;
+  opacity: 0.72;
+  background-size: 120px 120px;
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.sarjan-fabric-ar-error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.72);
+  margin: 0;
+}
+
 /* Template hover images use z-index; keep OOS ribbon above product image stack */
 .card-product .card-product-wrapper > .sarjan-oos-ribbon {
   z-index: 25;
@@ -14715,4 +14993,93 @@ a.sarjan-order-bot-card:focus-visible {
 .sarjan-mobile-menu__lang .sarjan-lang-select {
   width: 100%;
   max-width: none;
+}
+
+.sarjan-cart-resume-banner {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  background: linear-gradient(90deg, #6b1228 0%, #8b1e3f 100%);
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(107, 18, 40, 0.18);
+}
+
+.sarjan-cart-resume-banner__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  flex-wrap: wrap;
+}
+
+.sarjan-cart-resume-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sarjan-cart-resume-banner__dismiss {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Dark banner: outline + fill CTAs — disable Modave wipe / gradient text */
+.sarjan-cart-resume-banner .tf-btn::after,
+.sarjan-cart-resume-banner .tf-btn.btn-line::after,
+.sarjan-cart-resume-banner .tf-btn.btn-line::before {
+  display: none !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-fill {
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #6b1228 !important;
+  border: 1px solid #fff !important;
+  -webkit-text-fill-color: #6b1228 !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-fill:hover {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #6b1228 !important;
+  -webkit-text-fill-color: #6b1228 !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-fill .text {
+  color: #6b1228 !important;
+  -webkit-text-fill-color: #6b1228 !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-line {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  -webkit-text-fill-color: #fff !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-line .text {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-line:hover {
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #6b1228 !important;
+  border-color: #fff !important;
+  -webkit-text-fill-color: #6b1228 !important;
+}
+
+.sarjan-cart-resume-banner .tf-btn.btn-line:hover .text {
+  color: #6b1228 !important;
+  -webkit-text-fill-color: #6b1228 !important;
 }
