@@ -32,8 +32,8 @@ import {
 import { withProductImageAlts } from "@/lib/product-image-alt";
 import { readEnglish } from "@/lib/cms-localize";
 import type { CatalogFilters } from "@/lib/catalog";
+import { COLLECTION_ROUTES } from "@/lib/collection-route-defaults";
 import {
-  COLLECTION_ROUTES,
   ensureUniqueProductSlugs,
   migrateWeakProductSlugs,
 } from "@/lib/product-seo-slug";

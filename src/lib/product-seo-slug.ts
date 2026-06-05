@@ -1,6 +1,12 @@
 import type { Product } from "@/data/mock";
 import type { CatalogFilters } from "@/lib/catalog";
+import {
+  COLLECTION_ROUTES,
+  type CollectionRoute,
+} from "@/lib/collection-route-defaults";
 import { slugifyCmsSegment } from "@/lib/slug";
+
+export { COLLECTION_ROUTES, type CollectionRoute };
 
 const PATTERN_KEYWORDS = [
   "ajrakh",
@@ -22,15 +28,6 @@ const WEAK_SLUG =
   /(?:^product-\d{10,}$|(?:mens-(?:kurta|shirt)-).+-\d{4,}$|-\d{4,}$)/i;
 
 export type ProductCategoryRoute = {
-  slug: string;
-  title: string;
-  description: string;
-  filters?: CatalogFilters;
-  q?: string;
-  keywords?: string[];
-};
-
-export type CollectionRoute = {
   slug: string;
   title: string;
   description: string;
@@ -73,32 +70,6 @@ export const PRODUCT_CATEGORY_ROUTES: ProductCategoryRoute[] = [
     description: "Jacket and outerwear lines for seasonal wholesale buying.",
     q: "jacket",
     keywords: ["textile jackets", "wholesale jackets"],
-  },
-];
-
-export const COLLECTION_ROUTES: CollectionRoute[] = [
-  {
-    slug: "ajrakh",
-    title: "Ajrakh Collection",
-    description:
-      "Indigo resist and Ajrakh-inspired prints for shirts and kurtas.",
-    q: "ajrak",
-    keywords: ["ajrakh", "ajrak print", "indigo textile"],
-  },
-  {
-    slug: "mashru",
-    title: "Mashru Collection",
-    description:
-      "Silk-cotton mashru blends with a soft sheen for premium retail.",
-    q: "mashru",
-    keywords: ["mashru", "silk cotton blend", "textile mashru"],
-  },
-  {
-    slug: "block-print",
-    title: "Block Print Collection",
-    description: "Hand-block and studio block prints across shirts and kurtas.",
-    q: "block",
-    keywords: ["block print", "bagru", "textile block print"],
   },
 ];
 
@@ -196,15 +167,6 @@ export function migrateWeakProductSlugs(products: Product[]): Product[] {
 
 export function getProductCategoryRoute(slug: string) {
   return PRODUCT_CATEGORY_ROUTES.find((route) => route.slug === slug) ?? null;
-}
-
-/** Back-compat wrapper — prefer `getCollectionPageBySlug` + `resolveCollection` in new code. */
-export async function getCollectionRoute(slug: string) {
-  const { getCollectionPageBySlug } = await import("@/lib/cms-store");
-  const { collectionPageToRoute } = await import("@/lib/pages-localize");
-  const page = await getCollectionPageBySlug(slug);
-  if (!page) return null;
-  return collectionPageToRoute(page);
 }
 
 export function isReservedProductCategorySlug(slug: string) {
