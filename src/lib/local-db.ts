@@ -1198,6 +1198,63 @@ export async function createAdminOrder(input: {
   return order;
 }
 
+const CLIENT_CANCELLABLE_STATUSES: LocalOrder["status"][] = [
+  "Pending approval",
+  "Approved",
+];
+
+function matchesOrderLookupId(orderId: string, candidate: string) {
+  const requested = orderId.toLowerCase().trim();
+  const fullId = candidate.toLowerCase();
+  const numericId = fullId.replace(/^st-/, "");
+  return (
+    fullId === requested ||
+    numericId === requested ||
+    fullId.endsWith(requested)
+  );
+}
+
+/** Resolve an order belonging to `clientId` (supports ST- prefix / numeric id aliases). */
+export async function findClientOrder(
+  clientId: string,
+  orderId: string,
+): Promise<LocalOrder | null> {
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("client_id", clientId);
+      if (!error && data?.length) {
+        const row = data.find((item) =>
+          matchesOrderLookupId(orderId, String(item.id ?? "")),
+        );
+        if (row) return mapOrder(row);
+      }
+    } catch {
+      // Fall through to JSON fallback.
+    }
+  }
+  const db = await readLocalDb();
+  return (
+    db.orders.find(
+      (order) =>
+        order.clientId === clientId && matchesOrderLookupId(orderId, order.id),
+    ) ?? null
+  );
+}
+
+/** Client-initiated cancellation — maps to admin "Rejected" status. */
+export async function cancelClientOrder(clientId: string, orderId: string) {
+  const order = await findClientOrder(clientId, orderId);
+  if (!order) throw new Error("Order not found");
+  if (!CLIENT_CANCELLABLE_STATUSES.includes(order.status)) {
+    throw new Error("This order can no longer be cancelled");
+  }
+  return updateOrderStatus(order.id, "Rejected", "Cancelled by client");
+}
+
 export async function updateOrderStatus(
   id: string,
   status: LocalOrder["status"],
