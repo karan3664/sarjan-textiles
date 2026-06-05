@@ -1,9 +1,14 @@
 import Link from "next/link";
 import type { CategoryHubPage } from "@/lib/cms-store";
 import { listActiveCategoryHubPages } from "@/lib/cms-store";
+import { resolveCategoryHub } from "@/lib/pages-localize";
+import { localeFromHeaders } from "@/lib/server-locale";
 
 export async function CategoryHubIndexContent() {
-  const hubs = await listActiveCategoryHubPages();
+  const locale = await localeFromHeaders();
+  const hubs = (await listActiveCategoryHubPages()).map((hub) =>
+    resolveCategoryHub(hub, locale),
+  );
   if (!hubs.length) {
     return (
       <section className="flat-spacing">

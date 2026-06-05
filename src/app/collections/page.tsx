@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { PageTitle } from "@/components/storefront/PageTitle";
-import { sarjanButtonClass } from "@/lib/sarjan-button";
-import { COLLECTION_ROUTES } from "@/lib/product-seo-slug";
+import { listActiveCollectionPages } from "@/lib/cms-store";
+import { resolveCollection } from "@/lib/pages-localize";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
+import { sarjanButtonClass } from "@/lib/sarjan-button";
+import { localeFromHeaders } from "@/lib/server-locale";
 import { JsonLd } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -11,6 +13,10 @@ export async function generateMetadata() {
 }
 
 export default async function CollectionsPage() {
+  const locale = await localeFromHeaders();
+  const collections = (await listActiveCollectionPages()).map((page) =>
+    resolveCollection(page, locale),
+  );
   const jsonLd = await cmsSeoJsonLd("collections");
 
   return (
@@ -24,7 +30,7 @@ export default async function CollectionsPage() {
             links to a curated wholesale catalog view.
           </p>
           <div className="row g-4">
-            {COLLECTION_ROUTES.map((collection) => (
+            {collections.map((collection) => (
               <div className="col-md-4" key={collection.slug}>
                 <div className="card h-100">
                   <div className="card-body d-flex flex-column">

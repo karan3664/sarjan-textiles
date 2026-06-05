@@ -79,11 +79,13 @@ type AdminActiveSection =
   | "roles"
   | "backups"
   | "categoryPages"
+  | "collectionPages"
   | "customPages"
   | "commerceHub"
   | "blogComments"
   | "newsletter"
   | "sendNotifications"
+  | "mobileApp"
   | "account";
 
 type SidebarNavItem = {
@@ -221,10 +223,22 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     section: "sendNotifications",
   },
   {
+    href: "/admin/mobile",
+    icon: "icon-smartphone",
+    label: "Mobile app CMS",
+    section: "mobileApp",
+  },
+  {
     href: "/admin/category-pages",
     icon: "icon-chart-bar",
     label: "Category pages",
     section: "categoryPages",
+  },
+  {
+    href: "/admin/collection-pages",
+    icon: "icon-chart-bar",
+    label: "Collection pages",
+    section: "collectionPages",
   },
   {
     href: "/admin/custom-pages",

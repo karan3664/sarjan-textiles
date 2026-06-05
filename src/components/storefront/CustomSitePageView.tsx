@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CustomSitePage } from "@/lib/cms-store";
+import type { PublicCustomSitePage } from "@/lib/pages-localize";
 import { CustomContentSections } from "@/components/storefront/ModaveSections";
 import type { Product } from "@/data/mock";
 
@@ -7,7 +7,7 @@ export async function CustomSitePageView({
   page,
   products,
 }: {
-  page: CustomSitePage;
+  page: PublicCustomSitePage;
   products: Product[];
 }) {
   return (

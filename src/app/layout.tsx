@@ -6,6 +6,7 @@ import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
 import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner";
 import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
 import { pageMetadata } from "@/lib/seo";
+import { localeFromHeaders } from "@/lib/server-locale";
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -51,11 +52,12 @@ export const metadata: Metadata = {
   publisher: siteSettings.brandName,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await localeFromHeaders();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <meta charSet="utf-8" />
         {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (

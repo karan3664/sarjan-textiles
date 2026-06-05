@@ -5,6 +5,7 @@ import { getCatalogProducts } from "@/lib/catalog";
 import { getCmsProductBySlug } from "@/lib/cms-store";
 import { getServerClientId } from "@/lib/client-session-server";
 import { getProductCategoryRoute } from "@/lib/product-seo-slug";
+import { localeFromHeaders } from "@/lib/server-locale";
 import {
   JsonLd,
   listingBreadcrumbJsonLd,
@@ -25,10 +26,12 @@ export function generateStaticParams() {
 
 async function loadProductForSlug(slug: string) {
   const clientId = await getServerClientId();
+  const locale = await localeFromHeaders();
   const priced = await getCatalogProducts({
     ids: [slug],
     clientId,
     limit: 1,
+    locale,
   });
   if (priced.items[0]) return priced.items[0];
   return getCmsProductBySlug(slug);

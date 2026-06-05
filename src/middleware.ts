@@ -9,6 +9,8 @@ import {
   requestReturnPath,
 } from "@/lib/auth-route-guards";
 import { verifyClientToken } from "@/lib/client-token";
+import { isAppLocale } from "@/lib/localized-text";
+import { localeCookieOptions } from "@/lib/locale-cookie";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
 const CLIENT_SESSION_COOKIE = "sarjan-client-token";
@@ -46,6 +48,15 @@ function clientTokenFromRequest(request: NextRequest): string | undefined {
 }
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/api/mock/")) {
+    if (
+      process.env.NODE_ENV === "production" &&
+      process.env.ALLOW_MOCK_API !== "true"
+    ) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+  }
+
   if (request.nextUrl.pathname === "/FAQs") {
     const url = request.nextUrl.clone();
     url.pathname = "/faqs";
@@ -142,6 +153,13 @@ export async function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next();
+  const queryLang = request.nextUrl.searchParams
+    .get("lang")
+    ?.trim()
+    .toLowerCase();
+  if (queryLang && isAppLocale(queryLang)) {
+    response.cookies.set(localeCookieOptions(queryLang));
+  }
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "SAMEORIGIN");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");

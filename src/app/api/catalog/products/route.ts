@@ -1,7 +1,9 @@
 import { getCatalogProducts } from "@/lib/catalog";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
+import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 
 export async function GET(request: Request) {
+  const locale = localeFromRequest(request);
   const { searchParams } = new URL(request.url);
   const session = await verifyClientToken(bearerToken(request));
   const ids = searchParams
@@ -27,7 +29,7 @@ export async function GET(request: Request) {
       : undefined,
   };
 
-  return Response.json(
+  return jsonLocalized(
     await getCatalogProducts({
       page,
       limit,
@@ -36,6 +38,8 @@ export async function GET(request: Request) {
       q,
       filters,
       clientId: session?.clientId,
+      locale,
     }),
+    locale,
   );
 }

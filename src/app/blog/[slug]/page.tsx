@@ -1,24 +1,38 @@
 import { BlogDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCmsBlogBySlug } from "@/lib/cms-store";
+import { resolveBlog } from "@/lib/content-localize";
+import { localeFromHeaders } from "@/lib/server-locale";
 import { blogJsonLd, blogMetadata, JsonLd } from "@/lib/seo";
 import { notFound } from "next/navigation";
 
 export const revalidate = 300;
 
-export function generateStaticParams() { return []; }
+export function generateStaticParams() {
+  return [];
+}
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
-  const blog = await getCmsBlogBySlug(slug);
-  if (!blog) return {};
+  const blogRaw = await getCmsBlogBySlug(slug);
+  if (!blogRaw) return {};
+  const blog = resolveBlog(blogRaw, await localeFromHeaders());
   return blogMetadata(blog);
 }
 
-export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
-  const blog = await getCmsBlogBySlug(slug);
-  if (!blog) notFound();
+  const blogRaw = await getCmsBlogBySlug(slug);
+  if (!blogRaw) notFound();
+  const blog = resolveBlog(blogRaw, await localeFromHeaders());
 
   return (
     <ModaveShell>

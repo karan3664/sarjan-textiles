@@ -5547,6 +5547,273 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   appearance: none;
 }
 
+/* Mobile App CMS admin */
+.sarjan-mobile-app-cms {
+  max-width: 1120px;
+  margin-top: 8px;
+  padding-bottom: 88px;
+}
+
+.sarjan-mobile-app-cms__toolbar,
+.sarjan-mobile-app-cms__footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 28px rgba(24, 24, 24, 0.06);
+}
+
+.sarjan-mobile-app-cms__toolbar {
+  position: sticky;
+  top: 8px;
+  z-index: 30;
+  margin-bottom: 16px;
+}
+
+.sarjan-mobile-app-cms__footer-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 25;
+  margin-top: 8px;
+}
+
+.sarjan-mobile-app-cms__toolbar-copy {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.sarjan-mobile-app-cms__message {
+  margin-bottom: 16px;
+}
+
+.sarjan-mobile-app-cms__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(24, 24, 24, 0.06);
+}
+
+.sarjan-mobile-app-cms__nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5f5a55;
+  text-decoration: none;
+  background: transparent;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.sarjan-mobile-app-cms__nav-link:hover {
+  color: var(--sarjan-accent, #8b1e2d);
+  background: #f6eee6;
+}
+
+.sarjan-mobile-app-cms__panel {
+  padding: 24px 28px !important;
+  margin-bottom: 18px !important;
+}
+
+.sarjan-mobile-app-cms__panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #ece7df;
+}
+
+.sarjan-mobile-app-cms__panel-head--split {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sarjan-mobile-app-cms__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.sarjan-mobile-app-cms__field-full {
+  grid-column: 1 / -1;
+}
+
+.sarjan-mobile-app-cms__field-span {
+  display: flex;
+  align-items: flex-end;
+}
+
+.sarjan-mobile-app-cms__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.sarjan-mobile-app-cms__item-card {
+  padding: 16px 18px;
+  border: 1px solid #ece7df;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfbfa 0%, #f7f5f2 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.sarjan-mobile-app-cms__item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sarjan-mobile-app-cms__item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sarjan-mobile-app-cms__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ddd6cc;
+  border-radius: 8px;
+  background: #fff;
+  color: #3d3834;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sarjan-mobile-app-cms__icon-btn:hover {
+  border-color: var(--sarjan-accent, #8b1e2d);
+  color: var(--sarjan-accent, #8b1e2d);
+}
+
+.sarjan-mobile-app-cms__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #e8e3db;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  color: #3d3834;
+}
+
+.sarjan-mobile-app-cms__toggle--compact {
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.sarjan-mobile-app-cms__toggle input {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.sarjan-mobile-app-cms__chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sarjan-mobile-app-cms__file-input {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.sarjan-mobile-app-cms fieldset {
+  margin: 0;
+  min-width: 0;
+}
+
+.sarjan-mobile-app-cms .form-control {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px solid #d8d2c9;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--main, #181818);
+}
+
+.sarjan-mobile-app-cms textarea.form-control {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.sarjan-mobile-app-cms .form-control:focus {
+  outline: none;
+  border-color: var(--sarjan-accent, #8b1e2d);
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.12);
+}
+
+.sarjan-mobile-app-cms .body-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 991px) {
+  .sarjan-mobile-app-cms__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-mobile-app-cms__field-span {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 767px) {
+  .sarjan-mobile-app-cms__panel {
+    padding: 18px 16px !important;
+  }
+
+  .sarjan-mobile-app-cms__toolbar,
+  .sarjan-mobile-app-cms__footer-bar {
+    padding: 12px 14px;
+  }
+
+  .sarjan-mobile-app-cms__nav {
+    border-radius: 12px;
+  }
+
+  .sarjan-mobile-app-cms__nav-link {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+}
+
 .sarjan-admin-newsletter-templates {
   max-height: 280px;
   overflow-y: auto;
@@ -8123,6 +8390,40 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
 .sarjan-faqs-accordion .accordion-faqs-content.text-secondary {
   color: var(--secondary, #4d4e4f) !important;
   -webkit-text-fill-color: var(--secondary, #4d4e4f) !important;
+}
+
+.sarjan-faq-support {
+  margin-top: clamp(32px, 4vw, 48px);
+  padding-top: clamp(24px, 3vw, 32px);
+  border-top: 1px solid var(--line, #e9e9e9);
+  max-width: 520px;
+}
+
+.sarjan-faq-support p {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.sarjan-faq-support .sarjan-faq-cta {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: auto;
+  min-height: 48px;
+  padding: 12px 28px !important;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sarjan-faq-support .sarjan-faq-cta .sarjan-tf-btn-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.sarjan-faq-support .sarjan-faq-cta .text-button {
+  letter-spacing: 0.02em;
 }
 
 /* Bootstrap accordions elsewhere — undo Modave global `button` (white text until hover) */
@@ -11741,6 +12042,214 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
 }
 
 /* Out-of-stock ribbon + labels (storefront product detail + cards) */
+.sarjan-deal-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--sarjan-accent);
+  background: rgba(139, 30, 45, 0.08);
+  border: 1px solid rgba(139, 30, 45, 0.18);
+  border-radius: 10px;
+}
+
+.sarjan-deal-countdown__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.88em;
+}
+
+.sarjan-deal-countdown__timer {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  font-size: 1.08em;
+  font-weight: 800;
+}
+
+.sarjan-deal-countdown--card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 52px;
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+  background: linear-gradient(
+    90deg,
+    #6f1824 0%,
+    var(--sarjan-accent) 45%,
+    #6f1824 100%
+  );
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  max-width: 100%;
+  pointer-events: none;
+}
+
+/* Deal ribbon sits above the hover “Add to cart” bar — no overlap on hover */
+.card-product .card-product-wrapper {
+  --sarjan-card-atc-bottom: 10px;
+  --sarjan-card-atc-height: 46px;
+  --sarjan-card-deal-gap: 10px;
+}
+
+.card-product .card-product-wrapper:has(.sarjan-deal-countdown--card) {
+  --sarjan-deal-ribbon-bottom: calc(
+    var(--sarjan-card-atc-bottom) + var(--sarjan-card-atc-height) +
+      var(--sarjan-card-deal-gap)
+  );
+}
+
+.card-product
+  .card-product-wrapper:has(.sarjan-deal-countdown--card)
+  .sarjan-deal-countdown--card {
+  bottom: var(--sarjan-deal-ribbon-bottom);
+}
+
+.card-product
+  .card-product-wrapper:has(.sarjan-deal-countdown--card)
+  .list-btn-main {
+  z-index: 5;
+}
+
+.card-product
+  .card-product-wrapper:has(.sarjan-deal-countdown--card)
+  .sarjan-deal-countdown--card {
+  z-index: 27;
+}
+
+.sarjan-deal-countdown--card .sarjan-deal-countdown__ribbon-gold {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sarjan-gold) 20%,
+    #d4a855 50%,
+    var(--sarjan-gold) 80%,
+    transparent 100%
+  );
+}
+
+.sarjan-deal-countdown--card .sarjan-deal-countdown__ribbon-gold--bottom {
+  top: auto;
+  bottom: 0;
+}
+
+.sarjan-deal-countdown--card .sarjan-deal-countdown__label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  opacity: 0.95;
+}
+
+.sarjan-deal-countdown--card .sarjan-deal-countdown__timer {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+
+.sarjan-deal-countdown--detail {
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #fff;
+  background: linear-gradient(
+    90deg,
+    #6f1824 0%,
+    var(--sarjan-accent) 50%,
+    #6f1824 100%
+  );
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(139, 30, 45, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+.sarjan-deal-countdown--detail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sarjan-gold),
+    transparent
+  );
+}
+
+.sarjan-deal-countdown--detail .sarjan-deal-countdown__label,
+.sarjan-deal-countdown--detail .sarjan-deal-countdown__timer {
+  color: #fff;
+}
+
+.sarjan-deal-countdown--detail .sarjan-deal-countdown__timer {
+  font-size: 18px;
+}
+
+.sarjan-deal-countdown--sticky {
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.sarjan-deal-price-row {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sarjan-deal-original-price {
+  font-size: 0.92em;
+  font-weight: 500;
+  color: var(--sarjan-muted);
+  text-decoration: line-through;
+}
+
+.card-product .sarjan-deal-price-row {
+  margin-bottom: 4px;
+}
+
+.card-product .card-product-wrapper > .sarjan-deal-countdown--card {
+  z-index: 26;
+}
+
+@media (max-width: 767px) {
+  .card-product .card-product-wrapper {
+    --sarjan-card-atc-bottom: 8px;
+    --sarjan-card-atc-height: 44px;
+    --sarjan-card-deal-gap: 8px;
+  }
+
+  .sarjan-deal-countdown--card {
+    padding: 10px 12px;
+  }
+
+  .sarjan-deal-countdown--card .sarjan-deal-countdown__timer {
+    font-size: 15px;
+  }
+}
+
 .sarjan-oos-ribbon {
   position: absolute;
   top: 14px;
@@ -14175,3 +14684,35 @@ a.sarjan-order-bot-card:focus-visible {
 }
 
 /* Storefront CTA defaults + hover: src/app/storefront-buttons.css */
+
+.sarjan-lang-select-wrap {
+  margin: 0;
+  min-width: 118px;
+}
+
+.sarjan-lang-select {
+  min-width: 118px;
+  max-width: 140px;
+  padding: 6px 28px 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.sarjan-lang-select:focus {
+  border-color: var(--primary, #111);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+.sarjan-mobile-menu__lang {
+  margin: 12px 0 4px;
+}
+
+.sarjan-mobile-menu__lang .sarjan-lang-select {
+  width: 100%;
+  max-width: none;
+}

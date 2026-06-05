@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import type { CmsBlog, CmsPages, CmsSeoPage } from "@/lib/cms-store";
+import { readEnglish } from "@/lib/cms-localize";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 
 type SeoInput = {
@@ -191,28 +192,32 @@ export function cmsPageMetadata(
 }
 
 export function seoPageMetadata(page: CmsSeoPage) {
+  const metaTitle = readEnglish(page.metaTitle);
+  const label = readEnglish(page.label);
   return pageMetadata({
-    title: page.metaTitle || page.label,
-    description: page.metaDescription,
+    title: metaTitle || label,
+    description: readEnglish(page.metaDescription),
     path: page.path,
     image: page.image,
-    imageAlt: page.imageAlt,
-    keywords: splitKeywords(page.keywords),
+    imageAlt: readEnglish(page.imageAlt) || label,
+    keywords: splitKeywords(readEnglish(page.keywords)),
     noIndex: page.noIndex,
   });
 }
 
 export function seoPageJsonLd(page: CmsSeoPage) {
+  const metaTitle = readEnglish(page.metaTitle);
+  const label = readEnglish(page.label);
   return {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: page.metaTitle || page.label,
-    description: page.metaDescription,
+    name: metaTitle || label,
+    description: readEnglish(page.metaDescription),
     url: absoluteUrl(page.path),
     primaryImageOfPage: {
       "@type": "ImageObject",
       url: imageUrl(page.image),
-      caption: page.imageAlt || page.label,
+      caption: readEnglish(page.imageAlt) || label,
     },
     publisher: {
       "@type": "Organization",

@@ -11,11 +11,17 @@ import {
 } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import type { CmsCustomSection } from "@/types/cms-custom";
+import type { LocalizedText } from "@/lib/localized-text";
 import type { CmsInstagramFeed } from "@/lib/instagram-types";
 import {
   defaultHeaderNavigation,
   normalizeHeaderNavigation,
 } from "@/lib/header-navigation";
+import {
+  normalizeMobileAppConfig,
+  type MobileAppConfig,
+  type MobileAppConfigStored,
+} from "@/lib/mobile-app-cms";
 import { slugifyCmsSegment } from "@/lib/slug";
 import {
   dedupeBlogsByTitle,
@@ -24,7 +30,10 @@ import {
   normalizeCatalogLabel,
 } from "@/lib/dedupe-catalog";
 import { withProductImageAlts } from "@/lib/product-image-alt";
+import { readEnglish } from "@/lib/cms-localize";
+import type { CatalogFilters } from "@/lib/catalog";
 import {
+  COLLECTION_ROUTES,
   ensureUniqueProductSlugs,
   migrateWeakProductSlugs,
 } from "@/lib/product-seo-slug";
@@ -33,6 +42,7 @@ export type CmsBlog = (typeof defaultBlogs)[number];
 export type CmsHome = typeof defaultHome;
 export type CmsPages = typeof defaultPages;
 export type CmsSiteSettings = typeof defaultSiteSettings;
+export type { MobileAppConfig, MobileAppConfigStored };
 export type CmsTestimonial = (typeof defaultHome.testimonials)[number] & {
   id: string;
   status: "pending" | "approved" | "rejected";
@@ -86,6 +96,24 @@ export type CategoryHubSubcategory = {
   href: string;
 };
 
+/** Curated product listing under /collections/[slug] (admin-managed). */
+export type CollectionPage = {
+  id: string;
+  /** URL segment: /collections/[slug] */
+  slug: string;
+  title: string;
+  description: string;
+  q?: string;
+  filters?: CatalogFilters;
+  keywords?: string;
+  heroImage?: string;
+  enabled?: boolean;
+  sortOrder?: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  updatedAt?: string;
+};
+
 /** Landing page for a main category with a grid of subcategory cards (admin-managed). */
 export type CategoryHubPage = {
   id: string;
@@ -108,12 +136,12 @@ export type CustomSitePage = {
   id: string;
   /** URL segment: /site/[slug] */
   slug: string;
-  title: string;
+  title: string | LocalizedText;
   heroImage?: string;
-  heroSubtitle?: string;
+  heroSubtitle?: string | LocalizedText;
   enabled?: boolean;
-  metaTitle?: string;
-  metaDescription?: string;
+  metaTitle?: string | LocalizedText;
+  metaDescription?: string | LocalizedText;
   keywords?: string;
   sections: CmsCustomSection[];
   updatedAt?: string;
@@ -176,13 +204,13 @@ export type CmsProductFilterGroup = {
 
 export type CmsSeoPage = {
   id: string;
-  label: string;
+  label: string | LocalizedText;
   path: string;
-  metaTitle: string;
-  metaDescription: string;
-  keywords: string;
+  metaTitle: string | LocalizedText;
+  metaDescription: string | LocalizedText;
+  keywords: string | LocalizedText;
   image: string;
-  imageAlt: string;
+  imageAlt: string | LocalizedText;
   noIndex?: boolean;
 };
 
@@ -197,6 +225,8 @@ export type CmsSnapshot = {
   categoryMaster: ProductCategoryMaster[];
   /** Main category landing pages with subcategory cards (e.g. Kurtas → Ajrakh / Mashru / …). */
   categoryHubPages: CategoryHubPage[];
+  /** Curated collection landing pages (e.g. Ajrakh, Mashru, block print). */
+  collectionPages: CollectionPage[];
   /** Arbitrary marketing / content pages built from custom sections. */
   customSitePages: CustomSitePage[];
   pages: CmsPages;
@@ -205,6 +235,8 @@ export type CmsSnapshot = {
   auditLogs: AuditLog[];
   /** Cached Instagram posts when live fetch fails on server (e.g. Vercel). */
   instagramFeed?: CmsInstagramFeed;
+  /** Mobile app splash, onboarding, home layout — editable in Admin → Mobile app. */
+  mobileApp: MobileAppConfigStored;
   updatedAt: string;
 };
 
@@ -596,6 +628,21 @@ const defaultCategoryHubPages: CategoryHubPage[] = [
 
 const defaultCustomSitePages: CustomSitePage[] = [];
 
+const defaultCollectionPages: CollectionPage[] = COLLECTION_ROUTES.map(
+  (route, index) => ({
+    id: `collection-${route.slug}`,
+    slug: route.slug,
+    title: route.title,
+    description: route.description,
+    q: route.q,
+    filters: route.filters,
+    keywords: route.keywords?.join(", "),
+    enabled: true,
+    sortOrder: index + 1,
+    updatedAt: new Date(0).toISOString(),
+  }),
+);
+
 export const defaultCmsSnapshot: CmsSnapshot = {
   siteSettings: defaultSiteSettings,
   home: defaultHome,
@@ -612,11 +659,17 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   clientPricing: [],
   categoryMaster: defaultCategoryMaster(defaultProducts),
   categoryHubPages: defaultCategoryHubPages,
+  collectionPages: defaultCollectionPages,
   customSitePages: defaultCustomSitePages,
   pages: defaultPages,
   seoPages: defaultSeoPages,
   inventoryLogs: [],
   auditLogs: [],
+  mobileApp: normalizeMobileAppConfig(
+    undefined,
+    defaultSiteSettings,
+    defaultHome,
+  ),
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -769,6 +822,9 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     categoryHubPages: Array.isArray(input.categoryHubPages)
       ? input.categoryHubPages
       : defaultCmsSnapshot.categoryHubPages,
+    collectionPages: Array.isArray(input.collectionPages)
+      ? input.collectionPages
+      : defaultCollectionPages,
     customSitePages: Array.isArray(input.customSitePages)
       ? input.customSitePages
       : defaultCmsSnapshot.customSitePages,
@@ -786,6 +842,17 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
       input.instagramFeed.posts.length
         ? input.instagramFeed
         : undefined,
+    mobileApp: normalizeMobileAppConfig(
+      input.mobileApp,
+      migrateSiteSettings({
+        ...defaultCmsSnapshot.siteSettings,
+        ...(input.siteSettings ?? {}),
+      }),
+      {
+        ...defaultCmsSnapshot.home,
+        ...(input.home ?? {}),
+      },
+    ),
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   });
 }
@@ -872,7 +939,7 @@ export async function saveCmsSnapshot(
 
 export async function upsertCmsProduct(product: Product): Promise<CmsSnapshot> {
   const cms = await getCmsSnapshot();
-  const nameKey = normalizeCatalogLabel(product.name ?? "");
+  const nameKey = normalizeCatalogLabel(readEnglish(product.name ?? ""));
   const index = cms.products.findIndex(
     (item) =>
       item.slug === product.slug ||
@@ -892,13 +959,14 @@ export async function upsertCmsProducts(
   const nextProducts = [...cms.products];
 
   for (const product of products) {
-    const nameKey = normalizeCatalogLabel(product.name ?? "");
+    const nameKey = normalizeCatalogLabel(readEnglish(product.name ?? ""));
     const index = nextProducts.findIndex(
       (item) =>
         item.slug === product.slug ||
         item.id === product.id ||
         item.sku === product.sku ||
-        (nameKey && normalizeCatalogLabel(item.name ?? "") === nameKey),
+        (nameKey &&
+          normalizeCatalogLabel(readEnglish(item.name ?? "")) === nameKey),
     );
     if (index >= 0) nextProducts[index] = product;
     else nextProducts.unshift(product);
@@ -916,11 +984,12 @@ export async function deleteCmsProduct(slug: string): Promise<CmsSnapshot> {
 
 export async function upsertCmsBlog(blog: CmsBlog): Promise<CmsSnapshot> {
   const cms = await getCmsSnapshot();
-  const titleKey = normalizeCatalogLabel(blog.title ?? "");
+  const titleKey = normalizeCatalogLabel(readEnglish(blog.title ?? ""));
   const index = cms.blogs.findIndex(
     (item) =>
       item.slug === blog.slug ||
-      (titleKey && normalizeCatalogLabel(item.title ?? "") === titleKey),
+      (titleKey &&
+        normalizeCatalogLabel(readEnglish(item.title ?? "")) === titleKey),
   );
   const nextBlogs = [...cms.blogs];
   if (index >= 0) nextBlogs[index] = blog;
@@ -1067,6 +1136,27 @@ export async function listActiveCategoryHubPages() {
   return cms.categoryHubPages
     .filter((page) => page.enabled !== false)
     .sort((a, b) => a.title.localeCompare(b.title));
+}
+
+export async function getCollectionPageBySlug(slug: string) {
+  const cms = await getCachedCmsSnapshot();
+  return (
+    cms.collectionPages.find(
+      (page) => page.slug === slug && page.enabled !== false,
+    ) ?? null
+  );
+}
+
+export async function listActiveCollectionPages() {
+  const cms = await getCachedCmsSnapshot();
+  return cms.collectionPages
+    .filter((page) => page.enabled !== false)
+    .sort((a, b) => {
+      const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.title.localeCompare(b.title);
+    });
 }
 
 export async function getCustomSitePageBySlug(slug: string) {

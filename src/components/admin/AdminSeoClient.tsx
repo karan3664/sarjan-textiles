@@ -2,11 +2,19 @@
 
 import { useMemo, useState } from "react";
 import type { CmsSeoPage } from "@/lib/cms-store";
+import { readEnglish } from "@/lib/cms-localize";
+import { flattenSeoPageForAdmin } from "@/lib/pages-localize";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 function slugify(value: string) {
-  return value.toLowerCase().trim().replace(/['’]/g, "").replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/['’]/g, "")
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function cleanPath(value: string) {
@@ -14,6 +22,10 @@ function cleanPath(value: string) {
   if (!trimmed) return "/";
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+function seoText(value: string | import("@/lib/localized-text").LocalizedText) {
+  return readEnglish(value);
 }
 
 const emptySeoPage: CmsSeoPage = {
@@ -28,20 +40,41 @@ const emptySeoPage: CmsSeoPage = {
   noIndex: false,
 };
 
-export function AdminSeoClient({ initialSeoPages }: { initialSeoPages: CmsSeoPage[] }) {
+export function AdminSeoClient({
+  initialSeoPages,
+}: {
+  initialSeoPages: CmsSeoPage[];
+}) {
   const [seoPages, setSeoPages] = useState(initialSeoPages);
-  const [selectedId, setSelectedId] = useState(initialSeoPages[0]?.id ?? emptySeoPage.id);
+  const [selectedId, setSelectedId] = useState(
+    initialSeoPages[0]?.id ?? emptySeoPage.id,
+  );
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const selected = useMemo(() => seoPages.find((page) => page.id === selectedId) ?? seoPages[0] ?? emptySeoPage, [seoPages, selectedId]);
+  const selected = useMemo(
+    () =>
+      seoPages.find((page) => page.id === selectedId) ??
+      seoPages[0] ??
+      emptySeoPage,
+    [seoPages, selectedId],
+  );
 
   const updateSelected = (patch: Partial<CmsSeoPage>) => {
     setSaveState("idle");
-    setSeoPages((current) => current.map((page) => page.id === selected.id ? { ...page, ...patch } : page));
+    setSeoPages((current) =>
+      current.map((page) =>
+        page.id === selected.id ? { ...page, ...patch } : page,
+      ),
+    );
   };
 
   const addPage = () => {
     const id = `custom-${Date.now().toString(36)}`;
-    const next = { ...emptySeoPage, id, label: "New SEO Page", path: "/new-page" };
+    const next = {
+      ...emptySeoPage,
+      id,
+      label: "New SEO Page",
+      path: "/new-page",
+    };
     setSeoPages((current) => [next, ...current]);
     setSelectedId(id);
     setSaveState("idle");
@@ -60,13 +93,13 @@ export function AdminSeoClient({ initialSeoPages }: { initialSeoPages: CmsSeoPag
     try {
       const normalized = seoPages.map((page) => ({
         ...page,
-        id: page.id || slugify(page.label || page.path),
+        id: page.id || slugify(seoText(page.label) || page.path),
         path: cleanPath(page.path),
-        metaTitle: page.metaTitle.trim(),
-        metaDescription: page.metaDescription.trim(),
-        keywords: page.keywords.trim(),
+        metaTitle: seoText(page.metaTitle).trim(),
+        metaDescription: seoText(page.metaDescription).trim(),
+        keywords: seoText(page.keywords).trim(),
         image: page.image.trim(),
-        imageAlt: page.imageAlt.trim(),
+        imageAlt: seoText(page.imageAlt).trim(),
       }));
       const res = await fetch("/api/admin/cms", {
         method: "PUT",
@@ -75,7 +108,7 @@ export function AdminSeoClient({ initialSeoPages }: { initialSeoPages: CmsSeoPag
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Save failed");
-      setSeoPages(data.seoPages);
+      setSeoPages((data.seoPages ?? []).map(flattenSeoPageForAdmin));
       setSelectedId(selected.id);
       setSaveState("saved");
     } catch {
@@ -88,19 +121,31 @@ export function AdminSeoClient({ initialSeoPages }: { initialSeoPages: CmsSeoPag
       <div className="flex flex-wrap justify-between gap14 items-center mb-24">
         <div>
           <h5>Page Wise SEO</h5>
-          <p className="text-secondary">Client can edit title, tags, URL/canonical, social image, and image alt text from backend.</p>
+          <p className="text-secondary">
+            Client can edit title, tags, URL/canonical, social image, and image
+            alt text from backend.
+          </p>
         </div>
         <div className="flex gap10">
-          <button type="button" className="tf-button" onClick={addPage}>Add SEO Page</button>
-          <button type="button" className="tf-button style-1" onClick={saveSeo}>{saveState === "saving" ? "Saving..." : "Save SEO"}</button>
+          <button type="button" className="tf-button" onClick={addPage}>
+            Add SEO Page
+          </button>
+          <button type="button" className="tf-button style-1" onClick={saveSeo}>
+            {saveState === "saving" ? "Saving..." : "Save SEO"}
+          </button>
         </div>
       </div>
 
       <div className="sarjan-seo-layout">
         <div className="sarjan-seo-nav">
           {seoPages.map((page) => (
-            <button type="button" className={page.id === selected.id ? "active" : ""} key={page.id} onClick={() => setSelectedId(page.id)}>
-              <span>{page.label}</span>
+            <button
+              type="button"
+              className={page.id === selected.id ? "active" : ""}
+              key={page.id}
+              onClick={() => setSelectedId(page.id)}
+            >
+              <span>{seoText(page.label)}</span>
               <small>{page.path}</small>
             </button>
           ))}
@@ -110,52 +155,118 @@ export function AdminSeoClient({ initialSeoPages }: { initialSeoPages: CmsSeoPag
           <div className="cols gap22">
             <fieldset>
               <div className="body-title mb-10">Page Name</div>
-              <input value={selected.label} onChange={(event) => updateSelected({ label: event.target.value })} />
+              <input
+                value={seoText(selected.label)}
+                onChange={(event) =>
+                  updateSelected({ label: event.target.value })
+                }
+              />
             </fieldset>
             <fieldset>
               <div className="body-title mb-10">Page URL / Canonical URL</div>
-              <input value={selected.path} onChange={(event) => updateSelected({ path: event.target.value })} placeholder="/products or https://sarjantextiles.com/custom-page" />
+              <input
+                value={selected.path}
+                onChange={(event) =>
+                  updateSelected({ path: event.target.value })
+                }
+                placeholder="/products or https://sarjantextiles.com/custom-page"
+              />
             </fieldset>
             <fieldset>
               <div className="body-title mb-10">Meta Title</div>
-              <input value={selected.metaTitle} onChange={(event) => updateSelected({ metaTitle: event.target.value })} maxLength={70} placeholder="Google page title" />
+              <input
+                value={seoText(selected.metaTitle)}
+                onChange={(event) =>
+                  updateSelected({ metaTitle: event.target.value })
+                }
+                maxLength={70}
+                placeholder="Google page title"
+              />
             </fieldset>
             <fieldset>
               <div className="body-title mb-10">Meta Tags / Keywords</div>
-              <input value={selected.keywords} onChange={(event) => updateSelected({ keywords: event.target.value })} placeholder="printed shirts, B2B textiles, wholesale catalog" />
+              <input
+                value={seoText(selected.keywords)}
+                onChange={(event) =>
+                  updateSelected({ keywords: event.target.value })
+                }
+                placeholder="printed shirts, B2B textiles, wholesale catalog"
+              />
             </fieldset>
             <fieldset>
               <div className="body-title mb-10">Open Graph / SEO Image URL</div>
-              <input value={selected.image} onChange={(event) => updateSelected({ image: event.target.value })} placeholder="/uploads/cms/banner.webp" />
+              <input
+                value={selected.image}
+                onChange={(event) =>
+                  updateSelected({ image: event.target.value })
+                }
+                placeholder="/uploads/cms/banner.webp"
+              />
             </fieldset>
             <fieldset>
               <div className="body-title mb-10">Image Alt Text</div>
-              <input value={selected.imageAlt} onChange={(event) => updateSelected({ imageAlt: event.target.value })} placeholder="Sarjan Textiles textile catalog banner" />
+              <input
+                value={seoText(selected.imageAlt)}
+                onChange={(event) =>
+                  updateSelected({ imageAlt: event.target.value })
+                }
+                placeholder="Sarjan Textiles textile catalog banner"
+              />
             </fieldset>
           </div>
 
           <fieldset>
             <div className="body-title mb-10">Meta Description</div>
-            <textarea rows={4} value={selected.metaDescription} onChange={(event) => updateSelected({ metaDescription: event.target.value })} maxLength={170} placeholder="Search result description" />
+            <textarea
+              rows={4}
+              value={seoText(selected.metaDescription)}
+              onChange={(event) =>
+                updateSelected({ metaDescription: event.target.value })
+              }
+              maxLength={170}
+              placeholder="Search result description"
+            />
           </fieldset>
 
           <label className="tf-cart-checkbox sarjan-seo-index-toggle">
-            <input type="checkbox" className="tf-check" checked={!selected.noIndex} onChange={(event) => updateSelected({ noIndex: !event.target.checked })} />
+            <input
+              type="checkbox"
+              className="tf-check"
+              checked={!selected.noIndex}
+              onChange={(event) =>
+                updateSelected({ noIndex: !event.target.checked })
+              }
+            />
             <span>Allow Google indexing</span>
           </label>
 
           <div className="sarjan-seo-preview">
             <div className="body-title">Google Preview</div>
-            <h6>{selected.metaTitle || selected.label}</h6>
+            <h6>{seoText(selected.metaTitle) || seoText(selected.label)}</h6>
             <p className="text-success">{cleanPath(selected.path)}</p>
-            <p className="text-secondary">{selected.metaDescription || "Meta description will appear here."}</p>
+            <p className="text-secondary">
+              {seoText(selected.metaDescription) ||
+                "Meta description will appear here."}
+            </p>
           </div>
 
           {selected.id.startsWith("custom-") ? (
-            <button type="button" className="tf-button style-3 mt-20" onClick={removePage}>Remove Custom SEO Page</button>
+            <button
+              type="button"
+              className="tf-button style-3 mt-20"
+              onClick={removePage}
+            >
+              Remove Custom SEO Page
+            </button>
           ) : null}
-          <div className={`body-text mt-20 ${saveState === "error" ? "text-danger" : saveState === "saved" ? "text-success" : ""}`}>
-            {saveState === "saved" ? "Saved. Frontend SEO now reads backend CMS data." : saveState === "error" ? "Save failed." : "Ready."}
+          <div
+            className={`body-text mt-20 ${saveState === "error" ? "text-danger" : saveState === "saved" ? "text-success" : ""}`}
+          >
+            {saveState === "saved"
+              ? "Saved. Frontend SEO now reads backend CMS data."
+              : saveState === "error"
+                ? "Save failed."
+                : "Ready."}
           </div>
         </div>
       </div>

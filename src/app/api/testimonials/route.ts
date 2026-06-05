@@ -1,7 +1,9 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import type { CmsTestimonial } from "@/lib/cms-store";
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
+import { resolveTestimonials } from "@/lib/content-localize";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
+import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 import {
   sanitizeUserText,
   USER_TEXT_LIMITS,
@@ -10,13 +12,27 @@ import {
 
 const defaultAvatar = "/sarjan-assets/sarjan-favicon-192.png";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const locale = localeFromRequest(request);
   const cms = await getCmsSnapshot();
-  return Response.json({
-    testimonials: cms.testimonials.filter(
-      (testimonial) => testimonial.status === "approved",
-    ),
-  });
+
+  return jsonLocalized(
+    {
+      testimonials: resolveTestimonials(
+        cms.testimonials.filter(
+          (testimonial) => testimonial.status === "approved",
+        ),
+        locale,
+      ),
+      locale,
+    },
+    locale,
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+      },
+    },
+  );
 }
 
 export async function POST(request: Request) {

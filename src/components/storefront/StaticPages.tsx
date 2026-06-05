@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { products } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
+import { localeFromHeaders } from "@/lib/server-locale";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { FeedbackForm } from "./FeedbackForm";
 import { ModaveProductCard } from "./ModaveProductCard";
@@ -10,6 +11,11 @@ import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
 import { FaqAccordion } from "./FaqAccordion";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+import {
+  faqItemsForLocale,
+  translateStorefrontNav,
+  translateStorefrontUi,
+} from "@/lib/storefront-ui";
 
 export function DynamicInfoPage({
   title,
@@ -88,7 +94,8 @@ export async function SearchResultPage({
   q?: string;
   page?: number;
 }) {
-  const data = await getCatalogProducts({ q, page, limit: 24 });
+  const locale = await localeFromHeaders();
+  const data = await getCatalogProducts({ q, page, limit: 24, locale });
 
   return (
     <>
@@ -225,32 +232,35 @@ export function TermsPage() {
   );
 }
 
-export function FaqPage() {
-  const items = [
-    [
-      "Can clients order single pieces?",
-      "No. Sarjan B2B flow uses set-wise ordering by size run and color.",
-    ],
-    [
-      "How payment works?",
-      "Payment terms are confirmed by Sarjan accounts team after order approval.",
-    ],
-    [
-      "Who approves orders?",
-      "Admin reviews stock, MOQ, production, and dispatch before approval.",
-    ],
-    [
-      "Can ERP sync later?",
-      "Yes. Order and invoice data are structured for Tally/AWS migration later.",
-    ],
-  ] as const;
+export async function FaqPage() {
+  const locale = await localeFromHeaders();
+  const items = faqItemsForLocale(locale);
+  const faqTitle = translateStorefrontNav("FAQs", locale);
+  const homeLabel = translateStorefrontUi("home", locale);
 
   return (
     <div className="sarjan-faqs-page sarjan-policy-page">
-      <PageTitle title="FAQs" crumbs={["Homepage", "FAQs"]} />
+      <PageTitle title={faqTitle} crumbs={[homeLabel, faqTitle]} />
       <section className="flat-spacing sarjan-faqs-content">
         <div className="container">
           <FaqAccordion items={items} />
+          <div className="sarjan-faq-support">
+            <p className="text-secondary">
+              {locale === "hi"
+                ? "और मदद चाहिए? WhatsApp, फोन या ईमेल से संपर्क करें।"
+                : locale === "gu"
+                  ? "વધુ મદદ જોઈએ? WhatsApp, ફોન અથવા ઈમેલથી સંપર્ક કરો."
+                  : "Need more help? Reach us on WhatsApp, phone, or email."}
+            </p>
+            <Link
+              href="/contact"
+              className={withBtnIcon("tf-btn btn-fill radius-4 sarjan-faq-cta")}
+            >
+              <TfButtonIcon icon="icon-phone" textClassName="text text-button">
+                {translateStorefrontNav("Contact", locale)}
+              </TfButtonIcon>
+            </Link>
+          </div>
         </div>
       </section>
     </div>

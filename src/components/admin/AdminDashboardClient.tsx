@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminDashboardCharts } from "@/components/admin/AdminDashboardCharts";
+import { AdminTranslateAllPanel } from "@/components/admin/AdminTranslateAllPanel";
 
 type DashboardItem = {
   label: string;
@@ -130,6 +131,7 @@ export function AdminDashboardClient() {
 
   return (
     <>
+      <AdminTranslateAllPanel />
       <div className="swiper tf-sw-card swiper-box-shadow sarjan-admin-summary">
         <div className="swiper-wrapper">
           {dashboard.summary.map((metric) => (

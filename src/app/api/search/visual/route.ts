@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
+import { localeFromRequest } from "@/lib/request-locale";
 import { searchProductsByImage } from "@/lib/visual-search";
 
 export const runtime = "nodejs";
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
 
   const token = bearerToken(request);
   const session = token ? await verifyClientToken(token) : null;
+  const locale = localeFromRequest(request);
 
   try {
     const result = await searchProductsByImage({
@@ -62,6 +64,7 @@ export async function POST(request: Request) {
       textQuery,
       clientId: session?.clientId,
       limit: 24,
+      locale,
     });
 
     return Response.json({

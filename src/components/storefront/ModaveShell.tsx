@@ -7,8 +7,13 @@ import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
 import { OrderBotWidget } from "./OrderBotWidget";
 import { SarjanButtonHoverFix } from "./SarjanButtonHoverFix";
 import { TemplateScripts } from "./TemplateScripts";
+import { localeFromHeaders } from "@/lib/server-locale";
+import { getStorefrontHeaderData } from "@/lib/storefront-header-data";
 
-export function ModaveShell({ children }: { children: React.ReactNode }) {
+export async function ModaveShell({ children }: { children: React.ReactNode }) {
+  const locale = await localeFromHeaders();
+  const header = await getStorefrontHeaderData(locale);
+
   return (
     <>
       <button id="scroll-top" aria-label="Scroll to top">
@@ -31,7 +36,13 @@ export function ModaveShell({ children }: { children: React.ReactNode }) {
       <ModavePreload />
       <div id="wrapper">
         <OffcanvasRouteGuard />
-        <ModaveHeader />
+        <ModaveHeader
+          key={locale}
+          initialLocale={header.locale}
+          initialNavItems={header.items}
+          initialCategories={header.categories}
+          initialHubs={header.hubs}
+        />
         {children}
         <ModaveFooter />
         <CompareDrawer />

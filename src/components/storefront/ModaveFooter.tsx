@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { footerInformationLinks, siteSettings } from "@/data/mock";
-import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { localeFromHeaders } from "@/lib/server-locale";
+import {
+  translateStorefrontNav,
+  translateStorefrontUi,
+} from "@/lib/storefront-ui";
 import { FooterNewsletterForm } from "./FooterNewsletterForm";
 
 export async function ModaveFooter() {
-  const cms = await getCachedCmsSnapshot();
+  const locale = await localeFromHeaders();
+  const cms = await getLocalizedCmsSnapshot();
   const settings = { ...siteSettings, ...cms.siteSettings };
   const directionsHref =
     settings.directionsUrl?.trim() ||
@@ -30,7 +36,7 @@ export async function ModaveFooter() {
                       rel="noopener noreferrer"
                       className="tf-btn-default style-white fw-6"
                     >
-                      GET DIRECTION
+                      {translateStorefrontUi("getDirection", locale)}
                       <i className="icon-arrowUpRight" />
                     </a>
                   </div>
@@ -96,14 +102,15 @@ export async function ModaveFooter() {
                 <div className="footer-menu footer-menu-sarjan-split">
                   <div className="footer-col-block sarjan-footer-info-block">
                     <div className="footer-heading text-button footer-heading-mobile">
-                      {settings.footerInfoHeading ?? "Information"}
+                      {settings.footerInfoHeading ??
+                        translateStorefrontUi("information", locale)}
                     </div>
                     <div className="tf-collapse-content">
                       <ul className="footer-menu-list">
                         {footerInformationLinks.map((item) => (
                           <li className="text-caption-1" key={item.href}>
                             <Link href={item.href} className="footer-menu_item">
-                              {item.label}
+                              {translateStorefrontNav(item.label, locale)}
                             </Link>
                           </li>
                         ))}
@@ -116,7 +123,7 @@ export async function ModaveFooter() {
                 <div className="footer-menu footer-menu-sarjan-split">
                   <div className="footer-col-block">
                     <div className="footer-heading text-button footer-heading-mobile">
-                      Policies
+                      {translateStorefrontUi("policies", locale)}
                     </div>
                     <div className="tf-collapse-content">
                       <ul className="footer-menu-list">
@@ -125,7 +132,7 @@ export async function ModaveFooter() {
                             href="/privacy-policy"
                             className="footer-menu_item"
                           >
-                            Privacy policy
+                            {translateStorefrontUi("privacyPolicy", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
@@ -133,7 +140,7 @@ export async function ModaveFooter() {
                             href="/term-of-use"
                             className="footer-menu_item"
                           >
-                            Terms of use
+                            {translateStorefrontUi("termsOfUse", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
@@ -141,7 +148,7 @@ export async function ModaveFooter() {
                             href="/refund-policy"
                             className="footer-menu_item"
                           >
-                            Refund policy
+                            {translateStorefrontUi("refundPolicy", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
@@ -149,12 +156,12 @@ export async function ModaveFooter() {
                             href="/shipping-policy"
                             className="footer-menu_item"
                           >
-                            Shipping policy
+                            {translateStorefrontUi("shippingPolicy", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
                           <Link href="/site-map" className="footer-menu_item">
-                            Site map
+                            {translateStorefrontUi("siteMap", locale)}
                           </Link>
                         </li>
                       </ul>
@@ -172,27 +179,33 @@ export async function ModaveFooter() {
                       <ul className="footer-menu-list">
                         <li className="text-caption-1">
                           <Link href="/login" className="footer-menu_item">
-                            Client Login
+                            {translateStorefrontUi("clientLogin", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
                           <Link href="/register" className="footer-menu_item">
-                            Client Registration
+                            {translateStorefrontUi(
+                              "clientRegistration",
+                              locale,
+                            )}
                           </Link>
                         </li>
                         <li className="text-caption-1">
                           <Link href="/download" className="footer-menu_item">
-                            Download Android App
+                            {translateStorefrontUi(
+                              "downloadAndroidApp",
+                              locale,
+                            )}
                           </Link>
                         </li>
                         <li className="text-caption-1">
                           <Link href="/cart" className="footer-menu_item">
-                            Order Cart
+                            {translateStorefrontUi("orderCart", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
                           <Link href="/wishlist" className="footer-menu_item">
-                            My Wishlist
+                            {translateStorefrontUi("myWishlist", locale)}
                           </Link>
                         </li>
                         <li className="text-caption-1">
@@ -200,7 +213,7 @@ export async function ModaveFooter() {
                             href="/order-feedback"
                             className="footer-menu_item"
                           >
-                            Order Feedback
+                            {translateStorefrontUi("orderFeedback", locale)}
                           </Link>
                         </li>
                       </ul>
@@ -233,7 +246,8 @@ export async function ModaveFooter() {
                 <div className="footer-bottom-wrap">
                   <div className="left">
                     <p className="text-caption-1">
-                      ©2026 {settings.brandName}. All Rights Reserved.
+                      ©2026 {settings.brandName}.{" "}
+                      {translateStorefrontUi("allRightsReserved", locale)}
                     </p>
                   </div>
                   <div className="right">

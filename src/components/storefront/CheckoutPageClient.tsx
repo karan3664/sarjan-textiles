@@ -40,6 +40,7 @@ import {
 } from "@/lib/india-pincode";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import { productSetPrice } from "@/lib/product-pricing";
+import type { StorefrontCommerceLabels } from "@/lib/storefront-ui";
 import { PriceGate } from "./PriceGate";
 
 type CheckoutLine = StoredCartItem & {
@@ -50,7 +51,11 @@ type CheckoutLine = StoredCartItem & {
 
 type CheckoutClient = StoredClient & { city?: string };
 
-export function CheckoutPageClient() {
+export function CheckoutPageClient({
+  labels = {},
+}: {
+  labels?: StorefrontCommerceLabels;
+}) {
   const [cart, setCart] = useState<StoredCartItem[]>([]);
   const [lines, setLines] = useState<CheckoutLine[]>([]);
   const [client, setClient] = useState<CheckoutClient | null>(null);
@@ -124,12 +129,14 @@ export function CheckoutPageClient() {
   const validateCheckoutPincode = useCallback(async () => {
     const pincode = normalizeIndianPincode(checkoutPincode);
     if (!pincode) {
-      const text = "Postal code is required.";
+      const text = labels.pincodeRequired ?? "Postal code is required.";
       setPincodeFeedback({ tone: "error", text });
       return { ok: false, message: text };
     }
     if (!checkoutState.trim() || !checkoutCity.trim()) {
-      const text = "Select state and city before validating PIN code.";
+      const text =
+        labels.pincodeSelectStateCity ??
+        "Select state and city before validating PIN code.";
       setPincodeFeedback({ tone: "error", text });
       return { ok: false, message: text };
     }
@@ -150,13 +157,21 @@ export function CheckoutPageClient() {
       }
       return { ok: result.valid, message: result.message };
     } catch {
-      const text = "Could not verify PIN code. Try again.";
+      const text =
+        labels.pincodeVerifyFailed ?? "Could not verify PIN code. Try again.";
       setPincodeFeedback({ tone: "error", text });
       return { ok: false, message: text };
     } finally {
       setPincodeChecking(false);
     }
-  }, [checkoutPincode, checkoutState, checkoutCity]);
+  }, [
+    checkoutPincode,
+    checkoutState,
+    checkoutCity,
+    labels.pincodeRequired,
+    labels.pincodeSelectStateCity,
+    labels.pincodeVerifyFailed,
+  ]);
 
   useEffect(() => {
     const pincode = normalizeIndianPincode(checkoutPincode);
@@ -247,7 +262,7 @@ export function CheckoutPageClient() {
       localStorage.getItem("sarjan-client") ?? "null",
     ) as { id?: string; email?: string; status?: string } | null;
     if (!client?.id) {
-      setMessage("Login required before order submit.");
+      setMessage(labels.loginRequired ?? "Login required before order submit.");
       return;
     }
     if (!isClientApproved()) {
@@ -308,8 +323,8 @@ export function CheckoutPageClient() {
     const data = await res.json();
     setMessage(
       res.ok
-        ? `Order request saved: ${data.order.id}`
-        : (data.error ?? "Order failed"),
+        ? `${labels.orderSaved ?? "Order request saved"}: ${data.order.id}`
+        : (data.error ?? labels.orderFailed ?? "Order failed"),
     );
     if (res.ok) {
       requestAdminNotificationRefresh();
@@ -321,374 +336,375 @@ export function CheckoutPageClient() {
   };
 
   return (
-    <>
-      <div
-        className="page-title"
-        style={{
-          backgroundImage:
-            "url(/template/storefront/images/section/page-title.jpg)",
-        }}
-      >
-        <div className="container">
-          <h3 className="heading text-center">Checkout</h3>
-          <ul className="breadcrumbs d-flex align-items-center justify-content-center">
-            <li>
-              <Link className="link" href="/">
-                Homepage
-              </Link>
-            </li>
-            <li>
-              <i className="icon-arrRight" />
-            </li>
-            <li>Checkout</li>
-          </ul>
-        </div>
-      </div>
-      <section>
-        <div className="container">
-          {loading ? (
-            <div className="text-center py-5">Loading checkout...</div>
-          ) : lines.length ? (
-            <div className="row">
-              <div className="col-xl-6">
-                <div className="flat-spacing tf-page-checkout">
-                  {!client?.id && guestCheckoutMarketingEnabled() ? (
-                    <div className="wrap mb_24">
-                      <h5 className="title">Guest checkout strategy</h5>
-                      <p className="text-secondary text-caption-1">
-                        Browse and build a cart without logging in. To{" "}
-                        <strong>submit a B2B order request</strong> you need an
-                        approved client login (GST, credit, and dispatch data
-                        are tied to your account). Start with a wholesale
-                        inquiry or register for approval.
+    <section>
+      <div className="container">
+        {loading ? (
+          <div className="text-center py-5">
+            {labels.loadingCheckout ?? "Loading checkout..."}
+          </div>
+        ) : lines.length ? (
+          <div className="row">
+            <div className="col-xl-6">
+              <div className="flat-spacing tf-page-checkout">
+                {!client?.id && guestCheckoutMarketingEnabled() ? (
+                  <div className="wrap mb_24">
+                    <h5 className="title">
+                      {labels.guestCheckoutTitle ?? "Guest checkout strategy"}
+                    </h5>
+                    <p className="text-secondary text-caption-1">
+                      {labels.guestCheckoutBody ??
+                        "Browse and build a cart without logging in. To submit a B2B order request you need an approved client login (GST, credit, and dispatch data are tied to your account). Start with a wholesale inquiry or register for approval."}
+                    </p>
+                    <p className="text-secondary text-caption-1 mt_16 mb_0 sarjan-guest-checkout-links">
+                      <span className="text-secondary">
+                        {labels.nextSteps ?? "Next steps:"}{" "}
+                      </span>
+                      <Link href="/inquiry" className="text-button">
+                        {labels.sendInquiry ?? "Send inquiry"}
+                      </Link>
+                      <span className="text-secondary"> · </span>
+                      <Link href="/register" className="text-button">
+                        {labels.register ?? "Register"}
+                      </Link>
+                      <span className="text-secondary"> · </span>
+                      <Link href="/refund-policy" className="text-button">
+                        {labels.refundPolicy ?? "Refund policy"}
+                      </Link>
+                      <span className="text-secondary"> · </span>
+                      <Link href="/shipping-policy" className="text-button">
+                        {labels.shippingPolicy ?? "Shipping policy"}
+                      </Link>
+                    </p>
+                  </div>
+                ) : null}
+                {!client?.id ? (
+                  <div className="wrap">
+                    <div className="title-login">
+                      <p>
+                        {labels.alreadyHaveAccount ??
+                          "Already have an account?"}
                       </p>
-                      <p className="text-secondary text-caption-1 mt_16 mb_0 sarjan-guest-checkout-links">
-                        <span className="text-secondary">Next steps: </span>
-                        <Link href="/inquiry" className="text-button">
-                          Send inquiry
-                        </Link>
-                        <span className="text-secondary"> · </span>
-                        <Link href="/register" className="text-button">
-                          Register
-                        </Link>
-                        <span className="text-secondary"> · </span>
-                        <Link href="/refund-policy" className="text-button">
-                          Refund policy
-                        </Link>
-                        <span className="text-secondary"> · </span>
-                        <Link href="/shipping-policy" className="text-button">
-                          Shipping policy
-                        </Link>
-                      </p>
-                    </div>
-                  ) : null}
-                  {!client?.id ? (
-                    <div className="wrap">
-                      <div className="title-login">
-                        <p>Already have an account?</p>
-                        <Link
-                          href="/login?next=/checkout"
-                          className="text-button"
-                        >
-                          Login here
-                        </Link>
-                      </div>
-                      <form
-                        className="login-box form-has-password"
-                        onSubmit={handleCheckoutLogin}
+                      <Link
+                        href="/login?next=/checkout"
+                        className="text-button"
                       >
-                        <div className="grid-2">
-                          <input
-                            type="email"
-                            name="email"
-                            placeholder="Email address*"
-                            autoComplete="email"
-                            value={loginEmail}
-                            onChange={(e) => setLoginEmail(e.target.value)}
-                            required
-                            disabled={loginBusy}
-                          />
-                          <input
-                            type="password"
-                            name="password"
-                            placeholder="Password*"
-                            autoComplete="current-password"
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            required
-                            disabled={loginBusy}
-                          />
-                        </div>
-                        {loginMessage ? (
-                          <p className="text-danger mb_8">{loginMessage}</p>
-                        ) : null}
-                        <button
-                          className={withBtnIcon(sarjanButtonClass())}
-                          type="submit"
-                          disabled={loginBusy}
-                        >
-                          <TfButtonIcon icon="icon-user">
-                            {loginBusy ? "Logging in…" : "Login"}
-                          </TfButtonIcon>
-                        </button>
-                      </form>
+                        {labels.loginHere ?? "Login here"}
+                      </Link>
                     </div>
-                  ) : null}
-                  <div className="wrap">
-                    <h5 className="title">Information</h5>
-                    <form className="info-box" key={client?.id ?? "guest"}>
+                    <form
+                      className="login-box form-has-password"
+                      onSubmit={handleCheckoutLogin}
+                    >
                       <div className="grid-2">
                         <input
-                          type="text"
-                          placeholder="Company Name*"
-                          name="companyName"
-                          defaultValue={client?.companyName ?? ""}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Contact Person*"
-                          name="contactPerson"
-                          defaultValue={client?.address?.contactName ?? ""}
-                        />
-                      </div>
-                      <div className="grid-2">
-                        <input
-                          type="text"
-                          placeholder="Email Address*"
-                          defaultValue={client?.email ?? ""}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Phone Number*"
-                          defaultValue={client?.phone ?? ""}
-                        />
-                      </div>
-                      <div className="tf-select">
-                        <select
-                          className="text-title"
-                          name="address[country]"
-                          defaultValue="India"
-                        >
-                          <option value="Choose Country/Region">
-                            Choose Country/Region
-                          </option>
-                          <option value="India">India</option>
-                        </select>
-                      </div>
-                      <IndiaStateCitySelect
-                        layout="grid-2"
-                        state={checkoutState}
-                        city={checkoutCity}
-                        onStateChange={setCheckoutState}
-                        onCityChange={setCheckoutCity}
-                        stateRequired
-                        cityRequired
-                      />
-                      <div className="grid-2">
-                        <input
-                          type="text"
-                          placeholder="Street, address..."
-                          name="dispatchAddress"
-                          defaultValue={client?.address?.line1 ?? ""}
-                        />
-                        <input
-                          type="text"
-                          name="pincode"
-                          inputMode="numeric"
-                          autoComplete="postal-code"
-                          maxLength={6}
-                          placeholder="Postal Code*"
-                          value={checkoutPincode}
-                          onChange={(e) => {
-                            setCheckoutPincode(
-                              normalizeIndianPincode(e.target.value),
-                            );
-                            if (pincodeFeedback.tone !== "muted") {
-                              setPincodeFeedback({ tone: "muted", text: "" });
-                            }
-                          }}
-                          onBlur={() => void validateCheckoutPincode()}
+                          type="email"
+                          name="email"
+                          placeholder={labels.emailAddress ?? "Email address*"}
+                          autoComplete="email"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
                           required
+                          disabled={loginBusy}
+                        />
+                        <input
+                          type="password"
+                          name="password"
+                          placeholder="Password*"
+                          autoComplete="current-password"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          required
+                          disabled={loginBusy}
                         />
                       </div>
-                      {pincodeChecking || pincodeFeedback.text ? (
-                        <p
-                          className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
-                        >
-                          {pincodeChecking
-                            ? "Checking PIN code against India Post…"
-                            : pincodeFeedback.text}
-                        </p>
+                      {loginMessage ? (
+                        <p className="text-danger mb_8">{loginMessage}</p>
                       ) : null}
-                      <textarea placeholder="Write note..." name="note" />
+                      <button
+                        className={withBtnIcon(sarjanButtonClass())}
+                        type="submit"
+                        disabled={loginBusy}
+                      >
+                        <TfButtonIcon icon="icon-user">
+                          {loginBusy
+                            ? "Logging in…"
+                            : (labels.login ?? "Login")}
+                        </TfButtonIcon>
+                      </button>
                     </form>
                   </div>
-                  <div className="wrap">
-                    <h5 className="title">Order Confirmation</h5>
-                    <form className="form-payment">
-                      <div className="payment-box" id="payment-box">
-                        <div className="payment-item payment-choose-card active">
-                          <label
-                            htmlFor="order-confirmation-method"
-                            className="payment-header"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#order-confirmation"
-                            aria-controls="order-confirmation"
-                          >
-                            <input
-                              type="radio"
-                              name="payment-method"
-                              className="tf-check-rounded"
-                              id="order-confirmation-method"
-                              defaultChecked
-                            />
-                            <span className="text-title">
-                              Submit Order Request
-                            </span>
-                          </label>
-                          <div
-                            id="order-confirmation"
-                            className="collapse show"
-                            data-bs-parent="#payment-box"
-                          >
-                            <div className="payment-body">
-                              <p className="text-secondary">
-                                Sarjan admin will confirm stock, MOQ, dispatch
-                                details, and final order terms.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      {message ? (
-                        <p
-                          className={
-                            message.includes("failed") ||
-                            message.includes("required")
-                              ? "text-danger"
-                              : "text-success"
+                ) : null}
+                <div className="wrap">
+                  <h5 className="title">
+                    {labels.information ?? "Information"}
+                  </h5>
+                  <form className="info-box" key={client?.id ?? "guest"}>
+                    <div className="grid-2">
+                      <input
+                        type="text"
+                        placeholder={labels.companyName ?? "Company Name*"}
+                        name="companyName"
+                        defaultValue={client?.companyName ?? ""}
+                      />
+                      <input
+                        type="text"
+                        placeholder={labels.contactPerson ?? "Contact Person*"}
+                        name="contactPerson"
+                        defaultValue={client?.address?.contactName ?? ""}
+                      />
+                    </div>
+                    <div className="grid-2">
+                      <input
+                        type="text"
+                        placeholder={labels.emailAddress ?? "Email Address*"}
+                        defaultValue={client?.email ?? ""}
+                      />
+                      <input
+                        type="text"
+                        placeholder={labels.phoneNumber ?? "Phone Number*"}
+                        defaultValue={client?.phone ?? ""}
+                      />
+                    </div>
+                    <div className="tf-select">
+                      <select
+                        className="text-title"
+                        name="address[country]"
+                        defaultValue="India"
+                      >
+                        <option value="Choose Country/Region">
+                          {labels.chooseCountry ?? "Choose Country/Region"}
+                        </option>
+                        <option value="India">{labels.india ?? "India"}</option>
+                      </select>
+                    </div>
+                    <IndiaStateCitySelect
+                      layout="grid-2"
+                      state={checkoutState}
+                      city={checkoutCity}
+                      onStateChange={setCheckoutState}
+                      onCityChange={setCheckoutCity}
+                      stateRequired
+                      cityRequired
+                    />
+                    <div className="grid-2">
+                      <input
+                        type="text"
+                        placeholder={
+                          labels.streetAddress ?? "Street, address..."
+                        }
+                        name="dispatchAddress"
+                        defaultValue={client?.address?.line1 ?? ""}
+                      />
+                      <input
+                        type="text"
+                        name="pincode"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        maxLength={6}
+                        placeholder={labels.postalCode ?? "Postal Code*"}
+                        value={checkoutPincode}
+                        onChange={(e) => {
+                          setCheckoutPincode(
+                            normalizeIndianPincode(e.target.value),
+                          );
+                          if (pincodeFeedback.tone !== "muted") {
+                            setPincodeFeedback({ tone: "muted", text: "" });
                           }
-                        >
-                          {message}
-                        </p>
-                      ) : null}
-                      <div className="sarjan-checkout-submit-wrap">
-                        <button
-                          className={withBtnIcon("tf-btn btn-reset")}
-                          type="button"
-                          onClick={submitOrder}
-                        >
-                          <TfButtonIcon icon="icon-checkCircle">
-                            Submit Order Request
-                          </TfButtonIcon>
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-              <div className="col-xl-1">
-                <div className="line-separation" />
-              </div>
-              <div className="col-xl-5">
-                <div className="flat-spacing flat-sidebar-checkout">
-                  <div className="sidebar-checkout-content">
-                    <h5 className="title">Shopping Cart</h5>
-                    <div className="list-product">
-                      {lines.map((item) => (
-                        <div
-                          className="item-product"
-                          key={`${item.slug}-${item.color}-${item.sizes.join("-")}`}
-                        >
-                          <Link
-                            href={`/products/${item.product.slug}`}
-                            className="img-product position-relative d-inline-block"
-                          >
-                            {isProductSoldOut(item.product) ? (
-                              <div
-                                className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
-                                role="status"
-                              >
-                                Out of stock
-                              </div>
-                            ) : null}
-                            <img
-                              src={item.product.images[0]}
-                              alt={buildProductImageAlt(item.product)}
-                            />
-                          </Link>
-                          <div className="content-box">
-                            <div className="info">
-                              <Link
-                                href={`/products/${item.product.slug}`}
-                                className="name-product link text-title"
-                              >
-                                {item.product.name}
-                              </Link>
-                              <div className="variant text-caption-1 text-secondary">
-                                {item.color} / {item.sizes.join("/")}
-                              </div>
-                              <div className="variant text-caption-1 text-secondary">
-                                {item.quantity} set x {item.sizes.length} pcs
-                              </div>
-                            </div>
-                            <div className="total-price text-button">
-                              <span className="count">{item.quantity}</span>X
-                              <span className="price">
-                                {" "}
-                                <PriceGate amount={item.setPrice} compact />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        }}
+                        onBlur={() => void validateCheckoutPincode()}
+                        required
+                      />
                     </div>
-                    <div className="sec-total-price">
-                      <div className="top">
-                        <div className="item d-flex align-items-center justify-content-between text-button">
-                          <span>Subtotal</span>
-                          <PriceGate amount={subtotal} compact />
-                        </div>
-                        {gst.applies ? (
-                          <div className="item d-flex align-items-center justify-content-between text-button">
-                            <span>GST ({(gst.rate * 100).toFixed(0)}%)</span>
-                            <span>{formatInr(gst.amount)}</span>
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="bottom">
-                        <h5 className="d-flex justify-content-between">
-                          <span>Total</span>
-                          <PriceGate
-                            amount={grandTotal}
-                            className="total-price-checkout"
-                            compact
+                    {pincodeChecking || pincodeFeedback.text ? (
+                      <p
+                        className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
+                      >
+                        {pincodeChecking
+                          ? (labels.pincodeChecking ??
+                            "Checking PIN code against India Post…")
+                          : pincodeFeedback.text}
+                      </p>
+                    ) : null}
+                    <textarea
+                      placeholder={labels.writeNote ?? "Write note..."}
+                      name="note"
+                    />
+                  </form>
+                </div>
+                <div className="wrap">
+                  <h5 className="title">
+                    {labels.orderConfirmation ?? "Order Confirmation"}
+                  </h5>
+                  <form className="form-payment">
+                    <div className="payment-box" id="payment-box">
+                      <div className="payment-item payment-choose-card active">
+                        <label
+                          htmlFor="order-confirmation-method"
+                          className="payment-header"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#order-confirmation"
+                          aria-controls="order-confirmation"
+                        >
+                          <input
+                            type="radio"
+                            name="payment-method"
+                            className="tf-check-rounded"
+                            id="order-confirmation-method"
+                            defaultChecked
                           />
-                        </h5>
+                          <span className="text-title">
+                            {labels.submitOrder ?? "Submit Order Request"}
+                          </span>
+                        </label>
+                        <div
+                          id="order-confirmation"
+                          className="collapse show"
+                          data-bs-parent="#payment-box"
+                        >
+                          <div className="payment-body">
+                            <p className="text-secondary">
+                              Sarjan admin will confirm stock, MOQ, dispatch
+                              details, and final order terms.
+                            </p>
+                          </div>
+                        </div>
                       </div>
+                    </div>
+                    {message ? (
+                      <p
+                        className={
+                          message.includes("failed") ||
+                          message.includes("required")
+                            ? "text-danger"
+                            : "text-success"
+                        }
+                      >
+                        {message}
+                      </p>
+                    ) : null}
+                    <div className="sarjan-checkout-submit-wrap">
+                      <button
+                        className={withBtnIcon("tf-btn btn-reset")}
+                        type="button"
+                        onClick={submitOrder}
+                      >
+                        <TfButtonIcon icon="icon-checkCircle">
+                          {labels.submitOrder ?? "Submit Order Request"}
+                        </TfButtonIcon>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-1">
+              <div className="line-separation" />
+            </div>
+            <div className="col-xl-5">
+              <div className="flat-spacing flat-sidebar-checkout">
+                <div className="sidebar-checkout-content">
+                  <h5 className="title">
+                    {labels.shoppingCartLink ?? "Shopping Cart"}
+                  </h5>
+                  <div className="list-product">
+                    {lines.map((item) => (
+                      <div
+                        className="item-product"
+                        key={`${item.slug}-${item.color}-${item.sizes.join("-")}`}
+                      >
+                        <Link
+                          href={`/products/${item.product.slug}`}
+                          className="img-product position-relative d-inline-block"
+                        >
+                          {isProductSoldOut(item.product) ? (
+                            <div
+                              className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
+                              role="status"
+                            >
+                              {labels.outOfStock ?? "Out of stock"}
+                            </div>
+                          ) : null}
+                          <img
+                            src={item.product.images[0]}
+                            alt={buildProductImageAlt(item.product)}
+                          />
+                        </Link>
+                        <div className="content-box">
+                          <div className="info">
+                            <Link
+                              href={`/products/${item.product.slug}`}
+                              className="name-product link text-title"
+                            >
+                              {item.product.name}
+                            </Link>
+                            <div className="variant text-caption-1 text-secondary">
+                              {item.color} / {item.sizes.join("/")}
+                            </div>
+                            <div className="variant text-caption-1 text-secondary">
+                              {item.quantity}{" "}
+                              {labels.setLabel?.toLowerCase() ?? "set"} x{" "}
+                              {item.sizes.length} pcs
+                            </div>
+                          </div>
+                          <div className="total-price text-button">
+                            <span className="count">{item.quantity}</span>X
+                            <span className="price">
+                              {" "}
+                              <PriceGate amount={item.setPrice} compact />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="sec-total-price">
+                    <div className="top">
+                      <div className="item d-flex align-items-center justify-content-between text-button">
+                        <span>{labels.subtotal ?? "Subtotal"}</span>
+                        <PriceGate amount={subtotal} compact />
+                      </div>
+                      {gst.applies ? (
+                        <div className="item d-flex align-items-center justify-content-between text-button">
+                          <span>
+                            {labels.gst ?? "GST"} ({(gst.rate * 100).toFixed(0)}
+                            %)
+                          </span>
+                          <span>{formatInr(gst.amount)}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="bottom">
+                      <h5 className="d-flex justify-content-between">
+                        <span>{labels.total ?? "Total"}</span>
+                        <PriceGate
+                          amount={grandTotal}
+                          className="total-price-checkout"
+                          compact
+                        />
+                      </h5>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-5">
-              <h5>Your cart is empty</h5>
-              <p className="text-secondary mt_8">
-                Add product sets before checkout.
-              </p>
-              <Link
-                href="/products"
-                className={withBtnIcon("tf-btn btn-fill radius-4 mt_24")}
-              >
-                <TfButtonIcon icon="icon-arrRight">
-                  Browse Products
-                </TfButtonIcon>
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-    </>
+          </div>
+        ) : (
+          <div className="text-center py-5">
+            <h5>{labels.yourCartEmpty ?? "Your cart is empty"}</h5>
+            <p className="text-secondary mt_8">
+              {labels.addProductsEmpty ?? "Add product sets before checkout."}
+            </p>
+            <Link
+              href="/products"
+              className={withBtnIcon("tf-btn btn-fill radius-4 mt_24")}
+            >
+              <TfButtonIcon icon="icon-arrRight">
+                {labels.browseProducts ?? "Browse Products"}
+              </TfButtonIcon>
+            </Link>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

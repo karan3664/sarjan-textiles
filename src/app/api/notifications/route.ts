@@ -4,6 +4,8 @@ import {
   listBroadcastNotifications,
   listInboxForClient,
 } from "@/lib/client-notifications";
+import { localizeNotificationRecord } from "@/lib/notification-localize";
+import { localeFromRequest } from "@/lib/request-locale";
 
 function toPublicNotification(
   item: Awaited<ReturnType<typeof listBroadcastNotifications>>[number],
@@ -17,19 +19,26 @@ function toPublicNotification(
 
 /** GET /api/notifications — inbox (logged-in: orders + offers; guest: broadcasts only). */
 export async function GET(request: Request) {
+  const locale = localeFromRequest(request);
   const session = await verifyClientToken(bearerToken(request));
 
   if (session) {
     const notifications = await listInboxForClient(session.clientId);
     return Response.json({
-      notifications: notifications.map(toPublicNotification),
+      notifications: notifications
+        .map(toPublicNotification)
+        .map((item) => localizeNotificationRecord(item, locale)),
       mode: "authenticated",
+      locale,
     });
   }
 
   const notifications = await listBroadcastNotifications();
   return Response.json({
-    notifications: notifications.map(toPublicNotification),
+    notifications: notifications
+      .map(toPublicNotification)
+      .map((item) => localizeNotificationRecord(item, locale)),
     mode: "guest",
+    locale,
   });
 }

@@ -227,12 +227,12 @@ export async function syncCartWithApi(): Promise<StoredCartItem[]> {
     if (local.length === 0 && server.length > 0) {
       next = server;
     } else if (local.length > 0) {
-      next = local;
-      if (JSON.stringify(server) !== JSON.stringify(local)) {
-        await persistCartToApiAwait(local);
+      next = mergeCartLinesPull(local, server);
+      if (JSON.stringify(next) !== JSON.stringify(server)) {
+        await persistCartToApiAwait(next);
       }
     } else {
-      next = mergeCartLinesPull(local, server);
+      next = [];
     }
 
     if (JSON.stringify(next) !== JSON.stringify(readCart())) {

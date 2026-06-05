@@ -4,6 +4,7 @@ import {
   listActiveCategoryHubPages,
   type CmsSeoPage,
 } from "@/lib/cms-store";
+import { readEnglish } from "@/lib/cms-localize";
 import {
   COLLECTION_ROUTES,
   PRODUCT_CATEGORY_ROUTES,
@@ -35,7 +36,7 @@ function seoNode(page: CmsSeoPage): SitemapTreeNode {
   const priority = page.id === "home" ? 1 : page.id === "products" ? 0.9 : 0.7;
   return node({
     id: `seo-${page.id}`,
-    label: page.label,
+    label: readEnglish(page.label),
     path: page.path,
     priority,
     changeFrequency:
@@ -120,7 +121,7 @@ export async function buildSitemapTree(): Promise<{
     .map((page) =>
       node({
         id: `custom-${page.slug}`,
-        label: page.title ?? page.slug ?? "Page",
+        label: readEnglish(page.title) || page.slug || "Page",
         path: `/site/${String(page.slug).trim()}`,
         priority: 0.65,
         changeFrequency: "monthly",
@@ -211,7 +212,7 @@ export async function buildSitemapTree(): Promise<{
 
   const tree = node({
     id: "root",
-    label: home?.label ?? "Homepage",
+    label: (home ? readEnglish(home.label) : null) ?? "Homepage",
     path: home?.path ?? "/",
     priority: 1,
     changeFrequency: "weekly",

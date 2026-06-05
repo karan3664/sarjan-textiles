@@ -1,7 +1,7 @@
 const asset = (file: string) => `/sarjan-assets/${file}`;
 
 const sarjanRegisteredAddress =
-  "Sarjan Textiles, First Floor, Jyoti Chambers - Rajniketan, New Station Rd, Dharanagar Kodki, Old Dhatia Falia, Bhuj, Gujarat 370001";
+  "Sarjan Textiles, Ground Floor, Jyoti Chambers - Rajniketan, New Station Rd, Dharanagar Kodki, Old Dhatia Falia, Bhuj, Gujarat 370001";
 
 const sarjanDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(sarjanRegisteredAddress)}`;
 

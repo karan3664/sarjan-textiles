@@ -198,8 +198,13 @@ export function getProductCategoryRoute(slug: string) {
   return PRODUCT_CATEGORY_ROUTES.find((route) => route.slug === slug) ?? null;
 }
 
-export function getCollectionRoute(slug: string) {
-  return COLLECTION_ROUTES.find((route) => route.slug === slug) ?? null;
+/** Back-compat wrapper — prefer `getCollectionPageBySlug` + `resolveCollection` in new code. */
+export async function getCollectionRoute(slug: string) {
+  const { getCollectionPageBySlug } = await import("@/lib/cms-store");
+  const { collectionPageToRoute } = await import("@/lib/pages-localize");
+  const page = await getCollectionPageBySlug(slug);
+  if (!page) return null;
+  return collectionPageToRoute(page);
 }
 
 export function isReservedProductCategorySlug(slug: string) {

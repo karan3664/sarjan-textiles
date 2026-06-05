@@ -1,10 +1,16 @@
-import { defaultSeoPages } from "@/lib/cms-store";
-import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { defaultSeoPages, getCachedCmsSnapshot } from "@/lib/cms-store";
+import { resolveSeoPage } from "@/lib/pages-localize";
+import { localeFromHeaders } from "@/lib/server-locale";
 import { seoPageJsonLd, seoPageMetadata } from "@/lib/seo";
 
 async function seoPage(id: string) {
   const cms = await getCachedCmsSnapshot();
-  return cms.seoPages.find((item) => item.id === id) ?? defaultSeoPages.find((item) => item.id === id) ?? defaultSeoPages[0];
+  const locale = await localeFromHeaders();
+  const raw =
+    cms.seoPages.find((item) => item.id === id) ??
+    defaultSeoPages.find((item) => item.id === id) ??
+    defaultSeoPages[0];
+  return resolveSeoPage(raw, locale);
 }
 
 export async function cmsSeoMetadata(id: string) {

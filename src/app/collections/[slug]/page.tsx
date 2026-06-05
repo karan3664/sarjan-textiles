@@ -1,11 +1,14 @@
 import { ProductSeoListingPage } from "@/components/storefront/ProductSeoListingPage";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { getCollectionRoute } from "@/lib/product-seo-slug";
+import { getCollectionPageBySlug } from "@/lib/cms-store";
+import { resolveCollection } from "@/lib/pages-localize";
+import { localeFromHeaders } from "@/lib/server-locale";
 import {
   JsonLd,
   listingBreadcrumbJsonLd,
   pageMetadata,
   siteUrl,
+  splitKeywords,
 } from "@/lib/seo";
 import { notFound } from "next/navigation";
 
@@ -17,13 +20,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const route = getCollectionRoute(slug);
-  if (!route) return {};
+  const pageRaw = await getCollectionPageBySlug(slug);
+  if (!pageRaw) return {};
+  const page = resolveCollection(pageRaw, await localeFromHeaders());
   return pageMetadata({
-    title: `${route.title} | Sarjan Textiles`,
-    description: route.description,
-    path: `/collections/${route.slug}`,
-    keywords: route.keywords,
+    title: page.metaTitle || `${page.title} | Sarjan Textiles`,
+    description: page.metaDescription || page.description,
+    path: `/collections/${page.slug}`,
+    keywords: splitKeywords(page.keywords),
+    image: page.heroImage || "/sarjan-assets/banner-textiles-studio.webp",
+    imageAlt: page.title,
   });
 }
 
@@ -45,10 +51,11 @@ export default async function CollectionDetailPage({
   }>;
 }) {
   const { slug } = await params;
-  const route = getCollectionRoute(slug);
-  if (!route) notFound();
+  const pageRaw = await getCollectionPageBySlug(slug);
+  if (!pageRaw) notFound();
+  const page = resolveCollection(pageRaw, await localeFromHeaders());
   const {
-    page,
+    page: pageNum,
     sort,
     category,
     fabric,
@@ -62,9 +69,9 @@ export default async function CollectionDetailPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: route.title,
-    description: route.description,
-    url: new URL(`/collections/${route.slug}`, siteUrl).toString(),
+    name: page.title,
+    description: page.description,
+    url: new URL(`/collections/${page.slug}`, siteUrl).toString(),
   };
 
   return (
@@ -74,16 +81,16 @@ export default async function CollectionDetailPage({
         data={listingBreadcrumbJsonLd([
           { name: "Home", path: "/" },
           { name: "Collections", path: "/collections" },
-          { name: route.title, path: `/collections/${route.slug}` },
+          { name: page.title, path: `/collections/${page.slug}` },
         ])}
       />
       <ProductSeoListingPage
-        title={route.title}
-        subtitle={route.description}
-        page={Number(page ?? 1)}
+        title={page.title}
+        subtitle={page.description}
+        page={Number(pageNum ?? 1)}
         sort={sort}
         filters={{
-          ...route.filters,
+          ...page.filters,
           category,
           fabric,
           color,
@@ -92,9 +99,9 @@ export default async function CollectionDetailPage({
           minPrice: minPrice ? Number(minPrice) : undefined,
           maxPrice: maxPrice ? Number(maxPrice) : undefined,
         }}
-        q={route.q}
-        basePath={`/collections/${route.slug}`}
-        crumbs={["Home", "Collections", route.title]}
+        q={page.q}
+        basePath={`/collections/${page.slug}`}
+        crumbs={["Home", "Collections", page.title]}
       />
     </ModaveShell>
   );

@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { isProductSoldOut } from "@/lib/product-availability";
+import {
+  ProductDealCountdown,
+  ProductDealOriginalPrice,
+} from "./ProductDealCountdown";
 import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -22,17 +28,21 @@ export function ProductCard({ product }: { product: Product }) {
             Out of stock
           </div>
         ) : null}
+        <ProductDealCountdown product={product} variant="card" />
         <img src={product.images[0]} alt={altText} />
       </Link>
       <div className="p-3">
         <div className="d-flex justify-content-between gap-2 mb-2">
           <span className="sarjan-muted small">{product.category}</span>
-          <PriceGate
-            amount={product.price}
-            suffix=" / piece"
-            className="sarjan-price"
-            compact
-          />
+          <div className="text-end">
+            <PriceGate
+              amount={product.price}
+              suffix=" / piece"
+              className="sarjan-price"
+              compact
+            />
+            <ProductDealOriginalPrice product={product} />
+          </div>
         </div>
         <h5 className="mb-2">
           <Link

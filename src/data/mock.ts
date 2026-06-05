@@ -40,6 +40,15 @@ export type Product = {
   pricingSource?: "public" | "client_custom" | "client_discount";
   clientDiscountPercentage?: number;
   isFeatured?: boolean;
+  /** Admin: timed wholesale deal — original price stays in `price` until deal ends. */
+  dealEnabled?: boolean;
+  /** ISO datetime when deal expires. */
+  dealEndsAt?: string;
+  /** Wholesale unit price while deal is active (must be lower than `price`). */
+  dealPrice?: number;
+  /** Computed at read time (API responses). */
+  dealActive?: boolean;
+  dealOriginalPrice?: number;
 };
 
 const asset = (file: string) => {
@@ -52,7 +61,7 @@ const asset = (file: string) => {
 
 /** Single-line HQ for footer, contact, JSON-LD, and map “directions” fallback. */
 export const sarjanRegisteredAddress =
-  "Sarjan Textiles, First Floor, Jyoti Chambers - Rajniketan, New Station Rd, Dharanagar Kodki, Old Dhatia Falia, Bhuj, Gujarat 370001";
+  "Sarjan Textiles, Ground Floor, Jyoti Chambers - Rajniketan, New Station Rd, Dharanagar Kodki, Old Dhatia Falia, Bhuj, Gujarat 370001";
 
 export const sarjanDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(sarjanRegisteredAddress)}`;
 

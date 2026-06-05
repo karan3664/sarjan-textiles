@@ -9,6 +9,11 @@ import type { ProductCategoryMaster } from "@/lib/cms-store";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { buildSeoProductSlug, isWeakProductSlug } from "@/lib/product-seo-slug";
 import { slugifyCmsSegment } from "@/lib/slug";
+import {
+  dealEndsAtFromInput,
+  dealEndsAtInputValue,
+  formatDealCountdown,
+} from "@/lib/product-deal";
 
 type ProductForm = {
   name: string;
@@ -33,6 +38,9 @@ type ProductForm = {
   metaDescription: string;
   keywords: string;
   isFeatured: boolean;
+  dealEnabled: boolean;
+  dealEndsAt: string;
+  dealPrice: string;
 };
 
 type VariantOverride = {
@@ -112,6 +120,9 @@ const emptyForm: ProductForm = {
   metaDescription: "",
   keywords: "",
   isFeatured: false,
+  dealEnabled: false,
+  dealEndsAt: "",
+  dealPrice: "",
 };
 
 function previewProductSlug(form: ProductForm) {
@@ -226,6 +237,14 @@ function productFromForm(
         (rule) => Number.isFinite(rule.minQty) && Number.isFinite(rule.price),
       ),
     isFeatured: form.isFeatured,
+    dealEnabled: form.dealEnabled,
+    dealEndsAt: form.dealEnabled
+      ? dealEndsAtFromInput(form.dealEndsAt)
+      : undefined,
+    dealPrice:
+      form.dealEnabled && form.dealPrice.trim()
+        ? Number(form.dealPrice)
+        : undefined,
   };
 }
 
@@ -258,6 +277,12 @@ function formFromProduct(product?: Product): ProductForm {
     metaDescription: product.metaDescription ?? "",
     keywords: product.keywords ?? "",
     isFeatured: Boolean(product.isFeatured),
+    dealEnabled: Boolean(product.dealEnabled),
+    dealEndsAt: dealEndsAtInputValue(product.dealEndsAt),
+    dealPrice:
+      typeof product.dealPrice === "number" && product.dealPrice > 0
+        ? String(product.dealPrice)
+        : "",
   };
 }
 
@@ -333,6 +358,12 @@ export function AdminProductCreateClient({
   const selectedCare = splitList(form.care);
   const selectedColors = splitList(form.colors);
   const selectedSizes = splitList(form.sizes);
+  const dealPreview = useMemo(() => {
+    if (!form.dealEnabled || !form.dealEndsAt) return null;
+    const iso = dealEndsAtFromInput(form.dealEndsAt);
+    if (!iso) return null;
+    return formatDealCountdown(iso);
+  }, [form.dealEnabled, form.dealEndsAt]);
   const variantPreview = useMemo(
     () =>
       selectedColors.flatMap((color) =>
@@ -1099,6 +1130,69 @@ export function AdminProductCreateClient({
                   </label>
                 </fieldset>
               </div>
+
+              <fieldset className="sarjan-deal-panel">
+                <div className="text-button font-instrument mb-8">
+                  Timed deal (countdown + price drop)
+                </div>
+                <label className="sarjan-product-switch mb-12">
+                  <input
+                    type="checkbox"
+                    checked={form.dealEnabled}
+                    onChange={(event) =>
+                      update("dealEnabled", event.target.checked)
+                    }
+                  />
+                  <span>Enable deal timer on this product</span>
+                </label>
+                {form.dealEnabled ? (
+                  <div className="sarjan-product-field-grid">
+                    <fieldset>
+                      <div className="text-button font-instrument mb-8">
+                        Deal ends at
+                      </div>
+                      <input
+                        type="datetime-local"
+                        value={form.dealEndsAt}
+                        onChange={(event) =>
+                          update("dealEndsAt", event.target.value)
+                        }
+                        required={form.dealEnabled}
+                      />
+                      {dealPreview ? (
+                        <div className="body-text text-secondary mt-8">
+                          Live preview: {dealPreview}
+                        </div>
+                      ) : null}
+                    </fieldset>
+                    <fieldset>
+                      <div className="text-button font-instrument mb-8">
+                        Deal price (per piece)
+                      </div>
+                      <input
+                        type="number"
+                        min={1}
+                        value={form.dealPrice}
+                        onChange={(event) =>
+                          update("dealPrice", event.target.value)
+                        }
+                        placeholder="Lower than regular price"
+                        required={form.dealEnabled}
+                      />
+                      {form.price && form.dealPrice ? (
+                        <div className="body-text text-secondary mt-8">
+                          Regular ₹{form.price} → Deal ₹{form.dealPrice}
+                        </div>
+                      ) : null}
+                    </fieldset>
+                  </div>
+                ) : null}
+                <p className="body-text text-secondary mb-0 mt-8">
+                  App & website show a countdown until the timer ends, then
+                  revert to the regular price automatically.
+                </p>
+              </fieldset>
+
               {selectedSizes.length ? (
                 <fieldset>
                   <div className="text-button font-instrument mb-8">

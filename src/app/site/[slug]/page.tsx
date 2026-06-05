@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { CustomSitePageView } from "@/components/storefront/CustomSitePageView";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { getCachedCmsSnapshot, getCustomSitePageBySlug } from "@/lib/cms-store";
+import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { resolveCustomSitePage } from "@/lib/pages-localize";
+import { localeFromHeaders } from "@/lib/server-locale";
 import { JsonLd, pageMetadata, splitKeywords } from "@/lib/seo";
 
 export const revalidate = 300;
@@ -12,9 +14,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getCustomSitePageBySlug(slug);
-  if (!page) return {};
-  const cms = await getCachedCmsSnapshot();
+  const locale = await localeFromHeaders();
+  const cms = await getLocalizedCmsSnapshot();
+  const pageRaw =
+    cms.customSitePages.find(
+      (page) => page.slug === slug && page.enabled !== false,
+    ) ?? null;
+  if (!pageRaw) return {};
+  const page = resolveCustomSitePage(pageRaw, locale);
   return pageMetadata({
     title: page.metaTitle || `${page.title} | ${cms.siteSettings.brandName}`,
     description:
@@ -34,10 +41,15 @@ export default async function CustomSiteSlugPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getCustomSitePageBySlug(slug);
-  if (!page) notFound();
+  const locale = await localeFromHeaders();
+  const cms = await getLocalizedCmsSnapshot();
+  const pageRaw =
+    cms.customSitePages.find(
+      (page) => page.slug === slug && page.enabled !== false,
+    ) ?? null;
+  if (!pageRaw) notFound();
+  const page = resolveCustomSitePage(pageRaw, locale);
 
-  const cms = await getCachedCmsSnapshot();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",

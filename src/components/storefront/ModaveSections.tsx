@@ -3,13 +3,21 @@ import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { home as defaultHome, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts, type CatalogFilters } from "@/lib/catalog";
+import { localeFromHeaders } from "@/lib/server-locale";
+import { translateStorefrontUi } from "@/lib/storefront-ui";
+import { resolveProductFilters } from "@/lib/pages-localize";
+import {
+  resolveBlogs,
+  resolveHomeForLocale,
+  resolveStaticCmsPage,
+  resolveTestimonials,
+} from "@/lib/content-localize";
+import { resolveProducts } from "@/lib/product-localize";
 import { getServerClientId } from "@/lib/client-session-server";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import {
-  getCachedCmsSnapshot,
-  getCmsSnapshot,
-  type CmsProductFilterGroup,
-} from "@/lib/cms-store";
+import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { type CmsProductFilterGroup } from "@/lib/cms-store";
+import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { productSetPrice } from "@/lib/product-pricing";
 import {
@@ -18,6 +26,10 @@ import {
 } from "@/lib/product-availability";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
+import {
+  ProductDealCountdown,
+  ProductDealOriginalPrice,
+} from "./ProductDealCountdown";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { HomeHeroRotator } from "./HomeHeroRotator";
@@ -484,9 +496,10 @@ function testimonialAvatar(avatar?: string) {
 }
 
 export async function HomeDynamic() {
-  const cms = await getCmsSnapshot();
+  const locale = await localeFromHeaders();
+  const cms = await getLocalizedCmsSnapshot();
   const cmsSiteSettings = cms.siteSettings;
-  const home = cms.home;
+  const home = resolveHomeForLocale(cms.home, locale);
   const homeContent = home as typeof home & {
     topPicksTitle?: string;
     topPicksDescription?: string;
@@ -505,9 +518,10 @@ export async function HomeDynamic() {
       ? homeContent.hero.images
       : [home.hero.image]
   ).filter(Boolean);
-  const products = cms.products;
-  const approvedTestimonials = cms.testimonials.filter(
-    (testimonial) => testimonial.status === "approved",
+  const products = applyProductDeals(resolveProducts(cms.products, locale));
+  const approvedTestimonials = resolveTestimonials(
+    cms.testimonials.filter((testimonial) => testimonial.status === "approved"),
+    locale,
   );
   const featured = products[0];
   const instagramProfile =
@@ -832,7 +846,9 @@ export async function HomeDynamic() {
 }
 
 export async function ProductDetailDynamic({ product }: { product: Product }) {
-  const { products: catalogProducts } = await getCmsSnapshot();
+  const locale = await localeFromHeaders();
+  const { products: catalogProductsRaw } = await getLocalizedCmsSnapshot();
+  const catalogProducts = resolveProducts(catalogProductsRaw, locale);
   const idx = catalogProducts.findIndex((p) => p.slug === product.slug);
   const prevProduct =
     catalogProducts.length > 0
@@ -1016,17 +1032,22 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         <h3 className="name">{product.name}</h3>
                       </div>
                       <div className="tf-product-info-desc">
+                        <ProductDealCountdown
+                          product={product}
+                          variant="detail"
+                        />
                         <div className="tf-product-info-price">
                           <span
                             className="d-none price-on-sale"
                             aria-hidden
                             data-base-price={product.price}
                           />
-                          <h5 className="font-2">
+                          <h5 className="font-2 sarjan-deal-price-row">
                             <PriceGate
                               amount={product.price}
                               suffix=" / piece"
                             />
+                            <ProductDealOriginalPrice product={product} />
                           </h5>
                         </div>
                         <p>{product.description}</p>
@@ -1120,13 +1141,18 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       <div className="text-caption-1 text-secondary-2">
                         {product.colors[0]}, full size set, {product.fabric}
                       </div>
-                      <div className="text-title">
+                      <div className="text-title sarjan-deal-price-row">
                         <PriceGate
                           amount={product.price}
                           suffix=" / piece"
                           compact
                         />
+                        <ProductDealOriginalPrice product={product} />
                       </div>
+                      <ProductDealCountdown
+                        product={product}
+                        variant="sticky"
+                      />
                     </div>
                   </div>
                   <div className="tf-sticky-atc-infos">
@@ -1455,7 +1481,9 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
 const BLOG_PER_PAGE = 9;
 
 export async function BlogListDynamic({ page = 1 }: { page?: number }) {
-  const { blogs } = await getCachedCmsSnapshot();
+  const locale = await localeFromHeaders();
+  const { blogs: rawBlogs } = await getLocalizedCmsSnapshot();
+  const blogs = resolveBlogs(rawBlogs, locale);
   const totalPages = Math.max(1, Math.ceil(blogs.length / BLOG_PER_PAGE));
   const currentPage = Number.isFinite(page)
     ? Math.min(Math.max(Math.floor(page), 1), totalPages)
@@ -1646,13 +1674,15 @@ function ProductListCard({ product }: { product: Product }) {
             <span className="on-sale-item">Hot</span>
           </div>
         ) : null}
+        <ProductDealCountdown product={product} variant="card" />
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">
           {product.name}
         </a>
-        <div className="price">
+        <div className="price sarjan-deal-price-row">
           <PriceGate amount={product.price} suffix=" / piece" />
+          <ProductDealOriginalPrice product={product} />
         </div>
         <p className="description text-secondary text-line-clamp-2">
           {product.description}
@@ -1985,8 +2015,9 @@ export async function ProductsListingDynamic({
     "price-low-high": "Price, low to high",
     "price-high-low": "Price, high to low",
   };
-  const cms = await getCachedCmsSnapshot();
+  const cms = await getLocalizedCmsSnapshot();
   const clientId = await getServerClientId();
+  const locale = await localeFromHeaders();
   const catalog = await getCatalogProducts({
     page,
     limit: perPage,
@@ -1994,12 +2025,16 @@ export async function ProductsListingDynamic({
     q,
     filters,
     clientId,
+    locale,
   });
   const totalPages = catalog.totalPages;
   const currentPage = catalog.page;
   const start = (currentPage - 1) * perPage;
   const visibleProducts = catalog.items;
-  const productFilters = cms.productFilters ?? [];
+  const productFilters = resolveProductFilters(
+    cms.productFilters ?? [],
+    locale,
+  );
   const activeFilterCount = Object.values(filters).filter(
     (value) => value !== undefined && value !== "",
   ).length;
@@ -2285,11 +2320,14 @@ export function WishlistDynamic({ page = 1 }: { page?: number }) {
 }
 
 export async function BlogDetailDynamic({ slug }: { slug: string }) {
+  const locale = await localeFromHeaders();
   const {
-    blogs,
-    products,
+    blogs: rawBlogs,
+    products: rawProducts,
     siteSettings: cmsSiteSettings,
-  } = await getCachedCmsSnapshot();
+  } = await getLocalizedCmsSnapshot();
+  const blogs = resolveBlogs(rawBlogs, locale);
+  const products = resolveProducts(rawProducts, locale);
   const blog = blogs.find((item) => item.slug === slug) ?? blogs[0];
   const otherBlogs = blogs.filter((item) => item.slug !== blog.slug);
   const previous = otherBlogs[0] ?? blog;
@@ -2494,8 +2532,9 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
 }
 
 export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
-  const cms = await getCachedCmsSnapshot();
-  const page = cms.pages[type];
+  const cms = await getLocalizedCmsSnapshot();
+  const locale = await localeFromHeaders();
+  const page = resolveStaticCmsPage(cms.pages[type], locale);
   const settings = cms.siteSettings;
   const directionsHref =
     settings.directionsUrl?.trim() ||
@@ -2515,13 +2554,22 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
   const contactBannerImage =
     String(page.image ?? "").trim() ||
     "/sarjan-assets/banner-textiles-studio.webp";
+  const homeLabel = translateStorefrontUi("home", locale);
+  const pageTitle =
+    page.title?.trim() ||
+    (isContact
+      ? translateStorefrontUi("contactUs", locale)
+      : translateStorefrontUi("aboutOurStore", locale));
+  const aboutTabs = [
+    translateStorefrontUi("introduction", locale),
+    translateStorefrontUi("history", locale),
+    translateStorefrontUi("mission", locale),
+    translateStorefrontUi("infrastructure", locale),
+  ];
 
   return (
     <>
-      <PageTitle
-        title={isContact ? "Contact Us" : "About Our Store"}
-        crumbs={["Homepage", isContact ? "Contact Us" : "About Our Store"]}
-      />
+      <PageTitle title={pageTitle} crumbs={[homeLabel, pageTitle]} />
       {isContact ? (
         <>
           <section className="flat-spacing">
@@ -2543,9 +2591,11 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                   </div>
                 </div>
                 <div className="right">
-                  <h4>Information</h4>
+                  <h4>{translateStorefrontUi("information", locale)}</h4>
                   <div className="mb_20">
-                    <div className="text-title mb_8">Phone:</div>
+                    <div className="text-title mb_8">
+                      {translateStorefrontUi("phone", locale)}
+                    </div>
                     <p className="text-secondary mb_0">
                       <a
                         href={`tel:${settings.phone.replace(/\s/g, "")}`}
@@ -2556,7 +2606,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                     </p>
                   </div>
                   <div className="mb_20">
-                    <div className="text-title mb_8">Email:</div>
+                    <div className="text-title mb_8">
+                      {translateStorefrontUi("email", locale)}
+                    </div>
                     <p className="text-secondary mb_0">
                       <a
                         href={`mailto:${(settings.ordersEmail || settings.email).trim()}`}
@@ -2567,7 +2619,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                     </p>
                   </div>
                   <div className="mb_20">
-                    <div className="text-title mb_8">Address:</div>
+                    <div className="text-title mb_8">
+                      {translateStorefrontUi("address", locale)}
+                    </div>
                     <p className="text-secondary">{settings.address}</p>
                     <a
                       href={directionsHref}
@@ -2575,12 +2629,14 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                       rel="noopener noreferrer"
                       className="link fw-6 mt_12 d-inline-flex align-items-center gap-8"
                     >
-                      Get directions
+                      {translateStorefrontUi("getDirections", locale)}
                       <i className="icon-arrowUpRight" />
                     </a>
                   </div>
                   <div className="mb_20">
-                    <div className="text-title mb_8">Social</div>
+                    <div className="text-title mb_8">
+                      {translateStorefrontUi("social", locale)}
+                    </div>
                     <div className="sarjan-contact-socials d-flex flex-wrap align-items-center">
                       <a
                         href={(settings.facebookUrl ?? "#").trim() || "#"}
@@ -2632,7 +2688,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                     </div>
                   </div>
                   <div>
-                    <div className="text-title mb_8">Open Time:</div>
+                    <div className="text-title mb_8">
+                      {translateStorefrontUi("openTime", locale)}
+                    </div>
                     <p className="mb_4 open-time text-secondary">
                       {settings.openTimeWeekday}
                     </p>
@@ -2647,7 +2705,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
           <section className="flat-spacing pt-0">
             <div className="container">
               <div className="heading-section text-center">
-                <h3 className="heading">Get In Touch</h3>
+                <h3 className="heading">
+                  {translateStorefrontUi("getInTouch", locale)}
+                </h3>
                 <p className="subheading">
                   Share your buying requirement, category interest, and
                   preferred quantity.
@@ -2683,12 +2743,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                     <h3 className="title wow fadeInUp">{page.title}</h3>
                     <div className="widget-tabs style-3">
                       <ul className="widget-menu-tab wow fadeInUp">
-                        {[
-                          "Introduction",
-                          "History",
-                          "Mission",
-                          "Infrastructure",
-                        ].map((tab, index) => (
+                        {aboutTabs.map((tab, index) => (
                           <li
                             className={`item-title${index === 0 ? " active" : ""}`}
                             key={tab}
@@ -2726,7 +2781,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                       href="/contact"
                       className="tf-btn btn-fill wow fadeInUp"
                     >
-                      <span className="text text-button">Contact Team</span>
+                      <span className="text text-button">
+                        {translateStorefrontUi("contactTeam", locale)}
+                      </span>
                     </Link>
                   </div>
                 </div>

@@ -1,4 +1,8 @@
-import { getCmsSnapshot } from "@/lib/cms-store";
+import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { applyProductDeals } from "@/lib/product-deal";
+import { resolveProducts } from "@/lib/product-localize";
+import { readEnglish } from "@/lib/cms-localize";
+import type { AppLocale } from "@/lib/localized-text";
 import {
   isProductSoldOut,
   productStockOnHand,
@@ -98,13 +102,21 @@ function categoryMatches(product: Product, rulePath?: string[]) {
 
 function matchesFilters(product: Product, filters?: CatalogFilters) {
   if (!filters) return true;
-  if (filters.category && slugValue(product.category) !== filters.category)
+  if (
+    filters.category &&
+    slugValue(readEnglish(product.category as string)) !== filters.category
+  )
     return false;
-  if (filters.fabric && slugValue(product.fabric) !== filters.fabric)
+  if (
+    filters.fabric &&
+    slugValue(readEnglish(product.fabric as string)) !== filters.fabric
+  )
     return false;
   if (
     filters.color &&
-    !product.colors.some((color) => slugValue(color) === filters.color)
+    !product.colors.some(
+      (color) => slugValue(readEnglish(color as string)) === filters.color,
+    )
   )
     return false;
   if (
@@ -145,7 +157,7 @@ export async function applyClientPricing(
   }
 
   const [cms, client] = await Promise.all([
-    getCmsSnapshot(),
+    getLocalizedCmsSnapshot(),
     getClient(clientId),
   ]);
   if (!client || client.status !== "approved") {
@@ -234,6 +246,7 @@ export async function getCatalogProducts({
   q,
   clientId,
   filters,
+  locale = "en",
 }: {
   page?: number;
   limit?: number;
@@ -242,22 +255,23 @@ export async function getCatalogProducts({
   q?: string;
   clientId?: string | null;
   filters?: CatalogFilters;
+  locale?: AppLocale;
 }) {
-  const { products } = await getCmsSnapshot();
+  const { products: rawProducts } = await getLocalizedCmsSnapshot();
   const query = q?.trim().toLowerCase();
   const source = ids?.length
-    ? products.filter((product) => productMatchesCartIds(product, ids))
-    : sortProductList(products, sort);
+    ? rawProducts.filter((product) => productMatchesCartIds(product, ids))
+    : rawProducts;
   const searched = query
     ? source.filter((product) =>
         [
-          product.name,
+          readEnglish(product.name),
           product.slug,
           product.sku,
-          product.category,
-          product.fabric,
-          product.description,
-          ...product.colors,
+          readEnglish(product.category),
+          readEnglish(product.fabric),
+          readEnglish(product.description),
+          ...product.colors.map((color) => readEnglish(color)),
           ...product.sizes,
         ]
           .join(" ")
@@ -268,7 +282,11 @@ export async function getCatalogProducts({
   const filtered = searched.filter((product) =>
     matchesFilters(product, filters),
   );
-  const total = filtered.length;
+  const sorted = sortProductList(
+    applyProductDeals(resolveProducts(filtered, locale)),
+    sort,
+  );
+  const total = sorted.length;
   const safeLimit = Math.min(Math.max(limit, 1), 60);
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));
   const currentPage = Math.min(Math.max(Math.floor(page) || 1, 1), totalPages);
@@ -276,7 +294,7 @@ export async function getCatalogProducts({
 
   return {
     items: await applyClientPricing(
-      filtered.slice(start, start + safeLimit),
+      sorted.slice(start, start + safeLimit),
       clientId,
     ),
     total,

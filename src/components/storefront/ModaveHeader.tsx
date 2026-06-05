@@ -14,27 +14,20 @@ import {
 import { isClientPublicAuthPage } from "@/lib/auth-route-guards";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
+import type { AppLocale } from "@/lib/localized-text";
+import type {
+  StorefrontCatalogCategory,
+  StorefrontCategoryHub,
+  StorefrontHeaderNavLink,
+} from "@/lib/storefront-header-data";
 import {
   readWishlist,
   refreshWishlistFromCatalog,
 } from "@/lib/wishlist-client";
 
-type CatalogCategory = {
-  name: string;
-  slug: string;
-  productCount: number;
-};
-
-type CategoryHubNav = {
-  title: string;
-  slug: string;
-};
-
-type HeaderNavLink = {
-  label: string;
-  href: string;
-  showCategoriesDropdown?: boolean;
-};
+type HeaderNavLink = StorefrontHeaderNavLink;
 
 function catalogCategoryHref(slug: string) {
   const params = new URLSearchParams();
@@ -43,26 +36,51 @@ function catalogCategoryHref(slug: string) {
   return `/products?${params.toString()}`;
 }
 
-export function ModaveHeader() {
+export function ModaveHeader({
+  initialLocale = "en",
+  initialNavItems,
+  initialCategories = [],
+  initialHubs = [],
+}: {
+  initialLocale?: AppLocale;
+  initialNavItems?: HeaderNavLink[];
+  initialCategories?: StorefrontCatalogCategory[];
+  initialHubs?: StorefrontCategoryHub[];
+}) {
   const pathname = usePathname();
   const [client, setClient] = useState<{
     companyName?: string;
     email?: string;
   } | null>(null);
-  const [catalogCategories, setCatalogCategories] = useState<CatalogCategory[]>(
-    [],
-  );
-  const [hubs, setHubs] = useState<CategoryHubNav[]>([]);
+  const [catalogCategories, setCatalogCategories] = useState(initialCategories);
+  const [hubs, setHubs] = useState(initialHubs);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [navItems, setNavItems] = useState<HeaderNavLink[]>(
-    legacyHeaderNavLinks(),
+    initialNavItems ?? legacyHeaderNavLinks(),
   );
+
+  function readHeaderLocale(): string {
+    if (typeof document === "undefined") return initialLocale;
+    const match = document.cookie
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(`${SARJAN_LANG_COOKIE}=`));
+    return match?.split("=")[1]?.trim() || initialLocale;
+  }
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   const categoriesMenuActive = pathname.startsWith("/categories");
+
+  useEffect(() => {
+    if (initialNavItems?.length) {
+      setNavItems(initialNavItems);
+    }
+    setCatalogCategories(initialCategories);
+    setHubs(initialHubs);
+  }, [initialNavItems, initialCategories, initialHubs]);
 
   useEffect(() => {
     const sync = () => {
@@ -106,7 +124,8 @@ export function ModaveHeader() {
   }, [pathname]);
 
   useEffect(() => {
-    fetch("/api/navigation")
+    const lang = readHeaderLocale();
+    fetch(`/api/navigation?lang=${encodeURIComponent(lang)}`)
       .then((res) => res.json())
       .then((data: { items?: HeaderNavLink[] }) => {
         if (Array.isArray(data.items) && data.items.length) {
@@ -114,13 +133,17 @@ export function ModaveHeader() {
         }
       })
       .catch(() => undefined);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
-    fetch("/api/categories")
+    const lang = readHeaderLocale();
+    fetch(`/api/categories?lang=${encodeURIComponent(lang)}`)
       .then((res) => res.json())
       .then(
-        (data: { categories?: CatalogCategory[]; hubs?: CategoryHubNav[] }) => {
+        (data: {
+          categories?: StorefrontCatalogCategory[];
+          hubs?: StorefrontCategoryHub[];
+        }) => {
           setCatalogCategories(
             Array.isArray(data.categories) ? data.categories : [],
           );
@@ -131,7 +154,7 @@ export function ModaveHeader() {
         setCatalogCategories([]);
         setHubs([]);
       });
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     let cancelled = false;
@@ -208,6 +231,9 @@ export function ModaveHeader() {
             </div>
             <div className="col-xl-5 col-md-4 col-3">
               <ul className="nav-icon d-flex justify-content-end align-items-center">
+                <li className="nav-lang d-none d-md-block">
+                  <LanguageSwitcher initialLocale={initialLocale} />
+                </li>
                 <li className="nav-search">
                   <a
                     href="#"
@@ -493,6 +519,10 @@ export function ModaveHeader() {
                   </Link>
                 </div>
               )}
+            </div>
+
+            <div className="sarjan-mobile-menu__lang">
+              <LanguageSwitcher initialLocale={initialLocale} />
             </div>
 
             <form

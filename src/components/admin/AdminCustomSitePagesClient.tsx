@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
+import {
+  resolveCustomSitePage,
+  type PublicCustomSitePage,
+} from "@/lib/pages-localize";
 import type { CustomSitePage } from "@/lib/cms-store";
 import type { CmsCustomSection } from "@/types/cms-custom";
 import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
@@ -11,7 +15,7 @@ function uid(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function blankPage(): CustomSitePage {
+function blankPage(): PublicCustomSitePage {
   return {
     id: uid("page"),
     slug: "new-page",
@@ -28,10 +32,10 @@ export function AdminCustomSitePagesClient({
   initialPages,
   products,
 }: {
-  initialPages: CustomSitePage[];
+  initialPages: PublicCustomSitePage[];
   products: Product[];
 }) {
-  const [pages, setPages] = useState<CustomSitePage[]>(() =>
+  const [pages, setPages] = useState<PublicCustomSitePage[]>(() =>
     initialPages.length ? initialPages : [],
   );
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -42,7 +46,7 @@ export function AdminCustomSitePagesClient({
 
   const selected = pages.find((p) => p.id === selectedId) ?? null;
 
-  const updateSelected = (patch: Partial<CustomSitePage>) => {
+  const updateSelected = (patch: Partial<PublicCustomSitePage>) => {
     if (!selectedId) return;
     setPages((list) =>
       list.map((p) => (p.id === selectedId ? { ...p, ...patch } : p)),
@@ -87,7 +91,9 @@ export function AdminCustomSitePagesClient({
       });
       if (!res.ok) throw new Error("Save failed");
       const data = (await res.json()) as { customSitePages: CustomSitePage[] };
-      const next = data.customSitePages ?? [];
+      const next = (data.customSitePages ?? []).map((page) =>
+        resolveCustomSitePage(page, "en"),
+      );
       setPages(next);
       if (selectedId && !next.some((p) => p.id === selectedId)) {
         setSelectedId(next[0]?.id ?? null);

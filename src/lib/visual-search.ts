@@ -1,7 +1,10 @@
 import sharp from "sharp";
 import type { Product } from "@/data/mock";
 import { getCmsSnapshot } from "@/lib/cms-store";
+import { readEnglish } from "@/lib/cms-localize";
 import { applyClientPricing } from "@/lib/catalog";
+import { resolveProducts } from "@/lib/product-localize";
+import type { AppLocale } from "@/lib/localized-text";
 import { resolveOpenAiApiKey } from "@/lib/order-bot/openai-env";
 
 export type VisualSearchAnalysis = {
@@ -16,19 +19,19 @@ export type VisualSearchAnalysis = {
 
 function productHaystack(product: Product) {
   return [
-    product.name,
+    readEnglish(product.name),
     product.slug,
     product.sku,
-    product.category,
-    product.fabric,
-    product.description,
-    ...(product.categoryPath ?? []),
-    product.categoryLevel1,
-    product.categoryLevel2,
-    product.categoryLevel3,
-    ...product.colors,
+    readEnglish(product.category),
+    readEnglish(product.fabric),
+    readEnglish(product.description),
+    ...(product.categoryPath ?? []).map((part) => readEnglish(part)),
+    readEnglish(product.categoryLevel1),
+    readEnglish(product.categoryLevel2),
+    readEnglish(product.categoryLevel3),
+    ...product.colors.map((color) => readEnglish(color)),
     ...product.sizes,
-    product.keywords,
+    readEnglish(product.keywords),
   ]
     .filter(Boolean)
     .join(" ")
@@ -50,10 +53,10 @@ function uniqueTerms(values: Array<string | undefined | null>) {
 function scoreProduct(product: Product, terms: string[]) {
   let score = 0;
   const haystack = productHaystack(product);
-  const name = product.name.toLowerCase();
-  const category = product.category.toLowerCase();
-  const fabric = (product.fabric ?? "").toLowerCase();
-  const colors = product.colors.map((c) => c.toLowerCase());
+  const name = readEnglish(product.name).toLowerCase();
+  const category = readEnglish(product.category).toLowerCase();
+  const fabric = readEnglish(product.fabric ?? "").toLowerCase();
+  const colors = product.colors.map((c) => readEnglish(c).toLowerCase());
 
   for (const term of terms) {
     if (name.includes(term)) score += 8;
@@ -243,12 +246,14 @@ export async function searchProductsByImage({
   textQuery,
   clientId,
   limit = 24,
+  locale = "en",
 }: {
   imageBuffer: Buffer;
   mime: string;
   textQuery?: string;
   clientId?: string | null;
   limit?: number;
+  locale?: AppLocale;
 }) {
   const analysis = await analyzeSearchImage(imageBuffer, mime);
   const terms = buildSearchTerms(analysis, textQuery);
@@ -271,12 +276,17 @@ export async function searchProductsByImage({
   if (!items.length) {
     items = products.filter((product) =>
       analysis.colors.some((color) =>
-        product.colors.some((c) => c.toLowerCase().includes(color)),
+        product.colors.some((c) =>
+          readEnglish(c).toLowerCase().includes(color),
+        ),
       ),
     );
   }
 
-  const priced = await applyClientPricing(items.slice(0, limit), clientId);
+  const priced = await applyClientPricing(
+    resolveProducts(items.slice(0, limit), locale),
+    clientId,
+  );
   return {
     analysis,
     terms,

@@ -1,22 +1,57 @@
-import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { readEnglish } from "@/lib/cms-localize";
+import { resolveProduct, resolveProducts } from "@/lib/product-localize";
+import { resolveCategoryHub } from "@/lib/pages-localize";
+import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 import { slugifyCmsSegment } from "@/lib/slug";
 
-export async function GET() {
-  const { home, products, categoryHubPages } = await getCachedCmsSnapshot();
-  const productCategories = Array.from(
-    new Set(products.map((product) => product.category)),
-  ).map((name) => ({
-    name,
-    slug: slugifyCmsSegment(name),
-    image:
-      products.find((product) => product.category === name)?.images[0] ??
-      home.categories[0]?.image,
-    productCount: products.filter((product) => product.category === name)
-      .length,
-  }));
-  const hubs = (categoryHubPages ?? [])
+export async function GET(request: Request) {
+  const locale = localeFromRequest(request);
+  const cms = await getLocalizedCmsSnapshot();
+
+  const localizedProducts = resolveProducts(cms.products, locale);
+  const seen = new Set<string>();
+  const categories: Array<{
+    name: string;
+    slug: string;
+    image?: string;
+    productCount: number;
+  }> = [];
+
+  cms.products.forEach((product, index) => {
+    const englishCategory = readEnglish(product.category);
+    if (!englishCategory || seen.has(englishCategory)) return;
+    seen.add(englishCategory);
+    categories.push({
+      name: resolveProduct(product, locale).category,
+      slug: slugifyCmsSegment(englishCategory),
+      image:
+        localizedProducts[index]?.images[0] ?? cms.home.categories[0]?.image,
+      productCount: cms.products.filter(
+        (item) => readEnglish(item.category) === englishCategory,
+      ).length,
+    });
+  });
+
+  const hubs = (cms.categoryHubPages ?? [])
     .filter((page) => page.enabled !== false)
-    .sort((a, b) => a.title.localeCompare(b.title))
-    .map((page) => ({ title: page.title, slug: page.slug }));
-  return Response.json({ categories: productCategories, hubs });
+    .sort((a, b) => readEnglish(a.title).localeCompare(readEnglish(b.title)))
+    .map((page) => {
+      const localized = resolveCategoryHub(page, locale);
+      return {
+        title: localized.title,
+        slug: page.slug,
+        subtitle: localized.subtitle,
+        subcategories: localized.subcategories.map((sub) => ({
+          title: sub.title,
+          href: sub.href,
+        })),
+      };
+    });
+
+  return jsonLocalized({ categories, hubs, locale }, locale, {
+    headers: {
+      "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+    },
+  });
 }

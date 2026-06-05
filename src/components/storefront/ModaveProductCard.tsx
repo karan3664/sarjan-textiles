@@ -6,6 +6,10 @@ import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { isProductSoldOut } from "@/lib/product-availability";
 import { productColorHex } from "@/lib/product-color-swatch";
+import {
+  ProductDealCountdown,
+  ProductDealOriginalPrice,
+} from "./ProductDealCountdown";
 import { PriceGate } from "./PriceGate";
 
 export function ModaveProductCard({
@@ -129,16 +133,20 @@ export function ModaveProductCard({
             Out of stock
           </div>
         ) : null}
+        <ProductDealCountdown product={product} variant="card" />
       </div>
       <div className="card-product-info">
         <a href={`/products/${product.slug}`} className="title link">
           {product.name}
         </a>
-        <PriceGate
-          amount={product.price}
-          suffix=" / piece"
-          compact={priceCompact}
-        />
+        <div className="sarjan-deal-price-row">
+          <PriceGate
+            amount={product.price}
+            suffix=" / piece"
+            compact={priceCompact}
+          />
+          <ProductDealOriginalPrice product={product} />
+        </div>
         {showColorSwatches ? (
           <ul
             className="list-color-product mt_8"
