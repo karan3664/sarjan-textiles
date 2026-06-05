@@ -356,30 +356,32 @@ function buildLocalizedExtrasFromHome(
 ): MobileLocalizedExtras {
   const marqueeLines = (home.marqueeTop ?? []).map((line, index) => {
     const prev = previous?.marqueeLines[index];
-    return coerceLocalized(prev?.en === line.trim() ? prev : line);
+    const english = readEnglish(line);
+    return coerceLocalized(prev?.en === english ? prev : line);
   });
   const highlights = (home.highlights ?? []).map((item, index) => {
     const prev = previous?.highlights[index];
+    const labelEn = readEnglish(item.label);
     const label = coerceLocalized(
-      prev?.label.en === item.label.trim() ? prev.label : item.label,
+      prev?.label.en === labelEn ? prev.label : item.label,
     );
     return { value: item.value, label };
   });
   const services = (home.services ?? []).map((item, index) => {
     const prev = previous?.services[index];
+    const titleEn = readEnglish(item.title);
+    const bodyEn = readEnglish(item.body);
     return {
       icon: item.icon,
       title: coerceLocalized(
-        prev?.title.en === item.title.trim() ? prev.title : item.title,
+        prev?.title.en === titleEn ? prev.title : item.title,
       ),
-      body: coerceLocalized(
-        prev?.body.en === item.body.trim() ? prev.body : item.body,
-      ),
+      body: coerceLocalized(prev?.body.en === bodyEn ? prev.body : item.body),
     };
   });
   return {
     brandName: coerceLocalized(
-      previous?.brandName.en === site.brandName.trim()
+      previous?.brandName.en === readEnglish(site.brandName)
         ? previous.brandName
         : site.brandName,
     ),

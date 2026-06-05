@@ -1,15 +1,11 @@
 import type { CmsBlog, CmsHome, CmsTestimonial } from "@/lib/cms-store";
 import {
   applyTranslationJobs,
-  applyTranslationJobsStep,
   hasPendingTranslations,
   readEnglish,
   toLocalizedField,
   toLocalizedList,
 } from "@/lib/cms-localize";
-
-/** Max fields translated per home save — avoids serverless timeouts on bulk MyMemory runs. */
-const HOME_SAVE_TRANSLATE_MAX_KEYS = 20;
 import {
   pickLocalized,
   needsTranslation,
@@ -242,14 +238,14 @@ export async function ensureHomeLocalized(
   return applyHomeFields(normalized, translated);
 }
 
-/** Admin save: merge English edits, keep existing hi/gu when en unchanged, translate new copy. */
+/** Admin save: persist English edits quickly — hi/gu via Translate all (no inline API calls). */
 export async function localizeHomeOnSave(
   input: CmsHome,
   previous?: CmsHome,
 ): Promise<LocalizedHome> {
   const normalized = normalizeHomeRecord(input);
   if (!previous) {
-    return ensureHomeLocalized(normalized);
+    return normalized;
   }
 
   const prevFields = collectHomeFields(normalizeHomeRecord(previous));
@@ -262,16 +258,7 @@ export async function localizeHomeOnSave(
     }
   }
 
-  const merged = applyHomeFields(normalized, nextFields);
-  const pending = collectHomeFields(merged);
-  if (!hasPendingTranslations(pending)) {
-    return merged;
-  }
-  const { fields: translated } = await applyTranslationJobsStep(
-    pending,
-    HOME_SAVE_TRANSLATE_MAX_KEYS,
-  );
-  return applyHomeFields(merged, translated);
+  return applyHomeFields(normalized, nextFields);
 }
 
 export function homeNeedsLocalization(home: CmsHome): boolean {
