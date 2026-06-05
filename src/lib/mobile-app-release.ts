@@ -38,20 +38,18 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.14";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "15");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.15";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "16");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Offline banner, server cart sync, and improved deep links (sarjan:// + https).",
-      "New Collections, Category Hub, and FAQs screens with Hindi/Gujarati support.",
-      "Blog pagination, localized push notifications, and NetInfo offline detection.",
-      "iOS Universal Links + Android App Links for sarjantextiles.com paths.",
-      "Website parity: storefront i18n for cart, checkout, footer, and contact/about.",
-      "CMS-managed collection pages in admin; loading skeletons on key storefront routes.",
+      "Order detail layout: clearer spacing for Cancel order, Order Summary, and bottom tab bar.",
+      "Offline banner with NetInfo native module linked on Android and iOS.",
+      "Collections, Category Hub, FAQs, deep links, and Hindi/Gujarati notifications.",
+      "Server cart sync, blog pagination, and storefront i18n parity on the website.",
     ].join(" ");
 
   return {
