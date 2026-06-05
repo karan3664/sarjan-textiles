@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import {
-  isProductSoldOut,
   productStockOnHand,
+  showProductSoldOutToViewer,
 } from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
 import { PageTitle } from "./PageTitle";
-import { PriceGate } from "./PriceGate";
+import { PriceGate, useClientHasB2BToken } from "./PriceGate";
 
 function sizeRun(product: Product) {
   return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
@@ -40,6 +40,7 @@ export function ComparePageClient({
   );
   const [products, setProducts] = useState<Product[]>([]);
   const slugKey = useMemo(() => slugs.join(","), [slugs]);
+  const viewerLoggedIn = useClientHasB2BToken();
 
   useEffect(() => {
     if (!slugs.length) setSlugs(readCompare());
@@ -113,15 +114,19 @@ export function ComparePageClient({
       "Stock",
       (product: Product) => {
         const qty = productStockOnHand(product);
-        const soldOut = isProductSoldOut(product);
+        const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
         const label =
           qty !== undefined
             ? qty > 0
               ? `${qty} available`
-              : "Sold out"
+              : soldOut
+                ? "Sold out"
+                : `${qty} available`
             : Number(product.stock) > 0
               ? `${product.stock} available`
-              : "Sold out";
+              : soldOut
+                ? "Sold out"
+                : `${product.stock} available`;
         return (
           <span className={soldOut ? "sarjan-stock-unavailable" : undefined}>
             {label}
@@ -150,7 +155,7 @@ export function ComparePageClient({
                         className="tf-compare-image position-relative d-inline-block"
                         href={`/products/${product.slug}`}
                       >
-                        {isProductSoldOut(product) ? (
+                        {showProductSoldOutToViewer(product, viewerLoggedIn) ? (
                           <div
                             className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
                             role="status"
@@ -204,7 +209,7 @@ export function ComparePageClient({
                     className="tf-compare-col tf-compare-field tf-compare-viewcart text-center"
                     key={`${product.slug}-cart`}
                   >
-                    {isProductSoldOut(product) ? (
+                    {showProductSoldOutToViewer(product, viewerLoggedIn) ? (
                       <span
                         className="btn-view-cart sarjan-stock-unavailable"
                         style={{ opacity: 0.55, cursor: "not-allowed" }}

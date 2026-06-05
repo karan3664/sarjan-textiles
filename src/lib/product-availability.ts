@@ -19,3 +19,12 @@ export function isProductSoldOut(product: Pick<Product, "stock">): boolean {
   if (qty === undefined) return false;
   return qty <= 0;
 }
+
+/** Storefront: show out-of-stock only to logged-in B2B visitors (guests see catalog without OOS). */
+export function showProductSoldOutToViewer(
+  product: Pick<Product, "stock">,
+  viewerLoggedIn: boolean,
+): boolean {
+  if (!viewerLoggedIn) return false;
+  return isProductSoldOut(product);
+}

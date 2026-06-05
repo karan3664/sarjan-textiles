@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { useShowProductSoldOut } from "./PriceGate";
 import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
@@ -86,7 +86,7 @@ export function ProductPurchasePanel({
   const activeColor = colors[colorIndex] ?? colors[0];
   const sizeRun = productSizeRun(product);
   const setPrice = productSetPrice(product, activeColor, sizeRun);
-  const soldOut = isProductSoldOut(product);
+  const soldOut = useShowProductSoldOut(product);
   const wishlistActive = wishlistActiveProp ?? localWishlisted;
 
   useEffect(() => {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { showProductSoldOutToViewer } from "@/lib/product-availability";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -42,6 +42,7 @@ export function CartPageClient({
   const [loadError, setLoadError] = useState(false);
   const [clientGst, setClientGst] = useState("");
   const hasB2BSession = useClientHasB2BToken();
+  const viewerLoggedIn = hasB2BSession;
   const cartHydrateFetchRef = useRef(0);
 
   useEffect(() => {
@@ -215,7 +216,10 @@ export function CartPageClient({
                             href={`/products/${item.product.slug}`}
                             className="img-box position-relative d-inline-block"
                           >
-                            {isProductSoldOut(item.product) ? (
+                            {showProductSoldOutToViewer(
+                              item.product,
+                              viewerLoggedIn,
+                            ) ? (
                               <div
                                 className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                 role="status"

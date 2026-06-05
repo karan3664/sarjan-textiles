@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { useShowProductSoldOut } from "./PriceGate";
 import {
   ProductDealCountdown,
   ProductDealOriginalPrice,
@@ -12,7 +12,7 @@ import { PriceGate } from "./PriceGate";
 
 export function ProductCard({ product }: { product: Product }) {
   const altText = buildProductImageAlt(product);
-  const soldOut = isProductSoldOut(product);
+  const soldOut = useShowProductSoldOut(product);
 
   return (
     <article className="sarjan-card h-100">

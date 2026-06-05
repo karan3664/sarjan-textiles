@@ -38,17 +38,17 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.18";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "19");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.19";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "20");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Android sign-in: SMS OTP with App Check fix for sideload APK installs.",
-      "Clearer verification errors (no technical Firebase messages shown).",
-      "Home hero video, compare list, 360° product view, and Hindi/Gujarati.",
+      "Out-of-stock labels only when you are logged in (guests see the full catalog).",
+      "Cart refreshes live stock on open so availability matches the website.",
+      "Android sign-in: SMS OTP with App Check for sideload APK installs.",
       "Stability and UX improvements across catalog, cart, and checkout.",
     ].join(" ");
 

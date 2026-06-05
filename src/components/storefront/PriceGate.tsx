@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import type { Product } from "@/data/mock";
+import { showProductSoldOutToViewer } from "@/lib/product-availability";
 
 function subscribeClientApproved(onStoreChange: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -39,6 +41,14 @@ export function useClientHasB2BToken(): boolean {
     readClientB2BTokenPresent,
     () => false,
   );
+}
+
+/** Out-of-stock UI is shown only when a client session token exists. */
+export function useShowProductSoldOut(
+  product: Pick<Product, "stock">,
+): boolean {
+  const loggedIn = useClientHasB2BToken();
+  return showProductSoldOutToViewer(product, loggedIn);
 }
 
 export function PriceGate({

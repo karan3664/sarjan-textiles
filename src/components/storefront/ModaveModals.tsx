@@ -18,7 +18,7 @@ import {
 } from "@/lib/catalog-product-cache";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { productSetPrice } from "@/lib/product-pricing";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { showProductSoldOutToViewer } from "@/lib/product-availability";
 import {
   readWishlist,
   refreshWishlistFromCatalog,
@@ -655,7 +655,10 @@ export function ModaveModals() {
                             >
                               <div className="tf-mini-cart-image position-relative">
                                 <a href={`/products/${item.product.slug}`}>
-                                  {isProductSoldOut(item.product) ? (
+                                  {showProductSoldOutToViewer(
+                                    item.product,
+                                    hasB2BSession,
+                                  ) ? (
                                     <div
                                       className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                       role="status"

@@ -21,9 +21,10 @@ import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { productSetPrice } from "@/lib/product-pricing";
 import {
-  isProductSoldOut,
   productStockOnHand,
+  showProductSoldOutToViewer,
 } from "@/lib/product-availability";
+import { getServerClientSession } from "@/lib/client-session-server";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
 import {
@@ -115,7 +116,13 @@ function MarqueeBand({ items }: { items: string[] }) {
   );
 }
 
-function ProductFeature({ product }: { product: Product }) {
+function ProductFeature({
+  product,
+  viewerLoggedIn,
+}: {
+  product: Product;
+  viewerLoggedIn: boolean;
+}) {
   const images = [
     product.images[0],
     product.images[1] ?? product.images[0],
@@ -123,7 +130,7 @@ function ProductFeature({ product }: { product: Product }) {
   ];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = buildProductImageAlt(product);
-  const soldOut = isProductSoldOut(product);
+  const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
 
   return (
     <section className="flat-spacing bg-surface">
@@ -498,6 +505,7 @@ function testimonialAvatar(avatar?: string) {
 }
 
 export async function HomeDynamic() {
+  const viewerLoggedIn = Boolean(await getServerClientSession());
   const locale = await localeFromHeaders();
   const cms = await getLocalizedCmsSnapshot();
   const cmsSiteSettings = cms.siteSettings;
@@ -652,7 +660,9 @@ export async function HomeDynamic() {
         </div>
       </section>
     ),
-    featuredProduct: featured ? <ProductFeature product={featured} /> : null,
+    featuredProduct: featured ? (
+      <ProductFeature product={featured} viewerLoggedIn={viewerLoggedIn} />
+    ) : null,
     trendingProducts: (
       <section className="flat-spacing">
         <div className="container">
@@ -848,6 +858,7 @@ export async function HomeDynamic() {
 }
 
 export async function ProductDetailDynamic({ product }: { product: Product }) {
+  const viewerLoggedIn = Boolean(await getServerClientSession());
   const locale = await localeFromHeaders();
   const { products: catalogProductsRaw } = await getLocalizedCmsSnapshot();
   const catalogProducts = resolveProducts(catalogProductsRaw, locale);
@@ -876,7 +887,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = buildProductImageAlt(product);
-  const soldOut = isProductSoldOut(product);
+  const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
 
   return (
     <>
@@ -1641,18 +1652,22 @@ export function PageTitle({
   );
 }
 
-function ProductListCard({ product }: { product: Product }) {
+function ProductListCard({
+  product,
+  viewerLoggedIn,
+}: {
+  product: Product;
+  viewerLoggedIn: boolean;
+}) {
   const hover = product.images[1] ?? product.images[0];
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = buildProductImageAlt(product);
-  const soldOut = isProductSoldOut(product);
+  const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
 
   return (
     <div
       className="card-product style-list"
-      data-availability={
-        isProductSoldOut(product) ? "Out of stock" : "In stock"
-      }
+      data-availability={soldOut ? "Out of stock" : "In stock"}
       data-brand={siteSettings.brandName}
     >
       <div className="card-product-wrapper position-relative">
@@ -1838,6 +1853,7 @@ function productValueCount(
   productsList: Product[],
   group: CmsProductFilterGroup,
   value: string,
+  viewerLoggedIn: boolean,
 ) {
   return productsList.filter((product) => {
     if (group.type === "category")
@@ -1859,7 +1875,7 @@ function productValueCount(
       return qty > 0 && qty - product.reserved <= product.moq;
     }
     if (group.type === "stock" && value === "out-of-stock")
-      return isProductSoldOut(product);
+      return showProductSoldOutToViewer(product, viewerLoggedIn);
     return true;
   }).length;
 }
@@ -1871,6 +1887,7 @@ function ProductFilterPanel({
   sortValue,
   q,
   basePath,
+  viewerLoggedIn,
 }: {
   filtersConfig: CmsProductFilterGroup[];
   productsList: Product[];
@@ -1878,6 +1895,7 @@ function ProductFilterPanel({
   sortValue: string;
   q?: string;
   basePath: string;
+  viewerLoggedIn: boolean;
 }) {
   const enabledFilters = filtersConfig.filter((group) => group.enabled);
   const priceFilter = enabledFilters.find((group) => group.type === "price");
@@ -1912,7 +1930,12 @@ function ProductFilterPanel({
                         {option.label}{" "}
                         <span className="count-cate">
                           (
-                          {productValueCount(productsList, group, option.value)}
+                          {productValueCount(
+                            productsList,
+                            group,
+                            option.value,
+                            viewerLoggedIn,
+                          )}
                           )
                         </span>
                       </Link>
@@ -2025,6 +2048,7 @@ export async function ProductsListingDynamic({
   };
   const cms = await getLocalizedCmsSnapshot();
   const clientId = await getServerClientId();
+  const viewerLoggedIn = Boolean(clientId);
   const locale = await localeFromHeaders();
   const catalog = await getCatalogProducts({
     page,
@@ -2250,7 +2274,11 @@ export async function ProductsListingDynamic({
             </div>
             <div className="tf-list-layout wrapper-shop" id="listLayout">
               {visibleProducts.map((product) => (
-                <ProductListCard product={product} key={`list-${product.id}`} />
+                <ProductListCard
+                  product={product}
+                  viewerLoggedIn={viewerLoggedIn}
+                  key={`list-${product.id}`}
+                />
               ))}
             </div>
             <div
@@ -2307,6 +2335,7 @@ export async function ProductsListingDynamic({
             sortValue={sortValue}
             q={q}
             basePath={basePath}
+            viewerLoggedIn={viewerLoggedIn}
           />
         </div>
       </div>
@@ -2898,4 +2927,3 @@ export function AuthDynamic({ mode }: { mode: "login" | "register" }) {
     </>
   );
 }
-

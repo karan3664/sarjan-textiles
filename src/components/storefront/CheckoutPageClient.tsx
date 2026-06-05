@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { useClientHasB2BToken } from "./PriceGate";
+import { showProductSoldOutToViewer } from "@/lib/product-availability";
 import {
   type FormEvent,
   useCallback,
@@ -73,6 +74,7 @@ export function CheckoutPageClient({
     tone: "muted" | "success" | "error";
     text: string;
   }>({ tone: "muted", text: "" });
+  const viewerLoggedIn = useClientHasB2BToken();
 
   useEffect(() => {
     const applyCart = (next: StoredCartItem[]) => setCart(next);
@@ -616,7 +618,10 @@ export function CheckoutPageClient({
                           href={`/products/${item.product.slug}`}
                           className="img-product position-relative d-inline-block"
                         >
-                          {isProductSoldOut(item.product) ? (
+                          {showProductSoldOutToViewer(
+                            item.product,
+                            viewerLoggedIn,
+                          ) ? (
                             <div
                               className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                               role="status"

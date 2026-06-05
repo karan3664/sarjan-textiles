@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { useClientHasB2BToken } from "./PriceGate";
+import { showProductSoldOutToViewer } from "@/lib/product-availability";
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -58,6 +59,7 @@ function RepeatIcon() {
 export function CompareDrawer() {
   const [slugs, setSlugs] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const viewerLoggedIn = useClientHasB2BToken();
 
   useEffect(() => {
     const sync = () => setSlugs(readCompare());
@@ -167,7 +169,10 @@ export function CompareDrawer() {
                             className="image position-relative d-inline-block"
                             onClick={closeOffcanvas}
                           >
-                            {isProductSoldOut(product) ? (
+                            {showProductSoldOutToViewer(
+                              product,
+                              viewerLoggedIn,
+                            ) ? (
                               <div
                                 className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                 role="status"

@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { useShowProductSoldOut } from "./PriceGate";
 import { productColorHex } from "@/lib/product-color-swatch";
 import {
   ProductDealCountdown,
@@ -28,7 +28,7 @@ export function ModaveProductCard({
   const [colorIndex, setColorIndex] = useState(0);
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
   const altText = buildProductImageAlt(product);
-  const soldOut = isProductSoldOut(product);
+  const soldOut = useShowProductSoldOut(product);
   const colors = product.colors.length ? product.colors : ["Default"];
   const activeColor = colors[colorIndex] ?? colors[0];
   const primaryImage = product.images[colorIndex] ?? product.images[0];

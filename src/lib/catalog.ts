@@ -4,8 +4,8 @@ import { resolveProducts } from "@/lib/product-localize";
 import { readEnglish } from "@/lib/cms-localize";
 import type { AppLocale } from "@/lib/localized-text";
 import {
-  isProductSoldOut,
   productStockOnHand,
+  showProductSoldOutToViewer,
 } from "@/lib/product-availability";
 import type { Product } from "@/data/mock";
 import { getClient } from "@/lib/local-db";
@@ -100,7 +100,11 @@ function categoryMatches(product: Product, rulePath?: string[]) {
   return targetPath.every((part, index) => productPath[index] === part);
 }
 
-function matchesFilters(product: Product, filters?: CatalogFilters) {
+function matchesFilters(
+  product: Product,
+  filters: CatalogFilters | undefined,
+  viewerLoggedIn: boolean,
+) {
   if (!filters) return true;
   if (
     filters.category &&
@@ -138,7 +142,10 @@ function matchesFilters(product: Product, filters?: CatalogFilters) {
     if (qty === undefined) return false;
     if (!(qty > 0 && qty - product.reserved <= product.moq)) return false;
   }
-  if (filters.stock === "out-of-stock" && !isProductSoldOut(product))
+  if (
+    filters.stock === "out-of-stock" &&
+    !showProductSoldOutToViewer(product, viewerLoggedIn)
+  )
     return false;
   return true;
 }
@@ -279,8 +286,9 @@ export async function getCatalogProducts({
           .includes(query),
       )
     : source;
+  const viewerLoggedIn = Boolean(clientId);
   const filtered = searched.filter((product) =>
-    matchesFilters(product, filters),
+    matchesFilters(product, filters, viewerLoggedIn),
   );
   const sorted = sortProductList(
     applyProductDeals(resolveProducts(filtered, locale)),

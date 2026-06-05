@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
-import { isProductSoldOut } from "@/lib/product-availability";
+import { useShowProductSoldOut } from "./PriceGate";
 import { productImageForColorIndex } from "@/lib/product-colors";
 import { PriceGate } from "./PriceGate";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
@@ -18,6 +18,7 @@ export function QuickViewProduct({
   wishlistActive = false,
 }: QuickViewProductProps) {
   const [colorIndex, setColorIndex] = useState(0);
+  const soldOut = useShowProductSoldOut(product);
   const primaryImage = productImageForColorIndex(product, colorIndex);
   const hoverImage =
     product.images[colorIndex === 0 ? 1 : colorIndex] ??
@@ -31,7 +32,7 @@ export function QuickViewProduct({
   return (
     <div className="tf-product-info-wrap tf-quick-view-info">
       <div className="tf-quick-view-image position-relative">
-        {isProductSoldOut(product) ? (
+        {soldOut ? (
           <div className="sarjan-oos-ribbon" role="status">
             Out of stock
           </div>
@@ -54,11 +55,7 @@ export function QuickViewProduct({
             <div className="text-caption-1 text-secondary">
               MOQ {product.moq}.{" "}
               <span
-                className={
-                  isProductSoldOut(product)
-                    ? "sarjan-stock-unavailable"
-                    : undefined
-                }
+                className={soldOut ? "sarjan-stock-unavailable" : undefined}
               >
                 Stock {product.stock}.
               </span>
