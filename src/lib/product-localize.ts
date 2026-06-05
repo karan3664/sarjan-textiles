@@ -2,6 +2,7 @@ import type { Product } from "@/data/mock";
 import { slugifyCmsSegment } from "@/lib/slug";
 import {
   applyTranslationJobs,
+  applyTranslationJobsStep,
   hasPendingTranslations,
   readEnglish,
   toLocalizedField,
@@ -235,23 +236,41 @@ export async function localizeProductsOnSave(
 export async function ensureProductsLocalized(
   products: Array<Product | ProductRecord>,
 ): Promise<ProductRecord[]> {
+  let current = products.map((product) => normalizeProductRecord(product));
+  while (productsNeedLocalization(current)) {
+    const step = await ensureProductsLocalizedStep(current);
+    current = step.products;
+    if (!step.changed) break;
+  }
+  return current;
+}
+
+/** Translate a bounded batch of product fields (catalog-safe for serverless timeouts). */
+export async function ensureProductsLocalizedStep(
+  products: Array<Product | ProductRecord>,
+  maxKeys = 24,
+): Promise<{ products: ProductRecord[]; changed: boolean }> {
   const normalized = products.map((product) => normalizeProductRecord(product));
   const mergedFields: Record<string, LocalizedText> = {};
-  const prefixes: string[] = [];
 
   for (const product of normalized) {
     const prefix = product.slug || product.id;
-    prefixes.push(prefix);
     Object.assign(mergedFields, collectProductFields(product, prefix));
   }
 
-  if (!hasPendingTranslations(mergedFields)) return normalized;
+  if (!hasPendingTranslations(mergedFields)) {
+    return { products: normalized, changed: false };
+  }
 
-  const translated = await applyTranslationJobs(mergedFields);
-  return normalized.map((product) => {
+  const { fields: translated } = await applyTranslationJobsStep(
+    mergedFields,
+    maxKeys,
+  );
+  const next = normalized.map((product) => {
     const prefix = product.slug || product.id;
     return applyProductFields(product, prefix, translated);
   });
+  return { products: next, changed: true };
 }
 
 export function productsNeedLocalization(

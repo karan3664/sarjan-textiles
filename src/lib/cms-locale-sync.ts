@@ -32,6 +32,7 @@ import {
 } from "@/lib/cms-admin-view";
 import {
   ensureProductsLocalized,
+  ensureProductsLocalizedStep,
   productsNeedLocalization,
 } from "@/lib/product-localize";
 import {
@@ -57,6 +58,22 @@ export type CmsLocalizationStatus = {
   pendingSections: CmsLocalizationSection[];
   labels: Record<CmsLocalizationSection, string>;
 };
+
+/** Smaller sections first; products are batched last (largest). */
+const SECTION_ORDER: CmsLocalizationSection[] = [
+  "mobileApp",
+  "home",
+  "testimonials",
+  "productFilters",
+  "collectionPages",
+  "categoryHubPages",
+  "blogs",
+  "customSitePages",
+  "seoPages",
+  "products",
+];
+
+export const CMS_TRANSLATE_STEP_MAX_KEYS = 24;
 
 const SECTION_LABELS: Record<CmsLocalizationSection, string> = {
   products: "Products",
@@ -101,6 +118,168 @@ export function getCmsLocalizationStatus(
     pendingSections,
     labels: SECTION_LABELS,
   };
+}
+
+function firstPendingSection(
+  status: CmsLocalizationStatus,
+): CmsLocalizationSection | null {
+  for (const key of SECTION_ORDER) {
+    if (status.sections[key]) return key;
+  }
+  return null;
+}
+
+/** One bounded translation step — safe for Vercel/serverless time limits. */
+export async function ensureCmsLocalizedStep(
+  cms: CmsSnapshot,
+  options?: { maxTranslationKeys?: number },
+): Promise<{
+  cms: CmsSnapshot;
+  changed: boolean;
+  stepSection: CmsLocalizationSection | null;
+  status: CmsLocalizationStatus;
+}> {
+  const maxKeys = options?.maxTranslationKeys ?? CMS_TRANSLATE_STEP_MAX_KEYS;
+  const beforeStatus = getCmsLocalizationStatus(cms);
+  const section = firstPendingSection(beforeStatus);
+  if (!section) {
+    return {
+      cms,
+      changed: false,
+      stepSection: null,
+      status: beforeStatus,
+    };
+  }
+
+  let changed = false;
+  let next = cms;
+
+  switch (section) {
+    case "products": {
+      const stepped = await ensureProductsLocalizedStep(
+        cms.products ?? [],
+        maxKeys,
+      );
+      if (stepped.changed) {
+        next = { ...next, products: asStoredProducts(stepped.products) };
+        changed = true;
+      }
+      break;
+    }
+    case "home": {
+      if (homeNeedsLocalization(cms.home)) {
+        next = {
+          ...next,
+          home: asStoredHome(await ensureHomeLocalized(cms.home)),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "blogs": {
+      if (blogsNeedLocalization(cms.blogs)) {
+        next = {
+          ...next,
+          blogs: asStoredBlogs(await ensureBlogsLocalized(cms.blogs)),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "testimonials": {
+      if (testimonialsNeedLocalization(cms.testimonials)) {
+        next = {
+          ...next,
+          testimonials: asStoredTestimonials(
+            await ensureTestimonialsLocalized(cms.testimonials),
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "categoryHubPages": {
+      if (categoryHubsNeedLocalization(cms.categoryHubPages ?? [])) {
+        next = {
+          ...next,
+          categoryHubPages: asStoredCategoryHubs(
+            await ensureCategoryHubsLocalized(cms.categoryHubPages ?? []),
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "collectionPages": {
+      if (collectionsNeedLocalization(cms.collectionPages ?? [])) {
+        next = {
+          ...next,
+          collectionPages: asStoredCollectionPages(
+            await ensureCollectionsLocalized(cms.collectionPages ?? []),
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "productFilters": {
+      if (productFiltersNeedLocalization(cms.productFilters ?? [])) {
+        next = {
+          ...next,
+          productFilters: asStoredProductFilters(
+            await ensureProductFiltersLocalized(cms.productFilters ?? []),
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "customSitePages": {
+      if (customSitePagesNeedLocalization(cms.customSitePages ?? [])) {
+        next = {
+          ...next,
+          customSitePages: await ensureCustomSitePagesLocalized(
+            cms.customSitePages ?? [],
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "seoPages": {
+      if (
+        Array.isArray(cms.seoPages) &&
+        cms.seoPages.length &&
+        seoPagesNeedLocalization(cms.seoPages)
+      ) {
+        next = {
+          ...next,
+          seoPages: asStoredSeoPages(
+            await ensureSeoPagesLocalized(cms.seoPages),
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+    case "mobileApp": {
+      if (mobileAppHasPendingTranslations(cms.mobileApp)) {
+        next = {
+          ...next,
+          mobileApp: await ensureMobileAppLocalized(
+            cms.mobileApp,
+            cms.siteSettings,
+            cms.home,
+          ),
+        };
+        changed = true;
+      }
+      break;
+    }
+  }
+
+  const status = getCmsLocalizationStatus(next);
+  return { cms: next, changed, stepSection: section, status };
 }
 
 export async function ensureCmsLocalized(

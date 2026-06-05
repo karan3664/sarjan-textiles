@@ -8,19 +8,35 @@ type TranslateStatus = {
   pendingSections?: string[];
 };
 
+type TranslateStepResponse = TranslateStatus & {
+  ok?: boolean;
+  done?: boolean;
+  changed?: boolean;
+  message?: string;
+  error?: string;
+  stepLabel?: string | null;
+  translatedLabels?: string[];
+};
+
+function formatFetchError(res: Response, text: string): string {
+  if (res.status === 504 || res.status === 502) {
+    return "Server timed out on a translation step. Click “Translate all now” again — saved progress will continue where it left off.";
+  }
+  if (!text.trim()) {
+    return `Server returned an empty response (${res.status}). Refresh the page and try again.`;
+  }
+  return `Invalid server response (${res.status}). Refresh the page and try again.`;
+}
+
 async function readJsonResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   if (!text.trim()) {
-    throw new Error(
-      `Server returned an empty response (${res.status}). Refresh the page and try again.`,
-    );
+    throw new Error(formatFetchError(res, text));
   }
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new Error(
-      `Invalid server response (${res.status}). Refresh the page and try again.`,
-    );
+    throw new Error(formatFetchError(res, text));
   }
 }
 
@@ -67,34 +83,57 @@ export function AdminTranslateAllPanel({
     setRunning(true);
     setMessage("");
     setError("");
+    const maxSteps = 400;
+    let steps = 0;
+    let lastLabels: string[] = [];
+
     try {
-      const res = await fetch("/api/admin/cms/translate-all", {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await readJsonResponse<
-        TranslateStatus & {
-          ok?: boolean;
-          changed?: boolean;
-          message?: string;
-          error?: string;
-          translatedLabels?: string[];
+      while (steps < maxSteps) {
+        steps += 1;
+        const res = await fetch("/api/admin/cms/translate-all", {
+          method: "POST",
+          credentials: "include",
+        });
+        const data = await readJsonResponse<TranslateStepResponse>(res);
+        if (!res.ok) throw new Error(data.error ?? "Translation failed");
+
+        setStatus(data);
+        if (data.stepLabel) {
+          lastLabels = [data.stepLabel];
         }
-      >(res);
-      if (!res.ok) throw new Error(data.error ?? "Translation failed");
-      setStatus(data);
-      if (data.changed && data.translatedLabels?.length) {
+
+        if (data.done || !data.pending) {
+          setMessage(
+            data.message ??
+              "Hindi and Gujarati translations generated and saved.",
+          );
+          break;
+        }
+
+        const pending = data.pendingLabels.join(", ") || "remaining sections";
         setMessage(
-          `${data.message ?? "Done."} Updated: ${data.translatedLabels.join(", ")}.`,
+          `Step ${steps}: saved ${data.stepLabel ?? "content"}. Still pending: ${pending}. Continuing…`,
         );
-      } else {
-        setMessage(data.message ?? "Translations are up to date.");
+
+        if (!data.changed) {
+          throw new Error(
+            "Translation stalled with pending content. Retry in a minute or add OPENAI_API_KEY for faster bulk translate.",
+          );
+        }
       }
-      void loadStatus();
+
+      if (steps >= maxSteps) {
+        setError(
+          "Stopped after many steps. Click “Translate all now” again to continue.",
+        );
+      } else if (lastLabels.length) {
+        void loadStatus();
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Translation failed. Try again.",
       );
+      void loadStatus();
     } finally {
       setRunning(false);
     }
@@ -151,8 +190,8 @@ export function AdminTranslateAllPanel({
               </p>
               {running ? (
                 <p className="text-caption-1 text-secondary mb-0">
-                  Large catalogs can take several minutes with the free
-                  translator. Keep this tab open…
+                  Translates in small steps to avoid server timeouts. Keep this
+                  tab open — progress is saved after each step.
                 </p>
               ) : (
                 <p className="text-caption-1 text-secondary mb-0">

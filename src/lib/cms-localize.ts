@@ -30,23 +30,42 @@ export function toLocalizedList(
 export async function applyTranslationJobs(
   fields: Record<string, LocalizedText>,
 ): Promise<Record<string, LocalizedText>> {
+  const stepped = await applyTranslationJobsStep(
+    fields,
+    Number.POSITIVE_INFINITY,
+  );
+  return stepped.fields;
+}
+
+/** Translate up to `maxKeys` pending fields — keeps admin bulk runs under server timeouts. */
+export async function applyTranslationJobsStep(
+  fields: Record<string, LocalizedText>,
+  maxKeys: number,
+): Promise<{ fields: Record<string, LocalizedText>; hasMore: boolean }> {
   const jobs: Record<string, string> = {};
   for (const [key, text] of Object.entries(fields)) {
     if (needsTranslation(text)) {
-      jobs[key] = text.en;
+      if (Object.keys(jobs).length < maxKeys) {
+        jobs[key] = text.en;
+      }
     }
   }
-  if (!Object.keys(jobs).length) return fields;
+  if (!Object.keys(jobs).length) {
+    return { fields, hasMore: false };
+  }
 
   const translations = await translateEnglishBatch(jobs);
   const next = { ...fields };
-  for (const [key, text] of Object.entries(fields)) {
+  for (const key of Object.keys(jobs)) {
+    const text = fields[key];
     const translated = translations[key];
-    if (translated) {
+    if (text && translated) {
       next[key] = mergeTranslation(text, translated.hi, translated.gu);
     }
   }
-  return next;
+
+  const hasMore = Object.values(next).some((text) => needsTranslation(text));
+  return { fields: next, hasMore };
 }
 
 export function hasPendingTranslations(

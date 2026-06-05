@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verifyAdminToken } from "@/lib/admin-token";
 import {
-  ensureCmsLocalized,
+  ensureCmsLocalizedStep,
   getCmsLocalizationStatus,
 } from "@/lib/cms-locale-sync";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/lib/cms-store";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 async function requireAdmin() {
   return verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
@@ -71,34 +71,40 @@ export async function POST() {
       });
     }
 
-    const synced = await ensureCmsLocalized(before);
+    const synced = await ensureCmsLocalizedStep(before);
     if (synced.changed) {
       await saveCmsSnapshot(synced.cms);
     }
 
-    const afterStatus = getCmsLocalizationStatus(synced.cms);
+    const afterStatus = synced.status;
+    const stepLabel = synced.stepSection
+      ? afterStatus.labels[synced.stepSection]
+      : null;
 
-    await appendAuditLog({
-      actor: session.email,
-      role: session.role,
-      action: "translate_all_cms",
-      entity: "cms_snapshot",
-      entityId: "localization",
-      note: synced.changed
-        ? `Translated: ${beforeStatus.pendingSections.join(", ")}`
-        : "No changes after translate run",
-    }).catch(() => null);
+    if (!afterStatus.pending) {
+      await appendAuditLog({
+        actor: session.email,
+        role: session.role,
+        action: "translate_all_cms",
+        entity: "cms_snapshot",
+        entityId: "localization",
+        note: "Bulk Hindi/Gujarati translation completed",
+      }).catch(() => null);
+    }
 
     return NextResponse.json({
       ok: true,
+      done: !afterStatus.pending,
       changed: synced.changed,
-      message: synced.changed
+      stepSection: synced.stepSection,
+      stepLabel,
+      message: !afterStatus.pending
         ? "Hindi and Gujarati translations generated and saved."
-        : "Translation run finished with no remaining changes.",
-      translatedSections: beforeStatus.pendingSections,
-      translatedLabels: beforeStatus.pendingSections.map(
-        (key) => beforeStatus.labels[key],
-      ),
+        : stepLabel
+          ? `Saved progress for ${stepLabel}. Run again or keep this tab open to continue.`
+          : "Translation step finished.",
+      translatedSections: synced.stepSection ? [synced.stepSection] : [],
+      translatedLabels: stepLabel ? [stepLabel] : [],
       ...afterStatus,
       pendingLabels: afterStatus.pendingSections.map(
         (key) => afterStatus.labels[key],
