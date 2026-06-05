@@ -38,18 +38,18 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.16";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "17");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.17";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "18");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Cart fix: removed items stay removed; cart clears after successful checkout.",
-      "Checkout totals stay accurate; server cart no longer restores deleted lines.",
-      "Static maroon boot screen, order cancel API, and order detail spacing.",
-      "Collections, deep links, offline banner, and Hindi/Gujarati support.",
+      "Boot splash: Sarjan logo and tagline on maroon (no double loader).",
+      "Home hero: banner + YouTube/MP4 video slides like the website.",
+      "YouTube opens in the YouTube app with sound; uploaded videos play muted.",
+      "Cart sync, order cancel, collections, and Hindi/Gujarati support.",
     ].join(" ");
 
   return {
