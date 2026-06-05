@@ -1278,13 +1278,13 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-category-strip .collection-position-2 .img-style {
   height: 445px !important;
-  background: #eef1f3 !important;
+  background: #f3efe8 !important;
 }
 
 .sarjan-category-strip .collection-position-2 .img-style img {
   width: 100% !important;
   height: 100% !important;
-  object-fit: contain !important;
+  object-fit: cover !important;
 }
 
 @media (max-width: 1199px) {

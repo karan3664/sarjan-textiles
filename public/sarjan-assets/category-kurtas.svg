@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 960" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F4545"/>
+      <stop offset="1" stop-color="#1A6B6B"/>
+    </linearGradient>
+    <linearGradient id="kurta" x1="400" y1="160" x2="400" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#166060"/>
+      <stop offset="1" stop-color="#0D4848"/>
+    </linearGradient>
+    <pattern id="diamond" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="40" height="40" fill="#166060"/>
+      <path d="M20 0 L40 20 L20 40 L0 20 Z" fill="#C9A96E" opacity="0.55"/>
+      <path d="M20 8 L32 20 L20 32 L8 20 Z" fill="#F5EEDF" opacity="0.35"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="800" height="960" fill="url(#bg)"/>
+  <rect width="800" height="6" fill="#C9A96E"/>
+  <circle cx="700" cy="120" r="100" fill="#C9A96E" opacity="0.1"/>
+  <circle cx="90" cy="850" r="80" fill="#fff" opacity="0.05"/>
+  <g filter="url(#shadow)">
+    <path d="M290 200 L400 150 L510 200 L540 760 L260 760 Z" fill="url(#kurta)"/>
+    <rect x="310" y="280" width="180" height="420" fill="url(#diamond)"/>
+    <path d="M360 200 L400 230 L440 200 L440 270 L360 270 Z" fill="#F5EEDF"/>
+    <rect x="370" y="210" width="60" height="8" rx="2" fill="#C9A96E"/>
+    <path d="M260 760 L290 200 M540 760 L510 200" stroke="#C9A96E" stroke-width="3" opacity="0.45"/>
+    <ellipse cx="400" cy="790" rx="160" ry="20" fill="#000" opacity="0.2"/>
+  </g>
+  <text x="56" y="900" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#F5EEDF" opacity="0.45" letter-spacing="5">ETHNIC KURTAS</text>
+</svg>

@@ -422,9 +422,9 @@ export const home = {
     { value: "100%", label: "Admin approved orders" },
   ],
   categories: [
-    { name: "Printed Shirts", image: asset("shirt-blue-block-studio.png") },
-    { name: "Kurtas", image: asset("kurta-teal-diamond-studio.png") },
-    { name: "Festive Prints", image: asset("kurta-red-diamond-studio.png") },
+    { name: "Printed Shirts", image: asset("category-printed-shirts.webp") },
+    { name: "Kurtas", image: asset("category-kurtas.webp") },
+    { name: "Festive Prints", image: asset("category-festive-prints.webp") },
   ],
   marqueeTop: [
     "Embrace Endless Possibilities",

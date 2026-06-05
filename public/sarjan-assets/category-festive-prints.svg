@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 960" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5C1228"/>
+      <stop offset="1" stop-color="#7A1530"/>
+    </linearGradient>
+    <linearGradient id="fabric" x1="400" y1="180" x2="400" y2="740" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B1E3F"/>
+      <stop offset="1" stop-color="#6B1228"/>
+    </linearGradient>
+    <pattern id="bandhani" width="36" height="36" patternUnits="userSpaceOnUse">
+      <rect width="36" height="36" fill="#7A1530"/>
+      <circle cx="18" cy="18" r="7" fill="#D4AF37" opacity="0.75"/>
+      <circle cx="0" cy="0" r="4" fill="#F5E6A8" opacity="0.5"/>
+      <circle cx="36" cy="36" r="4" fill="#F5E6A8" opacity="0.5"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#3A0615" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="800" height="960" fill="url(#bg)"/>
+  <rect width="800" height="6" fill="#D4AF37"/>
+  <g opacity="0.15">
+    <circle cx="130" cy="130" r="60" stroke="#D4AF37" stroke-width="2" fill="none"/>
+    <circle cx="680" cy="800" r="90" stroke="#F5E6A8" stroke-width="2" fill="none"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M270 220 L400 165 L530 220 L555 730 L245 730 Z" fill="url(#fabric)"/>
+    <rect x="295" y="290" width="210" height="390" fill="url(#bandhani)"/>
+    <path d="M350 220 Q400 255 450 220 L450 300 Q400 335 350 300 Z" fill="#F5E6A8"/>
+    <path d="M245 730 L270 420 M555 730 L530 420" stroke="#D4AF37" stroke-width="4" opacity="0.6"/>
+    <rect x="295" y="270" width="210" height="12" fill="#D4AF37" opacity="0.85"/>
+    <ellipse cx="400" cy="770" rx="170" ry="22" fill="#000" opacity="0.25"/>
+  </g>
+  <g opacity="0.8">
+    <path d="M120 840 L140 820 L160 840 L140 860 Z" fill="#D4AF37"/>
+    <path d="M640 100 L660 80 L680 100 L660 120 Z" fill="#F5E6A8"/>
+  </g>
+  <text x="56" y="900" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#F5E6A8" opacity="0.5" letter-spacing="4">FESTIVE COLLECTION</text>
+</svg>
