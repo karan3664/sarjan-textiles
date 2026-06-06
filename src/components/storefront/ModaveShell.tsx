@@ -7,6 +7,7 @@ import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
 import { OrderBotWidget } from "./OrderBotWidget";
 import { AbandonedCartResumeBanner } from "./AbandonedCartResumeBanner";
 import { SavedListsSync } from "./SavedListsSync";
+import { ClientSessionBootstrap } from "./ClientSessionBootstrap";
 import { SarjanButtonHoverFix } from "./SarjanButtonHoverFix";
 import { TemplateScripts } from "./TemplateScripts";
 import { localeFromHeaders } from "@/lib/server-locale";
@@ -47,6 +48,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
         />
         <AbandonedCartResumeBanner />
         <SavedListsSync />
+        <ClientSessionBootstrap />
         {children}
         <ModaveFooter />
         <CompareDrawer />

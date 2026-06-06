@@ -39,6 +39,7 @@ export function adminCmsPutResponse(
   if (keys.has("customSitePages")) {
     out.customSitePages = flat.customSitePages;
   }
+  if (keys.has("siteSettings")) out.siteSettings = next.siteSettings;
   if (keys.has("pages")) out.pages = next.pages;
   if (keys.has("products")) out.products = flat.products;
   if (keys.has("blogs")) out.blogs = flat.blogs;

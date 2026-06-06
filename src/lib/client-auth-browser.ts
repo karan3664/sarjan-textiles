@@ -2,6 +2,68 @@
 
 import type { StoredClient } from "@/lib/client-session";
 
+const SESSION_FLASH_KEY = "sarjan-login-flash";
+const SLIDING_REFRESH_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
+
+function decodeClientTokenPayload(token: string): { exp?: number } | null {
+  try {
+    const segment = token.split(".")[1];
+    if (!segment) return null;
+    const padded = segment
+      .replaceAll("-", "+")
+      .replaceAll("_", "/")
+      .padEnd(Math.ceil(segment.length / 4) * 4, "=");
+    return JSON.parse(atob(padded)) as { exp?: number };
+  } catch {
+    return null;
+  }
+}
+
+export function isClientTokenExpired(token?: string | null) {
+  const value = token?.trim() || clientAuthToken();
+  if (!value) return true;
+  const payload = decodeClientTokenPayload(value);
+  if (!payload?.exp || !Number.isFinite(payload.exp)) return true;
+  return Date.now() > payload.exp;
+}
+
+export function clientSessionNeedsRefresh(token?: string | null) {
+  const value = token?.trim() || clientAuthToken();
+  if (!value) return false;
+  const payload = decodeClientTokenPayload(value);
+  if (!payload?.exp || !Number.isFinite(payload.exp)) return true;
+  return payload.exp - Date.now() < SLIDING_REFRESH_WINDOW_MS;
+}
+
+export function readStoredClientProfile(): StoredClient | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const client = JSON.parse(
+      localStorage.getItem("sarjan-client") ?? "null",
+    ) as StoredClient | null;
+    if (!client?.id?.trim()) return null;
+    return client;
+  } catch {
+    return null;
+  }
+}
+
+export function clearExpiredClientSession(
+  message = "Your session expired. Please sign in again.",
+) {
+  clearClientSessionLocal();
+  try {
+    sessionStorage.setItem(SESSION_FLASH_KEY, message);
+  } catch {
+    /* ignore */
+  }
+  void fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  }).catch(() => undefined);
+  window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+}
+
 export function clientAuthToken() {
   if (typeof window === "undefined") return "";
   return localStorage.getItem("sarjan-client-token")?.trim() ?? "";
@@ -103,11 +165,48 @@ export async function restoreClientSessionFromCookie(): Promise<ClientLoginResul
   if (!res.ok) {
     return { ok: false, error: data.error ?? "Not signed in" };
   }
-  if (!data.token || !data.client) {
+  if (!data.token || !data.client?.id) {
     return { ok: false, error: "Session check failed" };
   }
   persistClientSession(data.token, data.client);
   return { ok: true, client: data.client, token: data.token };
+}
+
+/**
+ * Validates the current session with the server, refreshes token when needed,
+ * and clears stale localStorage when the cookie/JWT is no longer valid.
+ */
+export async function validateAndRefreshClientSession(): Promise<ClientLoginResult> {
+  const token = clientAuthToken();
+  if (!token) {
+    return restoreClientSessionFromCookie();
+  }
+  if (isClientTokenExpired(token)) {
+    clearExpiredClientSession();
+    return { ok: false, error: "Session expired" };
+  }
+
+  const shouldRefresh =
+    clientSessionNeedsRefresh(token) || !readStoredClientProfile()?.id?.trim();
+
+  if (!shouldRefresh) {
+    const client = readStoredClientProfile();
+    if (client) {
+      return { ok: true, client, token };
+    }
+  }
+
+  const restored = await restoreClientSessionFromCookie();
+  if (restored.ok) {
+    return restored;
+  }
+
+  clearExpiredClientSession(
+    restored.error === "Not signed in"
+      ? "Your session expired. Please sign in again."
+      : (restored.error ?? "Session expired. Please sign in again."),
+  );
+  return restored;
 }
 
 /** POST /api/auth/login and save session in localStorage + cookie. */

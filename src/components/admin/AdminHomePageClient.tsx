@@ -9,6 +9,7 @@ import {
   parseHeroVideoSource,
   youtubeThumbnailUrl,
 } from "@/lib/hero-video";
+import { putAdminCms } from "@/lib/admin-cms-fetch";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
@@ -439,32 +440,19 @@ export function AdminHomePageClient({
     setSaveState("saving");
     setSaveError("");
     try {
-      const res = await fetch("/api/admin/cms", {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ home }),
-      });
-      const data = (await res.json().catch(() => null)) as {
-        home?: HomeDraft;
-        error?: string;
-      } | null;
-      if (!res.ok) {
-        throw new Error(data?.error ?? `Home save failed (${res.status})`);
-      }
-      if (!data?.home) {
-        throw new Error("CMS response missing home data");
-      }
+      const data = await putAdminCms<{ home?: HomeDraft }>({ home });
       const saved = data.home;
-      setHome({
-        ...saved,
-        hero: {
-          ...saved.hero,
-          videoUrls: getHeroVideos(saved.hero),
-          videoUrl: getHeroVideos(saved.hero)[0] ?? "",
-        },
-        sections: saved.sections?.length ? saved.sections : defaultSections(),
-      });
+      if (saved) {
+        setHome({
+          ...saved,
+          hero: {
+            ...saved.hero,
+            videoUrls: getHeroVideos(saved.hero),
+            videoUrl: getHeroVideos(saved.hero)[0] ?? "",
+          },
+          sections: saved.sections?.length ? saved.sections : defaultSections(),
+        });
+      }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2500);
     } catch (error) {

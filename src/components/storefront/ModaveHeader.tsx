@@ -9,7 +9,8 @@ import { legacyHeaderNavLinks } from "@/lib/header-navigation";
 import {
   clearClientSessionLocal,
   logoutClientSession,
-  restoreClientSessionFromCookie,
+  readStoredClientProfile,
+  validateAndRefreshClientSession,
 } from "@/lib/client-auth-browser";
 import { isClientPublicAuthPage } from "@/lib/auth-route-guards";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
@@ -83,43 +84,35 @@ export function ModaveHeader({
   }, [initialNavItems, initialCategories, initialHubs]);
 
   useEffect(() => {
-    const sync = () => {
-      try {
-        const token = localStorage.getItem("sarjan-client-token")?.trim();
-        if (!token) {
-          setClient(null);
-          return;
-        }
-        setClient(JSON.parse(localStorage.getItem("sarjan-client") ?? "null"));
-      } catch {
-        setClient(null);
-      }
+    const applyClient = () => {
+      const stored = readStoredClientProfile();
+      setClient(
+        stored
+          ? {
+              companyName: stored.companyName,
+              email: stored.email,
+            }
+          : null,
+      );
     };
 
     if (isClientPublicAuthPage(pathname)) {
-      /* Login/register: drop stale localStorage so header does not show Logout */
       clearClientSessionLocal();
       setClient(null);
-      window.addEventListener("sarjan-auth-updated", sync);
-      window.addEventListener("storage", sync);
+      window.addEventListener("sarjan-auth-updated", applyClient);
+      window.addEventListener("storage", applyClient);
       return () => {
-        window.removeEventListener("sarjan-auth-updated", sync);
-        window.removeEventListener("storage", sync);
+        window.removeEventListener("sarjan-auth-updated", applyClient);
+        window.removeEventListener("storage", applyClient);
       };
     }
 
-    sync();
-    if (!localStorage.getItem("sarjan-client-token")?.trim()) {
-      void restoreClientSessionFromCookie().then((restored) => {
-        if (restored.ok) sync();
-        else setClient(null);
-      });
-    }
-    window.addEventListener("sarjan-auth-updated", sync);
-    window.addEventListener("storage", sync);
+    void validateAndRefreshClientSession().finally(applyClient);
+    window.addEventListener("sarjan-auth-updated", applyClient);
+    window.addEventListener("storage", applyClient);
     return () => {
-      window.removeEventListener("sarjan-auth-updated", sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("sarjan-auth-updated", applyClient);
+      window.removeEventListener("storage", applyClient);
     };
   }, [pathname]);
 

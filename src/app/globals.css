@@ -14011,6 +14011,37 @@ a.sarjan-order-bot-card:focus-visible {
   text-transform: none;
 }
 
+.sarjan-auth-page .sarjan-mobile-prefix-field {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 !important;
+  border: 1px solid var(--sarjan-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sarjan-auth-page .sarjan-mobile-prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sarjan-muted);
+  background: #f9fafb;
+  border-right: 1px solid var(--sarjan-border);
+  user-select: none;
+}
+
+.sarjan-auth-page .sarjan-mobile-prefix-field input {
+  flex: 1;
+  border: none !important;
+  border-radius: 0 !important;
+  min-height: 48px;
+  box-shadow: none !important;
+}
+
 .sarjan-auth-page .sarjan-otp-row {
   grid-template-columns: minmax(0, 1fr) auto;
 }

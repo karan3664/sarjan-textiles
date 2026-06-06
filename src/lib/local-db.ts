@@ -874,6 +874,32 @@ export async function updateClientPassword(
   return row;
 }
 
+/** Self-service forgot password after email + mobile verification. */
+export async function resetClientPasswordById(id: string, newPassword: string) {
+  if (newPassword.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const supabase = supabaseAdmin();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("clients")
+      .update({ password_hash: hashPassword(newPassword) })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return mapClient(data);
+  }
+
+  const db = await readLocalDb();
+  const row = db.clients.find((item) => item.id === id);
+  if (!row) throw new Error("Client not found");
+  row.passwordHash = hashPassword(newPassword);
+  await writeLocalDb(db);
+  return row;
+}
+
 export async function createResetRequest(email: string) {
   const request = {
     id: randomUUID(),

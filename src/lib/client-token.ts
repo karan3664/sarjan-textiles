@@ -5,6 +5,9 @@ export type ClientSession = {
   exp: number;
 };
 
+/** Client JWT lifetime — B2B buyers often return after several days. */
+export const CLIENT_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+
 function secret() {
   const value =
     process.env.CLIENT_JWT_SECRET?.trim() ||
@@ -79,7 +82,7 @@ export async function createClientToken(input: {
   const payload = encodeSegment({
     ...input,
     iat: now,
-    exp: now + 1000 * 60 * 60 * 24 * 7,
+    exp: now + CLIENT_SESSION_TTL_MS,
   });
   const unsigned = `${header}.${payload}`;
   return `${unsigned}.${await hmac(unsigned)}`;

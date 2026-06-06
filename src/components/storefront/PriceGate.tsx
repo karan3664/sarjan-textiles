@@ -3,6 +3,11 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Product } from "@/data/mock";
 import { showProductSoldOutToViewer } from "@/lib/product-availability";
+import {
+  clientAuthToken,
+  isClientTokenExpired,
+  readStoredClientProfile,
+} from "@/lib/client-auth-browser";
 
 function subscribeClientApproved(onStoreChange: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -29,10 +34,12 @@ export function clientHasApprovedPricing(): boolean {
   }
 }
 
-/** True when a client JWT is stored (same signal the header uses for “logged in”). */
+/** True when a valid, non-expired client session is present. */
 function readClientB2BTokenPresent(): boolean {
   if (typeof window === "undefined") return false;
-  return Boolean(localStorage.getItem("sarjan-client-token")?.trim());
+  const token = clientAuthToken();
+  if (!token || isClientTokenExpired(token)) return false;
+  return Boolean(readStoredClientProfile()?.id?.trim());
 }
 
 export function useClientHasB2BToken(): boolean {

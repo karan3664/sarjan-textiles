@@ -242,6 +242,50 @@ export type CmsSnapshot = {
 
 const cmsPath = path.join(process.cwd(), "data", "cms-db.json");
 
+function isSupabaseCmsPrimary() {
+  const enabled = (process.env.SUPABASE_ENABLED ?? "").trim().toLowerCase();
+  return (
+    (enabled === "true" || enabled === "1" || enabled === "yes") &&
+    Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
+    )
+  );
+}
+
+function revalidateCmsCache() {
+  try {
+    revalidateTag("cms-snapshot");
+    revalidatePath("/", "layout");
+  } catch {
+    // No-op outside Next.js request context (scripts, tests).
+  }
+}
+
+async function readCmsSnapshotFromFile(): Promise<CmsSnapshot | null> {
+  try {
+    const raw = await readFile(cmsPath, "utf8");
+    return normalizeSnapshot(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+async function writeCmsSnapshotToSupabase(next: CmsSnapshot) {
+  const supabase = supabaseAdmin();
+  if (!supabase) {
+    throw new Error("Supabase CMS is not configured");
+  }
+  const stored = snapshotForStorage(next);
+  const { error } = await supabase
+    .from("cms_snapshots")
+    .upsert(
+      { id: 1, data: stored, updated_at: stored.updatedAt },
+      { onConflict: "id" },
+    );
+  if (error) throw new Error(error.message);
+}
+
 function filterOptions(values: string[]): CmsProductFilterOption[] {
   return Array.from(
     new Set(values.map((value) => value.trim()).filter(Boolean)),
@@ -572,12 +616,20 @@ function supabaseAdmin() {
 
 async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+  const timeout = setTimeout(() => controller.abort(), 60_000);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/** CMS snapshot row must stay small — audit history uses `audit_logs` table. */
+function snapshotForStorage(snapshot: CmsSnapshot): CmsSnapshot {
+  return {
+    ...snapshot,
+    auditLogs: [],
+  };
 }
 
 /** Starter hub so `/categories` and `/categories/mens-kurtas` work out of the box. */
@@ -834,7 +886,7 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
       ? input.inventoryLogs
       : defaultCmsSnapshot.inventoryLogs,
     auditLogs: Array.isArray(input.auditLogs)
-      ? input.auditLogs
+      ? input.auditLogs.slice(0, 50)
       : defaultCmsSnapshot.auditLogs,
     instagramFeed:
       input.instagramFeed &&
@@ -857,9 +909,18 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
   });
 }
 
+async function mirrorCmsSnapshotToFile(next: CmsSnapshot) {
+  try {
+    await mkdir(path.dirname(cmsPath), { recursive: true });
+    await writeFile(cmsPath, JSON.stringify(snapshotForStorage(next), null, 2));
+  } catch {
+    // Best-effort backup — Supabase remains source of truth when enabled.
+  }
+}
+
 async function readCmsSnapshot(): Promise<CmsSnapshot> {
   const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isSupabaseCmsPrimary() && supabase) {
     try {
       const { data, error } = await supabase
         .from("cms_snapshots")
@@ -867,21 +928,39 @@ async function readCmsSnapshot(): Promise<CmsSnapshot> {
         .eq("id", 1)
         .maybeSingle();
       if (error) throw new Error(error.message);
-      if (data?.data)
-        return normalizeSnapshot({
+      if (data?.data) {
+        const snapshot = normalizeSnapshot({
           ...(data.data as Partial<CmsSnapshot>),
           updatedAt: data.updated_at,
         });
-    } catch {
-      // Fallback keeps CMS usable when Supabase is unreachable locally.
+        void mirrorCmsSnapshotToFile(snapshot);
+        return snapshot;
+      }
+
+      // First run: seed Supabase from local JSON if present, else defaults.
+      const seed = (await readCmsSnapshotFromFile()) ?? defaultCmsSnapshot;
+      const seeded = { ...seed, updatedAt: new Date().toISOString() };
+      await writeCmsSnapshotToSupabase(seeded);
+      await mirrorCmsSnapshotToFile(seeded);
+      return seeded;
+    } catch (error) {
+      const local = await readCmsSnapshotFromFile();
+      if (local) {
+        console.warn(
+          "[cms-store] Supabase read failed; using local CMS backup:",
+          error instanceof Error ? error.message : error,
+        );
+        return local;
+      }
+      throw new Error(
+        error instanceof Error
+          ? `CMS database read failed: ${error.message}`
+          : "CMS database read failed",
+      );
     }
   }
-  try {
-    const raw = await readFile(cmsPath, "utf8");
-    return normalizeSnapshot(JSON.parse(raw));
-  } catch {
-    return defaultCmsSnapshot;
-  }
+
+  return (await readCmsSnapshotFromFile()) ?? defaultCmsSnapshot;
 }
 
 export async function getCmsSnapshot(): Promise<CmsSnapshot> {
@@ -907,33 +986,33 @@ export async function saveCmsSnapshot(
     updatedAt: new Date().toISOString(),
   });
   const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isSupabaseCmsPrimary() && supabase) {
     try {
-      const { error } = await supabase
-        .from("cms_snapshots")
-        .upsert(
-          { id: 1, data: next, updated_at: next.updatedAt },
-          { onConflict: "id" },
-        );
-      if (error) throw new Error(error.message);
-      revalidateTag("cms-snapshot");
-      revalidatePath("/", "layout");
+      await writeCmsSnapshotToSupabase(next);
+      await mirrorCmsSnapshotToFile(next);
+      revalidateCmsCache();
       return next;
     } catch (error) {
-      if (process.env.VERCEL) {
-        throw new Error(
-          error instanceof Error
-            ? `Supabase CMS save failed: ${error.message}`
-            : "Supabase CMS save failed",
-        );
-      }
+      throw new Error(
+        error instanceof Error
+          ? `Supabase CMS save failed: ${error.message}`
+          : "Supabase CMS save failed",
+      );
+    }
+  }
+
+  if (supabase) {
+    try {
+      await writeCmsSnapshotToSupabase(next);
+      revalidateCmsCache();
+      return next;
+    } catch {
       // Fall through to JSON fallback for local development only.
     }
   }
   await mkdir(path.dirname(cmsPath), { recursive: true });
-  await writeFile(cmsPath, JSON.stringify(next, null, 2));
-  revalidateTag("cms-snapshot");
-  revalidatePath("/", "layout");
+  await writeFile(cmsPath, JSON.stringify(snapshotForStorage(next), null, 2));
+  revalidateCmsCache();
   return next;
 }
 
@@ -1068,12 +1147,16 @@ export async function appendAuditLog(
         },
         created_at: log.createdAt,
       });
+      return cms;
     } catch {
       // CMS audit fallback below keeps admin history usable if the table is not migrated yet.
     }
   }
   return saveCmsSnapshot({
-    auditLogs: [log, ...(cms.auditLogs ?? [])].slice(0, 1000),
+    auditLogs: [
+      { ...log, before: undefined, after: undefined },
+      ...(cms.auditLogs ?? []),
+    ].slice(0, 50),
   });
 }
 

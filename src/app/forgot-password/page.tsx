@@ -1,4 +1,4 @@
-import { AuthPageClient } from "@/components/storefront/AuthPageClient";
+import { ForgotPasswordFlowClient } from "@/components/storefront/ForgotPasswordFlowClient";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getAuthBannersForStorefront } from "@/lib/auth-banner";
 
@@ -8,7 +8,7 @@ export default async function ForgotPasswordPage() {
   const banners = await getAuthBannersForStorefront();
   return (
     <ModaveShell>
-      <AuthPageClient mode="forgot" banners={banners} />
+      <ForgotPasswordFlowClient banners={banners} />
     </ModaveShell>
   );
 }

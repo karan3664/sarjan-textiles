@@ -1,9 +1,18 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { clientStatusAuthError } from "@/lib/client-approved-session";
-import { CLIENT_SESSION_COOKIE_NAME } from "@/lib/client-session-cookie";
+import {
+  CLIENT_SESSION_COOKIE_NAME,
+  setClientSessionCookie,
+} from "@/lib/client-session-cookie";
 import { getClient, publicClient } from "@/lib/local-db";
-import { bearerToken, verifyClientToken } from "@/lib/client-token";
+import {
+  bearerToken,
+  createClientToken,
+  verifyClientToken,
+} from "@/lib/client-token";
+
+const SLIDING_REFRESH_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
 
 /** Restore storefront session from HttpOnly cookie (fixes login redirect loops on mobile). */
 export async function GET(request: Request) {
@@ -23,13 +32,27 @@ export async function GET(request: Request) {
   }
 
   const jar = await cookies();
-  const token =
+  const existing =
     jar.get(CLIENT_SESSION_COOKIE_NAME)?.value?.trim() ||
     bearerToken(request) ||
     "";
 
-  return NextResponse.json({
+  const shouldRefresh = session.exp - Date.now() < SLIDING_REFRESH_WINDOW_MS;
+  const token = shouldRefresh
+    ? await createClientToken({
+        clientId: session.clientId,
+        email: session.email,
+      })
+    : existing;
+
+  const response = NextResponse.json({
     client: publicClient(client),
     token,
   });
+
+  if (shouldRefresh && token) {
+    setClientSessionCookie(response, token);
+  }
+
+  return response;
 }

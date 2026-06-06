@@ -1,7 +1,7 @@
 import { normalizeMobilePhone } from "@/lib/mobile-otp";
 
 const OTP_MESSAGE = (otp: string) =>
-  `Your Sarjan Textiles login OTP is ${otp}. Valid for 10 minutes.`;
+  `Your Sarjan Textile password reset code is ${otp}. Valid for 10 minutes.`;
 
 function msg91TemplateId() {
   return process.env.MSG91_TEMPLATE_ID?.trim() || "";
@@ -11,7 +11,6 @@ function dltTemplateId() {
   return process.env.MSG91_DLT_TEMPLATE_ID?.trim() || "";
 }
 
-/** MSG91 Flow API — uses MSG91 template id + ##otp## variable. */
 async function sendViaMsg91Template(
   authKey: string,
   phone: string,
@@ -50,7 +49,6 @@ async function sendViaMsg91Template(
   }
 }
 
-/** Legacy HTTP API with DLT portal template id (DLT_TE_ID). */
 async function sendViaMsg91Http(
   authKey: string,
   sender: string,
@@ -66,9 +64,7 @@ async function sendViaMsg91Http(
     country: "91",
   });
   const dltId = dltTemplateId();
-  if (dltId) {
-    params.set("DLT_TE_ID", dltId);
-  }
+  if (dltId) params.set("DLT_TE_ID", dltId);
   const response = await fetch(
     `https://control.msg91.com/api/sendhttp.php?${params.toString()}`,
     { method: "GET" },
@@ -79,8 +75,8 @@ async function sendViaMsg91Http(
   }
 }
 
-/** Sends a transactional OTP SMS. Dev: logs to console when SMS_DEV_CONSOLE_OTP is set. */
-export async function sendOtpSms(
+/** Password-reset mobile OTP only (website). App uses Firebase Phone Auth. */
+export async function sendPasswordResetSms(
   phoneInput: string,
   otp: string,
 ): Promise<void> {
@@ -92,13 +88,11 @@ export async function sendOtpSms(
   const devConsole =
     process.env.NODE_ENV === "development" &&
     (process.env.SMS_DEV_CONSOLE_OTP === "1" ||
-      process.env.SMS_DEV_CONSOLE_OTP === "true" ||
-      process.env.SMTP_DEV_CONSOLE_OTP === "1" ||
-      process.env.SMTP_DEV_CONSOLE_OTP === "true");
+      process.env.SMS_DEV_CONSOLE_OTP === "true");
 
   if (devConsole) {
     console.warn(
-      `[sarjan-dev] Mobile OTP for +91${phone} (not sent — SMS_DEV_CONSOLE_OTP): ${otp}`,
+      `[sarjan-dev] Password reset mobile OTP for +91${phone} (not sent): ${otp}`,
     );
     return;
   }
@@ -108,7 +102,7 @@ export async function sendOtpSms(
 
   if (!authKey) {
     throw new Error(
-      "SMS is not configured on the server. Set MSG91_AUTH_KEY or SMS_DEV_CONSOLE_OTP for development.",
+      "Mobile OTP is not configured. Use the Sarjan Textiles app to reset your password, or contact support.",
     );
   }
 

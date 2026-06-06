@@ -88,10 +88,13 @@ export function verifyMobileOtpToken(
       return { ok: false, error: "Invalid mobile OTP session" };
     }
     if (Date.now() > payload.exp) {
-      return { ok: false, error: "OTP expired. Send OTP again." };
+      return { ok: false, error: "Mobile OTP expired. Send OTP again." };
     }
     if (payload.phone !== phone) {
-      return { ok: false, error: "Mobile number changed after OTP was sent" };
+      return {
+        ok: false,
+        error: "Mobile number changed after OTP verification",
+      };
     }
     if (
       !constantTimeEqual(
@@ -99,7 +102,7 @@ export function verifyMobileOtpToken(
         payload.otpHash,
       )
     ) {
-      return { ok: false, error: "Invalid OTP" };
+      return { ok: false, error: "Invalid mobile OTP" };
     }
     return { ok: true, phone };
   } catch {

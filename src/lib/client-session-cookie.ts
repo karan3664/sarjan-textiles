@@ -3,7 +3,7 @@ import { productionSessionCookieDomain } from "@/lib/session-cookie-domain";
 
 export const CLIENT_SESSION_COOKIE_NAME = "sarjan-client-token";
 
-export const CLIENT_SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
+export const CLIENT_SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 30;
 
 export function clientSessionCookieBase() {
   const domain = productionSessionCookieDomain();

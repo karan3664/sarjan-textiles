@@ -24,6 +24,8 @@ import {
   clientAuthJsonHeaders,
   isClientApproved,
   loginClientSession,
+  readStoredClientProfile,
+  validateAndRefreshClientSession,
 } from "@/lib/client-auth-browser";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { guestCheckoutMarketingEnabled } from "@/lib/commerce-config";
@@ -84,30 +86,30 @@ export function CheckoutPageClient({
         .catch(() => applyCart(readCart()));
     };
     const syncClient = () => {
-      try {
-        const token = localStorage.getItem("sarjan-client-token")?.trim();
-        if (!token) {
-          setClient(null);
-          return;
-        }
-        setClient(readStoredClient());
-      } catch {
-        setClient(null);
-      }
+      const stored = readStoredClientProfile();
+      setClient(stored as CheckoutClient | null);
     };
     const onAuthUpdated = () => {
       syncClient();
       syncFromApi();
     };
-    syncClient();
-    syncFromApi();
+
+    void validateAndRefreshClientSession().finally(() => {
+      syncClient();
+      syncFromApi();
+      setLoading(false);
+    });
+
     const onCartUpdated = () => applyCart(readCart());
     window.addEventListener("sarjan-cart-updated", onCartUpdated);
     window.addEventListener("storage", syncFromApi);
     window.addEventListener("storage", syncClient);
     window.addEventListener("sarjan-auth-updated", onAuthUpdated);
     const onVisible = () => {
-      if (document.visibilityState === "visible") syncFromApi();
+      if (document.visibilityState === "visible") {
+        void validateAndRefreshClientSession().finally(syncClient);
+        syncFromApi();
+      }
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
@@ -323,6 +325,17 @@ export function CheckoutPageClient({
       }),
     });
     const data = await res.json();
+    if (res.status === 401) {
+      const { clearExpiredClientSession } =
+        await import("@/lib/client-auth-browser");
+      clearExpiredClientSession();
+      setClient(null);
+      setMessage(
+        labels.loginRequired ??
+          "Your session expired. Please sign in again to place your order.",
+      );
+      return;
+    }
     setMessage(
       res.ok
         ? `${labels.orderSaved ?? "Order request saved"}: ${data.order.id}`

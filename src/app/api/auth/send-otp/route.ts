@@ -26,11 +26,16 @@ export async function POST(request: Request) {
     );
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
-    const mode = body.mode === "login" ? "login" : "register";
+    const mode =
+      body.mode === "login"
+        ? "login"
+        : body.mode === "reset"
+          ? "reset"
+          : "register";
 
     const db = await readLocalDb();
-    if (mode === "login") {
-      // Login OTP: the email MUST belong to an existing account.
+    if (mode === "login" || mode === "reset") {
+      // Login / reset OTP: the email MUST belong to an existing account.
       const exists = db.clients.some(
         (client) =>
           normalizeClientEmail(client.email) === normalizeClientEmail(email),
@@ -63,9 +68,12 @@ export async function POST(request: Request) {
         process.env.SMTP_DEV_CONSOLE_OTP === "true");
 
     const isLogin = mode === "login";
+    const isReset = mode === "reset";
     const actionText = isLogin
       ? "Use the verification code below to sign in to your Sarjan Textiles account."
-      : "Use the verification code below to continue your Sarjan Textiles registration.";
+      : isReset
+        ? "Use the verification code below to reset your Sarjan Textiles account password."
+        : "Use the verification code below to continue your Sarjan Textiles registration.";
 
     if (devConsoleOtp) {
       console.warn(
@@ -94,7 +102,9 @@ export async function POST(request: Request) {
         to: email,
         subject: isLogin
           ? "Sarjan Textiles login verification code"
-          : "Sarjan Textiles email verification OTP",
+          : isReset
+            ? "Sarjan Textiles password reset code"
+            : "Sarjan Textiles email verification OTP",
         text: [
           `Your Sarjan Textiles verification OTP is ${otp}.`,
           "",
@@ -104,7 +114,11 @@ export async function POST(request: Request) {
         html: buildSarjanEmailHtml({
           preheader: `Your code: ${otp}`,
           eyebrow: isLogin ? "Login" : "Registration",
-          heading: isLogin ? "Your login code" : "Your verification code",
+          heading: isLogin
+            ? "Your login code"
+            : isReset
+              ? "Your password reset code"
+              : "Your verification code",
           innerHtml: otpInner,
         }),
       });
