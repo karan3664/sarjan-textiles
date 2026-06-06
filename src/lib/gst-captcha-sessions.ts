@@ -1,45 +1,77 @@
+import { createHmac, randomUUID } from "crypto";
+
 /**
- * In-memory binding between our captcha session id and the Set-Cookie line
- * returned when we fetch the GST portal captcha image.
- *
- * Note: On multi-instance hosts (e.g. Vercel), GET /api/gst/captcha and
- * POST /api/gst/verify must hit the same instance, or the session is lost.
- * For production scale, replace with Redis / Upstash.
+ * Signed captcha session tokens bind our session id to the GST portal Cookie
+ * header from the captcha image response. Stateless so Vercel / multi-instance
+ * hosts do not lose sessions between GET /api/gst/captcha and POST verify.
  */
 
 const TTL_MS = 10 * 60 * 1000;
-const MAX_ENTRIES = 600;
 
-type Entry = { cookieHeader: string; createdAt: number };
+type CaptchaSessionPayload = {
+  cookieHeader: string;
+  exp: number;
+  nonce: string;
+};
 
-const store = new Map<string, Entry>();
-
-function prune() {
-  const now = Date.now();
-  for (const [id, row] of store) {
-    if (now - row.createdAt > TTL_MS) store.delete(id);
-  }
-  if (store.size <= MAX_ENTRIES) return;
-  const sorted = [...store.entries()].sort(
-    (a, b) => a[1].createdAt - b[1].createdAt,
+function secret() {
+  return (
+    process.env.CLIENT_JWT_SECRET ||
+    process.env.ADMIN_SESSION_SECRET ||
+    "sarjan-demo-client-secret-change-before-production"
   );
-  while (store.size > MAX_ENTRIES / 2 && sorted.length) {
-    store.delete(sorted.shift()![0]);
+}
+
+function encode(value: CaptchaSessionPayload) {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+function sign(value: string) {
+  return createHmac("sha256", secret()).update(value).digest("base64url");
+}
+
+function constantTimeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let index = 0; index < a.length; index += 1) {
+    diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  }
+  return diff === 0;
+}
+
+function parseSessionToken(token: string): CaptchaSessionPayload | null {
+  const [payloadPart, signature] = token.split(".");
+  if (
+    !payloadPart ||
+    !signature ||
+    !constantTimeEqual(sign(payloadPart), signature)
+  ) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(
+      Buffer.from(payloadPart, "base64url").toString("utf8"),
+    ) as CaptchaSessionPayload;
+    if (!payload.cookieHeader || !payload.exp || !payload.nonce) return null;
+    if (Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
   }
 }
 
 export function putGstCaptchaSession(cookieHeader: string): string {
-  prune();
-  const id = crypto.randomUUID();
-  store.set(id, { cookieHeader, createdAt: Date.now() });
-  return id;
+  const payload: CaptchaSessionPayload = {
+    cookieHeader,
+    nonce: randomUUID(),
+    exp: Date.now() + TTL_MS,
+  };
+  const encoded = encode(payload);
+  return `${encoded}.${sign(encoded)}`;
 }
 
-/** Removes session (one-shot). Returns cookie header or null if missing/expired. */
+/** One-shot: returns cookie header or null if missing/expired/invalid. */
 export function takeGstCaptchaSession(id: string): string | null {
-  prune();
-  const row = store.get(id);
-  store.delete(id);
-  if (!row || Date.now() - row.createdAt > TTL_MS) return null;
-  return row.cookieHeader;
+  const payload = parseSessionToken(id);
+  return payload?.cookieHeader ?? null;
 }

@@ -1,4 +1,9 @@
-import { GST_REFERER, GST_UA } from "@/lib/gst-captcha-fetch";
+import {
+  GST_ORIGIN,
+  GST_REFERER,
+  GST_UA,
+  gstPortalRequest,
+} from "@/lib/gst-portal-http";
 
 export type GstVerificationResult = {
   gstin: string;
@@ -222,30 +227,31 @@ export async function verifyGstinWithPortalCaptcha(
     );
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
   try {
-    const res = await fetch(
-      "https://services.gst.gov.in/services/api/search/taxpayerDetails",
+    const res = await gstPortalRequest(
+      "POST",
+      "/services/api/search/taxpayerDetails",
       {
-        method: "POST",
         headers: {
           "Content-Type": "application/json;charset=UTF-8",
           Accept: "application/json, text/plain",
           "Accept-Language": "en-US,en;q=0.9",
-          Origin: "https://services.gst.gov.in",
+          Origin: GST_ORIGIN,
           Referer: GST_REFERER,
-          "User-Agent": GST_UA,
           Cookie: cookieHeader,
         },
         body: JSON.stringify({ gstin, captcha: digits }),
-        signal: controller.signal,
-        cache: "no-store",
+        timeoutMs: 15_000,
       },
     );
 
-    const payload = await res.json().catch(() => null);
-    if (!res.ok) throw new Error("GST portal verification failed");
+    let payload: unknown;
+    try {
+      payload = JSON.parse(res.body.toString("utf8")) as unknown;
+    } catch {
+      throw new Error("GST portal verification failed");
+    }
+    if (res.status !== 200) throw new Error("GST portal verification failed");
     assertNoPortalError(payload, { captchaAttempt: true });
     const parsed = parseGstResponse(gstin, payload);
     if (!parsed) throw new Error("GST portal did not return company name");
@@ -257,13 +263,14 @@ export async function verifyGstinWithPortalCaptcha(
     ) {
       throw error;
     }
-    if (error instanceof Error && error.name === "AbortError") {
+    if (
+      error instanceof Error &&
+      error.message === "GST portal request timed out"
+    ) {
       throw new Error("GST lookup timed out. Try again.");
     }
     if (error instanceof Error) throw error;
     throw new Error("GST portal verification failed");
-  } finally {
-    clearTimeout(timeout);
   }
 }
 

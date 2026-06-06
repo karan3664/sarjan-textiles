@@ -24,7 +24,7 @@ This project includes **hooks and UI scaffolding**, not a certified GST portal o
 The storefront **Verify GST** button calls `POST /api/gst/verify`. The official [GST taxpayer search](https://services.gst.gov.in/services/searchtp) uses a **6-digit numeric captcha** tied to a short-lived `CaptchaCookie`.
 
 - **Built-in flow**: `GET /api/gst/captcha` loads the portal image server-side and stores the cookie in memory; the client sends the digits plus `captchaSessionId` with `POST /api/gst/verify`. This mirrors the public portal behaviour without calling `gst.gov.in` from the browser (avoids CORS and keeps cookies on your server).
-- **Serverless caveat**: captcha sessions live in **process memory**. On platforms that fan out to many instances (e.g. Vercel), `GET` and `POST` must hit the **same** instance or the session is lost. For high traffic, replace `src/lib/gst-captcha-sessions.ts` with Redis / Upstash and pass the same store from both routes.
+- **Serverless**: captcha sessions are **signed tokens** (cookie header embedded in `sessionId`), so GET captcha and POST verify work across Vercel instances without Redis.
 - **Fallback**: users can still enter the **legal name manually** when the portal is down or sessions fail; admins reconcile during approval.
 - **Alternative**: set `SARJAN_GST_LOOKUP_URL` (and optionally `SARJAN_GST_LOOKUP_SECRET`) to your own HTTPS service or a **GSP / aggregator** that returns taxpayer JSON or `{ legalName, tradeName? }` for `POST { gstin }`. See `.env.example`.
 

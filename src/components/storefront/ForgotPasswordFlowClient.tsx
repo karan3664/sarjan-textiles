@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
+import { OtpCodeInput } from "@/components/storefront/OtpCodeInput";
 import type { AuthBanners } from "@/lib/auth-banner-types";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
@@ -33,6 +34,8 @@ export function ForgotPasswordFlowClient({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [mobileOtpSent, setMobileOtpSent] = useState(false);
+  const mobileAutoSendStarted = useRef(false);
 
   const startReset = async (event: FormEvent) => {
     event.preventDefault();
@@ -101,6 +104,10 @@ export function ForgotPasswordFlowClient({
     }
     setResetToken(String(data.resetToken ?? ""));
     setStep("mobile");
+    setMobileOtp("");
+    setMobileOtpToken("");
+    setMobileOtpSent(false);
+    mobileAutoSendStarted.current = false;
     setMessage("Email verified. Verify your mobile number next.");
   };
 
@@ -119,8 +126,16 @@ export function ForgotPasswordFlowClient({
       return;
     }
     setMobileOtpToken(String(data.otpToken ?? ""));
+    setMobileOtpSent(true);
     setMessage(data.message ?? "OTP sent to your mobile");
   };
+
+  useEffect(() => {
+    if (step !== "mobile" || mobileAutoSendStarted.current) return;
+    mobileAutoSendStarted.current = true;
+    void sendMobileOtp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-send once per mobile step
+  }, [step]);
 
   const verifyMobileOtp = async () => {
     setLoading(true);
@@ -262,43 +277,36 @@ export function ForgotPasswordFlowClient({
                   <p className="mb_16">
                     Email: <strong>{email}</strong>
                   </p>
-                  <div className="sarjan-otp-row mb_16">
-                    <input
-                      type="text"
-                      className="sarjan-otp-input"
-                      placeholder="Email OTP*"
-                      inputMode="numeric"
-                      value={emailOtp}
-                      onChange={(e) =>
-                        setEmailOtp(
-                          e.target.value.replace(/\D/g, "").slice(0, 6),
-                        )
+                  <OtpCodeInput
+                    label="Email verification code"
+                    value={emailOtp}
+                    onChange={setEmailOtp}
+                    focusTrigger={emailOtpToken || undefined}
+                    autoFocus={Boolean(emailOtpToken)}
+                  />
+                  <div className="sarjan-otp-actions sarjan-otp-actions--stack mt_12">
+                    <button
+                      type="button"
+                      className={withBtnIcon(
+                        sarjanButtonClass("sarjan-auth-btn"),
+                      )}
+                      onClick={sendEmailOtp}
+                      disabled={loading}
+                    >
+                      Send OTP
+                    </button>
+                    <button
+                      type="button"
+                      className={withBtnIcon(
+                        sarjanButtonClass("sarjan-auth-btn"),
+                      )}
+                      onClick={verifyEmailOtp}
+                      disabled={
+                        loading || emailOtp.length !== 6 || !emailOtpToken
                       }
-                    />
-                    <div className="sarjan-otp-actions">
-                      <button
-                        type="button"
-                        className={withBtnIcon(
-                          sarjanButtonClass("sarjan-auth-btn"),
-                        )}
-                        onClick={sendEmailOtp}
-                        disabled={loading}
-                      >
-                        Send OTP
-                      </button>
-                      <button
-                        type="button"
-                        className={withBtnIcon(
-                          sarjanButtonClass("sarjan-auth-btn"),
-                        )}
-                        onClick={verifyEmailOtp}
-                        disabled={
-                          loading || emailOtp.length !== 6 || !emailOtpToken
-                        }
-                      >
-                        Verify
-                      </button>
-                    </div>
+                    >
+                      Verify
+                    </button>
                   </div>
                 </div>
               ) : null}
@@ -308,43 +316,37 @@ export function ForgotPasswordFlowClient({
                   <p className="mb_16">
                     Mobile: <strong>+91 {mobile}</strong>
                   </p>
-                  <div className="sarjan-otp-row mb_16">
-                    <input
-                      type="text"
-                      className="sarjan-otp-input"
-                      placeholder="Mobile OTP*"
-                      inputMode="numeric"
-                      value={mobileOtp}
-                      onChange={(e) =>
-                        setMobileOtp(
-                          e.target.value.replace(/\D/g, "").slice(0, 6),
-                        )
+                  <OtpCodeInput
+                    label="Mobile verification code"
+                    value={mobileOtp}
+                    onChange={setMobileOtp}
+                    focusTrigger={mobileOtpSent ? mobileOtpToken : loading}
+                    autoFocus={mobileOtpSent}
+                    disabled={!mobileOtpSent && loading}
+                  />
+                  <div className="sarjan-otp-actions sarjan-otp-actions--stack mt_12">
+                    <button
+                      type="button"
+                      className={withBtnIcon(
+                        sarjanButtonClass("sarjan-auth-btn"),
+                      )}
+                      onClick={sendMobileOtp}
+                      disabled={loading}
+                    >
+                      {mobileOtpSent ? "Resend OTP" : "Send OTP"}
+                    </button>
+                    <button
+                      type="button"
+                      className={withBtnIcon(
+                        sarjanButtonClass("sarjan-auth-btn"),
+                      )}
+                      onClick={verifyMobileOtp}
+                      disabled={
+                        loading || mobileOtp.length !== 6 || !mobileOtpToken
                       }
-                    />
-                    <div className="sarjan-otp-actions">
-                      <button
-                        type="button"
-                        className={withBtnIcon(
-                          sarjanButtonClass("sarjan-auth-btn"),
-                        )}
-                        onClick={sendMobileOtp}
-                        disabled={loading}
-                      >
-                        Send OTP
-                      </button>
-                      <button
-                        type="button"
-                        className={withBtnIcon(
-                          sarjanButtonClass("sarjan-auth-btn"),
-                        )}
-                        onClick={verifyMobileOtp}
-                        disabled={
-                          loading || mobileOtp.length !== 6 || !mobileOtpToken
-                        }
-                      >
-                        Verify
-                      </button>
-                    </div>
+                    >
+                      Verify
+                    </button>
                   </div>
                 </div>
               ) : null}
