@@ -1,5 +1,5 @@
 import { verifyGstinFromPortal, verifyGstinWithPortalCaptcha } from "@/lib/gst";
-import { takeGstCaptchaSession } from "@/lib/gst-captcha-sessions";
+import { readGstCaptchaSession } from "@/lib/gst-captcha-sessions";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
-      const cookieHeader = takeGstCaptchaSession(captchaSessionId);
+      const cookieHeader = readGstCaptchaSession(captchaSessionId);
       if (!cookieHeader) {
         return Response.json(
           {

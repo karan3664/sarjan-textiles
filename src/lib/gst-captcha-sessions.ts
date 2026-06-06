@@ -70,8 +70,13 @@ export function putGstCaptchaSession(cookieHeader: string): string {
   return `${encoded}.${sign(encoded)}`;
 }
 
-/** One-shot: returns cookie header or null if missing/expired/invalid. */
-export function takeGstCaptchaSession(id: string): string | null {
+/** Read cookie header without consuming the session (retry wrong captcha / network blips). */
+export function readGstCaptchaSession(id: string): string | null {
   const payload = parseSessionToken(id);
   return payload?.cookieHeader ?? null;
+}
+
+/** One-shot: returns cookie header or null if missing/expired/invalid. */
+export function takeGstCaptchaSession(id: string): string | null {
+  return readGstCaptchaSession(id);
 }

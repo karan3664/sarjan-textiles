@@ -6,11 +6,52 @@ export const GST_UA =
 export const GST_REFERER = "https://services.gst.gov.in/services/searchtp";
 export const GST_ORIGIN = "https://services.gst.gov.in";
 
-type GstPortalResponse = {
+export type GstPortalResponse = {
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: Buffer;
 };
+
+/** Shared agent for captcha fetch (GET-only warm-up). */
+const gstPortalAgent = new https.Agent({
+  keepAlive: true,
+  keepAliveMsecs: 30_000,
+  maxSockets: 8,
+  timeout: 20_000,
+});
+
+function isRetryableGstNetworkError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const code = (error as NodeJS.ErrnoException).code;
+  return (
+    code === "ECONNRESET" ||
+    code === "ECONNREFUSED" ||
+    code === "ETIMEDOUT" ||
+    code === "EPIPE" ||
+    error.message === "GST portal request timed out"
+  );
+}
+
+function userFacingGstNetworkError(error: unknown): Error {
+  if (!(error instanceof Error)) {
+    return new Error(
+      "GST portal is temporarily unreachable. Refresh the captcha or enter company name manually.",
+    );
+  }
+  const code = (error as NodeJS.ErrnoException).code;
+  if (code === "ECONNRESET" || code === "EPIPE") {
+    return new Error(
+      "GST portal closed the connection. Refresh the captcha image and try again in a few seconds.",
+    );
+  }
+  if (
+    code === "ETIMEDOUT" ||
+    error.message === "GST portal request timed out"
+  ) {
+    return new Error("GST lookup timed out. Try again.");
+  }
+  return error;
+}
 
 function parseSetCookieHeaders(
   headers: Record<string, string | string[] | undefined>,
@@ -26,6 +67,13 @@ export function cookiePairsFromSetCookie(lines: string[]): string[] {
     .filter((line): line is string => Boolean(line?.includes("=")));
 }
 
+export function cookiePairsFromHeader(cookieHeader: string): string[] {
+  return cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => part.includes("="));
+}
+
 export function mergeCookiePairs(...groups: string[][]): string {
   const map = new Map<string, string>();
   for (const group of groups) {
@@ -38,20 +86,14 @@ export function mergeCookiePairs(...groups: string[][]): string {
   return [...map.values()].join("; ");
 }
 
-function cookiePairsFromHeader(cookieHeader: string): string[] {
-  return cookieHeader
-    .split(";")
-    .map((part) => part.trim())
-    .filter((part) => part.includes("="));
-}
-
-export function gstPortalRequest(
+function gstPortalRequestOnce(
   method: "GET" | "POST",
   path: string,
   options: {
     headers?: Record<string, string>;
     body?: string;
     timeoutMs?: number;
+    agent?: https.Agent;
   } = {},
 ): Promise<GstPortalResponse> {
   return new Promise((resolve, reject) => {
@@ -62,6 +104,7 @@ export function gstPortalRequest(
         hostname: "services.gst.gov.in",
         path,
         method,
+        agent: options.agent ?? gstPortalAgent,
         headers: {
           "User-Agent": GST_UA,
           ...options.headers,
@@ -92,9 +135,140 @@ export function gstPortalRequest(
   });
 }
 
+export function gstPortalRequest(
+  method: "GET" | "POST",
+  path: string,
+  options: {
+    headers?: Record<string, string>;
+    body?: string;
+    timeoutMs?: number;
+    agent?: https.Agent;
+  } = {},
+): Promise<GstPortalResponse> {
+  return gstPortalRequestOnce(method, path, options);
+}
+
+export async function gstPortalRequestWithRetry(
+  method: "GET" | "POST",
+  path: string,
+  options: {
+    headers?: Record<string, string>;
+    body?: string;
+    timeoutMs?: number;
+    agent?: https.Agent;
+  } = {},
+  attempts = 3,
+): Promise<GstPortalResponse> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await gstPortalRequestOnce(method, path, options);
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableGstNetworkError(error) || attempt === attempts - 1) {
+        throw userFacingGstNetworkError(error);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+  }
+  throw userFacingGstNetworkError(lastError);
+}
+
+/**
+ * GST WAF expects search page + POST on the same keep-alive socket.
+ * Use a dedicated agent per verify attempt (serverless-safe).
+ */
+export async function postGstTaxpayerDetailsWithSession(
+  captchaCookieHeader: string,
+  payload: { gstin: string; captcha: string },
+): Promise<GstPortalResponse> {
+  const captchaPairs = cookiePairsFromHeader(captchaCookieHeader).filter(
+    (pair) => pair.startsWith("CaptchaCookie="),
+  );
+  if (!captchaPairs.length) {
+    throw new Error(
+      "Captcha session expired. Refresh the image and try again.",
+    );
+  }
+
+  const verifyAgent = new https.Agent({
+    keepAlive: true,
+    keepAliveMsecs: 10_000,
+    maxSockets: 1,
+    timeout: 20_000,
+  });
+
+  try {
+    const warm = await gstPortalRequestWithRetry(
+      "GET",
+      "/services/searchtp",
+      {
+        agent: verifyAgent,
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+          Referer: `${GST_ORIGIN}/`,
+        },
+      },
+      2,
+    );
+    if (warm.status !== 200) {
+      throw new Error(`GST search page HTTP ${warm.status}`);
+    }
+
+    const cookieForPost = mergeCookiePairs(
+      cookiePairsFromSetCookie(parseSetCookieHeaders(warm.headers)),
+      captchaPairs,
+    );
+
+    return await gstPortalRequestWithRetry(
+      "POST",
+      "/services/api/search/taxpayerDetails",
+      {
+        agent: verifyAgent,
+        headers: {
+          "Content-Type": "application/json;charset=UTF-8",
+          Accept: "application/json, text/plain, */*",
+          "Accept-Language": "en-US,en;q=0.9",
+          Origin: GST_ORIGIN,
+          Referer: GST_REFERER,
+          Cookie: cookieForPost,
+        },
+        body: JSON.stringify(payload),
+        timeoutMs: 15_000,
+      },
+      3,
+    );
+  } catch (error) {
+    throw userFacingGstNetworkError(error);
+  } finally {
+    verifyAgent.destroy();
+  }
+}
+
+/** @deprecated Use postGstTaxpayerDetailsWithSession */
+export async function refreshGstPortalSessionForVerify(
+  captchaCookieHeader: string,
+): Promise<string> {
+  const captchaPairs = cookiePairsFromHeader(captchaCookieHeader).filter(
+    (pair) => pair.startsWith("CaptchaCookie="),
+  );
+  const warm = await gstPortalRequestWithRetry("GET", "/services/searchtp", {
+    headers: {
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+  });
+  return mergeCookiePairs(
+    cookiePairsFromSetCookie(parseSetCookieHeaders(warm.headers)),
+    captchaPairs,
+  );
+}
+
 /** Load the public search page so F5 / session cookies exist before captcha. */
 export async function warmGstPortalSession(): Promise<string> {
-  const res = await gstPortalRequest("GET", "/services/searchtp", {
+  const res = await gstPortalRequestWithRetry("GET", "/services/searchtp", {
     headers: {
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Accept-Language": "en-US,en;q=0.9",
@@ -126,7 +300,7 @@ export async function fetchGstPortalCaptchaPng(): Promise<{
 }> {
   const sessionCookies = await warmGstPortalSession();
   const rnd = Math.random().toString();
-  const capRes = await gstPortalRequest(
+  const capRes = await gstPortalRequestWithRetry(
     "GET",
     `/services/captcha?rnd=${encodeURIComponent(rnd)}`,
     {

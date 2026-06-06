@@ -173,7 +173,14 @@ export function GstVerificationFields({
       const message =
         error instanceof Error ? error.message : "GST verification failed";
       if (
-        /no taxpayer|unavailable|blocked|try again|captcha|automated lookup|timed out|lookup failed|configure SARJAN_GST_LOOKUP|6-digit code|Captcha session expired|digits as shown|GST portal is busy|GST portal requires captcha|GST lookup timed out|did not match the captcha|could not return taxpayer details|did not return company name/i.test(
+        /closed the connection|temporarily unreachable|refresh the captcha|timed out/i.test(
+          message,
+        )
+      ) {
+        void loadGstCaptcha();
+      }
+      if (
+        /no taxpayer|unavailable|blocked|try again|captcha|automated lookup|timed out|lookup failed|configure SARJAN_GST_LOOKUP|6-digit code|Captcha session expired|digits as shown|GST portal is busy|GST portal requires captcha|GST lookup timed out|did not match the captcha|could not return taxpayer details|did not return company name|closed the connection|refresh the captcha/i.test(
           message,
         )
       ) {

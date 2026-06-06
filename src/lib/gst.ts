@@ -1,9 +1,4 @@
-import {
-  GST_ORIGIN,
-  GST_REFERER,
-  GST_UA,
-  gstPortalRequest,
-} from "@/lib/gst-portal-http";
+import { postGstTaxpayerDetailsWithSession } from "@/lib/gst-portal-http";
 
 export type GstVerificationResult = {
   gstin: string;
@@ -228,22 +223,10 @@ export async function verifyGstinWithPortalCaptcha(
   }
 
   try {
-    const res = await gstPortalRequest(
-      "POST",
-      "/services/api/search/taxpayerDetails",
-      {
-        headers: {
-          "Content-Type": "application/json;charset=UTF-8",
-          Accept: "application/json, text/plain",
-          "Accept-Language": "en-US,en;q=0.9",
-          Origin: GST_ORIGIN,
-          Referer: GST_REFERER,
-          Cookie: cookieHeader,
-        },
-        body: JSON.stringify({ gstin, captcha: digits }),
-        timeoutMs: 15_000,
-      },
-    );
+    const res = await postGstTaxpayerDetailsWithSession(cookieHeader, {
+      gstin,
+      captcha: digits,
+    });
 
     let payload: unknown;
     try {
