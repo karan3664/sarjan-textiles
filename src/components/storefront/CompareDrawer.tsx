@@ -90,6 +90,7 @@ export function CompareDrawer() {
   useEffect(() => {
     if (!slugs.length) {
       setProducts([]);
+      closeOffcanvas();
       return;
     }
     fetch(
@@ -123,6 +124,10 @@ export function CompareDrawer() {
     instance?.hide();
   };
 
+  const visibleProducts = slugs.length
+    ? products.filter((product) => slugs.includes(product.slug))
+    : [];
+
   return (
     <div
       className="offcanvas offcanvas-bottom offcanvas-compare"
@@ -147,8 +152,8 @@ export function CompareDrawer() {
                     <h5 className="title">Compare Products</h5>
                   </div>
                   <div className="tf-compare-wrap">
-                    {products.length ? (
-                      products.map((product) => (
+                    {visibleProducts.length ? (
+                      visibleProducts.map((product) => (
                         <div
                           className="tf-compare-item file-delete"
                           key={product.slug}

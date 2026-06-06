@@ -38,18 +38,17 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.24";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "25");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.25";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "26");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Wishlist and compare sync across app, web, and devices when signed in.",
-      "Cart sync fixes — mobile removals no longer overwritten by stale web cache.",
-      "GST verify runs from Mumbai region; clearer errors when portal blocks POST.",
-      "Profile app-update banner persists after Maybe later (Zomato-style).",
+      "Compare tray stays stable — add/clear no longer flickers from repeated server pulls.",
+      "Wishlist and compare sync only POST after login; no tab-focus overwrites on web.",
+      "Compare dock X button layout fix; drawer auto-closes when list is empty.",
     ].join(" ");
 
   return {

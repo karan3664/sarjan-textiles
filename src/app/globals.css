@@ -8992,6 +8992,12 @@ button.accordion-button:not(.collapsed),
   display: none;
 }
 
+.offcanvas-compare .tf-compare-list .tf-compare-wrap {
+  overflow: visible;
+  padding-top: 8px;
+  padding-right: 8px;
+}
+
 .offcanvas-compare .tf-compare-wrap .tf-compare-item {
   overflow: visible;
   padding-top: 12px;
@@ -9001,13 +9007,13 @@ button.accordion-button:not(.collapsed),
 .offcanvas-compare .tf-compare-item .sarjan-compare-remove,
 .offcanvas-compare .tf-compare-wrap .tf-compare-item > .icon-close {
   position: absolute !important;
-  top: 4px !important;
-  right: 4px !important;
+  top: 0 !important;
+  right: 0 !important;
   transform: none !important;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
   padding: 0;
   margin: 0;
   display: inline-flex;

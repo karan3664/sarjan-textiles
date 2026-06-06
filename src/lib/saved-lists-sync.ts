@@ -26,16 +26,13 @@ function writeLocalSavedListsUpdatedAt(iso: string) {
   window.localStorage.setItem(SAVED_LISTS_UPDATED_AT_KEY, iso);
 }
 
-function touchLocalSavedListsUpdatedAt() {
-  writeLocalSavedListsUpdatedAt(new Date().toISOString());
-}
-
 function isEmptySavedLists(value: SavedListsPayload) {
   return value.wishlist.length === 0 && value.compare.length === 0;
 }
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let pullInFlight: Promise<void> | null = null;
+let sessionPullDone = false;
 
 async function fetchServerSavedLists(): Promise<{
   wishlist: string[];
@@ -95,7 +92,6 @@ async function persistSavedListsToServer(
 export function scheduleSavedListsSync() {
   if (typeof window === "undefined") return;
   if (!readStoredClientId() || !isClientApproved()) return;
-  touchLocalSavedListsUpdatedAt();
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     syncTimer = null;
@@ -103,10 +99,16 @@ export function scheduleSavedListsSync() {
   }, 600);
 }
 
-export async function pullSavedListsFromServer() {
+export function resetSavedListsSession() {
+  sessionPullDone = false;
+}
+
+export async function pullSavedListsFromServer(options?: { force?: boolean }) {
+  if (sessionPullDone && !options?.force) return;
   if (pullInFlight) return pullInFlight;
 
   pullInFlight = (async () => {
+    sessionPullDone = true;
     const clientId = readStoredClientId();
     if (!clientId || !isClientApproved()) return;
 
