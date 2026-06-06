@@ -203,8 +203,8 @@ export function AdminCmsClient() {
         <div className="cols gap22">
           <fieldset>
             <div className="body-title mb-10">Banner title</div>
-            <input
-              type="text"
+            <textarea
+              rows={4}
               value={cms.home.hero.title}
               onChange={(event) => setHome("title", event.target.value)}
             />

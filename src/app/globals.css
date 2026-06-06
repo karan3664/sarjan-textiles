@@ -1018,11 +1018,13 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   .sarjan-hero-rotator .sarjan-hero-heading,
   .sarjan-hero-rotator .sarjan-hero-copy-layer .heading {
     font-size: clamp(32px, 4.2vw, 56px) !important;
-    line-height: 1.18 !important;
+    line-height: 1.28 !important;
     font-weight: 500;
-    max-width: 22ch;
+    max-width: min(100%, 52ch);
     margin-inline: auto;
     overflow: visible;
+    white-space: pre-line;
+    text-wrap: pretty;
   }
 
   .sarjan-hero-rotator .sarjan-hero-subheading,
@@ -1206,10 +1208,12 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
     .sarjan-hero-copy-layer
     .sarjan-hero-heading.title-display {
     font-size: clamp(24px, 6.8vw, 32px) !important;
-    line-height: 1.15 !important;
-    max-width: 18ch;
+    line-height: 1.32 !important;
+    max-width: min(100%, 46ch);
     margin-inline: auto;
     overflow: visible;
+    white-space: pre-line;
+    text-wrap: pretty;
   }
 
   .sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {

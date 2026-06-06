@@ -181,7 +181,7 @@ export function HomeHeroRotator({
           <div className="box-content sarjan-hero-copy">
             <div className="content-slider sarjan-hero-copy-stack">
               <div className="box-title-slider sarjan-hero-copy-titles">
-                <h2 className="heading text-white sarjan-hero-heading">
+                <h2 className="heading text-white sarjan-hero-heading sarjan-hero-heading-multiline">
                   {title}
                 </h2>
                 <p className="body-text-1 subheading text-white sarjan-hero-subheading">

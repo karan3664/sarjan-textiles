@@ -1221,9 +1221,10 @@ export function AdminHomePageClient({
                 />
               </Field>
               <Field label="Banner title">
-                <TextInput
+                <textarea
+                  rows={4}
                   value={home.hero.title}
-                  onChange={(value) => updateHero("title", value)}
+                  onChange={(event) => updateHero("title", event.target.value)}
                 />
               </Field>
               <Field label="Button label">
