@@ -1,5 +1,5 @@
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
-import { getCart, saveCart } from "@/lib/local-db";
+import { readCartRecord, saveCart } from "@/lib/local-db";
 
 export async function GET(request: Request) {
   const auth = await requireApprovedClientRequest(request);
@@ -9,7 +9,8 @@ export async function GET(request: Request) {
   if (!clientId || clientId !== auth.session.clientId) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
-  return Response.json({ items: await getCart(clientId) });
+  const record = await readCartRecord(clientId);
+  return Response.json({ items: record.items, updatedAt: record.updatedAt });
 }
 
 export async function POST(request: Request) {
@@ -27,7 +28,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
     const items = await saveCart(body.clientId, body.items);
-    return Response.json({ items });
+    const record = await readCartRecord(body.clientId);
+    return Response.json({ items, updatedAt: record.updatedAt });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Cart save failed" },

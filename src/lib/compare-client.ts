@@ -17,14 +17,19 @@ export function readCompare(): string[] {
   }
 }
 
-export function writeCompare(slugs: string[]) {
+export function writeCompare(
+  slugs: string[],
+  options: { syncApi?: boolean } = {},
+) {
   const unique = Array.from(new Set(slugs.filter(Boolean))).slice(
     0,
     MAX_COMPARE_ITEMS,
   );
   window.localStorage.setItem(COMPARE_KEY, JSON.stringify(unique));
   window.dispatchEvent(new CustomEvent("sarjan-compare-updated"));
-  scheduleSavedListsSync();
+  if (options.syncApi !== false) {
+    scheduleSavedListsSync();
+  }
   return unique;
 }
 

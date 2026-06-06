@@ -1,34 +1,101 @@
 "use client";
 
+import {
+  clientAuthJsonHeaders,
+  isClientApproved,
+  readStoredClientId,
+} from "@/lib/client-auth-browser";
+import { resolveSyncedSnapshot } from "@/lib/client-sync-timestamp";
 import { readCompare, writeCompare } from "@/lib/compare-client";
-import { readStoredClient } from "@/lib/client-session";
 import { readWishlist, writeWishlist } from "@/lib/wishlist-client";
 
-function clientAuthHeaders(): HeadersInit {
-  const token =
-    typeof document !== "undefined"
-      ? document.cookie
-          .split(";")
-          .map((part) => part.trim())
-          .find((part) => part.startsWith("sarjan-client-token="))
-          ?.split("=")[1]
-      : undefined;
-  if (!token) return {};
-  try {
-    return { Authorization: `Bearer ${decodeURIComponent(token)}` };
-  } catch {
-    return { Authorization: `Bearer ${token}` };
-  }
+export const SAVED_LISTS_UPDATED_AT_KEY = "sarjan-saved-lists-updated-at";
+
+type SavedListsPayload = {
+  wishlist: string[];
+  compare: string[];
+};
+
+function readLocalSavedListsUpdatedAt(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(SAVED_LISTS_UPDATED_AT_KEY);
 }
 
-function mergeUnique(...lists: string[][]) {
-  return Array.from(new Set(lists.flat().filter(Boolean)));
+function writeLocalSavedListsUpdatedAt(iso: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SAVED_LISTS_UPDATED_AT_KEY, iso);
+}
+
+function touchLocalSavedListsUpdatedAt() {
+  writeLocalSavedListsUpdatedAt(new Date().toISOString());
+}
+
+function isEmptySavedLists(value: SavedListsPayload) {
+  return value.wishlist.length === 0 && value.compare.length === 0;
 }
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let pullInFlight: Promise<void> | null = null;
+
+async function fetchServerSavedLists(): Promise<{
+  wishlist: string[];
+  compare: string[];
+  updatedAt: string | null;
+}> {
+  try {
+    const res = await fetch("/api/client/saved-lists", {
+      headers: clientAuthJsonHeaders(),
+      credentials: "include",
+    });
+    if (!res.ok) {
+      return { wishlist: [], compare: [], updatedAt: null };
+    }
+    const data = (await res.json()) as {
+      wishlist?: string[];
+      compare?: string[];
+      updatedAt?: string;
+    };
+    return {
+      wishlist: Array.isArray(data.wishlist) ? data.wishlist : [],
+      compare: Array.isArray(data.compare) ? data.compare.slice(0, 3) : [],
+      updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null,
+    };
+  } catch {
+    return { wishlist: [], compare: [], updatedAt: null };
+  }
+}
+
+async function persistSavedListsToServer(
+  payload: SavedListsPayload,
+): Promise<{ ok: boolean; updatedAt: string | null }> {
+  const clientId = readStoredClientId();
+  if (!clientId) return { ok: false, updatedAt: null };
+
+  try {
+    const res = await fetch("/api/client/saved-lists", {
+      method: "POST",
+      headers: clientAuthJsonHeaders(),
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return { ok: false, updatedAt: null };
+    const data = (await res.json()) as { updatedAt?: string };
+    return {
+      ok: true,
+      updatedAt:
+        typeof data.updatedAt === "string"
+          ? data.updatedAt
+          : new Date().toISOString(),
+    };
+  } catch {
+    return { ok: false, updatedAt: null };
+  }
+}
 
 export function scheduleSavedListsSync() {
   if (typeof window === "undefined") return;
+  if (!readStoredClientId() || !isClientApproved()) return;
+  touchLocalSavedListsUpdatedAt();
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     syncTimer = null;
@@ -37,50 +104,55 @@ export function scheduleSavedListsSync() {
 }
 
 export async function pullSavedListsFromServer() {
-  const client = readStoredClient();
-  if (!client?.id || client.status !== "approved") return;
+  if (pullInFlight) return pullInFlight;
 
-  try {
-    const res = await fetch("/api/client/saved-lists", {
-      headers: clientAuthHeaders(),
-      credentials: "include",
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as {
-      wishlist?: string[];
-      compare?: string[];
+  pullInFlight = (async () => {
+    const clientId = readStoredClientId();
+    if (!clientId || !isClientApproved()) return;
+
+    const local: SavedListsPayload = {
+      wishlist: readWishlist(),
+      compare: readCompare(),
     };
-    const mergedWishlist = mergeUnique(readWishlist(), data.wishlist ?? []);
-    const mergedCompare = mergeUnique(readCompare(), data.compare ?? []).slice(
-      0,
-      3,
+    const server = await fetchServerSavedLists();
+    const resolved = resolveSyncedSnapshot(
+      local,
+      { wishlist: server.wishlist, compare: server.compare },
+      readLocalSavedListsUpdatedAt(),
+      server.updatedAt,
+      isEmptySavedLists,
     );
-    writeWishlist(mergedWishlist);
-    writeCompare(mergedCompare);
-    await pushSavedListsToServer();
-  } catch {
-    /* offline — keep local lists */
-  }
+
+    let adoptedAt = resolved.adoptUpdatedAt;
+    if (resolved.pushLocal) {
+      const saved = await persistSavedListsToServer(resolved.items);
+      if (saved.ok && saved.updatedAt) {
+        adoptedAt = saved.updatedAt;
+      }
+    }
+
+    writeWishlist(resolved.items.wishlist, { syncApi: false });
+    writeCompare(resolved.items.compare, { syncApi: false });
+    if (adoptedAt) {
+      writeLocalSavedListsUpdatedAt(adoptedAt);
+    }
+  })().finally(() => {
+    pullInFlight = null;
+  });
+
+  return pullInFlight;
 }
 
 export async function pushSavedListsToServer() {
-  const client = readStoredClient();
-  if (!client?.id || client.status !== "approved") return;
+  const clientId = readStoredClientId();
+  if (!clientId || !isClientApproved()) return;
 
-  try {
-    await fetch("/api/client/saved-lists", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...clientAuthHeaders(),
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        wishlist: readWishlist(),
-        compare: readCompare(),
-      }),
-    });
-  } catch {
-    /* ignore */
+  const payload: SavedListsPayload = {
+    wishlist: readWishlist(),
+    compare: readCompare(),
+  };
+  const saved = await persistSavedListsToServer(payload);
+  if (saved.ok && saved.updatedAt) {
+    writeLocalSavedListsUpdatedAt(saved.updatedAt);
   }
 }

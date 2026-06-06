@@ -1,11 +1,18 @@
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
-import { getClientSavedLists, saveClientSavedLists } from "@/lib/local-db";
+import {
+  readClientSavedListsRecord,
+  saveClientSavedLists,
+} from "@/lib/local-db";
 
 export async function GET(request: Request) {
   const auth = await requireApprovedClientRequest(request);
   if (auth instanceof Response) return auth;
-  const lists = await getClientSavedLists(auth.session.clientId);
-  return Response.json(lists);
+  const record = await readClientSavedListsRecord(auth.session.clientId);
+  return Response.json({
+    wishlist: record.wishlist,
+    compare: record.compare,
+    updatedAt: record.updatedAt,
+  });
 }
 
 export async function POST(request: Request) {
@@ -17,7 +24,8 @@ export async function POST(request: Request) {
       wishlist: Array.isArray(body.wishlist) ? body.wishlist : [],
       compare: Array.isArray(body.compare) ? body.compare : [],
     });
-    return Response.json(lists);
+    const record = await readClientSavedListsRecord(auth.session.clientId);
+    return Response.json({ ...lists, updatedAt: record.updatedAt });
   } catch (error) {
     return Response.json(
       {

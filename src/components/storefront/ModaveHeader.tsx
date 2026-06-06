@@ -14,6 +14,7 @@ import {
 } from "@/lib/client-auth-browser";
 import { isClientPublicAuthPage } from "@/lib/auth-route-guards";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
+import { pullSavedListsFromServer } from "@/lib/saved-lists-sync";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
@@ -176,6 +177,7 @@ export function ModaveHeader({
     let cancelled = false;
 
     const syncCounts = async () => {
+      await pullSavedListsFromServer();
       const validWishlist = await refreshWishlistFromCatalog();
       const cart = await syncCartWithApi();
       if (cancelled) return;

@@ -41,7 +41,7 @@ function userFacingGstNetworkError(error: unknown): Error {
   const code = (error as NodeJS.ErrnoException).code;
   if (code === "ECONNRESET" || code === "EPIPE") {
     return new Error(
-      "GST portal closed the connection. Refresh the captcha image and try again in a few seconds.",
+      "GST portal closed the server connection. This can repeat even with the correct captcha — enter trade and legal name manually below, or try again in a few minutes.",
     );
   }
   if (
@@ -175,76 +175,87 @@ export async function gstPortalRequestWithRetry(
 }
 
 /**
- * GST WAF expects search page + POST on the same keep-alive socket.
- * Use a dedicated agent per verify attempt (serverless-safe).
+ * GST WAF expects search page + POST on the same session cookies from captcha.
+ * Use a fresh non-pooled agent per attempt (serverless-safe).
  */
 export async function postGstTaxpayerDetailsWithSession(
   captchaCookieHeader: string,
   payload: { gstin: string; captcha: string },
 ): Promise<GstPortalResponse> {
-  const captchaPairs = cookiePairsFromHeader(captchaCookieHeader).filter(
-    (pair) => pair.startsWith("CaptchaCookie="),
-  );
-  if (!captchaPairs.length) {
+  if (!captchaCookieHeader.includes("CaptchaCookie=")) {
     throw new Error(
       "Captcha session expired. Refresh the image and try again.",
     );
   }
 
-  const verifyAgent = new https.Agent({
-    keepAlive: true,
-    keepAliveMsecs: 10_000,
-    maxSockets: 1,
-    timeout: 20_000,
-  });
+  const postHeaders: Record<string, string> = {
+    "Content-Type": "application/json;charset=UTF-8",
+    Accept: "application/json, text/plain, */*",
+    "Accept-Language": "en-IN,en;q=0.9",
+    Origin: GST_ORIGIN,
+    Referer: GST_REFERER,
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+    Connection: "close",
+  };
 
-  try {
-    const warm = await gstPortalRequestWithRetry(
-      "GET",
-      "/services/searchtp",
-      {
-        agent: verifyAgent,
-        headers: {
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
-          Referer: `${GST_ORIGIN}/`,
+  const body = JSON.stringify(payload);
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const verifyAgent = new https.Agent({
+      keepAlive: false,
+      maxSockets: 1,
+      timeout: 25_000,
+    });
+
+    try {
+      let cookieForPost = captchaCookieHeader;
+
+      if (attempt > 0) {
+        const warm = await gstPortalRequestOnce("GET", "/services/searchtp", {
+          agent: verifyAgent,
+          headers: {
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-IN,en;q=0.9",
+            Referer: `${GST_ORIGIN}/`,
+            Cookie: captchaCookieHeader,
+          },
+        });
+        if (warm.status !== 200) {
+          throw new Error(`GST search page HTTP ${warm.status}`);
+        }
+        cookieForPost = mergeCookiePairs(
+          cookiePairsFromHeader(captchaCookieHeader),
+          cookiePairsFromSetCookie(parseSetCookieHeaders(warm.headers)),
+        );
+      }
+
+      const post = await gstPortalRequestOnce(
+        "POST",
+        "/services/api/search/taxpayerDetails",
+        {
+          agent: verifyAgent,
+          headers: { ...postHeaders, Cookie: cookieForPost },
+          body,
+          timeoutMs: 20_000,
         },
-      },
-      2,
-    );
-    if (warm.status !== 200) {
-      throw new Error(`GST search page HTTP ${warm.status}`);
+      );
+      return post;
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableGstNetworkError(error) || attempt === 3) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 700 * (attempt + 1)));
+    } finally {
+      verifyAgent.destroy();
     }
-
-    const cookieForPost = mergeCookiePairs(
-      cookiePairsFromSetCookie(parseSetCookieHeaders(warm.headers)),
-      captchaPairs,
-    );
-
-    return await gstPortalRequestWithRetry(
-      "POST",
-      "/services/api/search/taxpayerDetails",
-      {
-        agent: verifyAgent,
-        headers: {
-          "Content-Type": "application/json;charset=UTF-8",
-          Accept: "application/json, text/plain, */*",
-          "Accept-Language": "en-US,en;q=0.9",
-          Origin: GST_ORIGIN,
-          Referer: GST_REFERER,
-          Cookie: cookieForPost,
-        },
-        body: JSON.stringify(payload),
-        timeoutMs: 15_000,
-      },
-      3,
-    );
-  } catch (error) {
-    throw userFacingGstNetworkError(error);
-  } finally {
-    verifyAgent.destroy();
   }
+
+  throw userFacingGstNetworkError(lastError);
 }
 
 /** @deprecated Use postGstTaxpayerDetailsWithSession */

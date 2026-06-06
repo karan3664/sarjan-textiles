@@ -27,14 +27,19 @@ export function readWishlist(): string[] {
   }
 }
 
-export function writeWishlist(slugs: string[]) {
+export function writeWishlist(
+  slugs: string[],
+  options: { syncApi?: boolean } = {},
+) {
   if (typeof window === "undefined") return;
   const next = Array.from(new Set(slugs.filter(Boolean)));
   const current = readWishlist();
   if (slugSetsEqual(current, next)) return;
   window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("sarjan-wishlist-updated"));
-  scheduleSavedListsSync();
+  if (options.syncApi !== false) {
+    scheduleSavedListsSync();
+  }
 }
 
 export function isWishlisted(slug: string) {

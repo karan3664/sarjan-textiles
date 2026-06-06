@@ -2,6 +2,11 @@ import { verifyGstinFromPortal, verifyGstinWithPortalCaptcha } from "@/lib/gst";
 import { readGstCaptchaSession } from "@/lib/gst-captcha-sessions";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+/** GST portal POST is often blocked from US/EU datacenters; verify from Mumbai. */
+export const preferredRegion = ["bom1"];
+
 export async function POST(request: Request) {
   const limit = rateLimit(rateLimitKey(request, "gst-verify"), 20, 60_000);
   if (!limit.allowed) return rateLimitResponse(limit.resetAt);

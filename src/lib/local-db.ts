@@ -126,6 +126,7 @@ export type AbandonedCartCandidate = {
 type ClientSavedListsState = {
   wishlist: string[];
   compare: string[];
+  updatedAt?: string;
 };
 
 type LocalDb = {
@@ -1483,7 +1484,7 @@ export async function getCart(clientId: string) {
   return db.carts?.[clientId] ?? [];
 }
 
-async function readCartRecord(clientId: string): Promise<{
+export async function readCartRecord(clientId: string): Promise<{
   items: CartLine[];
   updatedAt: string;
   reminder1SentAt?: string;
@@ -1677,14 +1678,16 @@ function normalizeSlugList(raw: unknown): string[] {
 
 export type ClientSavedLists = ClientSavedListsState;
 
-export async function getClientSavedLists(
-  clientId: string,
-): Promise<ClientSavedLists> {
+export async function readClientSavedListsRecord(clientId: string): Promise<{
+  wishlist: string[];
+  compare: string[];
+  updatedAt: string;
+}> {
   const supabase = supabaseAdmin();
   if (supabase) {
     const { data, error } = await supabase
       .from("client_saved_lists")
-      .select("wishlist_slugs, compare_slugs")
+      .select("wishlist_slugs, compare_slugs, updated_at")
       .eq("client_id", clientId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -1694,11 +1697,24 @@ export async function getClientSavedLists(
         0,
         MAX_COMPARE_SLUGS,
       ),
+      updatedAt: String(data?.updated_at ?? new Date(0).toISOString()),
     };
   }
 
   const db = await readLocalDb();
-  return db.savedLists?.[clientId] ?? { wishlist: [], compare: [] };
+  const state = db.savedLists?.[clientId];
+  return {
+    wishlist: state?.wishlist ?? [],
+    compare: (state?.compare ?? []).slice(0, MAX_COMPARE_SLUGS),
+    updatedAt: state?.updatedAt ?? new Date(0).toISOString(),
+  };
+}
+
+export async function getClientSavedLists(
+  clientId: string,
+): Promise<ClientSavedLists> {
+  const record = await readClientSavedListsRecord(clientId);
+  return { wishlist: record.wishlist, compare: record.compare };
 }
 
 export async function saveClientSavedLists(
@@ -1724,7 +1740,8 @@ export async function saveClientSavedLists(
 
   const db = await readLocalDb();
   db.savedLists = db.savedLists ?? {};
-  db.savedLists[clientId] = { wishlist, compare };
+  const now = new Date().toISOString();
+  db.savedLists[clientId] = { wishlist, compare, updatedAt: now };
   await writeLocalDb(db);
   return { wishlist, compare };
 }

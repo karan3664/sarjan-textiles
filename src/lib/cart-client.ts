@@ -4,8 +4,10 @@ import {
   clientAuthJsonHeaders,
   readStoredClientId,
 } from "@/lib/client-auth-browser";
+import { resolveSyncedSnapshot } from "@/lib/client-sync-timestamp";
 
 export const CART_KEY = "sarjan-cart";
+export const CART_UPDATED_AT_KEY = "sarjan-cart-updated-at";
 export const FULL_SIZE_RUN = ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 export const SIZE_GROUPS = {
   regular: ["XS", "S", "M", "L", "XL", "XXL"],
@@ -47,11 +49,37 @@ export function readCart(): StoredCartItem[] {
   }
 }
 
+function readLocalCartUpdatedAt(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(CART_UPDATED_AT_KEY);
+}
+
+function writeLocalCartUpdatedAt(iso: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(CART_UPDATED_AT_KEY, iso);
+}
+
+/** Pick cart when web localStorage and server (mobile/web API) disagree. */
+export function resolveSyncedCart(
+  local: StoredCartItem[],
+  server: StoredCartItem[],
+  localUpdatedAt: string | null,
+  serverUpdatedAt: string | null,
+) {
+  return resolveSyncedSnapshot(
+    local,
+    server,
+    localUpdatedAt,
+    serverUpdatedAt,
+    (items) => items.length === 0,
+  );
+}
+
 async function persistCartToApiAwait(
   items: StoredCartItem[],
-): Promise<boolean> {
+): Promise<{ ok: boolean; updatedAt: string | null }> {
   const clientId = readStoredClientId();
-  if (!clientId) return false;
+  if (!clientId) return { ok: false, updatedAt: null };
 
   try {
     const response = await fetch("/api/cart", {
@@ -60,9 +88,17 @@ async function persistCartToApiAwait(
       credentials: "include",
       body: JSON.stringify({ clientId, items }),
     });
-    return response.ok;
+    if (!response.ok) return { ok: false, updatedAt: null };
+    const data = (await response.json()) as { updatedAt?: string };
+    return {
+      ok: true,
+      updatedAt:
+        typeof data.updatedAt === "string"
+          ? data.updatedAt
+          : new Date().toISOString(),
+    };
   } catch {
-    return false;
+    return { ok: false, updatedAt: null };
   }
 }
 
@@ -79,6 +115,7 @@ export function writeCart(
   const unchanged = JSON.stringify(current) === JSON.stringify(next);
   if (!unchanged) {
     window.localStorage.setItem(CART_KEY, JSON.stringify(next));
+    writeLocalCartUpdatedAt(new Date().toISOString());
     window.dispatchEvent(new CustomEvent("sarjan-cart-updated"));
   }
   if (options.syncApi !== false) {
@@ -191,19 +228,27 @@ export async function reconcileCartWithCatalog(
 
 let cartSyncInFlight: Promise<StoredCartItem[]> | null = null;
 
-async function fetchServerCart(clientId: string): Promise<StoredCartItem[]> {
+async function fetchServerCart(clientId: string): Promise<{
+  items: StoredCartItem[];
+  updatedAt: string | null;
+}> {
   try {
     const response = await fetch(
       `/api/cart?clientId=${encodeURIComponent(clientId)}`,
       catalogFetchInit(),
     );
-    if (!response.ok) return [];
+    if (!response.ok) return { items: [], updatedAt: null };
     const data = await response.json();
-    return Array.isArray(data.items)
-      ? (data.items.map(normalizeCartItem).filter(Boolean) as StoredCartItem[])
-      : [];
+    return {
+      items: Array.isArray(data.items)
+        ? (data.items
+            .map(normalizeCartItem)
+            .filter(Boolean) as StoredCartItem[])
+        : [],
+      updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : null,
+    };
   } catch {
-    return [];
+    return { items: [], updatedAt: null };
   }
 }
 
@@ -212,35 +257,39 @@ export async function syncCartWithApi(): Promise<StoredCartItem[]> {
 
   cartSyncInFlight = (async () => {
     const clientId = readStoredClientId();
-    let local = readCart();
+    const local = readCart();
 
     if (!clientId) {
       return reconcileCartWithCatalog(local);
     }
 
-    // Push local cart first so removals are saved before we read the server.
-    await persistCartToApiAwait(local);
-
     const server = await fetchServerCart(clientId);
+    const resolved = resolveSyncedCart(
+      local,
+      server.items,
+      readLocalCartUpdatedAt(),
+      server.updatedAt,
+    );
 
-    let next: StoredCartItem[];
-    if (local.length === 0 && server.length > 0) {
-      next = server;
-    } else if (local.length > 0) {
-      next = mergeCartLinesPull(local, server);
-      if (JSON.stringify(next) !== JSON.stringify(server)) {
-        await persistCartToApiAwait(next);
+    const next = resolved.items;
+    let adoptedAt = resolved.adoptUpdatedAt;
+
+    if (resolved.pushLocal) {
+      const saved = await persistCartToApiAwait(next);
+      if (saved.ok && saved.updatedAt) {
+        adoptedAt = saved.updatedAt;
       }
-    } else {
-      next = [];
     }
 
     if (JSON.stringify(next) !== JSON.stringify(readCart())) {
       writeCart(next, { syncApi: false });
-      local = next;
     }
 
-    return reconcileCartWithCatalog(local);
+    if (adoptedAt) {
+      writeLocalCartUpdatedAt(adoptedAt);
+    }
+
+    return reconcileCartWithCatalog(next);
   })().finally(() => {
     cartSyncInFlight = null;
   });

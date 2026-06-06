@@ -3,6 +3,8 @@ import { putGstCaptchaSession } from "@/lib/gst-captcha-sessions";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+/** GST portal accepts fewer requests from non-India egress; run close to users. */
+export const preferredRegion = ["bom1"];
 
 export async function GET(request: Request) {
   const limit = rateLimit(rateLimitKey(request, "gst-captcha"), 24, 60_000);

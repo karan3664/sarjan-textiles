@@ -38,18 +38,18 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.23";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "24");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.24";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "25");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Profile shows App update available after Maybe later (Zomato-style).",
-      "CMS-driven profile menus and dynamic in-app CMS pages.",
-      "Delivery location bar on home and GST portal verification fixes.",
-      "Stability improvements across home, profile, and checkout.",
+      "Wishlist and compare sync across app, web, and devices when signed in.",
+      "Cart sync fixes — mobile removals no longer overwritten by stale web cache.",
+      "GST verify runs from Mumbai region; clearer errors when portal blocks POST.",
+      "Profile app-update banner persists after Maybe later (Zomato-style).",
     ].join(" ");
 
   return {

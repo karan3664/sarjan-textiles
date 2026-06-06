@@ -3,13 +3,18 @@
 import { useEffect } from "react";
 import { pullSavedListsFromServer } from "@/lib/saved-lists-sync";
 
-/** Merges wishlist/compare with the logged-in client's server copy. */
+/** Keeps wishlist/compare aligned with the logged-in client's server copy. */
 export function SavedListsSync() {
   useEffect(() => {
     void pullSavedListsFromServer();
-    const onStorage = () => void pullSavedListsFromServer();
-    window.addEventListener("sarjan-auth-updated", onStorage);
-    return () => window.removeEventListener("sarjan-auth-updated", onStorage);
+    const onRefresh = () => void pullSavedListsFromServer();
+    window.addEventListener("sarjan-auth-updated", onRefresh);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        void pullSavedListsFromServer();
+      }
+    });
+    return () => window.removeEventListener("sarjan-auth-updated", onRefresh);
   }, []);
 
   return null;

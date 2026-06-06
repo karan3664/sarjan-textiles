@@ -172,25 +172,18 @@ export function GstVerificationFields({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "GST verification failed";
-      if (
-        /closed the connection|temporarily unreachable|refresh the captcha|timed out/i.test(
+      const allowManual =
+        /no taxpayer|unavailable|blocked|try again|captcha|automated lookup|timed out|lookup failed|configure SARJAN_GST_LOOKUP|6-digit code|Captcha session expired|digits as shown|GST portal is busy|GST portal requires captcha|GST lookup timed out|did not match the captcha|could not return taxpayer details|did not return company name|closed the server connection|closed the connection|temporarily unreachable|server connection/i.test(
           message,
-        )
-      ) {
-        void loadGstCaptcha();
-      }
-      if (
-        /no taxpayer|unavailable|blocked|try again|captcha|automated lookup|timed out|lookup failed|configure SARJAN_GST_LOOKUP|6-digit code|Captcha session expired|digits as shown|GST portal is busy|GST portal requires captcha|GST lookup timed out|did not match the captcha|could not return taxpayer details|did not return company name|closed the connection|refresh the captcha/i.test(
-          message,
-        )
-      ) {
+        );
+      if (allowManual) {
         setGstManualAllowed(true);
         setGstMessage(message);
+        void loadGstCaptcha();
       } else {
         setGstManualAllowed(false);
         setGstMessage(message);
       }
-      void loadGstCaptcha();
     } finally {
       setGstLoading(false);
     }
@@ -363,7 +356,11 @@ export function GstVerificationFields({
       {gstMessage && !verifiedOnFile ? (
         <p
           className={
-            gstVerified || gstManualAllowed ? "text-success" : "text-danger"
+            gstVerified
+              ? "text-success"
+              : gstManualAllowed
+                ? "text-secondary"
+                : "text-danger"
           }
         >
           {gstMessage}
