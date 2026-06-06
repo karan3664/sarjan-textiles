@@ -48,15 +48,20 @@ export type MobileHomeHeaderConfig = {
 export type MobileHomeSectionType =
   | "banner"
   | "categories"
+  | "collections"
   | "featured"
   | "bestSellers"
   | "newArrivals"
+  | "promoBanners"
   | "marquee"
   | "highlights"
   | "services"
   | "offer"
   | "dealEnds"
   | "custom"
+  | "quickReorder"
+  | "openOrders"
+  | "recentlyViewed"
   | "allProducts"
   | "testimonials"
   | "instagram";
@@ -166,15 +171,20 @@ export const mobileHomeSectionOptions: Array<{
 }> = [
   { type: "banner", label: "Hero banners" },
   { type: "categories", label: "Shop by category" },
+  { type: "collections", label: "Collections rail" },
   { type: "featured", label: "Featured products" },
   { type: "bestSellers", label: "Best sellers" },
   { type: "newArrivals", label: "New arrivals" },
+  { type: "promoBanners", label: "Promo banners" },
   { type: "offer", label: "Offer / promo block" },
   { type: "dealEnds", label: "Deal ends countdown" },
   { type: "marquee", label: "Marquee ticker" },
   { type: "highlights", label: "Highlights strip" },
   { type: "services", label: "Trust / services icons" },
   { type: "custom", label: "Custom text + CTA" },
+  { type: "quickReorder", label: "Quick reorder (B2B)" },
+  { type: "openOrders", label: "Open orders snapshot (B2B)" },
+  { type: "recentlyViewed", label: "Recently viewed" },
   { type: "allProducts", label: "All products grid" },
   { type: "testimonials", label: "Testimonials" },
   { type: "instagram", label: "Instagram gallery" },
@@ -254,6 +264,28 @@ export function defaultMobileAppConfig(
         title: "Shop by Category",
         subtitle: "Browse wholesale lines",
       },
+      { id: "marquee", type: "marquee", enabled: true, title: "Updates" },
+      {
+        id: "highlights",
+        type: "highlights",
+        enabled: true,
+        title: "Why Sarjan",
+      },
+      {
+        id: "services",
+        type: "services",
+        enabled: true,
+        title: "Wholesale benefits",
+      },
+      { id: "openOrders", type: "openOrders", enabled: true },
+      { id: "quickReorder", type: "quickReorder", enabled: true },
+      {
+        id: "collections",
+        type: "collections",
+        enabled: true,
+        title: "Curated collections",
+        subtitle: "Seasonal lines for your store",
+      },
       {
         id: "featured",
         type: "featured",
@@ -275,6 +307,8 @@ export function defaultMobileAppConfig(
         title: "New Arrivals",
         subtitle: "Fresh off the loom",
       },
+      { id: "promoBanners", type: "promoBanners", enabled: true },
+      { id: "recentlyViewed", type: "recentlyViewed", enabled: true },
       {
         id: "allProducts",
         type: "allProducts",
