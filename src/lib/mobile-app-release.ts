@@ -38,18 +38,18 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.21";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "22");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.22";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "23");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Amazon-style delivery location bar on home — tap to choose pincode or saved address.",
-      "Profile shows App update available when a newer APK is ready (after Maybe later).",
-      "Forgot password, Firebase OTP keyboard fix, and GST captcha improvements from prior releases.",
-      "Stability and UX polish across home, catalog, and checkout.",
+      "CMS-driven profile menus — add or hide items from admin without a new APK.",
+      "Dynamic CMS pages open in-app from profile menu (site:slug links).",
+      "Delivery location bar, profile app-update banner, and OTP keyboard fixes.",
+      "Stability improvements across home, profile, and checkout.",
     ].join(" ");
 
   return {
