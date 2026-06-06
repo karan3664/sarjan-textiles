@@ -27,6 +27,11 @@ import {
   readWishlist,
   refreshWishlistFromCatalog,
 } from "@/lib/wishlist-client";
+import {
+  filterAccountNavItems,
+  fetchAccountNavigation,
+  type PublicAccountNavItem,
+} from "@/lib/account-nav-client";
 
 type HeaderNavLink = StorefrontHeaderNavLink;
 
@@ -60,6 +65,9 @@ export function ModaveHeader({
   const [navItems, setNavItems] = useState<HeaderNavLink[]>(
     initialNavItems ?? legacyHeaderNavLinks(),
   );
+  const [accountHeaderNav, setAccountHeaderNav] = useState<
+    PublicAccountNavItem[]
+  >([]);
 
   function readHeaderLocale(): string {
     if (typeof document === "undefined") return initialLocale;
@@ -74,6 +82,18 @@ export function ModaveHeader({
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   const categoriesMenuActive = pathname.startsWith("/categories");
+
+  const filteredAccountHeader = filterAccountNavItems(accountHeaderNav, {
+    isAuthenticated: Boolean(client),
+  });
+  const authAccountLinks = filteredAccountHeader.filter(
+    (item) => !item.guestOnly,
+  );
+  const guestAccountLinks = filteredAccountHeader.filter(
+    (item) => item.guestOnly,
+  );
+  const primaryAuthLink = authAccountLinks[0];
+  const secondaryAuthLinks = authAccountLinks.slice(1);
 
   useEffect(() => {
     if (initialNavItems?.length) {
@@ -126,6 +146,9 @@ export function ModaveHeader({
         }
       })
       .catch(() => undefined);
+    void fetchAccountNavigation(lang).then((data) => {
+      setAccountHeaderNav(data.header);
+    });
   }, [pathname]);
 
   useEffect(() => {
@@ -253,34 +276,45 @@ export function ModaveHeader({
                     {client ? (
                       <>
                         <div className="sub-top">
-                          <a
-                            href="/profile"
-                            className={withBtnIcon("tf-btn btn-reset")}
-                          >
-                            <TfButtonIcon
-                              icon="icon-user"
-                              textClassName="text text-button"
+                          {primaryAuthLink ? (
+                            <a
+                              href={primaryAuthLink.href}
+                              className={withBtnIcon("tf-btn btn-reset")}
                             >
-                              My Account
-                            </TfButtonIcon>
-                          </a>
+                              <TfButtonIcon
+                                icon={primaryAuthLink.icon ?? "icon-user"}
+                                textClassName="text text-button"
+                              >
+                                {primaryAuthLink.label}
+                              </TfButtonIcon>
+                            </a>
+                          ) : (
+                            <a
+                              href="/profile"
+                              className={withBtnIcon("tf-btn btn-reset")}
+                            >
+                              <TfButtonIcon
+                                icon="icon-user"
+                                textClassName="text text-button"
+                              >
+                                My Account
+                              </TfButtonIcon>
+                            </a>
+                          )}
                           <p className="text-center text-secondary-2">
                             {client.companyName ?? client.email}
                           </p>
                         </div>
                         <div className="sub-bot">
-                          <a
-                            href="/my-account-orders"
-                            className="body-text-1 link d-block mb_8"
-                          >
-                            My Orders
-                          </a>
-                          <a
-                            href="/my-account-testimonials"
-                            className="body-text-1 link d-block mb_8"
-                          >
-                            Share Testimonial
-                          </a>
+                          {secondaryAuthLinks.map((item) => (
+                            <a
+                              key={item.id}
+                              href={item.href}
+                              className="body-text-1 link d-block mb_8"
+                            >
+                              {item.label}
+                            </a>
+                          ))}
                           <button
                             type="button"
                             className="body-text-1 link sarjan-logout-btn"
@@ -294,14 +328,20 @@ export function ModaveHeader({
                       <>
                         <div className="sub-top">
                           <a
-                            href="/login"
+                            href={
+                              guestAccountLinks.find((item) =>
+                                item.href.includes("login"),
+                              )?.href ?? "/login"
+                            }
                             className={withBtnIcon("tf-btn btn-reset")}
                           >
                             <TfButtonIcon
                               icon="icon-user"
                               textClassName="text text-button"
                             >
-                              Login
+                              {guestAccountLinks.find((item) =>
+                                item.href.includes("login"),
+                              )?.label ?? "Login"}
                             </TfButtonIcon>
                           </a>
                           <p className="text-center text-secondary-2">
@@ -310,12 +350,29 @@ export function ModaveHeader({
                           </p>
                         </div>
                         <div className="sub-bot">
-                          <Link
-                            href="/contact"
-                            className="body-text-1 link d-block"
-                          >
-                            Contact us
-                          </Link>
+                          {guestAccountLinks
+                            .filter((item) => !item.href.includes("login"))
+                            .map((item) =>
+                              item.href.startsWith("http") ? (
+                                <a
+                                  key={item.id}
+                                  href={item.href}
+                                  className="body-text-1 link d-block"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {item.label}
+                                </a>
+                              ) : (
+                                <Link
+                                  key={item.id}
+                                  href={item.href}
+                                  className="body-text-1 link d-block"
+                                >
+                                  {item.label}
+                                </Link>
+                              ),
+                            )}
                         </div>
                       </>
                     )}
@@ -462,27 +519,16 @@ export function ModaveHeader({
                     {client.companyName ?? client.email}
                   </p>
                   <div className="sarjan-mobile-menu__actions">
-                    <Link
-                      href="/profile"
-                      className="sarjan-mobile-menu__btn"
-                      data-bs-dismiss="offcanvas"
-                    >
-                      My Account
-                    </Link>
-                    <Link
-                      href="/my-account-orders"
-                      className="sarjan-mobile-menu__btn"
-                      data-bs-dismiss="offcanvas"
-                    >
-                      My Orders
-                    </Link>
-                    <Link
-                      href="/my-account-testimonials"
-                      className="sarjan-mobile-menu__btn"
-                      data-bs-dismiss="offcanvas"
-                    >
-                      Share Testimonial
-                    </Link>
+                    {authAccountLinks.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className="sarjan-mobile-menu__btn"
+                        data-bs-dismiss="offcanvas"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                     <button
                       type="button"
                       className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--logout sarjan-logout-btn"
@@ -496,13 +542,18 @@ export function ModaveHeader({
                 </>
               ) : (
                 <div className="sarjan-mobile-menu__actions sarjan-mobile-menu__actions--guest">
-                  <Link
-                    href="/login"
-                    className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--primary"
-                    data-bs-dismiss="offcanvas"
-                  >
-                    Login
-                  </Link>
+                  {guestAccountLinks
+                    .filter((item) => item.href.includes("login"))
+                    .map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--primary"
+                        data-bs-dismiss="offcanvas"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                   <Link
                     href="/register"
                     className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--outline"
@@ -510,6 +561,18 @@ export function ModaveHeader({
                   >
                     Register
                   </Link>
+                  {guestAccountLinks
+                    .filter((item) => !item.href.includes("login"))
+                    .map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className="sarjan-mobile-menu__btn"
+                        data-bs-dismiss="offcanvas"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                 </div>
               )}
             </div>

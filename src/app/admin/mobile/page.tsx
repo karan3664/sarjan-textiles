@@ -1,4 +1,5 @@
 import { AdminMobileAppClient } from "@/components/admin/AdminMobileAppClient";
+import { AdminProfileMenusEditor } from "@/components/admin/AdminProfileMenusEditor";
 import { AdminTemplateChrome } from "@/components/admin/AdminTemplateChrome";
 import { AdminTranslateAllPanel } from "@/components/admin/AdminTranslateAllPanel";
 import { getCmsSnapshot } from "@/lib/cms-store";
@@ -15,6 +16,7 @@ export default async function AdminMobileAppPage() {
       <AdminMobileAppClient
         initialConfig={flattenMobileAppForAdmin(cms.mobileApp)}
       />
+      <AdminProfileMenusEditor />
     </AdminTemplateChrome>
   );
 }

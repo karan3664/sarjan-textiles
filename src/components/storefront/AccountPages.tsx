@@ -42,6 +42,12 @@ import { PageTitle } from "./PageTitle";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 import { OrderPlacedViaBadge } from "./OrderPlacedViaBadge";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+import {
+  fetchAccountNavigation,
+  filterAccountNavItems,
+  type PublicAccountNavItem,
+} from "@/lib/account-nav-client";
+import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 
 type Client = AccountClient;
 
@@ -61,7 +67,7 @@ type Address = {
 
 type Order = AccountOrder;
 
-const nav: Array<{
+const fallbackSidebarNav: Array<{
   href: string;
   label: string;
   shortLabel?: string;
@@ -83,6 +89,26 @@ const nav: Array<{
     icon: "icon-shipping",
   },
 ];
+
+function readAccountLocale(): string {
+  if (typeof document === "undefined") return "en";
+  const match = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${SARJAN_LANG_COOKIE}=`));
+  return match?.split("=")[1]?.trim() || "en";
+}
+
+function sidebarNavFromApi(items: PublicAccountNavItem[]) {
+  const filtered = filterAccountNavItems(items, { isAuthenticated: true });
+  if (!filtered.length) return fallbackSidebarNav;
+  return filtered.map((item) => ({
+    href: item.href,
+    label: item.label,
+    shortLabel: item.label.split(" ")[0],
+    icon: item.icon ?? "icon-arrRight",
+  }));
+}
 
 const logoutNavItem = {
   label: "Logout",
@@ -129,6 +155,13 @@ function AccountFrameInner({
   sectionClass?: string;
 }) {
   const { client, loading } = useAccountSession();
+  const [sidebarNav, setSidebarNav] = useState(fallbackSidebarNav);
+
+  useEffect(() => {
+    void fetchAccountNavigation(readAccountLocale()).then((data) => {
+      setSidebarNav(sidebarNavFromApi(data.sidebar));
+    });
+  }, []);
 
   return (
     <>
@@ -154,7 +187,7 @@ function AccountFrameInner({
                   </div>
                 </div>
                 <ul className="my-account-nav">
-                  {nav.map((item) => (
+                  {sidebarNav.map((item) => (
                     <li key={item.href}>
                       {item.href === active ? (
                         <span className="my-account-nav-item sarjan-account-nav-item active">
@@ -196,7 +229,7 @@ function AccountFrameInner({
                 className="sarjan-account-mobile-nav"
                 aria-label="Account sections"
               >
-                {nav.map((item) => (
+                {sidebarNav.map((item) => (
                   <a
                     key={item.href}
                     href={item.href}

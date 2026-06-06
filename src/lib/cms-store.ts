@@ -18,6 +18,10 @@ import {
   normalizeHeaderNavigation,
 } from "@/lib/header-navigation";
 import {
+  defaultAccountNavigation,
+  normalizeAccountNavigation,
+} from "@/lib/account-navigation";
+import {
   normalizeMobileAppConfig,
   type MobileAppConfig,
   type MobileAppConfigStored,
@@ -791,6 +795,11 @@ function migrateSiteSettings(merged: CmsSiteSettings): CmsSiteSettings {
   next.headerNavigation = normalizeHeaderNavigation(
     merged.headerNavigation,
     defaultHeaderNavigation,
+  );
+
+  next.accountNavigation = normalizeAccountNavigation(
+    merged.accountNavigation,
+    defaultAccountNavigation,
   );
 
   return next;

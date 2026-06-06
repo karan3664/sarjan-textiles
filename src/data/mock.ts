@@ -74,6 +74,7 @@ import {
   defaultHeaderNavigation,
   legacyNavigation,
 } from "@/lib/header-navigation";
+import { defaultAccountNavigation } from "@/lib/account-navigation";
 
 export const siteSettings = {
   /** India GST identification number (invoices / compliance). */
@@ -115,6 +116,8 @@ export const siteSettings = {
   authBanners: defaultAuthBanners,
   /** Top nav bar — reorder, hide, or link any page (Admin → Header menu). */
   headerNavigation: defaultHeaderNavigation,
+  /** Account dropdown + sidebar links (Admin → Account menu). */
+  accountNavigation: defaultAccountNavigation,
 };
 
 export const navigation = legacyNavigation;

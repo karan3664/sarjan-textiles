@@ -1,6 +1,15 @@
 import type { CmsHome, CmsSiteSettings } from "@/lib/cms-store";
 import { translateEnglishBatch } from "@/lib/auto-translate";
 import {
+  applyProfileMenuTranslations,
+  collectProfileMenuTranslationJobs,
+  flattenMobileProfileMenusForAdmin,
+  normalizeMobileProfileMenus,
+  resolveMobileProfileMenus,
+  type MobileProfileMenus,
+  type MobileProfileMenusStored,
+} from "@/lib/mobile-profile-menus";
+import {
   coerceLocalized,
   localizedFromEnglish,
   markTranslationAttempted,
@@ -77,6 +86,7 @@ export type MobileAppConfig = {
   };
   homeHeader: MobileHomeHeaderConfig;
   homeSections: MobileHomeSection[];
+  profileMenus: MobileProfileMenus;
   footerCredit: string;
   support: {
     phone: string;
@@ -125,6 +135,7 @@ export type MobileAppConfigStored = {
     showVisualSearch: boolean;
   };
   homeSections: StoredSection[];
+  profileMenus: MobileProfileMenusStored;
   footerCredit: LocalizedText;
   support: MobileAppConfig["support"];
   localizedExtras?: MobileLocalizedExtras;
@@ -287,6 +298,9 @@ export function defaultMobileAppConfig(
         subtitle: "@sarjantextiles",
       },
     ],
+    profileMenus: flattenMobileProfileMenusForAdmin(
+      normalizeMobileProfileMenus(undefined),
+    ),
     footerCredit:
       site.footerCredit ?? "Designed & Developed by Karan Digital Labs",
     support: {
@@ -483,6 +497,10 @@ export function normalizeMobileAppConfig(
       : defaults.homeSections
           .map(toStoredSection)
           .filter((section): section is StoredSection => section != null),
+    profileMenus: normalizeMobileProfileMenus(
+      (base as MobileAppConfigStored).profileMenus ??
+        (base as MobileAppConfig).profileMenus,
+    ),
     footerCredit: coerceLocalized(
       readEnglish(
         (base as MobileAppConfig).footerCredit ??
@@ -583,6 +601,10 @@ function applyTranslations(
         : undefined,
     })),
     footerCredit: pick("footerCredit", stored.footerCredit),
+    profileMenus: applyProfileMenuTranslations(
+      stored.profileMenus,
+      translations,
+    ),
     localizedExtras: stored.localizedExtras
       ? {
           brandName: pick("extras.brandName", stored.localizedExtras.brandName),
@@ -632,6 +654,8 @@ function collectTranslationJobs(stored: MobileAppConfigStored) {
       queueText(jobs, `section.${index}.ctaLabel`, section.ctaLabel);
     }
   });
+
+  Object.assign(jobs, collectProfileMenuTranslationJobs(stored.profileMenus));
 
   stored.localizedExtras?.marqueeLines.forEach((line, index) => {
     queueText(jobs, `extras.marquee.${index}`, line);
@@ -692,7 +716,11 @@ export async function localizeMobileAppOnSave(
 export function flattenMobileAppForAdmin(
   stored: MobileAppConfigStored,
 ): MobileAppConfig {
-  return resolveMobileAppConfig(stored, "en");
+  const resolved = resolveMobileAppConfig(stored, "en");
+  return {
+    ...resolved,
+    profileMenus: flattenMobileProfileMenusForAdmin(stored.profileMenus),
+  };
 }
 
 export function resolveMobileAppConfig(
@@ -741,6 +769,7 @@ export function resolveMobileAppConfig(
       backgroundColor: section.backgroundColor,
       accentColor: section.accentColor,
     })),
+    profileMenus: resolveMobileProfileMenus(stored.profileMenus, locale),
     footerCredit: pick(stored.footerCredit) ?? "",
     support: { ...stored.support },
   };

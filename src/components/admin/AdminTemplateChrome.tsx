@@ -87,6 +87,7 @@ type AdminActiveSection =
   | "newsletter"
   | "sendNotifications"
   | "mobileApp"
+  | "accountMenu"
   | "account";
 
 type SidebarNavItem = {
@@ -186,6 +187,12 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-more-horizontal",
     label: "Header menu",
     section: "headerMenu",
+  },
+  {
+    href: "/admin/account-menu",
+    icon: "icon-user",
+    label: "Account menu",
+    section: "accountMenu",
   },
   {
     href: "/admin/about",
