@@ -38,18 +38,18 @@ export function getMobileAppRelease(): MobileAppRelease {
   const apkFile =
     process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.20";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "21");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.21";
+  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "22");
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
     [
-      "Self-service forgot password: verify email and mobile, then set a new password.",
-      "Firebase SMS OTP sign-in with +91 mobile input and smoother verification screens.",
-      "Home banner titles support longer multi-line copy (up to four lines).",
-      "Stability and UX improvements across catalog, cart, and checkout.",
+      "Amazon-style delivery location bar on home — tap to choose pincode or saved address.",
+      "Profile shows App update available when a newer APK is ready (after Maybe later).",
+      "Forgot password, Firebase OTP keyboard fix, and GST captcha improvements from prior releases.",
+      "Stability and UX polish across home, catalog, and checkout.",
     ].join(" ");
 
   return {
