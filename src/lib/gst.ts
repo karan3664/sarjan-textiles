@@ -1,4 +1,8 @@
-import { postGstTaxpayerDetailsWithSession } from "@/lib/gst-portal-http";
+import {
+  GST_REFERER,
+  GST_UA,
+  postGstTaxpayerDetailsWithSession,
+} from "@/lib/gst-portal-http";
 
 export type GstVerificationResult = {
   gstin: string;
