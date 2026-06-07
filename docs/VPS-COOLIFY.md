@@ -126,6 +126,18 @@ Port **8000** (Coolify UI) is **not open** on the public internet — `http://69
 
 Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build.
 
+**GitHub Actions fails in ~8s (SSH):**
+
+1. Open the failed run log — look for `ssh: handshake failed`, `permission denied`, or `connection timed out`.
+2. `VPS_SSH_PRIVATE_KEY` must be the **private** key (`-----BEGIN OPENSSH PRIVATE KEY-----`), not `.pub`.
+3. On Mac, test the same key GitHub uses:
+   ```bash
+   ssh -i ~/.ssh/id_ed25519 root@69.62.77.149 "echo ok"
+   ```
+   If this fails locally, fix VPS `authorized_keys` first (`ssh-copy-id`).
+4. Hostinger firewall: allow **TCP 22** from anywhere (GitHub Actions uses dynamic IPs).
+5. After fixing, **Actions → Re-run all jobs**.
+
 ### Mobile APK release (no Coolify env edits)
 
 Version comes from `public/downloads/mobile-release.json` (written automatically):

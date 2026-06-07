@@ -9,6 +9,7 @@ import {
   parseHeroVideoSource,
   youtubeThumbnailUrl,
 } from "@/lib/hero-video";
+import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
 import { putAdminCms } from "@/lib/admin-cms-fetch";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -152,6 +153,31 @@ function TextInput({
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
     />
+  );
+}
+
+function HtmlField({
+  label,
+  value,
+  onChange,
+  rows = 4,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  placeholder?: string;
+}) {
+  return (
+    <Field label={label}>
+      <AdminHtmlEditor
+        value={value}
+        onChange={onChange}
+        rows={rows}
+        placeholder={placeholder}
+      />
+    </Field>
   );
 }
 
@@ -957,15 +983,15 @@ export function AdminHomePageClient({
               {section.type === "custom" && (
                 <div className="sarjan-custom-section-editor">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
-                    <Field label="Section name">
-                      <TextInput
-                        value={section.title ?? ""}
-                        onChange={(value) =>
-                          updateSection(index, { title: value })
-                        }
-                        placeholder="Example: Summer Collection"
-                      />
-                    </Field>
+                    <HtmlField
+                      label="Section name"
+                      value={section.title ?? ""}
+                      onChange={(value) =>
+                        updateSection(index, { title: value })
+                      }
+                      rows={2}
+                      placeholder="Example: Summer Collection"
+                    />
                     <Field label="Layout">
                       <select
                         value={section.layout ?? "grid"}
@@ -982,15 +1008,15 @@ export function AdminHomePageClient({
                       </select>
                     </Field>
                   </div>
-                  <Field label="Section subtitle">
-                    <textarea
-                      value={section.subtitle ?? ""}
-                      onChange={(event) =>
-                        updateSection(index, { subtitle: event.target.value })
-                      }
-                      placeholder="Optional subtitle shown under section name"
-                    />
-                  </Field>
+                  <HtmlField
+                    label="Section subtitle"
+                    value={section.subtitle ?? ""}
+                    onChange={(value) =>
+                      updateSection(index, { subtitle: value })
+                    }
+                    rows={3}
+                    placeholder="Optional subtitle shown under section name"
+                  />
                   <div className="sarjan-custom-block-actions">
                     <span className="body-title">Add content:</span>
                     {(
@@ -1036,26 +1062,26 @@ export function AdminHomePageClient({
 
                           {block.type === "text" && (
                             <div className="d-grid gap-3">
-                              <Field label="Heading">
-                                <TextInput
-                                  value={block.heading ?? ""}
-                                  onChange={(value) =>
-                                    updateCustomBlock(index, blockIndex, {
-                                      heading: value,
-                                    })
-                                  }
-                                />
-                              </Field>
-                              <Field label="Text">
-                                <textarea
-                                  value={block.body ?? ""}
-                                  onChange={(event) =>
-                                    updateCustomBlock(index, blockIndex, {
-                                      body: event.target.value,
-                                    })
-                                  }
-                                />
-                              </Field>
+                              <HtmlField
+                                label="Heading"
+                                value={block.heading ?? ""}
+                                onChange={(value) =>
+                                  updateCustomBlock(index, blockIndex, {
+                                    heading: value,
+                                  })
+                                }
+                                rows={2}
+                              />
+                              <HtmlField
+                                label="Text"
+                                value={block.body ?? ""}
+                                onChange={(value) =>
+                                  updateCustomBlock(index, blockIndex, {
+                                    body: value,
+                                  })
+                                }
+                                rows={4}
+                              />
                             </div>
                           )}
 
@@ -1113,16 +1139,16 @@ export function AdminHomePageClient({
 
                           {block.type === "button" && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <Field label="Button label">
-                                <TextInput
-                                  value={block.label ?? ""}
-                                  onChange={(value) =>
-                                    updateCustomBlock(index, blockIndex, {
-                                      label: value,
-                                    })
-                                  }
-                                />
-                              </Field>
+                              <HtmlField
+                                label="Button label"
+                                value={block.label ?? ""}
+                                onChange={(value) =>
+                                  updateCustomBlock(index, blockIndex, {
+                                    label: value,
+                                  })
+                                }
+                                rows={2}
+                              />
                               <Field label="Button link">
                                 <TextInput
                                   value={block.href ?? ""}
@@ -1214,25 +1240,24 @@ export function AdminHomePageClient({
               </div>
             </div>
             <div className="cols gap22">
-              <Field label="Eyebrow">
-                <TextInput
-                  value={home.hero.eyebrow}
-                  onChange={(value) => updateHero("eyebrow", value)}
-                />
-              </Field>
-              <Field label="Banner title">
-                <textarea
-                  rows={4}
-                  value={home.hero.title}
-                  onChange={(event) => updateHero("title", event.target.value)}
-                />
-              </Field>
-              <Field label="Button label">
-                <TextInput
-                  value={home.hero.primaryCta.label}
-                  onChange={(value) => updateHeroCta("label", value)}
-                />
-              </Field>
+              <HtmlField
+                label="Eyebrow"
+                value={home.hero.eyebrow}
+                onChange={(value) => updateHero("eyebrow", value)}
+                rows={2}
+              />
+              <HtmlField
+                label="Banner title"
+                value={home.hero.title}
+                onChange={(value) => updateHero("title", value)}
+                rows={4}
+              />
+              <HtmlField
+                label="Button label"
+                value={home.hero.primaryCta.label}
+                onChange={(value) => updateHeroCta("label", value)}
+                rows={2}
+              />
               <Field label="Button link">
                 <TextInput
                   value={home.hero.primaryCta.href}
@@ -1240,14 +1265,12 @@ export function AdminHomePageClient({
                 />
               </Field>
             </div>
-            <Field label="Banner description">
-              <textarea
-                value={home.hero.description}
-                onChange={(event) =>
-                  updateHero("description", event.target.value)
-                }
-              />
-            </Field>
+            <HtmlField
+              label="Banner description"
+              value={home.hero.description}
+              onChange={(value) => updateHero("description", value)}
+              rows={5}
+            />
           </div>
         </div>
       </div>
@@ -1301,12 +1324,12 @@ export function AdminHomePageClient({
                   </div>
                 )}
               <div className="sarjan-category-fields">
-                <Field label="Card title">
-                  <TextInput
-                    value={category.name}
-                    onChange={(value) => updateCategory(index, "name", value)}
-                  />
-                </Field>
+                <HtmlField
+                  label="Card title"
+                  value={category.name}
+                  onChange={(value) => updateCategory(index, "name", value)}
+                  rows={2}
+                />
                 <Field label="Link">
                   <TextInput
                     value={category.href ?? "#catalog"}
@@ -1342,25 +1365,25 @@ export function AdminHomePageClient({
               </div>
             </div>
             <div className="sarjan-heading-fields">
-              <Field label="Section title">
-                <TextInput
-                  value={home.topPicksTitle ?? "Today's Top Picks"}
-                  onChange={(value) =>
-                    setHome((current) => ({ ...current, topPicksTitle: value }))
-                  }
-                />
-              </Field>
-              <Field label="Section subtitle">
-                <textarea
-                  value={home.topPicksDescription ?? ""}
-                  onChange={(event) =>
-                    setHome((current) => ({
-                      ...current,
-                      topPicksDescription: event.target.value,
-                    }))
-                  }
-                />
-              </Field>
+              <HtmlField
+                label="Section title"
+                value={home.topPicksTitle ?? "Today's Top Picks"}
+                onChange={(value) =>
+                  setHome((current) => ({ ...current, topPicksTitle: value }))
+                }
+                rows={2}
+              />
+              <HtmlField
+                label="Section subtitle"
+                value={home.topPicksDescription ?? ""}
+                onChange={(value) =>
+                  setHome((current) => ({
+                    ...current,
+                    topPicksDescription: value,
+                  }))
+                }
+                rows={3}
+              />
             </div>
           </div>
 
@@ -1373,25 +1396,25 @@ export function AdminHomePageClient({
               </div>
             </div>
             <div className="sarjan-heading-fields">
-              <Field label="Section title">
-                <TextInput
-                  value={home.trendingTitle}
-                  onChange={(value) =>
-                    setHome((current) => ({ ...current, trendingTitle: value }))
-                  }
-                />
-              </Field>
-              <Field label="Section subtitle">
-                <textarea
-                  value={home.trendingDescription}
-                  onChange={(event) =>
-                    setHome((current) => ({
-                      ...current,
-                      trendingDescription: event.target.value,
-                    }))
-                  }
-                />
-              </Field>
+              <HtmlField
+                label="Section title"
+                value={home.trendingTitle}
+                onChange={(value) =>
+                  setHome((current) => ({ ...current, trendingTitle: value }))
+                }
+                rows={2}
+              />
+              <HtmlField
+                label="Section subtitle"
+                value={home.trendingDescription}
+                onChange={(value) =>
+                  setHome((current) => ({
+                    ...current,
+                    trendingDescription: value,
+                  }))
+                }
+                rows={3}
+              />
             </div>
           </div>
 
@@ -1407,28 +1430,28 @@ export function AdminHomePageClient({
               </div>
             </div>
             <div className="sarjan-heading-fields">
-              <Field label="Section title">
-                <TextInput
-                  value={home.testimonialsTitle ?? "Customer Say!"}
-                  onChange={(value) =>
-                    setHome((current) => ({
-                      ...current,
-                      testimonialsTitle: value,
-                    }))
-                  }
-                />
-              </Field>
-              <Field label="Section subtitle">
-                <textarea
-                  value={home.testimonialsDescription ?? ""}
-                  onChange={(event) =>
-                    setHome((current) => ({
-                      ...current,
-                      testimonialsDescription: event.target.value,
-                    }))
-                  }
-                />
-              </Field>
+              <HtmlField
+                label="Section title"
+                value={home.testimonialsTitle ?? "Customer Say!"}
+                onChange={(value) =>
+                  setHome((current) => ({
+                    ...current,
+                    testimonialsTitle: value,
+                  }))
+                }
+                rows={2}
+              />
+              <HtmlField
+                label="Section subtitle"
+                value={home.testimonialsDescription ?? ""}
+                onChange={(value) =>
+                  setHome((current) => ({
+                    ...current,
+                    testimonialsDescription: value,
+                  }))
+                }
+                rows={3}
+              />
             </div>
           </div>
 
@@ -1441,25 +1464,25 @@ export function AdminHomePageClient({
               </div>
             </div>
             <div className="sarjan-heading-fields">
-              <Field label="Section title">
-                <TextInput
-                  value={home.galleryTitle}
-                  onChange={(value) =>
-                    setHome((current) => ({ ...current, galleryTitle: value }))
-                  }
-                />
-              </Field>
-              <Field label="Section subtitle">
-                <textarea
-                  value={home.galleryDescription}
-                  onChange={(event) =>
-                    setHome((current) => ({
-                      ...current,
-                      galleryDescription: event.target.value,
-                    }))
-                  }
-                />
-              </Field>
+              <HtmlField
+                label="Section title"
+                value={home.galleryTitle}
+                onChange={(value) =>
+                  setHome((current) => ({ ...current, galleryTitle: value }))
+                }
+                rows={2}
+              />
+              <HtmlField
+                label="Section subtitle"
+                value={home.galleryDescription}
+                onChange={(value) =>
+                  setHome((current) => ({
+                    ...current,
+                    galleryDescription: value,
+                  }))
+                }
+                rows={3}
+              />
             </div>
           </div>
         </div>
@@ -1488,18 +1511,18 @@ export function AdminHomePageClient({
                 <div className="sarjan-highlight-label">{highlight.label}</div>
               </div>
               <div className="sarjan-compact-fields">
-                <Field label="Value">
-                  <TextInput
-                    value={highlight.value}
-                    onChange={(value) => updateHighlight(index, "value", value)}
-                  />
-                </Field>
-                <Field label="Label">
-                  <TextInput
-                    value={highlight.label}
-                    onChange={(value) => updateHighlight(index, "label", value)}
-                  />
-                </Field>
+                <HtmlField
+                  label="Value"
+                  value={highlight.value}
+                  onChange={(value) => updateHighlight(index, "value", value)}
+                  rows={2}
+                />
+                <HtmlField
+                  label="Label"
+                  value={highlight.label}
+                  onChange={(value) => updateHighlight(index, "label", value)}
+                  rows={2}
+                />
               </div>
             </div>
           ))}
@@ -1590,20 +1613,18 @@ export function AdminHomePageClient({
                     onChange={(value) => updateService(index, "icon", value)}
                   />
                 </Field>
-                <Field label="Title">
-                  <TextInput
-                    value={service.title}
-                    onChange={(value) => updateService(index, "title", value)}
-                  />
-                </Field>
-                <Field label="Body">
-                  <textarea
-                    value={service.body}
-                    onChange={(event) =>
-                      updateService(index, "body", event.target.value)
-                    }
-                  />
-                </Field>
+                <HtmlField
+                  label="Title"
+                  value={service.title}
+                  onChange={(value) => updateService(index, "title", value)}
+                  rows={2}
+                />
+                <HtmlField
+                  label="Body"
+                  value={service.body}
+                  onChange={(value) => updateService(index, "body", value)}
+                  rows={4}
+                />
               </div>
             </div>
           ))}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CmsHtml } from "@/components/shared/CmsHtml";
 import {
   buildHeroSlides,
   normalizeHeroVideoUrls,
@@ -182,15 +183,17 @@ export function HomeHeroRotator({
             <div className="content-slider sarjan-hero-copy-stack">
               <div className="box-title-slider sarjan-hero-copy-titles">
                 <h2 className="heading text-white sarjan-hero-heading sarjan-hero-heading-multiline">
-                  {title}
+                  <CmsHtml html={title} />
                 </h2>
                 <p className="body-text-1 subheading text-white sarjan-hero-subheading">
-                  {description}
+                  <CmsHtml html={description} />
                 </p>
               </div>
               <div className="box-btn-slider sarjan-hero-cta">
                 <Link href={cta.href} className="tf-btn btn-fill btn-white">
-                  <span className="text">{cta.label}</span>
+                  <span className="text">
+                    <CmsHtml html={cta.label} />
+                  </span>
                   <i className="icon icon-arrowUpRight" />
                 </Link>
               </div>

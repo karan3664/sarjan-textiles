@@ -33,6 +33,7 @@ import {
 } from "./ProductDealCountdown";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
+import { CmsHtml } from "@/components/shared/CmsHtml";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
@@ -104,7 +105,9 @@ function MarqueeBand({ items }: { items: string[] }) {
         {repeatedMarquee(items).map((item, index) => (
           <Fragment key={`${item}-${index}`}>
             <div className="marquee-child-item">
-              <h3 className="text-uppercase">{item}</h3>
+              <h3 className="text-uppercase">
+                <CmsHtml html={item} />
+              </h3>
             </div>
             <div className="marquee-child-item">
               <span className="icon icon-tshirt" />
@@ -343,8 +346,12 @@ function ServiceIconBox({
                     <span className={`icon ${service.icon}`} />
                   </div>
                   <div className="content text-center">
-                    <h6>{service.title}</h6>
-                    <p className="text-secondary">{service.body}</p>
+                    <h6>
+                      <CmsHtml html={service.title} />
+                    </h6>
+                    <p className="text-secondary">
+                      <CmsHtml html={service.body} />
+                    </p>
                   </div>
                 </div>
               </div>
@@ -378,9 +385,15 @@ function CustomHomeSection({
     <section className="flat-spacing sarjan-custom-storefront-section">
       <div className="container">
         <div className="heading-section text-center wow fadeInUp">
-          {section.title ? <h3 className="heading">{section.title}</h3> : null}
+          {section.title ? (
+            <h3 className="heading">
+              <CmsHtml html={section.title} />
+            </h3>
+          ) : null}
           {section.subtitle ? (
-            <p className="subheading text-secondary">{section.subtitle}</p>
+            <p className="subheading text-secondary">
+              <CmsHtml html={section.subtitle} />
+            </p>
           ) : null}
         </div>
         <div className={layoutClass}>
@@ -388,9 +401,15 @@ function CustomHomeSection({
             if (block.type === "text") {
               return (
                 <div className="sarjan-custom-text-block" key={block.id}>
-                  {block.heading ? <h4>{block.heading}</h4> : null}
+                  {block.heading ? (
+                    <h4>
+                      <CmsHtml html={block.heading} />
+                    </h4>
+                  ) : null}
                   {block.body ? (
-                    <p className="text-secondary">{block.body}</p>
+                    <p className="text-secondary">
+                      <CmsHtml html={block.body} />
+                    </p>
                   ) : null}
                 </div>
               );
@@ -417,7 +436,9 @@ function CustomHomeSection({
                     className="tf-btn btn-fill"
                     href={block.href || "/products"}
                   >
-                    <span className="text">{block.label || "Explore Now"}</span>
+                    <span className="text">
+                      <CmsHtml html={block.label || "Explore Now"} />
+                    </span>
                     <i className="icon icon-arrowUpRight" />
                   </Link>
                 </div>
@@ -594,7 +615,9 @@ export async function HomeDynamic() {
                   </a>
                   <div className="content">
                     <a href={category.href ?? "#catalog"} className="cls-btn">
-                      <h6 className="text">{category.name}</h6>
+                      <h6 className="text">
+                        <CmsHtml html={category.name} />
+                      </h6>
                       <i className="icon icon-arrowUpRight" />
                     </a>
                   </div>
@@ -613,11 +636,17 @@ export async function HomeDynamic() {
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
             <h3 className="heading">
-              {homeContent.topPicksTitle ?? "Today's Top Picks"}
+              <CmsHtml
+                html={homeContent.topPicksTitle ?? "Today's Top Picks"}
+              />
             </h3>
             <p className="subheading text-secondary">
-              {homeContent.topPicksDescription ??
-                "Fresh Sarjan textile products from admin-managed data."}
+              <CmsHtml
+                html={
+                  homeContent.topPicksDescription ??
+                  "Fresh Sarjan textile products from admin-managed data."
+                }
+              />
             </p>
           </div>
           <div
@@ -667,9 +696,11 @@ export async function HomeDynamic() {
       <section className="flat-spacing">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
-            <h3 className="heading">{home.trendingTitle}</h3>
+            <h3 className="heading">
+              <CmsHtml html={home.trendingTitle} />
+            </h3>
             <p className="subheading text-secondary">
-              {home.trendingDescription}
+              <CmsHtml html={home.trendingDescription} />
             </p>
           </div>
           <div
@@ -710,11 +741,17 @@ export async function HomeDynamic() {
           <div className="container">
             <div className="heading-section text-center wow fadeInUp">
               <h3 className="heading">
-                {homeContent.testimonialsTitle ?? "Customer Say!"}
+                <CmsHtml
+                  html={homeContent.testimonialsTitle ?? "Customer Say!"}
+                />
               </h3>
               <p className="subheading">
-                {homeContent.testimonialsDescription ??
-                  "Our customers adore our products, and we constantly aim to delight them."}
+                <CmsHtml
+                  html={
+                    homeContent.testimonialsDescription ??
+                    "Our customers adore our products, and we constantly aim to delight them."
+                  }
+                />
               </p>
               <p className="mt_16 mb_0">
                 <Link
@@ -788,9 +825,11 @@ export async function HomeDynamic() {
       <section className="flat-spacing pt-0 sarjan-instagram-gallery-section">
         <div className="container">
           <div className="heading-section text-center wow fadeInUp">
-            <h3 className="heading">{home.galleryTitle}</h3>
+            <h3 className="heading">
+              <CmsHtml html={home.galleryTitle} />
+            </h3>
             <p className="subheading text-secondary">
-              {home.galleryDescription}
+              <CmsHtml html={home.galleryDescription} />
             </p>
             <p className="mt_12 mb_0">
               <Link

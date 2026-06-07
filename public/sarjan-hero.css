@@ -2,6 +2,23 @@
  * Sarjan home hero — loaded last (after Modave) so copy is never clipped.
  */
 
+/* Soft outer glow on banner typography (very low opacity) */
+.sarjan-hero-rotator .sarjan-hero-heading,
+.sarjan-hero-rotator .sarjan-hero-copy-layer .heading,
+.tf-slideshow.sarjan-hero-rotator h2.sarjan-hero-heading {
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.14),
+    0 0 24px rgba(255, 255, 255, 0.08),
+    0 0 42px rgba(255, 255, 255, 0.04);
+}
+
+.sarjan-hero-rotator .sarjan-hero-subheading,
+.sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.1),
+    0 0 18px rgba(255, 255, 255, 0.05);
+}
+
 /* Modave .tf-slideshow { overflow: hidden } would crop vertically centered copy */
 .tf-slideshow.sarjan-hero-rotator {
   overflow: visible !important;

@@ -1,5 +1,4 @@
-# Coolify dashboard (port 8000) is not reachable from the public internet on this VPS.
-# On push, SSH to the server and trigger deploy on localhost — same as opening the webhook from inside the VPS.
+# Coolify (port 8000) is localhost-only on the VPS. GitHub Actions SSHs in and triggers deploy.
 name: Deploy to Coolify
 
 on:
@@ -20,15 +19,13 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          envs: COOLIFY_API_TOKEN,COOLIFY_DEPLOY_WEBHOOK
+          port: 22
+          timeout: 60s
+          command_timeout: 15m
+          script_stop: true
           script: |
             set -euo pipefail
-            if [ -z "${COOLIFY_DEPLOY_WEBHOOK:-}" ] || [ -z "${COOLIFY_API_TOKEN:-}" ]; then
-              echo "Missing COOLIFY_DEPLOY_WEBHOOK or COOLIFY_API_TOKEN secret" >&2
-              exit 1
-            fi
-            curl -fsS -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" "${COOLIFY_DEPLOY_WEBHOOK}"
+            curl -fsS \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
+              "${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}"
             echo "Coolify deploy triggered."
-        env:
-          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
-          COOLIFY_DEPLOY_WEBHOOK: ${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}

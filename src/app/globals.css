@@ -767,6 +767,10 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   margin: 18px 0;
   font-size: clamp(42px, 6vw, 86px);
   line-height: 0.98;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.14),
+    0 0 24px rgba(255, 255, 255, 0.08),
+    0 0 42px rgba(255, 255, 255, 0.04);
 }
 
 .sarjan-hero p {
@@ -774,6 +778,14 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: var(--sarjan-muted);
   font-size: 18px;
   line-height: 1.7;
+}
+
+.cms-html-content p {
+  margin: 0 0 0.35em;
+}
+
+.cms-html-content p:last-child {
+  margin-bottom: 0;
 }
 
 .sarjan-hero-media {
