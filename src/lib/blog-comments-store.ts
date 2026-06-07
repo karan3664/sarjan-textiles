@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isPostgresEnabled, pgInsertReturning, pgQuery } from "@/lib/postgres";
 import { sanitizeUserText } from "@/lib/user-text";
 
 const COMMENTS_FILE = path.join(process.cwd(), "data", "blog-comments.json");
@@ -42,21 +42,6 @@ export type BlogCommentUpdatePatch = {
 };
 
 type CommentsFile = { items: BlogComment[] };
-
-function supabaseEnabled(): boolean {
-  const v = (process.env.SUPABASE_ENABLED ?? "").trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
-}
-
-function supabaseDb() {
-  if (!supabaseEnabled()) return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false },
-  });
-}
 
 function parseStatus(s: string): BlogCommentStatus {
   if (s === "approved" || s === "rejected" || s === "pending") return s;
@@ -147,36 +132,37 @@ async function writeAllToFile(items: BlogComment[]): Promise<void> {
   await writeFile(COMMENTS_FILE, JSON.stringify(payload, null, 2), "utf8");
 }
 
-async function readAllFromSupabase(): Promise<BlogComment[] | null> {
-  const sb = supabaseDb();
-  if (!sb) return null;
-  const { data, error } = await sb
-    .from("blog_comments")
-    .select("*")
-    .order("created_at", { ascending: true });
-  if (error) {
-    console.error("[blog-comments] supabase read:", error.message);
+async function readAllFromPostgres(): Promise<BlogComment[] | null> {
+  if (!isPostgresEnabled()) return null;
+  try {
+    const { rows } = await pgQuery(
+      "select * from blog_comments order by created_at asc",
+    );
+    return rows.map((row) => mapFromRow(row as Record<string, unknown>));
+  } catch (error) {
+    console.error(
+      "[blog-comments] postgres read:",
+      error instanceof Error ? error.message : error,
+    );
     return null;
   }
-  return (data ?? []).map((row) => mapFromRow(row as Record<string, unknown>));
 }
 
 async function readAll(): Promise<BlogComment[]> {
-  const fromDb = await readAllFromSupabase();
+  const fromDb = await readAllFromPostgres();
   if (fromDb !== null) return fromDb;
   return readAllFromFile();
 }
 
 async function getBlogCommentById(id: string): Promise<BlogComment | null> {
-  const sb = supabaseDb();
-  if (sb) {
-    const { data, error } = await sb
-      .from("blog_comments")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-    if (error || !data) return null;
-    return mapFromRow(data as Record<string, unknown>);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select * from blog_comments where id = $1 limit 1",
+      [id],
+    );
+    const row = rows[0];
+    if (row) return mapFromRow(row as Record<string, unknown>);
+    return null;
   }
   const all = await readAllFromFile();
   return all.find((c) => c.id === id) ?? null;
@@ -212,11 +198,9 @@ export async function createBlogComment(input: {
   authorEmail: string;
   body: string;
 }): Promise<BlogComment> {
-  const sb = supabaseDb();
-  if (sb) {
-    const { data, error } = await sb
-      .from("blog_comments")
-      .insert({
+  if (isPostgresEnabled()) {
+    try {
+      const data = await pgInsertReturning("blog_comments", {
         blog_slug: input.blogSlug.trim(),
         author_name: input.authorName.trim(),
         author_email: input.authorEmail.trim().toLowerCase(),
@@ -225,22 +209,22 @@ export async function createBlogComment(input: {
         admin_replies: [],
         admin_reply: null,
         admin_replied_at: null,
-      })
-      .select("*")
-      .single();
-    if (error) {
+      });
+      if (!data) {
+        throw new Error(
+          "Postgres insert returned no row. Check that table public.blog_comments exists.",
+        );
+      }
+      return mapFromRow(data as Record<string, unknown>);
+    } catch (error) {
       throw new Error(
-        error.message.includes("blog_comments")
-          ? "Comments database is not ready. Apply the blog_comments migration in Supabase, or run locally with SUPABASE_ENABLED=false."
-          : error.message,
+        error instanceof Error && error.message.includes("blog_comments")
+          ? "Comments database is not ready. Apply the blog_comments migration on your VPS Postgres, or run locally without DATABASE_URL."
+          : error instanceof Error
+            ? error.message
+            : "Comment create failed",
       );
     }
-    if (data == null || typeof data !== "object") {
-      throw new Error(
-        "Supabase insert returned no row. Check that table public.blog_comments exists and PostgREST can return inserted rows.",
-      );
-    }
-    return mapFromRow(data as Record<string, unknown>);
   }
 
   const all = await readAllFromFile();
@@ -309,24 +293,16 @@ export async function updateBlogComment(
   const legacyReply = last?.body ?? null;
   const legacyAt = last?.createdAt ?? null;
 
-  const sb = supabaseDb();
-  if (sb) {
-    const { data, error } = await sb
-      .from("blog_comments")
-      .update({
-        status: nextStatus,
-        admin_replies: adminReplies,
-        admin_reply: legacyReply,
-        admin_replied_at: legacyAt,
-      })
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) {
-      console.error("[blog-comments] supabase update:", error.message);
-      return null;
-    }
-    if (data == null || typeof data !== "object") return null;
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      `update blog_comments
+       set status = $2, admin_replies = $3::jsonb, admin_reply = $4, admin_replied_at = $5
+       where id = $1
+       returning *`,
+      [id, nextStatus, JSON.stringify(adminReplies), legacyReply, legacyAt],
+    );
+    const data = rows[0];
+    if (!data) return null;
     return mapFromRow(data as Record<string, unknown>);
   }
 
@@ -353,13 +329,12 @@ export async function deleteBlogComment(id: string): Promise<string | null> {
   if (!cur) return null;
   const blogSlug = cur.blogSlug;
 
-  const sb = supabaseDb();
-  if (sb) {
-    const { error } = await sb.from("blog_comments").delete().eq("id", id);
-    if (error) {
-      console.error("[blog-comments] supabase delete:", error.message);
-      return null;
-    }
+  if (isPostgresEnabled()) {
+    const { rowCount } = await pgQuery(
+      "delete from blog_comments where id = $1",
+      [id],
+    );
+    if (!rowCount) return null;
     return blogSlug;
   }
 

@@ -158,11 +158,108 @@ function unwrapFontElements(container: ParentNode) {
   });
 }
 
+function readInlineStyleFromNode(
+  node: Node | null,
+  editor: HTMLElement,
+  property: "fontFamily" | "fontSize",
+): string {
+  let current: Node | null = node;
+  if (current?.nodeType === Node.TEXT_NODE) {
+    current = current.parentElement;
+  }
+  while (current && current !== editor) {
+    if (current instanceof HTMLElement) {
+      if (current.tagName === "FONT" && property === "fontFamily") {
+        const face = current.getAttribute("face");
+        if (face) {
+          return matchCmsFontFamily(face) || normalizeFontFamily(face);
+        }
+      }
+      const inline = current.style[property];
+      if (inline) {
+        return property === "fontFamily" ? normalizeFontFamily(inline) : inline;
+      }
+    }
+    current = current.parentElement;
+  }
+  return "";
+}
+
+/** Dominant inline font/size on editor content (ignores surface default CSS). */
+export function detectEditorContentStyle(
+  editor: HTMLDivElement | null,
+  property: "fontFamily" | "fontSize",
+): string {
+  if (!editor || typeof document === "undefined") {
+    return "";
+  }
+
+  const values = new Set<string>();
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+  let textNode: Node | null;
+  while ((textNode = walker.nextNode())) {
+    if (!textNode.textContent?.trim()) {
+      continue;
+    }
+    const style = readInlineStyleFromNode(textNode, editor, property);
+    if (style) {
+      values.add(style);
+    }
+  }
+
+  if (values.size === 1) {
+    return [...values][0] ?? "";
+  }
+  return "";
+}
+
+export function resolveEditorToolbarStyle(
+  editor: HTMLDivElement | null,
+  property: "fontFamily" | "fontSize",
+  selection: Selection | null,
+): string {
+  if (!editor) {
+    return "";
+  }
+  if (isSelectionWithinEditor(editor, selection) && selection?.rangeCount) {
+    const range = selection.getRangeAt(0);
+    const atCaret = readInlineStyleFromNode(
+      range.commonAncestorContainer,
+      editor,
+      property,
+    );
+    if (atCaret) {
+      return atCaret;
+    }
+    if (!range.collapsed) {
+      const start = readInlineStyleFromNode(
+        range.startContainer,
+        editor,
+        property,
+      );
+      const end = readInlineStyleFromNode(range.endContainer, editor, property);
+      if (start && start === end) {
+        return start;
+      }
+    }
+  }
+  return detectEditorContentStyle(editor, property);
+}
+
+function selectEntireEditor(editor: HTMLDivElement, selection: Selection) {
+  const range = document.createRange();
+  range.selectNodeContents(editor);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  return range;
+}
+
 export function applyCmsEditorInlineStyle(
   editor: HTMLDivElement | null,
   property: "fontFamily" | "fontSize",
   value: string,
   savedRange: Range | null,
+  options?: { applyToAll?: boolean },
 ) {
   if (!editor || typeof document === "undefined") {
     return;
@@ -174,25 +271,41 @@ export function applyCmsEditorInlineStyle(
     return;
   }
 
-  if (savedRange) {
+  let range: Range | null = null;
+
+  if (options?.applyToAll) {
+    range = selectEntireEditor(editor, selection);
+  } else if (
+    savedRange &&
+    editor.contains(savedRange.commonAncestorContainer)
+  ) {
     selection.removeAllRanges();
     selection.addRange(savedRange.cloneRange());
+    range = selection.getRangeAt(0);
+  } else if (selection.rangeCount) {
+    const candidate = selection.getRangeAt(0);
+    if (editor.contains(candidate.commonAncestorContainer)) {
+      range = candidate;
+    }
   }
 
-  if (!selection.rangeCount) {
-    return;
-  }
-
-  const range = selection.getRangeAt(0);
-  if (!editor.contains(range.commonAncestorContainer)) {
-    return;
+  if (!range) {
+    range = selectEntireEditor(editor, selection);
   }
 
   if (range.collapsed) {
-    range.selectNodeContents(editor);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    range = selectEntireEditor(editor, selection);
     if (!range.toString().trim() && !editor.textContent?.trim()) {
+      const css =
+        property === "fontFamily"
+          ? `font-family: '${value}', sans-serif`
+          : `font-size: ${value}`;
+      editor.innerHTML = `<span style="${css}"><br></span>`;
+      const next = document.createRange();
+      next.selectNodeContents(editor);
+      next.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(next);
       return;
     }
   }

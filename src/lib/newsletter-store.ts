@@ -1,7 +1,7 @@
 import { randomUUID, createHash } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isPostgresEnabled, pgInsertReturning, pgQuery } from "@/lib/postgres";
 import { assertProductionDatabase } from "@/lib/database-status";
 
 export type NewsletterSubscriber = {
@@ -38,16 +38,6 @@ const dataPath = path.join(
 );
 
 const defaultDb: LocalNewsletterDb = { subscribers: [], campaigns: [] };
-
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false },
-  });
-}
 
 function newUnsubscribeToken(email: string) {
   return createHash("sha256")
@@ -121,16 +111,11 @@ async function writeLocalNewsletterDb(db: LocalNewsletterDb) {
 export async function listNewsletterSubscribers(): Promise<
   NewsletterSubscriber[]
 > {
-  const sb = supabaseAdmin();
-  if (sb) {
-    const { data, error } = await sb
-      .from("newsletter_subscribers")
-      .select("*")
-      .order("subscribed_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) =>
-      mapSubscriber(row as Record<string, unknown>),
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select * from newsletter_subscribers order by subscribed_at desc",
     );
+    return rows.map((row) => mapSubscriber(row as Record<string, unknown>));
   }
   const db = await readLocalNewsletterDb();
   return [...db.subscribers].sort(
@@ -157,32 +142,28 @@ export async function subscribeNewsletterEmail(
   source = "footer",
 ): Promise<{ subscriber: NewsletterSubscriber; created: boolean }> {
   const normalized = email.trim().toLowerCase();
-  const sb = supabaseAdmin();
 
-  if (sb) {
-    const { data: existing } = await sb
-      .from("newsletter_subscribers")
-      .select("*")
-      .eq("email", normalized)
-      .maybeSingle();
+  if (isPostgresEnabled()) {
+    const { rows: existingRows } = await pgQuery(
+      "select * from newsletter_subscribers where email = $1 limit 1",
+      [normalized],
+    );
+    const existing = existingRows[0] as Record<string, unknown> | undefined;
 
     if (existing) {
-      const row = existing as Record<string, unknown>;
+      const row = existing;
       if (row.status === "unsubscribed") {
         const token = newUnsubscribeToken(normalized);
-        const { data: updated, error } = await sb
-          .from("newsletter_subscribers")
-          .update({
-            status: "active",
-            unsubscribe_token: token,
-            unsubscribed_at: null,
-            subscribed_at: new Date().toISOString(),
-            source,
-          })
-          .eq("id", row.id)
-          .select("*")
-          .single();
-        if (error) throw new Error(error.message);
+        const { rows } = await pgQuery(
+          `update newsletter_subscribers
+           set status = 'active', unsubscribe_token = $2, unsubscribed_at = null,
+               subscribed_at = $3::timestamptz, source = $4
+           where id = $1
+           returning *`,
+          [row.id, token, new Date().toISOString(), source],
+        );
+        const updated = rows[0];
+        if (!updated) throw new Error("Newsletter resubscribe failed");
         return {
           subscriber: mapSubscriber(updated as Record<string, unknown>),
           created: false,
@@ -195,17 +176,13 @@ export async function subscribeNewsletterEmail(
     }
 
     const token = newUnsubscribeToken(normalized);
-    const { data: inserted, error } = await sb
-      .from("newsletter_subscribers")
-      .insert({
-        email: normalized,
-        status: "active",
-        unsubscribe_token: token,
-        source,
-      })
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+    const inserted = await pgInsertReturning("newsletter_subscribers", {
+      email: normalized,
+      status: "active",
+      unsubscribe_token: token,
+      source,
+    });
+    if (!inserted) throw new Error("Newsletter subscribe failed");
     return {
       subscriber: mapSubscriber(inserted as Record<string, unknown>),
       created: true,
@@ -243,18 +220,15 @@ export async function unsubscribeByToken(token: string) {
   const trimmed = token.trim();
   if (!trimmed) return null;
 
-  const sb = supabaseAdmin();
-  if (sb) {
-    const { data, error } = await sb
-      .from("newsletter_subscribers")
-      .update({
-        status: "unsubscribed",
-        unsubscribed_at: new Date().toISOString(),
-      })
-      .eq("unsubscribe_token", trimmed)
-      .select("*")
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      `update newsletter_subscribers
+       set status = 'unsubscribed', unsubscribed_at = $2::timestamptz
+       where unsubscribe_token = $1
+       returning *`,
+      [trimmed, new Date().toISOString()],
+    );
+    const data = rows[0];
     return data ? mapSubscriber(data as Record<string, unknown>) : null;
   }
 
@@ -276,7 +250,6 @@ export async function logNewsletterCampaign(input: {
   sentCount: number;
   failedCount: number;
 }) {
-  const sb = supabaseAdmin();
   const row = {
     template_id: input.templateId,
     subject: input.subject,
@@ -287,13 +260,9 @@ export async function logNewsletterCampaign(input: {
     failed_count: input.failedCount,
   };
 
-  if (sb) {
-    const { data, error } = await sb
-      .from("newsletter_campaigns")
-      .insert(row)
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgInsertReturning("newsletter_campaigns", row);
+    if (!data) throw new Error("Newsletter campaign log failed");
     return mapCampaign(data as Record<string, unknown>);
   }
 
@@ -315,17 +284,12 @@ export async function logNewsletterCampaign(input: {
 }
 
 export async function listRecentNewsletterCampaigns(limit = 20) {
-  const sb = supabaseAdmin();
-  if (sb) {
-    const { data, error } = await sb
-      .from("newsletter_campaigns")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) =>
-      mapCampaign(row as Record<string, unknown>),
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select * from newsletter_campaigns order by created_at desc limit $1",
+      [limit],
     );
+    return rows.map((row) => mapCampaign(row as Record<string, unknown>));
   }
   const db = await readLocalNewsletterDb();
   return db.campaigns.slice(0, limit);

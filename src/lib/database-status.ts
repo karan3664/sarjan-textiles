@@ -1,12 +1,7 @@
+import { isPostgresEnabled } from "@/lib/postgres";
+
 export function databaseMode() {
-  if (process.env.DATABASE_URL?.trim()) return "postgres";
-  if (
-    process.env.SUPABASE_ENABLED === "true" &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL
-  ) {
-    return "supabase-postgres";
-  }
+  if (isPostgresEnabled()) return "postgres";
   return "json-fallback";
 }
 
@@ -14,7 +9,7 @@ export function assertProductionDatabase() {
   const mode = databaseMode();
   if (process.env.NODE_ENV === "production" && mode === "json-fallback") {
     throw new Error(
-      "Production database is not configured. Set DATABASE_URL or Supabase service credentials.",
+      "Production database is not configured. Set DATABASE_URL to your Hostinger VPS PostgreSQL connection string.",
     );
   }
   return mode;

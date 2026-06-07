@@ -1,6 +1,7 @@
 "use client";
 
 import type { CmsHomeBanner } from "@/lib/home-banners";
+import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
 import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
 
 type UploadState = Record<string, "uploading" | string | undefined>;
@@ -117,7 +118,7 @@ export function AdminHomeBannerSlides({
                 <div>
                   <div className="sarjan-home-preview sarjan-banner-slide-preview mb-10">
                     {banner.image ? (
-                      <img src={banner.image} alt="" />
+                      <img src={resolveCmsMediaUrl(banner.image)} alt="" />
                     ) : (
                       <div className="body-text text-secondary">No image</div>
                     )}

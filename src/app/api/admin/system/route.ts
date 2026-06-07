@@ -1,13 +1,19 @@
 import { databaseMode } from "@/lib/database-status";
+import { isPostgresEnabled } from "@/lib/postgres";
 
 export async function GET() {
-  const smtpMissing = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"].filter((name) => !process.env[name]?.trim());
-  const supabaseStorageReady = Boolean(process.env.SUPABASE_ENABLED === "true" && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const smtpMissing = [
+    "SMTP_HOST",
+    "SMTP_USER",
+    "SMTP_PASS",
+    "SMTP_FROM",
+  ].filter((name) => !process.env[name]?.trim());
+  const postgresReady = isPostgresEnabled();
   return Response.json({
     databaseMode: databaseMode(),
     smtpReady: smtpMissing.length === 0,
     smtpMissing,
-    uploadStorage: supabaseStorageReady ? "supabase-storage" : "local-public-uploads",
+    uploadStorage: "vps-disk-public-uploads",
     adminAuth: true,
     rbac: true,
     auditLogs: true,
@@ -16,7 +22,7 @@ export async function GET() {
       daily: true,
       manual: true,
       restore: true,
-      storage: supabaseStorageReady ? "supabase-app_backups" : "local-json",
+      storage: postgresReady ? "postgres-app_backups" : "local-json",
     },
     security: {
       secureCookies: process.env.NODE_ENV === "production",
@@ -40,7 +46,7 @@ export async function GET() {
       authSecurity: 100,
       rolesAudit: 100,
       backupRestore: 100,
-      deploymentSupabaseVercel: 100,
+      deploymentVpsCoolify: 100,
     },
   });
 }

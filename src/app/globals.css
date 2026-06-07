@@ -4367,6 +4367,82 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   line-height: 1.45;
 }
 
+/* Product card — hanging promo tag + star rating (logo maroon) */
+.sarjan-product-promo-tag {
+  position: absolute;
+  top: 10px;
+  left: 4px;
+  z-index: 4;
+  transform: rotate(-28deg);
+  transform-origin: top center;
+  pointer-events: none;
+}
+
+.sarjan-product-promo-tag__ring {
+  width: 9px;
+  height: 9px;
+  margin: 0 auto 2px;
+  border: 2px solid #1a1a1a;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.sarjan-product-promo-tag__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 68px;
+  padding: 7px 8px 9px;
+  color: #fff;
+  text-align: center;
+  background: var(--primary, #7a1f1f);
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 50% 100%, 0 78%);
+}
+
+.sarjan-product-promo-tag__line {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+}
+
+.sarjan-product-promo-tag__arrow {
+  width: 42px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.sarjan-product-card-rating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+
+.sarjan-product-card-rating .icon {
+  font-size: 13px;
+  line-height: 1;
+  color: #e8b007;
+}
+
+.sarjan-product-card-rating .icon.sarjan-star-muted {
+  color: #d9d2c6;
+}
+
+.sarjan-card-img .sarjan-product-promo-tag,
+.sarjan-card-img .sarjan-product-card-rating {
+  z-index: 3;
+}
+
 .sarjan-home-image-panel {
   height: 100%;
 }

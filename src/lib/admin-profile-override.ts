@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isPostgresEnabled, pgQuery, pgUpsertReturning } from "@/lib/postgres";
 import type { ConfiguredAdmin } from "@/lib/admin-token";
 
 const OVERRIDE_FILE = path.join(
@@ -18,23 +18,8 @@ type OverridesFile = {
   byEmail: Record<string, OverrideRow>;
 };
 
-function supabaseEnabled() {
-  const v = (process.env.SUPABASE_ENABLED ?? "").trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
-}
-
-function supabaseDb() {
-  if (!supabaseEnabled()) return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false },
-  });
-}
-
 function canWriteJsonOverrideFile() {
-  if (supabaseDb()) return false;
+  if (isPostgresEnabled()) return false;
   if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME)
     return false;
   return true;
@@ -53,18 +38,15 @@ async function readOverridesFromFile(): Promise<OverridesFile> {
   }
 }
 
-async function readOverridesFromSupabase(): Promise<OverridesFile | null> {
-  const supabase = supabaseDb();
-  if (!supabase) return null;
+async function readOverridesFromPostgres(): Promise<OverridesFile | null> {
+  if (!isPostgresEnabled()) return null;
 
-  const { data, error } = await supabase
-    .from("admin_profile_overrides")
-    .select("email, name, password_hash");
-
-  if (error) throw new Error(error.message);
+  const { rows } = await pgQuery(
+    "select email, name, password_hash from admin_profile_overrides",
+  );
 
   const byEmail: Record<string, OverrideRow> = {};
-  for (const row of data ?? []) {
+  for (const row of rows) {
     const key = String(row.email ?? "")
       .trim()
       .toLowerCase();
@@ -83,7 +65,7 @@ async function readOverridesFromSupabase(): Promise<OverridesFile | null> {
 
 async function readOverrides(): Promise<OverridesFile> {
   try {
-    const fromDb = await readOverridesFromSupabase();
+    const fromDb = await readOverridesFromPostgres();
     if (fromDb) return fromDb;
   } catch {
     /* fall through to JSON for local dev */
@@ -94,16 +76,15 @@ async function readOverrides(): Promise<OverridesFile> {
 async function writeOverridesToFile(data: OverridesFile) {
   if (!canWriteJsonOverrideFile()) {
     throw new Error(
-      "Cannot persist admin profile on disk. Enable Supabase (SUPABASE_ENABLED=true) and run migration 20260523000000_admin_profile_overrides.sql.",
+      "Cannot persist admin profile on disk. Set DATABASE_URL and run migration 20260523000000_admin_profile_overrides.sql on your VPS Postgres.",
     );
   }
   await mkdir(path.dirname(OVERRIDE_FILE), { recursive: true });
   await writeFile(OVERRIDE_FILE, JSON.stringify(data, null, 2), "utf8");
 }
 
-async function writeOverridesToSupabase(data: OverridesFile) {
-  const supabase = supabaseDb();
-  if (!supabase) {
+async function writeOverridesToPostgres(data: OverridesFile) {
+  if (!isPostgresEnabled()) {
     await writeOverridesToFile(data);
     return;
   }
@@ -117,16 +98,14 @@ async function writeOverridesToSupabase(data: OverridesFile) {
 
   if (!rows.length) return;
 
-  const { error } = await supabase
-    .from("admin_profile_overrides")
-    .upsert(rows, { onConflict: "email" });
-  if (error) throw new Error(error.message);
+  for (const row of rows) {
+    await pgUpsertReturning("admin_profile_overrides", row, "email");
+  }
 }
 
 async function writeOverrides(data: OverridesFile) {
-  const supabase = supabaseDb();
-  if (supabase) {
-    await writeOverridesToSupabase(data);
+  if (isPostgresEnabled()) {
+    await writeOverridesToPostgres(data);
     return;
   }
   await writeOverridesToFile(data);

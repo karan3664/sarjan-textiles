@@ -1,7 +1,6 @@
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import { assertClientAvatarContentAllowed } from "@/lib/client-avatar-moderation";
 import { clientStatusAuthError } from "@/lib/client-approved-session";
@@ -18,59 +17,12 @@ const localAvatarDir = path.join(
   "sarjan-assets",
   "client-avatars",
 );
-const storageBucket = "cms-media";
-
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, { auth: { persistSession: false } });
-}
 
 function isImageFile(file: File) {
   return (
     file.type.startsWith("image/") ||
     /\.(jpe?g|png|webp|gif|avif|heic|heif)$/i.test(file.name)
   );
-}
-
-async function uploadAvatarToSupabase(
-  clientId: string,
-  buffer: Buffer,
-  contentType: string,
-) {
-  const supabase = supabaseAdmin();
-  if (!supabase) return null;
-
-  await supabase.storage
-    .createBucket(storageBucket, { public: true })
-    .catch(() => null);
-
-  const storagePath = `avatars/${clientId}.webp`;
-  const { error } = await supabase.storage
-    .from(storageBucket)
-    .upload(storagePath, buffer, {
-      cacheControl: "3600",
-      contentType,
-      upsert: true,
-    });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage
-    .from(storageBucket)
-    .getPublicUrl(storagePath);
-  return data.publicUrl;
-}
-
-async function deleteAvatarFromSupabase(clientId: string) {
-  const supabase = supabaseAdmin();
-  if (!supabase) return;
-  await supabase.storage
-    .from(storageBucket)
-    .remove([`avatars/${clientId}.webp`])
-    .catch(() => null);
 }
 
 async function deleteLocalAvatarFile(clientId: string) {
@@ -106,7 +58,7 @@ export async function DELETE(
   const auth = await authorizeAvatarRequest(request, id);
   if ("error" in auth && auth.error) return auth.error;
 
-  await Promise.all([deleteLocalAvatarFile(id), deleteAvatarFromSupabase(id)]);
+  await deleteLocalAvatarFile(id);
 
   const client = await updateClient(id, { avatarUrl: "" });
   return Response.json({ client: publicClient(client) });
@@ -185,15 +137,10 @@ export async function POST(
 
   let avatarUrl: string;
   try {
-    const remote = await uploadAvatarToSupabase(id, webp, "image/webp");
-    if (remote) {
-      avatarUrl = remote;
-    } else {
-      await mkdir(localAvatarDir, { recursive: true });
-      const filename = `${id}.webp`;
-      await writeFile(path.join(localAvatarDir, filename), webp);
-      avatarUrl = `/sarjan-assets/client-avatars/${filename}`;
-    }
+    await mkdir(localAvatarDir, { recursive: true });
+    const filename = `${id}.webp`;
+    await writeFile(path.join(localAvatarDir, filename), webp);
+    avatarUrl = `/sarjan-assets/client-avatars/${filename}`;
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Avatar save failed" },

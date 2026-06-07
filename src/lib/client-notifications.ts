@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { isPostgresEnabled, pgInsertReturning, pgQuery } from "@/lib/postgres";
 import {
   createLocalClientNotification,
   deleteLocalClientNotification,
@@ -33,14 +33,6 @@ export type ClientNotificationRecord = {
 
 const MAX_PER_CLIENT = 100;
 const MAX_BROADCAST = 80;
-
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
 
 function maxFor(clientId: string) {
   return clientId === BROADCAST_CLIENT_ID ? MAX_BROADCAST : MAX_PER_CLIENT;
@@ -76,21 +68,19 @@ function rowToRecord(row: DbRow): ClientNotificationRecord {
   };
 }
 
-async function trimSupabaseClient(
-  supabase: NonNullable<ReturnType<typeof supabaseAdmin>>,
-  clientId: string,
-) {
+async function trimPostgresClient(clientId: string) {
   const limit = maxFor(clientId);
-  const { data } = await supabase
-    .from("client_notifications")
-    .select("id")
-    .eq("client_id", clientId)
-    .order("created_at", { ascending: false });
-  const rows = data ?? [];
+  const { rows } = await pgQuery<{ id: string }>(
+    "select id from client_notifications where client_id = $1 order by created_at desc",
+    [clientId],
+  );
   if (rows.length <= limit) return;
-  const staleIds = rows.slice(limit).map((r: { id: string }) => r.id);
+  const staleIds = rows.slice(limit).map((r) => r.id);
   if (staleIds.length) {
-    await supabase.from("client_notifications").delete().in("id", staleIds);
+    await pgQuery(
+      "delete from client_notifications where id = any($1::uuid[])",
+      [staleIds],
+    );
   }
 }
 
@@ -99,15 +89,12 @@ export function isBroadcastNotification(item: ClientNotificationRecord) {
 }
 
 export async function listClientNotifications(clientId: string) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_notifications")
-      .select("*")
-      .eq("client_id", clientId)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) => rowToRecord(row as DbRow));
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select * from client_notifications where client_id = $1 order by created_at desc",
+      [clientId],
+    );
+    return rows.map((row) => rowToRecord(row as DbRow));
   }
   return listLocalClientNotifications(clientId);
 }
@@ -118,15 +105,12 @@ export async function listBroadcastNotifications() {
 
 /** Logged-in inbox: personal order updates + marketing broadcasts. */
 export async function listInboxForClient(clientId: string) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_notifications")
-      .select("*")
-      .in("client_id", [clientId, BROADCAST_CLIENT_ID])
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) => rowToRecord(row as DbRow));
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select * from client_notifications where client_id = any($1::text[]) order by created_at desc",
+      [[clientId, BROADCAST_CLIENT_ID]],
+    );
+    return rows.map((row) => rowToRecord(row as DbRow));
   }
   const personal = await listClientNotifications(clientId);
   const broadcast = await listBroadcastNotifications();
@@ -158,9 +142,8 @@ export async function createClientNotification(input: {
     createdAt: new Date().toISOString(),
   };
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { error } = await supabase.from("client_notifications").insert({
+  if (isPostgresEnabled()) {
+    await pgInsertReturning("client_notifications", {
       id: record.id,
       client_id: record.clientId,
       title: record.title,
@@ -171,8 +154,7 @@ export async function createClientNotification(input: {
       read: false,
       created_at: record.createdAt,
     });
-    if (error) throw new Error(error.message);
-    await trimSupabaseClient(supabase, record.clientId);
+    await trimPostgresClient(record.clientId);
     return record;
   }
 
@@ -193,14 +175,12 @@ export async function createBroadcastNotification(input: {
 }
 
 export async function findClientNotification(notificationId: string) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_notifications")
-      .select("*")
-      .eq("id", notificationId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select * from client_notifications where id = $1 limit 1",
+      [notificationId],
+    );
+    const data = rows[0];
     return data ? rowToRecord(data as DbRow) : null;
   }
   return findLocalClientNotification(notificationId);
@@ -210,8 +190,7 @@ export async function markClientNotificationRead(
   clientId: string,
   notificationId: string,
 ) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     const existing = await findClientNotification(notificationId);
     if (!existing) return null;
     if (
@@ -220,13 +199,11 @@ export async function markClientNotificationRead(
     ) {
       return null;
     }
-    const { data, error } = await supabase
-      .from("client_notifications")
-      .update({ read: true })
-      .eq("id", notificationId)
-      .select("*")
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+    const { rows } = await pgQuery(
+      "update client_notifications set read = true where id = $1 returning *",
+      [notificationId],
+    );
+    const data = rows[0];
     return data ? rowToRecord(data as DbRow) : null;
   }
   return markLocalClientNotificationRead(
@@ -240,8 +217,7 @@ export async function deleteClientNotification(
   clientId: string,
   notificationId: string,
 ) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     const existing = await findClientNotification(notificationId);
     if (!existing) return false;
     if (
@@ -250,11 +226,9 @@ export async function deleteClientNotification(
     ) {
       return false;
     }
-    const { error } = await supabase
-      .from("client_notifications")
-      .delete()
-      .eq("id", notificationId);
-    if (error) throw new Error(error.message);
+    await pgQuery("delete from client_notifications where id = $1", [
+      notificationId,
+    ]);
     return true;
   }
   return deleteLocalClientNotification(

@@ -78,10 +78,6 @@ NEXT_PUBLIC_SITE_URL=https://sarjantextiles.com
 # From /root/sarjan-db-credentials.env after bootstrap
 DATABASE_URL=postgresql://sarjan:PASSWORD@sarjan-postgres:5432/sarjan_textiles
 
-# Until postgres code migration ships, production still needs Supabase OR json mode fails.
-# Target state (VPS-only):
-SUPABASE_ENABLED=false
-
 ADMIN_SESSION_SECRET=<64+ random chars>
 CLIENT_JWT_SECRET=<64+ random chars>
 ADMIN_EMAIL=admin@sarjantextiles.com
@@ -200,24 +196,13 @@ On VPS `/etc/cron.d/sarjan`:
 
 ---
 
-## E. Code blocker (important)
-
-The app still reads/writes via **Supabase JS client** in many files. `DATABASE_URL` alone is not enough until the postgres driver layer is wired.
-
-**Order:**
-
-1. Bootstrap Postgres on VPS (this doc) ✅
-2. Code: `DATABASE_URL` + `pg` in `local-db.ts` and related stores (in progress)
-3. Deploy on Coolify with `SUPABASE_ENABLED=false`
-4. Point DNS · cut Vercel/Supabase
-
-Mobile app needs **no change** if domain stays `sarjantextiles.com`.
-
----
-
-## F. Verify
+## E. Verify
 
 ```bash
 curl -sI https://sarjantextiles.com/api/health
 docker exec sarjan-postgres psql -U sarjan -d sarjan_textiles -c "SELECT count(*) FROM clients;"
 ```
+
+**CMS banner/images:** uploads save to `/app/public/uploads/cms/` on the persistent volume. The app serves them via `/uploads/cms/*` (runtime route — not bundled in the Docker image). After deploy, re-upload hero slides in **Admin → Home** if old URLs still 404 (files may have been lost before the volume was mounted).
+
+Mobile app needs **no change** if domain stays `sarjantextiles.com`.

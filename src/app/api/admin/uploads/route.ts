@@ -2,16 +2,15 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import {
   processAuthBannerUpload,
   toAuthBannerAsset,
 } from "@/lib/auth-banner-process";
+import { resolveCmsUploadsRoot } from "@/lib/cms-uploads-path";
 
 export const runtime = "nodejs";
 
-const uploadDir = path.join(process.cwd(), "public", "uploads", "cms");
-const storageBucket = "cms-media";
+const uploadDir = resolveCmsUploadsRoot();
 const maxUploadBytes = 30 * 1024 * 1024;
 const maxVideoUploadBytes = 80 * 1024 * 1024;
 const allowedExtensions = [
@@ -60,14 +59,6 @@ function videoContentType(file: File, extension: string) {
   return "video/mp4";
 }
 
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, { auth: { persistSession: false } });
-}
-
 async function imageBuffer(file: File) {
   const input = Buffer.from(await file.arrayBuffer());
 
@@ -92,47 +83,11 @@ async function imageBuffer(file: File) {
   }
 }
 
-async function uploadToSupabase(
-  filename: string,
-  buffer: Buffer,
-  contentType: string,
-) {
-  const supabase = supabaseAdmin();
-  if (!supabase) return null;
-
-  await supabase.storage
-    .createBucket(storageBucket, { public: true })
-    .catch(() => null);
-
-  const storagePath = `cms/${filename}`;
-  const { error } = await supabase.storage
-    .from(storageBucket)
-    .upload(storagePath, buffer, {
-      cacheControl: "31536000",
-      contentType,
-      upsert: true,
-    });
-
-  if (error) throw new Error(error.message);
-
-  const { data } = supabase.storage
-    .from(storageBucket)
-    .getPublicUrl(storagePath);
-  return data.publicUrl;
-}
-
 async function persistCmsFile(
   filename: string,
   buffer: Buffer,
-  contentType: string,
+  _contentType: string,
 ) {
-  try {
-    const supabaseUrl = await uploadToSupabase(filename, buffer, contentType);
-    if (supabaseUrl) return supabaseUrl;
-  } catch (error) {
-    if (process.env.VERCEL) throw error;
-  }
-
   await mkdir(uploadDir, { recursive: true });
   const filepath = path.join(uploadDir, filename);
   await writeFile(filepath, buffer);

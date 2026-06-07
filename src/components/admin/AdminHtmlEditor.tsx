@@ -1,63 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   applyCmsEditorInlineStyle,
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
   CMS_FONT_SIZES,
+  detectEditorContentStyle,
   isSelectionWithinEditor,
-  matchCmsFontFamily,
-  normalizeFontFamily,
   normalizeLegacyFontHtml,
+  resolveEditorToolbarStyle,
 } from "@/lib/cms-html-editor-utils";
 
 const GOOGLE_FONTS_URL = buildGoogleFontsUrl();
 
 function exec(command: string, value?: string) {
   document.execCommand(command, false, value);
-}
-
-function detectStyleAtSelection(
-  editor: HTMLDivElement | null,
-  property: "fontFamily" | "fontSize",
-): string {
-  const selection = window.getSelection();
-  if (!editor || !isSelectionWithinEditor(editor, selection)) {
-    return "";
-  }
-  let node: Node | null = selection!.anchorNode;
-  if (!node) {
-    return "";
-  }
-  if (node.nodeType === Node.TEXT_NODE) {
-    node = node.parentElement;
-  }
-  while (node && node !== editor) {
-    if (node instanceof HTMLElement) {
-      if (node.tagName === "FONT") {
-        const face = node.getAttribute("face");
-        if (face && property === "fontFamily") {
-          return matchCmsFontFamily(face) || normalizeFontFamily(face);
-        }
-      }
-      const inline = node.style[property];
-      if (inline) {
-        return property === "fontFamily" ? normalizeFontFamily(inline) : inline;
-      }
-      const computed = window.getComputedStyle(node)[property];
-      if (property === "fontFamily") {
-        const match = matchCmsFontFamily(computed);
-        if (match) {
-          return match;
-        }
-      } else if (computed && computed !== "16px") {
-        return computed;
-      }
-    }
-    node = node.parentElement;
-  }
-  return "";
 }
 
 type Props = {
@@ -76,6 +41,7 @@ export function AdminHtmlEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const isInternalUpdateRef = useRef(false);
+  const lastHtmlRef = useRef(value);
   const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [source, setSource] = useState(value);
@@ -95,19 +61,55 @@ export function AdminHtmlEditor({
     document.head.appendChild(link);
   }, []);
 
-  useEffect(() => {
-    setSource(value);
-    if (isInternalUpdateRef.current) {
-      isInternalUpdateRef.current = false;
+  const refreshToolbar = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) {
       return;
     }
-    if (mode === "visual" && editorRef.current) {
-      const normalized = normalizeLegacyFontHtml(value || "");
+    const selection = window.getSelection();
+    setActiveFont(
+      resolveEditorToolbarStyle(editor, "fontFamily", selection) ||
+        detectEditorContentStyle(editor, "fontFamily"),
+    );
+    setActiveSize(
+      resolveEditorToolbarStyle(editor, "fontSize", selection) ||
+        detectEditorContentStyle(editor, "fontSize"),
+    );
+    if (isSelectionWithinEditor(editor, selection) && selection?.rangeCount) {
+      const range = selection.getRangeAt(0);
+      if (editor.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+  }, []);
+
+  const syncEditorHtml = useCallback(
+    (html: string) => {
+      if (!editorRef.current || mode !== "visual") {
+        return;
+      }
+      const normalized = normalizeLegacyFontHtml(html || "");
       if (editorRef.current.innerHTML !== normalized) {
         editorRef.current.innerHTML = normalized;
       }
+      requestAnimationFrame(() => refreshToolbar());
+    },
+    [mode, refreshToolbar],
+  );
+
+  useLayoutEffect(() => {
+    setSource(value);
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      lastHtmlRef.current = value;
+      requestAnimationFrame(() => refreshToolbar());
+      return;
     }
-  }, [value, mode]);
+    if (value !== lastHtmlRef.current) {
+      lastHtmlRef.current = value;
+      syncEditorHtml(value);
+    }
+  }, [value, mode, syncEditorHtml, refreshToolbar]);
 
   const saveSelection = useCallback(() => {
     const editor = editorRef.current;
@@ -123,27 +125,27 @@ export function AdminHtmlEditor({
 
   const syncVisual = useCallback(() => {
     const html = editorRef.current?.innerHTML ?? "";
+    if (html === lastHtmlRef.current) {
+      return;
+    }
+    lastHtmlRef.current = html;
     isInternalUpdateRef.current = true;
     onChange(html);
     setSource(html);
   }, [onChange]);
 
-  const refreshToolbar = useCallback(() => {
-    const editor = editorRef.current;
-    const selection = window.getSelection();
-    if (!isSelectionWithinEditor(editor, selection)) {
-      return;
-    }
-    setActiveFont(detectStyleAtSelection(editor, "fontFamily"));
-    setActiveSize(detectStyleAtSelection(editor, "fontSize"));
-    saveSelection();
-  }, [saveSelection]);
-
   useEffect(() => {
     if (mode !== "visual") {
       return;
     }
-    const onSelectionChange = () => refreshToolbar();
+    const onSelectionChange = () => {
+      const editor = editorRef.current;
+      const selection = window.getSelection();
+      if (!isSelectionWithinEditor(editor, selection)) {
+        return;
+      }
+      refreshToolbar();
+    };
     document.addEventListener("selectionchange", onSelectionChange);
     return () =>
       document.removeEventListener("selectionchange", onSelectionChange);
@@ -161,23 +163,38 @@ export function AdminHtmlEditor({
     property: "fontFamily" | "fontSize",
     nextValue: string,
   ) => {
-    applyCmsEditorInlineStyle(
-      editorRef.current,
-      property,
-      nextValue,
-      savedRangeRef.current,
-    );
+    const editor = editorRef.current;
+    if (!editor) {
+      return;
+    }
+
+    const selection = window.getSelection();
+    const saved = savedRangeRef.current;
+    const hasTextSelection =
+      saved &&
+      !saved.collapsed &&
+      editor.contains(saved.commonAncestorContainer);
+
+    applyCmsEditorInlineStyle(editor, property, nextValue, saved, {
+      applyToAll: !hasTextSelection,
+    });
+
     if (property === "fontFamily") {
       setActiveFont(nextValue);
     } else {
       setActiveSize(nextValue);
     }
-    saveSelection();
+
     syncVisual();
-    refreshToolbar();
+    requestAnimationFrame(() => refreshToolbar());
   };
 
-  const handleToolbarPointerDown = () => {
+  const handleToolbarPointerDown = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest("select")) {
+      saveSelection();
+      return;
+    }
     saveSelection();
   };
 
@@ -286,7 +303,6 @@ export function AdminHtmlEditor({
           style={{ minHeight: `${minHeightPx}px` }}
           onInput={() => {
             syncVisual();
-            refreshToolbar();
           }}
           onBlur={(event) => {
             const related = event.relatedTarget as Node | null;
@@ -296,9 +312,9 @@ export function AdminHtmlEditor({
             }
             syncVisual();
           }}
-          onKeyUp={refreshToolbar}
-          onMouseUp={refreshToolbar}
           onFocus={refreshToolbar}
+          onMouseUp={saveSelection}
+          onKeyUp={saveSelection}
         />
       ) : (
         <textarea
@@ -309,14 +325,16 @@ export function AdminHtmlEditor({
           placeholder={placeholder}
           onChange={(event) => {
             setSource(event.target.value);
+            lastHtmlRef.current = event.target.value;
             isInternalUpdateRef.current = true;
             onChange(event.target.value);
           }}
         />
       )}
       <p className="sarjan-html-editor-hint">
-        Select text (or click inside field) then pick font/size — each field
-        keeps its own formatting. Use HTML tab for advanced markup.
+        Click inside a field and pick font/size — applies to the whole field.
+        Select part of the text to format only that portion. Use HTML tab for
+        advanced markup.
       </p>
     </div>
   );

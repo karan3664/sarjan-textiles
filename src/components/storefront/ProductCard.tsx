@@ -8,7 +8,10 @@ import {
   ProductDealCountdown,
   ProductDealOriginalPrice,
 } from "./ProductDealCountdown";
+import { ProductPromoTag } from "./ProductPromoTag";
+import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
+import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
 
 export function ProductCard({ product }: { product: Product }) {
   const altText = buildProductImageAlt(product);
@@ -28,6 +31,8 @@ export function ProductCard({ product }: { product: Product }) {
             Out of stock
           </div>
         ) : null}
+        {SHOW_PRODUCT_PROMO_TAG ? <ProductPromoTag /> : null}
+        <ProductCardRating rating={product.rating} />
         <ProductDealCountdown product={product} variant="card" />
         <img src={product.images[0]} alt={altText} />
       </Link>

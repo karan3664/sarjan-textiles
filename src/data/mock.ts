@@ -53,6 +53,9 @@ export type Product = {
   /** Computed at read time (API responses). */
   dealActive?: boolean;
   dealOriginalPrice?: number;
+  /** Storefront card star rating (defaults to 4 when omitted). */
+  rating?: number;
+  ratingCount?: number;
 };
 
 const asset = (file: string) => {

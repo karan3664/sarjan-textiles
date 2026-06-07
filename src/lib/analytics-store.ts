@@ -1,12 +1,4 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, { auth: { persistSession: false } });
-}
+import { isPostgresEnabled, pgQuery } from "@/lib/postgres";
 
 export async function trackVisit(input: {
   visitorId: string;
@@ -14,35 +6,41 @@ export async function trackVisit(input: {
   referrer?: string;
   userAgent?: string;
 }) {
-  const supabase = supabaseAdmin();
-  if (!supabase) return;
-  await supabase.from("analytics_events").insert({
-    visitor_id: input.visitorId.slice(0, 80),
-    path: input.path.slice(0, 300),
-    referrer: input.referrer?.slice(0, 500),
-    user_agent: input.userAgent?.slice(0, 500),
-  });
+  if (!isPostgresEnabled()) return;
+  await pgQuery(
+    `insert into analytics_events (visitor_id, path, referrer, user_agent)
+     values ($1, $2, $3, $4)`,
+    [
+      input.visitorId.slice(0, 80),
+      input.path.slice(0, 300),
+      input.referrer?.slice(0, 500) ?? null,
+      input.userAgent?.slice(0, 500) ?? null,
+    ],
+  );
 }
 
 export async function getWebsiteAnalytics() {
-  const supabase = supabaseAdmin();
-  if (!supabase) return { totalVisitors: 0, pageViews: 0 };
+  if (!isPostgresEnabled()) {
+    return { totalVisitors: 0, pageViews: 0 };
+  }
 
   try {
-    const [{ count: pageViews }, { data }] = await Promise.all([
-      supabase
-        .from("analytics_events")
-        .select("id", { count: "exact", head: true }),
-      supabase.from("analytics_events").select("visitor_id").limit(10000),
+    const [countRes, visitorsRes] = await Promise.all([
+      pgQuery<{ count: string }>(
+        "select count(*)::text as count from analytics_events",
+      ),
+      pgQuery<{ visitor_id: string | null }>(
+        "select visitor_id from analytics_events limit 10000",
+      ),
     ]);
     const uniqueVisitors = new Set(
-      (data ?? [])
-        .map((row: { visitor_id?: string | null }) => row.visitor_id)
+      visitorsRes.rows
+        .map((row) => row.visitor_id)
         .filter((id): id is string => Boolean(id)),
     );
     return {
       totalVisitors: uniqueVisitors.size,
-      pageViews: pageViews ?? 0,
+      pageViews: Number(countRes.rows[0]?.count ?? 0),
     };
   } catch {
     return { totalVisitors: 0, pageViews: 0 };

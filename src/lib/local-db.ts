@@ -1,7 +1,6 @@
 import { randomUUID, createHash } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import {
   assertUniqueAmongClients,
@@ -17,6 +16,12 @@ import {
   syncInventoryForOrderStatusChange,
 } from "@/lib/order-inventory";
 import { assertProductionDatabase } from "@/lib/database-status";
+import {
+  isPostgresEnabled,
+  pgInsertReturning,
+  pgQuery,
+  pgUpsertReturning,
+} from "@/lib/postgres";
 import {
   normalizeOrderPlacedVia,
   type OrderPlacedVia,
@@ -162,25 +167,21 @@ const defaultDb: LocalDb = {
   feedbacks: [],
 };
 
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false },
-    global: { fetch: timeoutFetch },
-  });
-}
-
-async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2000);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
+async function pgUpdateReturning(
+  table: string,
+  idColumn: string,
+  id: string,
+  patch: Record<string, unknown>,
+) {
+  const keys = Object.keys(patch);
+  if (!keys.length) return null;
+  const sets = keys.map((key, index) => `${key} = $${index + 1}`);
+  const params = [...keys.map((key) => patch[key]), id];
+  const { rows } = await pgQuery(
+    `update ${table} set ${sets.join(", ")} where ${idColumn} = $${keys.length + 1} returning *`,
+    params,
+  );
+  return rows[0] ?? null;
 }
 
 function mapClient(row: Record<string, unknown>): LocalClient {
@@ -318,51 +319,40 @@ export function publicClient(client: LocalClient) {
 }
 
 export async function readLocalDb(): Promise<LocalDb> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
       const [clientsRes, ordersRes, feedbacksRes] = await Promise.all([
-        supabase.from("clients").select("*"),
-        supabase.from("orders").select("*"),
-        supabase.from("feedbacks").select("*"),
+        pgQuery("select * from clients"),
+        pgQuery("select * from orders"),
+        pgQuery("select * from feedbacks"),
       ]);
-      if (clientsRes.error || ordersRes.error || feedbacksRes.error)
-        throw new Error(
-          clientsRes.error?.message ||
-            ordersRes.error?.message ||
-            feedbacksRes.error?.message,
-        );
       return {
         ...defaultDb,
-        clients: (clientsRes.data ?? []).map(mapClient),
-        orders: (ordersRes.data ?? []).map(mapOrder),
-        feedbacks: (feedbacksRes.data ?? []).map(
-          (row: Record<string, unknown>) => ({
-            id: String(row.id ?? ""),
-            companyName: String(row.company_name ?? ""),
-            email: String(row.email ?? ""),
-            contactPerson:
-              row.contact_person != null
-                ? String(row.contact_person)
-                : undefined,
-            phone: row.phone != null ? String(row.phone) : undefined,
-            requirement:
-              row.requirement != null ? String(row.requirement) : undefined,
-            orderId: row.order_id != null ? String(row.order_id) : undefined,
-            message: String(row.message ?? ""),
-            status: row.status as "new" | "replied" | undefined,
-            createdAt: String(row.created_at ?? ""),
-            repliedAt:
-              row.replied_at != null ? String(row.replied_at) : undefined,
-            replySubject:
-              row.reply_subject != null ? String(row.reply_subject) : undefined,
-            replyMessage:
-              row.reply_message != null ? String(row.reply_message) : undefined,
-          }),
-        ),
+        clients: clientsRes.rows.map(mapClient),
+        orders: ordersRes.rows.map(mapOrder),
+        feedbacks: feedbacksRes.rows.map((row: Record<string, unknown>) => ({
+          id: String(row.id ?? ""),
+          companyName: String(row.company_name ?? ""),
+          email: String(row.email ?? ""),
+          contactPerson:
+            row.contact_person != null ? String(row.contact_person) : undefined,
+          phone: row.phone != null ? String(row.phone) : undefined,
+          requirement:
+            row.requirement != null ? String(row.requirement) : undefined,
+          orderId: row.order_id != null ? String(row.order_id) : undefined,
+          message: String(row.message ?? ""),
+          status: row.status as "new" | "replied" | undefined,
+          createdAt: String(row.created_at ?? ""),
+          repliedAt:
+            row.replied_at != null ? String(row.replied_at) : undefined,
+          replySubject:
+            row.reply_subject != null ? String(row.reply_subject) : undefined,
+          replyMessage:
+            row.reply_message != null ? String(row.reply_message) : undefined,
+        })),
       };
     } catch {
-      // Fallback keeps demo/admin usable when Supabase is unreachable locally.
+      // Fallback keeps demo/admin usable when PostgreSQL is unreachable locally.
     }
   }
   try {
@@ -374,7 +364,7 @@ export async function readLocalDb(): Promise<LocalDb> {
 }
 
 function canWriteJsonDbFile() {
-  if (supabaseAdmin()) return false;
+  if (isPostgresEnabled()) return false;
   if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME)
     return false;
   return true;
@@ -384,7 +374,7 @@ export async function writeLocalDb(db: LocalDb) {
   if (!canWriteJsonDbFile()) {
     assertProductionDatabase();
     throw new Error(
-      "Cannot write local-db.json in this environment. Use Supabase (SUPABASE_ENABLED=true) and apply pending migrations.",
+      "Cannot write local-db.json in this environment. Set DATABASE_URL to your PostgreSQL connection string and apply pending migrations.",
     );
   }
   await mkdir(path.dirname(dbPath), { recursive: true });
@@ -420,8 +410,7 @@ export async function createClient(input: {
     gst: input.gst,
   });
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
       const addressPayload: NonNullable<LocalClient["address"]> = {};
       if (input.contactName?.trim()) {
@@ -445,12 +434,8 @@ export async function createClient(input: {
         status: "pending",
         address: Object.keys(addressPayload).length ? addressPayload : {},
       };
-      const { data, error } = await supabase
-        .from("clients")
-        .insert(row)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgInsertReturning("clients", row);
+      if (!data) throw new Error("Failed to create client");
       return mapClient(data);
     } catch {
       // Fall through to JSON fallback.
@@ -528,8 +513,7 @@ export async function createAdminClient(input: {
     ownerLegalName: input.ownerLegalName,
   };
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
       const addressPayload: NonNullable<LocalClient["address"]> = {};
       if (input.ownerLegalName?.trim()) {
@@ -547,12 +531,8 @@ export async function createAdminClient(input: {
         status: input.status ?? "approved",
         address: Object.keys(addressPayload).length ? addressPayload : {},
       };
-      const { data, error } = await supabase
-        .from("clients")
-        .insert(row)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgInsertReturning("clients", row);
+      if (!data) throw new Error("Failed to create client");
       return mapClient(data);
     } catch {
       // Fall through to JSON fallback.
@@ -596,16 +576,10 @@ export async function updateClientStatus(
   id: string,
   status: LocalClient["status"],
 ) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      const { data, error } = await supabase
-        .from("clients")
-        .update({ status })
-        .eq("id", id)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgUpdateReturning("clients", "id", id, { status });
+      if (!data) throw new Error("Client not found");
       return mapClient(data);
     } catch {
       // Fall through to JSON fallback.
@@ -652,8 +626,7 @@ export async function updateClient(
     id,
   );
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
       const updateRow: Record<string, unknown> = {};
       if (input.companyName !== undefined)
@@ -668,13 +641,8 @@ export async function updateClient(
           input.avatarUrl === null || !String(input.avatarUrl).trim();
         updateRow.avatar_url = cleared ? null : String(input.avatarUrl).trim();
       }
-      const { data, error } = await supabase
-        .from("clients")
-        .update(updateRow)
-        .eq("id", id)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgUpdateReturning("clients", "id", id, updateRow);
+      if (!data) throw new Error("Client not found");
       const updated = mapClient(data);
       if (input.address !== undefined && formatClientDispatchAddress(updated)) {
         await syncPendingOrderDispatchAddresses(id);
@@ -759,63 +727,42 @@ export async function syncPendingOrderDispatchAddresses(clientId: string) {
     await writeLocalDb(db);
   }
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data: rows, error } = await supabase
-      .from("orders")
-      .select("id, dispatch_address")
-      .eq("client_id", clientId);
-    if (!error && rows?.length) {
-      await Promise.all(
-        rows
-          .filter((row) => !hasMeaningfulDispatchAddress(row.dispatch_address))
-          .map((row) =>
-            supabase
-              .from("orders")
-              .update({ dispatch_address: formatted })
-              .eq("id", row.id),
-          ),
-      );
-    }
+  if (isPostgresEnabled()) {
+    await pgQuery(
+      `update orders set dispatch_address = $1 where client_id = $2 and (dispatch_address is null or trim(dispatch_address) = '')`,
+      [formatted, clientId],
+    );
   }
 
   return updated;
 }
 
 export async function deleteClientIfAllowed(id: string) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      const { data: orders, error: ordersError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("client_id", id);
-      if (ordersError) throw new Error(ordersError.message);
-      const openOrders = (orders ?? [])
+      const { rows: orders } = await pgQuery<Record<string, unknown>>(
+        "select * from orders where client_id = $1",
+        [id],
+      );
+      const openOrders = orders
         .map(mapOrder)
-        .filter((order) => order.status !== "Delivered");
+        .filter((order: LocalOrder) => order.status !== "Delivered");
       if (openOrders.length) {
         throw new Error(
-          `Cannot delete customer. Pending orders found: ${openOrders.map((order) => `${order.id} (${order.status})`).join(", ")}. Delete allowed only when all orders are Delivered.`,
+          `Cannot delete customer. Pending orders found: ${openOrders.map((order: LocalOrder) => `${order.id} (${order.status})`).join(", ")}. Delete allowed only when all orders are Delivered.`,
         );
       }
 
-      if ((orders ?? []).length) {
-        const { error: orderDeleteError } = await supabase
-          .from("orders")
-          .delete()
-          .eq("client_id", id);
-        if (orderDeleteError) throw new Error(orderDeleteError.message);
+      if (orders.length) {
+        await pgQuery("delete from orders where client_id = $1", [id]);
       }
 
-      const { data, error } = await supabase
-        .from("clients")
-        .delete()
-        .eq("id", id)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
-      return mapClient(data);
+      const { rows } = await pgQuery(
+        "delete from clients where id = $1 returning *",
+        [id],
+      );
+      if (!rows[0]) throw new Error("Client not found");
+      return mapClient(rows[0]);
     } catch (error) {
       if (
         error instanceof Error &&
@@ -857,15 +804,11 @@ export async function updateClientPassword(
   if (!verifyPassword(currentPassword, client.passwordHash))
     throw new Error("Current password is incorrect");
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("clients")
-      .update({ password_hash: hashPassword(newPassword) })
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgUpdateReturning("clients", "id", id, {
+      password_hash: hashPassword(newPassword),
+    });
+    if (!data) throw new Error("Client not found");
     return mapClient(data);
   }
 
@@ -883,15 +826,11 @@ export async function resetClientPasswordById(id: string, newPassword: string) {
     throw new Error("Password must be at least 8 characters");
   }
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("clients")
-      .update({ password_hash: hashPassword(newPassword) })
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgUpdateReturning("clients", "id", id, {
+      password_hash: hashPassword(newPassword),
+    });
+    if (!data) throw new Error("Client not found");
     return mapClient(data);
   }
 
@@ -910,18 +849,13 @@ export async function createResetRequest(email: string) {
     createdAt: new Date().toISOString(),
   };
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("password_reset_requests")
-      .insert({
-        id: request.id,
-        email: request.email,
-        created_at: request.createdAt,
-      })
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgInsertReturning("password_reset_requests", {
+      id: request.id,
+      email: request.email,
+      created_at: request.createdAt,
+    });
+    if (!data) throw new Error("Failed to create reset request");
     return {
       id: String(data.id ?? request.id),
       email: String(data.email ?? request.email),
@@ -944,23 +878,18 @@ export async function createFeedback(input: {
   orderId?: string;
   message: string;
 }) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("feedbacks")
-      .insert({
-        company_name: input.companyName.trim(),
-        email: input.email.trim().toLowerCase(),
-        contact_person: input.contactPerson?.trim(),
-        phone: input.phone?.trim(),
-        requirement: input.requirement?.trim(),
-        order_id: input.orderId?.trim(),
-        message: input.message.trim(),
-        status: "new",
-      })
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgInsertReturning("feedbacks", {
+      company_name: input.companyName.trim(),
+      email: input.email.trim().toLowerCase(),
+      contact_person: input.contactPerson?.trim(),
+      phone: input.phone?.trim(),
+      requirement: input.requirement?.trim(),
+      order_id: input.orderId?.trim(),
+      message: input.message.trim(),
+      status: "new",
+    });
+    if (!data) throw new Error("Failed to create feedback");
     return {
       id: data.id,
       companyName: data.company_name,
@@ -1004,20 +933,14 @@ export async function markFeedbackReplied(
   id: string,
   reply?: { subject?: string; message?: string },
 ) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("feedbacks")
-      .update({
-        status: "replied",
-        replied_at: new Date().toISOString(),
-        reply_subject: reply?.subject,
-        reply_message: reply?.message,
-      })
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgUpdateReturning("feedbacks", "id", id, {
+      status: "replied",
+      replied_at: new Date().toISOString(),
+      reply_subject: reply?.subject,
+      reply_message: reply?.message,
+    });
+    if (!data) throw new Error("Inquiry not found");
     return {
       id: data.id,
       companyName: data.company_name,
@@ -1090,8 +1013,7 @@ export async function createOrder(
       "";
   const orderInput = { ...input, dispatchAddress };
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     if (clientRow.status !== "approved")
       throw new Error("Client approval required before placing orders");
     const createdAt = new Date().toISOString();
@@ -1113,29 +1035,25 @@ export async function createOrder(
       ],
       createdAt,
     };
-    const { data, error } = await supabase
-      .from("orders")
-      .insert({
-        id: order.id,
-        client_id: order.clientId,
-        client_email: order.clientEmail,
-        status: order.status,
-        payment_mode: order.paymentMode,
-        payment_status: order.paymentStatus,
-        credit_days: order.creditDays,
-        deposit_status: order.depositStatus,
-        subtotal: order.subtotal,
-        tax: order.tax ?? null,
-        total: order.total ?? null,
-        items: order.items,
-        dispatch_address: order.dispatchAddress,
-        dispatch_history: order.dispatchHistory,
-        note: order.note,
-        placed_via: placedVia,
-      })
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
+    const data = await pgInsertReturning("orders", {
+      id: order.id,
+      client_id: order.clientId,
+      client_email: order.clientEmail,
+      status: order.status,
+      payment_mode: order.paymentMode,
+      payment_status: order.paymentStatus,
+      credit_days: order.creditDays,
+      deposit_status: order.depositStatus,
+      subtotal: order.subtotal,
+      tax: order.tax ?? null,
+      total: order.total ?? null,
+      items: order.items,
+      dispatch_address: order.dispatchAddress,
+      dispatch_history: order.dispatchHistory,
+      note: order.note,
+      placed_via: placedVia,
+    });
+    if (!data) throw new Error("Failed to create order");
     const mapped = mapOrder(data);
     await reserveInventoryForOrder(mapped);
     await maybeBackfillClientAddressFromDispatch(
@@ -1221,31 +1139,26 @@ export async function createAdminOrder(input: {
     createdAt,
   };
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .insert({
-          id: order.id,
-          client_id: order.clientId,
-          client_email: order.clientEmail,
-          status: order.status,
-          payment_mode: order.paymentMode,
-          payment_status: order.paymentStatus,
-          credit_days: order.creditDays,
-          deposit_status: order.depositStatus,
-          subtotal: order.subtotal,
-          tax: order.tax ?? null,
-          total: order.total ?? null,
-          items: order.items,
-          dispatch_address: order.dispatchAddress,
-          dispatch_history: order.dispatchHistory,
-          note: order.note,
-        })
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgInsertReturning("orders", {
+        id: order.id,
+        client_id: order.clientId,
+        client_email: order.clientEmail,
+        status: order.status,
+        payment_mode: order.paymentMode,
+        payment_status: order.paymentStatus,
+        credit_days: order.creditDays,
+        deposit_status: order.depositStatus,
+        subtotal: order.subtotal,
+        tax: order.tax ?? null,
+        total: order.total ?? null,
+        items: order.items,
+        dispatch_address: order.dispatchAddress,
+        dispatch_history: order.dispatchHistory,
+        note: order.note,
+      });
+      if (!data) throw new Error("Failed to create order");
       return mapOrder(data);
     } catch {
       // Fall through to JSON fallback.
@@ -1278,15 +1191,14 @@ export async function findClientOrder(
   clientId: string,
   orderId: string,
 ): Promise<LocalOrder | null> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("client_id", clientId);
-      if (!error && data?.length) {
-        const row = data.find((item) =>
+      const { rows } = await pgQuery<Record<string, unknown>>(
+        "select * from orders where client_id = $1",
+        [clientId],
+      );
+      if (rows.length) {
+        const row = rows.find((item: Record<string, unknown>) =>
           matchesOrderLookupId(orderId, String(item.id ?? "")),
         );
         if (row) return mapOrder(row);
@@ -1319,26 +1231,26 @@ export async function updateOrderStatus(
   status: LocalOrder["status"],
   note?: string,
 ) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      const { data: existing, error: existingError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (existingError || !existing) throw new Error("Order not found");
+      const { rows: existingRows } = await pgQuery(
+        "select * from orders where id = $1",
+        [id],
+      );
+      const existing = existingRows[0];
+      if (!existing) throw new Error("Order not found");
       const history = [
-        ...(existing.dispatch_history ?? []),
+        ...(Array.isArray(existing.dispatch_history)
+          ? existing.dispatch_history
+          : []),
         { status, note: note?.trim(), createdAt: new Date().toISOString() },
       ];
-      const { data, error } = await supabase
-        .from("orders")
-        .update({ status, note, dispatch_history: history })
-        .eq("id", id)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgUpdateReturning("orders", "id", id, {
+        status,
+        note,
+        dispatch_history: history,
+      });
+      if (!data) throw new Error("Order not found");
       const mapped = mapOrder(data);
       await syncInventoryForOrderStatusChange(
         mapped,
@@ -1348,7 +1260,7 @@ export async function updateOrderStatus(
       notifyOrderStatusPush(mapped);
       return mapped;
     } catch {
-      // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
+      // Fall through to JSON fallback when PostgreSQL is unreachable or missing seeded local orders.
     }
   }
   const db = await readLocalDb();
@@ -1404,16 +1316,17 @@ export async function updateOrderAdmin(
     >
   >,
 ) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      const { data: existing, error: existingError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (existingError || !existing) throw new Error("Order not found");
-      const history = existing.dispatch_history ?? [];
+      const { rows: existingRows } = await pgQuery(
+        "select * from orders where id = $1",
+        [id],
+      );
+      const existing = existingRows[0];
+      if (!existing) throw new Error("Order not found");
+      const history = Array.isArray(existing.dispatch_history)
+        ? existing.dispatch_history
+        : [];
       const nextHistory =
         input.status && input.status !== existing.status
           ? [
@@ -1425,16 +1338,11 @@ export async function updateOrderAdmin(
               },
             ]
           : history;
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          ...orderRow({ ...input, dispatchHistory: nextHistory }),
-          dispatch_history: nextHistory,
-        })
-        .eq("id", id)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
+      const data = await pgUpdateReturning("orders", "id", id, {
+        ...orderRow({ ...input, dispatchHistory: nextHistory }),
+        dispatch_history: nextHistory,
+      });
+      if (!data) throw new Error("Order not found");
       const mapped = mapOrder(data);
       if (input.status && input.status !== existing.status) {
         await syncInventoryForOrderStatusChange(
@@ -1446,7 +1354,7 @@ export async function updateOrderAdmin(
       }
       return mapped;
     } catch {
-      // Fall through to JSON fallback when Supabase is unreachable or missing seeded local orders.
+      // Fall through to JSON fallback when PostgreSQL is unreachable or missing seeded local orders.
     }
   }
   const db = await readLocalDb();
@@ -1475,14 +1383,12 @@ export async function updateOrderAdmin(
 }
 
 export async function getCart(clientId: string) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_carts")
-      .select("items")
-      .eq("client_id", clientId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select items from client_carts where client_id = $1",
+      [clientId],
+    );
+    const data = rows[0];
     return Array.isArray(data?.items) ? (data.items as CartLine[]) : [];
   }
 
@@ -1496,14 +1402,12 @@ export async function readCartRecord(clientId: string): Promise<{
   reminder1SentAt?: string;
   reminder2SentAt?: string;
 }> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_carts")
-      .select("items, updated_at, reminder_1_sent_at, reminder_2_sent_at")
-      .eq("client_id", clientId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select items, updated_at, reminder_1_sent_at, reminder_2_sent_at from client_carts where client_id = $1",
+      [clientId],
+    );
+    const data = rows[0];
     return {
       items: Array.isArray(data?.items) ? (data.items as CartLine[]) : [],
       updatedAt: String(data?.updated_at ?? new Date(0).toISOString()),
@@ -1528,15 +1432,10 @@ export async function markCartReminderSent(
   stage: CartReminderStage,
 ) {
   const now = new Date().toISOString();
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     const patch =
       stage === 1 ? { reminder_1_sent_at: now } : { reminder_2_sent_at: now };
-    const { error } = await supabase
-      .from("client_carts")
-      .update(patch)
-      .eq("client_id", clientId);
-    if (error) throw new Error(error.message);
+    await pgUpdateReturning("client_carts", "client_id", clientId, patch);
     return;
   }
 
@@ -1560,17 +1459,12 @@ export async function listAbandonedCartCandidates(): Promise<
   const now = Date.now();
   const candidates: AbandonedCartCandidate[] = [];
 
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_carts")
-      .select(
-        "client_id, items, updated_at, reminder_1_sent_at, reminder_2_sent_at",
-      )
-      .order("updated_at", { ascending: true });
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const { rows: data } = await pgQuery(
+      "select client_id, items, updated_at, reminder_1_sent_at, reminder_2_sent_at from client_carts order by updated_at asc",
+    );
 
-    for (const row of data ?? []) {
+    for (const row of data) {
       const items = Array.isArray(row.items) ? (row.items as CartLine[]) : [];
       if (!items.length) continue;
       const updatedAt = String(row.updated_at ?? "");
@@ -1586,7 +1480,7 @@ export async function listAbandonedCartCandidates(): Promise<
 
       if (age >= hourMs && !reminder1SentAt) {
         candidates.push({
-          clientId: row.client_id,
+          clientId: String(row.client_id),
           items,
           updatedAt,
           stage: 1,
@@ -1595,7 +1489,7 @@ export async function listAbandonedCartCandidates(): Promise<
       }
       if (age >= dayMs && reminder1SentAt && !reminder2SentAt) {
         candidates.push({
-          clientId: row.client_id,
+          clientId: String(row.client_id),
           items,
           updatedAt,
           stage: 2,
@@ -1627,7 +1521,6 @@ export async function listAbandonedCartCandidates(): Promise<
 }
 
 export async function saveCart(clientId: string, items: CartLine[]) {
-  const supabase = supabaseAdmin();
   const previous = await readCartRecord(clientId);
   const unchanged = JSON.stringify(previous.items) === JSON.stringify(items);
   if (unchanged) {
@@ -1635,22 +1528,18 @@ export async function saveCart(clientId: string, items: CartLine[]) {
   }
 
   const now = new Date().toISOString();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_carts")
-      .upsert(
-        {
-          client_id: clientId,
-          items,
-          updated_at: now,
-          reminder_1_sent_at: null,
-          reminder_2_sent_at: null,
-        },
-        { onConflict: "client_id" },
-      )
-      .select("items")
-      .single();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const data = await pgUpsertReturning(
+      "client_carts",
+      {
+        client_id: clientId,
+        items,
+        updated_at: now,
+        reminder_1_sent_at: null,
+        reminder_2_sent_at: null,
+      },
+      "client_id",
+    );
     return Array.isArray(data?.items) ? (data.items as CartLine[]) : items;
   }
 
@@ -1689,14 +1578,12 @@ export async function readClientSavedListsRecord(clientId: string): Promise<{
   compare: string[];
   updatedAt: string;
 }> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("client_saved_lists")
-      .select("wishlist_slugs, compare_slugs, updated_at")
-      .eq("client_id", clientId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery(
+      "select wishlist_slugs, compare_slugs, updated_at from client_saved_lists where client_id = $1",
+      [clientId],
+    );
+    const data = rows[0];
     return {
       wishlist: normalizeSlugList(data?.wishlist_slugs),
       compare: normalizeSlugList(data?.compare_slugs).slice(
@@ -1729,18 +1616,17 @@ export async function saveClientSavedLists(
 ): Promise<ClientSavedLists> {
   const wishlist = normalizeSlugList(input.wishlist);
   const compare = normalizeSlugList(input.compare).slice(0, MAX_COMPARE_SLUGS);
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { error } = await supabase.from("client_saved_lists").upsert(
+  if (isPostgresEnabled()) {
+    await pgUpsertReturning(
+      "client_saved_lists",
       {
         client_id: clientId,
         wishlist_slugs: wishlist,
         compare_slugs: compare,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "client_id" },
+      "client_id",
     );
-    if (error) throw new Error(error.message);
     return { wishlist, compare };
   }
 

@@ -102,11 +102,11 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error: readOnly
-          ? "Notifications must be stored in Supabase on production. Set SUPABASE_ENABLED=true, run migration 20260604140000_client_notifications.sql, and redeploy."
+          ? "Notifications must be stored in Postgres on production. Set DATABASE_URL, run migration 20260604140000_client_notifications.sql on your VPS Postgres, and redeploy."
           : raw.includes("Firebase")
             ? "Push is not configured. Inbox entry was still saved if possible."
             : raw.includes("client_notifications")
-              ? "Database table missing. Run Supabase migration 20260604140000_client_notifications.sql."
+              ? "Database table missing. Run Postgres migration 20260604140000_client_notifications.sql."
               : raw || "Could not send notification",
       },
       { status: 500 },

@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isPostgresEnabled, pgQuery } from "@/lib/postgres";
 import {
   blogs as defaultBlogs,
   home as defaultHome,
@@ -13,6 +13,7 @@ import type { Product } from "@/data/mock";
 import type { CmsCustomSection } from "@/types/cms-custom";
 import type { LocalizedText } from "@/lib/localized-text";
 import type { CmsInstagramFeed } from "@/lib/instagram-types";
+import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
 import {
   defaultHeaderNavigation,
   normalizeHeaderNavigation,
@@ -246,14 +247,20 @@ export type CmsSnapshot = {
 
 const cmsPath = path.join(process.cwd(), "data", "cms-db.json");
 
-function isSupabaseCmsPrimary() {
-  const enabled = (process.env.SUPABASE_ENABLED ?? "").trim().toLowerCase();
-  return (
-    (enabled === "true" || enabled === "1" || enabled === "yes") &&
-    Boolean(
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
-    )
+function isPostgresCmsPrimary() {
+  return isPostgresEnabled();
+}
+
+async function writeCmsSnapshotToPostgres(next: CmsSnapshot) {
+  if (!isPostgresEnabled()) {
+    throw new Error("PostgreSQL CMS is not configured (DATABASE_URL missing)");
+  }
+  const stored = snapshotForStorage(next);
+  await pgQuery(
+    `insert into cms_snapshots (id, data, updated_at)
+     values (1, $1::jsonb, $2::timestamptz)
+     on conflict (id) do update set data = excluded.data, updated_at = excluded.updated_at`,
+    [JSON.stringify(stored), stored.updatedAt],
   );
 }
 
@@ -275,19 +282,16 @@ async function readCmsSnapshotFromFile(): Promise<CmsSnapshot | null> {
   }
 }
 
-async function writeCmsSnapshotToSupabase(next: CmsSnapshot) {
-  const supabase = supabaseAdmin();
-  if (!supabase) {
-    throw new Error("Supabase CMS is not configured");
-  }
-  const stored = snapshotForStorage(next);
-  const { error } = await supabase
-    .from("cms_snapshots")
-    .upsert(
-      { id: 1, data: stored, updated_at: stored.updatedAt },
-      { onConflict: "id" },
-    );
-  if (error) throw new Error(error.message);
+async function readCmsSnapshotFromPostgres(): Promise<CmsSnapshot | null> {
+  const { rows } = await pgQuery<{ data: CmsSnapshot; updated_at: string }>(
+    "select data, updated_at from cms_snapshots where id = 1 limit 1",
+  );
+  const row = rows[0];
+  if (!row?.data) return null;
+  return normalizeSnapshot({
+    ...(row.data as Partial<CmsSnapshot>),
+    updatedAt: row.updated_at,
+  });
 }
 
 function filterOptions(values: string[]): CmsProductFilterOption[] {
@@ -579,19 +583,25 @@ export const defaultSeoPages: CmsSeoPage[] = [
 ];
 
 function optimizedMediaPath(value: string) {
-  if (!/\.(png|jpe?g)$/i.test(value)) return value;
-  if (value.startsWith("/uploads/cms/")) return value;
-  if (value.startsWith("/sarjan-assets/")) {
-    const file = value.split("/").pop() ?? "";
+  const resolved = resolveCmsMediaUrl(value);
+  if (!/\.(png|jpe?g)$/i.test(resolved)) return resolved;
+  if (
+    resolved.startsWith("/uploads/cms/") ||
+    resolved.includes("/storage/v1/object/public/cms-media/")
+  ) {
+    return resolved;
+  }
+  if (resolved.startsWith("/sarjan-assets/")) {
+    const file = resolved.split("/").pop() ?? "";
     if (
       file.startsWith("sarjan-logo") ||
       file.startsWith("sarjan-favicon") ||
       file.includes("Logo Final")
     )
-      return value;
-    return value.replace(/\.(png|jpe?g)$/i, ".webp");
+      return resolved;
+    return resolved.replace(/\.(png|jpe?g)$/i, ".webp");
   }
-  return value;
+  return resolved;
 }
 
 function optimizeMedia<T>(value: T): T {
@@ -604,27 +614,6 @@ function optimizeMedia<T>(value: T): T {
     ) as T;
   }
   return value;
-}
-
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false },
-    global: { fetch: timeoutFetch },
-  });
-}
-
-async function timeoutFetch(input: RequestInfo | URL, init?: RequestInit) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60_000);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 /** CMS snapshot row must stay small — audit history uses `audit_logs` table. */
@@ -922,40 +911,29 @@ async function mirrorCmsSnapshotToFile(next: CmsSnapshot) {
     await mkdir(path.dirname(cmsPath), { recursive: true });
     await writeFile(cmsPath, JSON.stringify(snapshotForStorage(next), null, 2));
   } catch {
-    // Best-effort backup — Supabase remains source of truth when enabled.
+    // Best-effort backup — Postgres remains source of truth when enabled.
   }
 }
 
 async function readCmsSnapshot(): Promise<CmsSnapshot> {
-  const supabase = supabaseAdmin();
-  if (isSupabaseCmsPrimary() && supabase) {
+  if (isPostgresCmsPrimary()) {
     try {
-      const { data, error } = await supabase
-        .from("cms_snapshots")
-        .select("data, updated_at")
-        .eq("id", 1)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      if (data?.data) {
-        const snapshot = normalizeSnapshot({
-          ...(data.data as Partial<CmsSnapshot>),
-          updatedAt: data.updated_at,
-        });
-        void mirrorCmsSnapshotToFile(snapshot);
-        return snapshot;
+      const fromDb = await readCmsSnapshotFromPostgres();
+      if (fromDb) {
+        void mirrorCmsSnapshotToFile(fromDb);
+        return fromDb;
       }
 
-      // First run: seed Supabase from local JSON if present, else defaults.
       const seed = (await readCmsSnapshotFromFile()) ?? defaultCmsSnapshot;
       const seeded = { ...seed, updatedAt: new Date().toISOString() };
-      await writeCmsSnapshotToSupabase(seeded);
+      await writeCmsSnapshotToPostgres(seeded);
       await mirrorCmsSnapshotToFile(seeded);
       return seeded;
     } catch (error) {
       const local = await readCmsSnapshotFromFile();
       if (local) {
         console.warn(
-          "[cms-store] Supabase read failed; using local CMS backup:",
+          "[cms-store] Postgres read failed; using local CMS backup:",
           error instanceof Error ? error.message : error,
         );
         return local;
@@ -993,29 +971,18 @@ export async function saveCmsSnapshot(
     ...input,
     updatedAt: new Date().toISOString(),
   });
-  const supabase = supabaseAdmin();
-  if (isSupabaseCmsPrimary() && supabase) {
+  if (isPostgresCmsPrimary()) {
     try {
-      await writeCmsSnapshotToSupabase(next);
+      await writeCmsSnapshotToPostgres(next);
       await mirrorCmsSnapshotToFile(next);
       revalidateCmsCache();
       return next;
     } catch (error) {
       throw new Error(
         error instanceof Error
-          ? `Supabase CMS save failed: ${error.message}`
-          : "Supabase CMS save failed",
+          ? `Postgres CMS save failed: ${error.message}`
+          : "Postgres CMS save failed",
       );
-    }
-  }
-
-  if (supabase) {
-    try {
-      await writeCmsSnapshotToSupabase(next);
-      revalidateCmsCache();
-      return next;
-    } catch {
-      // Fall through to JSON fallback for local development only.
     }
   }
   await mkdir(path.dirname(cmsPath), { recursive: true });
@@ -1138,23 +1105,26 @@ export async function appendAuditLog(
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     try {
-      await supabase.from("audit_logs").insert({
-        id: log.id,
-        actor_email: log.actor,
-        actor_role: log.role,
-        action: log.action,
-        entity_type: log.entity,
-        entity_id: log.entityId,
-        metadata: {
-          before: log.before,
-          after: log.after,
-          note: log.note,
-        },
-        created_at: log.createdAt,
-      });
+      await pgQuery(
+        `insert into audit_logs (id, actor_email, actor_role, action, entity_type, entity_id, metadata, created_at)
+         values ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::timestamptz)`,
+        [
+          log.id,
+          log.actor,
+          log.role ?? null,
+          log.action,
+          log.entity,
+          log.entityId ?? null,
+          JSON.stringify({
+            before: log.before,
+            after: log.after,
+            note: log.note,
+          }),
+          log.createdAt,
+        ],
+      );
       return cms;
     } catch {
       // CMS audit fallback below keeps admin history usable if the table is not migrated yet.
@@ -1169,31 +1139,32 @@ export async function appendAuditLog(
 }
 
 export async function getAuditLogs(): Promise<AuditLog[]> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("audit_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    if (!error && data?.length) {
-      return data.map((row: Record<string, unknown>) => {
-        const metadata = row.metadata as
-          | { before?: unknown; after?: unknown; note?: string }
-          | undefined;
-        return {
-          id: String(row.id ?? ""),
-          actor: String(row.actor_email ?? "system"),
-          role: row.actor_role != null ? String(row.actor_role) : undefined,
-          action: String(row.action ?? ""),
-          entity: String(row.entity_type ?? ""),
-          entityId: row.entity_id != null ? String(row.entity_id) : undefined,
-          before: metadata?.before,
-          after: metadata?.after,
-          note: metadata?.note,
-          createdAt: String(row.created_at ?? ""),
-        };
-      });
+  if (isPostgresEnabled()) {
+    try {
+      const { rows } = await pgQuery<Record<string, unknown>>(
+        "select * from audit_logs order by created_at desc limit 1000",
+      );
+      if (rows.length) {
+        return rows.map((row) => {
+          const metadata = row.metadata as
+            | { before?: unknown; after?: unknown; note?: string }
+            | undefined;
+          return {
+            id: String(row.id ?? ""),
+            actor: String(row.actor_email ?? "system"),
+            role: row.actor_role != null ? String(row.actor_role) : undefined,
+            action: String(row.action ?? ""),
+            entity: String(row.entity_type ?? ""),
+            entityId: row.entity_id != null ? String(row.entity_id) : undefined,
+            before: metadata?.before,
+            after: metadata?.after,
+            note: metadata?.note,
+            createdAt: String(row.created_at ?? ""),
+          };
+        });
+      }
+    } catch {
+      /* fall through to CMS snapshot audit logs */
     }
   }
   const cms = await getCmsSnapshot();

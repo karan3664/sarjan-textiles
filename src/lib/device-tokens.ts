@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { isPostgresEnabled, pgQuery, pgUpsertReturning } from "@/lib/postgres";
 import {
   getLocalAllDeviceTokens,
   getLocalClientDeviceTokens,
@@ -9,18 +9,7 @@ import {
 /** Guest / logged-out app installs (marketing push only). */
 export const ANONYMOUS_CLIENT_ID = "__anonymous__";
 
-/**
- * Storage for mobile-app FCM device tokens (Supabase table `device_tokens`).
- * Falls back to JSON file storage when Supabase is not configured.
- */
-function supabaseAdmin() {
-  if (process.env.SUPABASE_ENABLED !== "true") return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
+/** Storage for mobile-app FCM device tokens. Falls back to JSON when DATABASE_URL is unset. */
 export type DevicePlatform = "android" | "ios";
 
 export async function registerDeviceToken(input: {
@@ -28,17 +17,17 @@ export async function registerDeviceToken(input: {
   token: string;
   platform: DevicePlatform;
 }) {
-  const supabase = supabaseAdmin();
-  if (supabase) {
+  if (isPostgresEnabled()) {
     const now = new Date().toISOString();
-    await supabase.from("device_tokens").upsert(
+    await pgUpsertReturning(
+      "device_tokens",
       {
         token: input.token,
         client_id: input.clientId,
         platform: input.platform,
         updated_at: now,
       },
-      { onConflict: "token" },
+      "token",
     );
     return;
   }
@@ -59,28 +48,24 @@ export async function registerAnonymousDeviceToken(input: {
 export async function getClientDeviceTokens(
   clientId: string,
 ): Promise<string[]> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data } = await supabase
-      .from("device_tokens")
-      .select("token")
-      .eq("client_id", clientId);
-    return (data ?? [])
-      .map((row: { token?: unknown }) => String(row.token ?? "").trim())
-      .filter(Boolean);
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery<{ token: string }>(
+      "select token from device_tokens where client_id = $1",
+      [clientId],
+    );
+    return rows.map((row) => String(row.token ?? "").trim()).filter(Boolean);
   }
   return getLocalClientDeviceTokens(clientId);
 }
 
 export async function getAllPushDeviceTokens(): Promise<string[]> {
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    const { data } = await supabase.from("device_tokens").select("token");
+  if (isPostgresEnabled()) {
+    const { rows } = await pgQuery<{ token: string }>(
+      "select token from device_tokens",
+    );
     return Array.from(
       new Set(
-        (data ?? [])
-          .map((row: { token?: unknown }) => String(row.token ?? "").trim())
-          .filter(Boolean),
+        rows.map((row) => String(row.token ?? "").trim()).filter(Boolean),
       ),
     );
   }
@@ -90,9 +75,10 @@ export async function getAllPushDeviceTokens(): Promise<string[]> {
 /** Remove tokens FCM reported as stale/unregistered. */
 export async function removeDeviceTokens(tokens: string[]) {
   if (!tokens.length) return;
-  const supabase = supabaseAdmin();
-  if (supabase) {
-    await supabase.from("device_tokens").delete().in("token", tokens);
+  if (isPostgresEnabled()) {
+    await pgQuery("delete from device_tokens where token = any($1::text[])", [
+      tokens,
+    ]);
     return;
   }
   await removeLocalDeviceTokens(tokens);

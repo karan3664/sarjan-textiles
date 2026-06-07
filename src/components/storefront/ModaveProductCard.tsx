@@ -10,7 +10,10 @@ import {
   ProductDealCountdown,
   ProductDealOriginalPrice,
 } from "./ProductDealCountdown";
+import { ProductPromoTag } from "./ProductPromoTag";
+import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
+import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
 
 export function ModaveProductCard({
   product,
@@ -133,6 +136,8 @@ export function ModaveProductCard({
             Out of stock
           </div>
         ) : null}
+        {SHOW_PRODUCT_PROMO_TAG ? <ProductPromoTag /> : null}
+        <ProductCardRating rating={product.rating} />
         <ProductDealCountdown product={product} variant="card" />
       </div>
       <div className="card-product-info">

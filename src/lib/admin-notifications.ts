@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { isPostgresEnabled, pgQuery, pgUpsertReturning } from "@/lib/postgres";
 import type { AdminRole } from "@/lib/admin-token";
 import { getAllBlogComments } from "@/lib/blog-comments-store";
 import { readLocalDb } from "@/lib/local-db";
@@ -29,23 +29,8 @@ type StateFile = {
   listClearedBefore: string | null;
 };
 
-function supabaseEnabled() {
-  const v = (process.env.SUPABASE_ENABLED ?? "").trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
-}
-
-function supabaseDb() {
-  if (!supabaseEnabled()) return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createSupabaseClient(url, key, {
-    auth: { persistSession: false },
-  });
-}
-
 function canWriteJsonStateFile() {
-  if (supabaseDb()) return false;
+  if (isPostgresEnabled()) return false;
   if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME)
     return false;
   return true;
@@ -68,15 +53,14 @@ async function readStateFromFile(): Promise<StateFile> {
   }
 }
 
-async function readStateFromSupabase(): Promise<StateFile | null> {
-  const supabase = supabaseDb();
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from("admin_notification_state")
-    .select("read_ids, list_cleared_before")
-    .eq("id", 1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
+async function readStateFromPostgres(): Promise<StateFile | null> {
+  if (!isPostgresEnabled()) return null;
+  const { rows } = await pgQuery(
+    "select read_ids, list_cleared_before from admin_notification_state where id = 1 limit 1",
+  );
+  const data = rows[0] as
+    | { read_ids?: unknown; list_cleared_before?: unknown }
+    | undefined;
   if (!data) return { readIds: [], listClearedBefore: null };
   return normalizeState({
     readIds: Array.isArray(data.read_ids) ? data.read_ids : [],
@@ -89,7 +73,7 @@ async function readStateFromSupabase(): Promise<StateFile | null> {
 
 async function readState(): Promise<StateFile> {
   try {
-    const fromDb = await readStateFromSupabase();
+    const fromDb = await readStateFromPostgres();
     if (fromDb) return fromDb;
   } catch {
     /* fall through to JSON for local dev */
@@ -100,35 +84,33 @@ async function readState(): Promise<StateFile> {
 async function writeStateToFile(state: StateFile) {
   if (!canWriteJsonStateFile()) {
     throw new Error(
-      "Cannot persist admin notification state to disk. Enable Supabase and run migration 20260521150000_admin_notification_state.sql.",
+      "Cannot persist admin notification state to disk. Set DATABASE_URL and run migration 20260521150000_admin_notification_state.sql on your VPS Postgres.",
     );
   }
   await mkdir(path.dirname(STATE_FILE), { recursive: true });
   await writeFile(STATE_FILE, JSON.stringify(state, null, 2), "utf8");
 }
 
-async function writeStateToSupabase(state: StateFile) {
-  const supabase = supabaseDb();
-  if (!supabase) {
+async function writeStateToPostgres(state: StateFile) {
+  if (!isPostgresEnabled()) {
     await writeStateToFile(state);
     return;
   }
-  const { error } = await supabase.from("admin_notification_state").upsert(
+  await pgUpsertReturning(
+    "admin_notification_state",
     {
       id: 1,
       read_ids: state.readIds,
       list_cleared_before: state.listClearedBefore,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "id" },
+    "id",
   );
-  if (error) throw new Error(error.message);
 }
 
 async function writeState(state: StateFile) {
-  const supabase = supabaseDb();
-  if (supabase) {
-    await writeStateToSupabase(state);
+  if (isPostgresEnabled()) {
+    await writeStateToPostgres(state);
     return;
   }
   await writeStateToFile(state);
