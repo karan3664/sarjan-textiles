@@ -132,9 +132,35 @@ body.sarjan-storefront
     .btn-style-2,
     .btn-style-3,
     .btn-main-product
-  ):not(.btn-line):not(:disabled):is(:hover, :focus-visible, .is-hovered) {
+  ):not(.btn-line):not(:disabled):is(:hover, :focus-visible, .is-hovered),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  button.sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible, .is-hovered),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  button.sarjan-auth-btn:not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ) {
   background-color: var(--sarjan-btn-hover-bg) !important;
   color: var(--sarjan-btn-hover-color) !important;
   border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  button.sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible, .is-hovered)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  button.sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible, .is-hovered)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-btn-hover-color) !important;
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }

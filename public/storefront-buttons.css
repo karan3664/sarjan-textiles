@@ -424,11 +424,15 @@ body.sarjan-storefront
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }
 
-/* Auth page explicit */
+/* Auth page explicit (OTP uses .sarjan-btn, not .tf-btn) */
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions
-  .tf-btn:not(:disabled),
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled),
 body.sarjan-storefront .sarjan-auth-page .sarjan-auth-submit:not(:disabled),
 body.sarjan-storefront
   .sarjan-auth-page
@@ -444,7 +448,17 @@ body.sarjan-storefront
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions
-  .tf-btn:not(:disabled):hover,
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible
+  ),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible
+  ),
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-auth-submit:not(:disabled):hover,
@@ -455,6 +469,26 @@ body.sarjan-storefront
   background-color: var(--sarjan-btn-hover-bg) !important;
   color: var(--sarjan-btn-hover-color) !important;
   border-color: var(--sarjan-btn-hover-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible
+  )
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible
+  )
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-btn-hover-color) !important;
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }
 

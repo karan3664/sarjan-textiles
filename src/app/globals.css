@@ -14158,6 +14158,49 @@ a.sarjan-order-bot-card:focus-visible {
   cursor: not-allowed;
 }
 
+/* Auth OTP CTAs sit outside #wrapper — beat Modave `button:hover { background: transparent }` */
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  .sarjan-auth-btn:not(:disabled),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  .sarjan-auth-btn:not(:disabled) {
+  background-color: #ffffff !important;
+  color: #181818 !important;
+  border: 1px solid #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  .sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  .sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible) {
+  background-color: var(--sarjan-accent, #8b1e2d) !important;
+  border-color: var(--sarjan-accent, #8b1e2d) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  .sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  .sarjan-auth-btn:not(:disabled):is(:hover, :focus-visible)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .sarjan-auth-page .sarjan-auth-submit-wrap {
   width: 100%;
   margin-top: 4px;
