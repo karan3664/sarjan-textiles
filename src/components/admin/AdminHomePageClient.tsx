@@ -10,7 +10,13 @@ import {
   youtubeThumbnailUrl,
 } from "@/lib/hero-video";
 import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
+import { AdminHomeBannerSlides } from "@/components/admin/AdminHomeBannerSlides";
 import { putAdminCms } from "@/lib/admin-cms-fetch";
+import {
+  normalizeHomeBanners,
+  syncHomeHeroFromBanners,
+  type CmsHomeBanner,
+} from "@/lib/home-banners";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
@@ -69,6 +75,7 @@ type HomeDraft = Omit<CmsHome, "hero" | "sections"> & {
     videoUrls?: string[];
     videoUrl?: string;
   };
+  banners?: CmsHomeBanner[];
   sections?: HomeSectionControl[];
   topPicksTitle?: string;
   topPicksDescription?: string;
@@ -140,11 +147,11 @@ function stripHtmlPreview(html: string, max = 52) {
 function buildHomeDraft(initialHome: CmsHome | HomeDraft): HomeDraft {
   const draft = initialHome as HomeDraft;
   const videoUrls = getHeroVideos(draft.hero);
-  return {
+  return syncHomeHeroFromBanners({
     ...draft,
     hero: { ...draft.hero, videoUrls, videoUrl: videoUrls[0] ?? "" },
     sections: draft.sections?.length ? draft.sections : defaultSections(),
-  };
+  }) as HomeDraft;
 }
 
 type HomeEditorSaveContextValue = {
@@ -549,13 +556,62 @@ export function AdminHomePageClient({
 
   const heroImages = getHeroImages(home.hero);
   const heroVideos = getHeroVideos(home.hero);
+  const bannerSlides = normalizeHomeBanners(home);
   const sections = home.sections?.length ? home.sections : defaultSections();
+
+  const setBannerSlides = (nextBanners: CmsHomeBanner[]) => {
+    setHome(
+      (current) =>
+        syncHomeHeroFromBanners({
+          ...current,
+          banners: nextBanners,
+        }) as HomeDraft,
+    );
+  };
+
+  const updateBannerSlide = (index: number, patch: Partial<CmsHomeBanner>) => {
+    const next = [...normalizeHomeBanners(home)];
+    next[index] = { ...next[index], ...patch };
+    setBannerSlides(next);
+  };
+
+  const moveBannerSlide = (index: number, direction: -1 | 1) => {
+    const next = [...normalizeHomeBanners(home)];
+    const target = index + direction;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    setBannerSlides(next);
+  };
+
+  const removeBannerSlide = (index: number) => {
+    setBannerSlides(normalizeHomeBanners(home).filter((_, i) => i !== index));
+  };
+
+  const addBannerSlide = () => {
+    const next = [
+      ...normalizeHomeBanners(home),
+      {
+        id: `banner-${Date.now()}`,
+        image: "/sarjan-assets/banner-textiles-studio.webp",
+        eyebrow: "",
+        title: "",
+        description: "",
+        ctaLabel: "",
+        ctaHref: "",
+        actionType: "url" as const,
+        actionValue: "",
+        enabled: true,
+      },
+    ];
+    setBannerSlides(next);
+  };
 
   const saveHome = async () => {
     setSaveState("saving");
     setSaveError("");
     try {
-      const data = await putAdminCms<{ home?: HomeDraft }>({ home });
+      const payload = syncHomeHeroFromBanners(home);
+      const data = await putAdminCms<{ home?: HomeDraft }>({ home: payload });
       const saved = data.home;
       if (saved) {
         const next = buildHomeDraft(saved);
@@ -730,6 +786,55 @@ export function AdminHomePageClient({
       throw new Error(error?.error ?? "Image upload failed");
     }
     return (await res.json()) as { url: string };
+  };
+
+  const uploadBannerSlides = async (files: File[]) => {
+    if (!files.length) return;
+    setUploadState((current) => ({ ...current, hero: "uploading" }));
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const item = await uploadFile(file);
+        uploaded.push(item.url);
+      }
+      const next = [
+        ...normalizeHomeBanners(home),
+        ...uploaded.map((image, offset) => ({
+          id: `banner-${Date.now()}-${offset}`,
+          image,
+          eyebrow: "",
+          title: "",
+          description: "",
+          ctaLabel: "",
+          ctaHref: "",
+          actionType: "url" as const,
+          actionValue: "",
+          enabled: true,
+        })),
+      ];
+      setBannerSlides(next);
+      setUploadState((current) => ({ ...current, hero: undefined }));
+    } catch (error) {
+      setUploadState((current) => ({
+        ...current,
+        hero: error instanceof Error ? error.message : "Upload failed",
+      }));
+    }
+  };
+
+  const replaceBannerSlideImage = async (index: number, file: File) => {
+    const key = `banner-${index}`;
+    setUploadState((current) => ({ ...current, [key]: "uploading" }));
+    try {
+      const item = await uploadFile(file);
+      updateBannerSlide(index, { image: item.url });
+      setUploadState((current) => ({ ...current, [key]: undefined }));
+    } catch (error) {
+      setUploadState((current) => ({
+        ...current,
+        [key]: error instanceof Error ? error.message : "Upload failed",
+      }));
+    }
   };
 
   const uploadImage = async (uploadKey: string, file: File) => {
@@ -981,85 +1086,43 @@ export function AdminHomePageClient({
       <div className="wg-box mb-30 sarjan-home-editor-card sarjan-home-hero-editor">
         <div className="flex flex-wrap justify-between gap14 items-center mb-24">
           <div>
-            <h5>Homepage Banner</h5>
+            <h5>Homepage Banner Slides</h5>
             <div className="body-text text-secondary">
-              Banner images, hero text (rich HTML editor), and optional video
-              slides.
+              Add multiple banners — each slide has its own image, text, fonts,
+              and button. Same order on website and mobile app after Save.
             </div>
           </div>
           <div className="box-status text-button type-delivery">
             Live Preview
           </div>
         </div>
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(360px,0.9fr)_minmax(500px,1.1fr)] gap-8 2xl:gap-10 items-start">
-          <div>
-            <div className="body-title mb-10">Banner Images</div>
-            <HeroImagesField
-              images={heroImages}
-              uploadState={uploadState}
-              onUpload={uploadHeroImages}
-              onPrimary={setPrimaryHeroImage}
-              onRemove={removeHeroImage}
-            />
-            <HeroVideosField
-              enabled={Boolean(home.hero.videoEnabled)}
-              videos={heroVideos}
-              poster={heroImages[0]}
-              uploadState={uploadState.heroVideo}
-              urlDraft={heroVideoUrlDraft}
-              onToggle={updateHeroVideoEnabled}
-              onUpload={uploadHeroVideos}
-              onAddUrl={addHeroVideoUrl}
-              onUrlDraftChange={setHeroVideoUrlDraft}
-              onPrimary={setPrimaryHeroVideo}
-              onRemove={removeHeroVideo}
-            />
-          </div>
-          <div className="sarjan-home-form-panel">
-            <div className="mb-24">
-              <h5>Banner Content</h5>
-              <div className="body-text text-secondary">
-                Select text, then pick font and size. Use Save on each field or
-                Save Home Page at the top.
-              </div>
-            </div>
-            <div className="cols gap22">
-              <HtmlField
-                label="Eyebrow"
-                value={home.hero.eyebrow}
-                savedValue={savedHome.hero.eyebrow}
-                onChange={(value) => updateHero("eyebrow", value)}
-                rows={3}
-              />
-              <HtmlField
-                label="Banner title"
-                value={home.hero.title}
-                savedValue={savedHome.hero.title}
-                onChange={(value) => updateHero("title", value)}
-                rows={6}
-              />
-              <HtmlField
-                label="Button label"
-                value={home.hero.primaryCta.label}
-                savedValue={savedHome.hero.primaryCta.label}
-                onChange={(value) => updateHeroCta("label", value)}
-                rows={3}
-              />
-              <TextField
-                label="Button link"
-                value={home.hero.primaryCta.href}
-                savedValue={savedHome.hero.primaryCta.href}
-                onChange={(value) => updateHeroCta("href", value)}
-              />
-            </div>
-            <HtmlField
-              label="Banner description"
-              value={home.hero.description}
-              savedValue={savedHome.hero.description}
-              onChange={(value) => updateHero("description", value)}
-              rows={7}
-            />
-          </div>
+
+        <AdminHomeBannerSlides
+          banners={bannerSlides}
+          uploadState={uploadState}
+          onUpload={uploadBannerSlides}
+          onReplace={replaceBannerSlideImage}
+          onUpdate={updateBannerSlide}
+          onMove={moveBannerSlide}
+          onRemove={removeBannerSlide}
+          onAdd={addBannerSlide}
+        />
+
+        <div className="mt-24 pt-24 border-top">
+          <div className="body-title mb-10">Optional video slides</div>
+          <HeroVideosField
+            enabled={Boolean(home.hero.videoEnabled)}
+            videos={heroVideos}
+            poster={heroImages[0]}
+            uploadState={uploadState.heroVideo}
+            urlDraft={heroVideoUrlDraft}
+            onToggle={updateHeroVideoEnabled}
+            onUpload={uploadHeroVideos}
+            onAddUrl={addHeroVideoUrl}
+            onUrlDraftChange={setHeroVideoUrlDraft}
+            onPrimary={setPrimaryHeroVideo}
+            onRemove={removeHeroVideo}
+          />
         </div>
       </div>
 

@@ -8,6 +8,8 @@ import {
   normalizeHeroVideoUrls,
   type HeroSlide,
 } from "@/lib/hero-video";
+import type { CmsHomeBanner } from "@/lib/home-banners";
+import { imageIndexForSlide } from "@/lib/home-banners";
 
 const IMAGE_SLIDE_MS = 5000;
 
@@ -20,6 +22,7 @@ export function HomeHeroRotator({
   title,
   description,
   cta,
+  bannerSlides = [],
   videoEnabled = false,
   videoUrls = [],
   videoUrl = "",
@@ -28,6 +31,7 @@ export function HomeHeroRotator({
   title: string;
   description: string;
   cta: { label: string; href: string };
+  bannerSlides?: CmsHomeBanner[];
   videoEnabled?: boolean;
   videoUrls?: string[];
   /** @deprecated use videoUrls */
@@ -54,6 +58,15 @@ export function HomeHeroRotator({
   const videoEndedRef = useRef(false);
   const activeSlide = slides[active] ?? slides[0];
   const onVideoSlide = isVideoSlide(activeSlide);
+  const activeBannerIndex = imageIndexForSlide(slides, active);
+  const activeBanner = bannerSlides[activeBannerIndex];
+  const slideTitle = activeBanner?.title || title;
+  const slideDescription = activeBanner?.description || description;
+  const slideCta = {
+    label: activeBanner?.ctaLabel || cta.label,
+    href: activeBanner?.ctaHref || cta.href,
+  };
+  const slideEyebrow = activeBanner?.eyebrow?.trim() ?? "";
 
   const advanceSlide = useCallback(() => {
     if (slides.length < 2) return;
@@ -182,17 +195,25 @@ export function HomeHeroRotator({
           <div className="box-content sarjan-hero-copy">
             <div className="content-slider sarjan-hero-copy-stack">
               <div className="box-title-slider sarjan-hero-copy-titles">
+                {slideEyebrow ? (
+                  <p className="text-button text-white sarjan-hero-eyebrow mb-8">
+                    <CmsHtml html={slideEyebrow} />
+                  </p>
+                ) : null}
                 <h2 className="heading text-white sarjan-hero-heading sarjan-hero-heading-multiline">
-                  <CmsHtml html={title} />
+                  <CmsHtml html={slideTitle} />
                 </h2>
                 <p className="body-text-1 subheading text-white sarjan-hero-subheading">
-                  <CmsHtml html={description} />
+                  <CmsHtml html={slideDescription} />
                 </p>
               </div>
               <div className="box-btn-slider sarjan-hero-cta">
-                <Link href={cta.href} className="tf-btn btn-fill btn-white">
+                <Link
+                  href={slideCta.href}
+                  className="tf-btn btn-fill btn-white"
+                >
                   <span className="text">
-                    <CmsHtml html={cta.label} />
+                    <CmsHtml html={slideCta.label} />
                   </span>
                   <i className="icon icon-arrowUpRight" />
                 </Link>

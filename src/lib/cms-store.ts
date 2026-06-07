@@ -580,6 +580,7 @@ export const defaultSeoPages: CmsSeoPage[] = [
 
 function optimizedMediaPath(value: string) {
   if (!/\.(png|jpe?g)$/i.test(value)) return value;
+  if (value.startsWith("/uploads/cms/")) return value;
   if (value.startsWith("/sarjan-assets/")) {
     const file = value.split("/").pop() ?? "";
     if (
@@ -590,8 +591,6 @@ function optimizedMediaPath(value: string) {
       return value;
     return value.replace(/\.(png|jpe?g)$/i, ".webp");
   }
-  if (value.startsWith("/uploads/cms/"))
-    return value.replace(/\.(png|jpe?g)$/i, ".webp");
   return value;
 }
 

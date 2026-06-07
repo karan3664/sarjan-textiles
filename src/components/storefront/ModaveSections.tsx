@@ -12,6 +12,7 @@ import {
   resolveStaticCmsPage,
   resolveTestimonials,
 } from "@/lib/content-localize";
+import { normalizeHomeBanners } from "@/lib/home-banners";
 import { resolveProducts } from "@/lib/product-localize";
 import { getServerClientId } from "@/lib/client-session-server";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
@@ -549,6 +550,11 @@ export async function HomeDynamic() {
       ? homeContent.hero.images
       : [home.hero.image]
   ).filter(Boolean);
+  const bannerSlides = normalizeHomeBanners(
+    homeContent as typeof homeContent & {
+      banners?: import("@/lib/home-banners").CmsHomeBanner[];
+    },
+  );
   const products = applyProductDeals(resolveProducts(cms.products, locale));
   const approvedTestimonials = resolveTestimonials(
     cms.testimonials.filter((testimonial) => testimonial.status === "approved"),
@@ -571,6 +577,7 @@ export async function HomeDynamic() {
     hero: (
       <HomeHeroRotator
         images={heroImages}
+        bannerSlides={bannerSlides}
         title={home.hero.title}
         description={home.hero.description}
         cta={home.hero.primaryCta}

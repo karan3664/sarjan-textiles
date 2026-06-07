@@ -4243,6 +4243,32 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   white-space: nowrap;
 }
 
+.sarjan-banner-slide-card {
+  border: 1px solid #e8e2d9;
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: #fbfaf7;
+}
+
+.sarjan-banner-slide-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sarjan-banner-slide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sarjan-banner-slide-preview {
+  min-height: 160px;
+}
+
 .sarjan-home-image-panel {
   height: 100%;
 }

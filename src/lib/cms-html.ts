@@ -9,6 +9,7 @@ const CMS_ALLOWED_TAGS = [
   "br",
   "p",
   "span",
+  "font",
   "a",
   "h1",
   "h2",
@@ -40,6 +41,7 @@ export function sanitizeCmsHtml(value: string): string {
     allowedTags: CMS_ALLOWED_TAGS,
     allowedAttributes: {
       "*": ["style", "class"],
+      font: ["face", "size", "color"],
       a: ["href", "target", "rel"],
     },
     allowedStyles: {
