@@ -48,6 +48,12 @@ function clientTokenFromRequest(request: NextRequest): string | undefined {
 }
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/downloads/sarjan-textiles.apk") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/api/download/apk";
+    return NextResponse.rewrite(url);
+  }
+
   if (request.nextUrl.pathname.startsWith("/api/mock/")) {
     if (
       process.env.NODE_ENV === "production" &&

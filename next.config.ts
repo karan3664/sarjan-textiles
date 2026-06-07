@@ -81,6 +81,24 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/downloads/:path*.apk",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/api/download/apk",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate",
+          },
+        ],
+      },
     ];
   },
   images: {

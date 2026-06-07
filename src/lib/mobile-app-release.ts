@@ -56,7 +56,8 @@ export function getMobileAppRelease(): MobileAppRelease {
     versionCode,
     forceUpdate,
     apkFile,
-    apkUrl: `${origin}/downloads/${apkFile}`,
+    // Dynamic route bypasses CDN/static cache for the same APK filename each release.
+    apkUrl: `${origin}/api/download/apk?v=${versionCode}`,
     downloadPageUrl: `${origin}/download`,
     releaseNotes,
   };
