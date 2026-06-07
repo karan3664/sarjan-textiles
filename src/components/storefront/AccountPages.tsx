@@ -48,6 +48,7 @@ import {
   type PublicAccountNavItem,
 } from "@/lib/account-nav-client";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
+import { enrichOrderPricing, gstPercentLabel } from "@/lib/gst-display";
 
 type Client = AccountClient;
 
@@ -922,6 +923,10 @@ export function AccountOrdersPage() {
   );
 }
 
+function orderPricing(order: Order) {
+  return enrichOrderPricing(order);
+}
+
 function AccountOrdersContent() {
   const { orders, loading } = useAccountSession();
   const searchParams = useSearchParams();
@@ -1416,6 +1421,7 @@ function OrderView({
   ];
   const current = Math.max(0, steps.indexOf(order.status));
   const dispatchNotes = (order.dispatchHistory ?? []).slice().reverse();
+  const priced = orderPricing(order);
 
   return (
     <div className="account-order-details">
@@ -1430,9 +1436,9 @@ function OrderView({
               Thank you. Your B2B order request has been received.
             </h6>
           </div>
-          <div className="text-end">
-            <p className="text-secondary">Total</p>
-            <h5>{money(order.subtotal)}</h5>
+          <div className="text-end sarjan-order-pricing-summary">
+            <p className="text-secondary mb_4">Order total (incl. GST)</p>
+            <h5 className="mb_0">{money(priced.total)}</h5>
           </div>
         </div>
         <div className="account-order-item">
@@ -1451,6 +1457,20 @@ function OrderView({
               <div className="text-button">{money(item.lineTotal)}</div>
             </div>
           ))}
+        </div>
+        <div className="sarjan-order-totals-card mt_24">
+          <div className="sarjan-order-totals-row">
+            <span>Subtotal</span>
+            <span>{money(priced.subtotal)}</span>
+          </div>
+          <div className="sarjan-order-totals-row">
+            <span>GST ({gstPercentLabel()}%)</span>
+            <span>{money(priced.tax)}</span>
+          </div>
+          <div className="sarjan-order-totals-row sarjan-order-totals-row--total">
+            <span>Total payable</span>
+            <strong>{money(priced.total)}</strong>
+          </div>
         </div>
         <div className="widget-tabs style-3 widget-order-tab mt_32">
           <ul className="widget-menu-tab">

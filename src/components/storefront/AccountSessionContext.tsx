@@ -49,6 +49,9 @@ export type AccountOrder = {
   paymentMode: "cheque";
   creditDays: number;
   subtotal: number;
+  tax?: number;
+  shipping?: number;
+  total?: number;
   dispatchAddress: string;
   dispatchDate?: string;
   transportDetails?: string;

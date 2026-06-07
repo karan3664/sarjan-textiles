@@ -27,3 +27,29 @@ export function computeGstOnSubtotal(
   const amount = Math.round(subtotalInr * rate * 100) / 100;
   return { rate, amount, applies: true };
 }
+
+export function gstPercentLabel(rate = gstRateOnSale()) {
+  return Math.round(rate * 100);
+}
+
+/** Ensure order totals include mandatory GST when backend omits tax (app parity). */
+export function enrichOrderPricing<
+  T extends {
+    subtotal: number;
+    tax?: number;
+    shipping?: number;
+    total?: number;
+  },
+>(order: T): T & { tax: number; total: number } {
+  const subtotal = Number(order.subtotal ?? 0);
+  const shipping = Number(order.shipping ?? 0);
+  const gst = computeGstOnSubtotal(subtotal, null, { b2bPricing: true });
+  const tax =
+    order.tax != null && Number(order.tax) > 0 ? Number(order.tax) : gst.amount;
+  const computedTotal = subtotal + tax + shipping;
+  const total =
+    order.total != null && Number(order.total) > 0
+      ? Number(order.total)
+      : computedTotal;
+  return { ...order, subtotal, tax, shipping, total };
+}

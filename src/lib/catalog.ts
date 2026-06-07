@@ -39,7 +39,7 @@ function slugValue(value: string) {
 
 function productMatchesCartIds(product: Product, ids: string[]) {
   const wanted = new Set(ids);
-  if (wanted.has(product.slug)) return true;
+  if (wanted.has(product.slug) || wanted.has(product.id)) return true;
   return product.legacySlugs?.some((legacy) => wanted.has(legacy)) ?? false;
 }
 
