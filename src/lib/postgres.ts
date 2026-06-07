@@ -20,6 +20,15 @@ export function getPgPool() {
   return global.__sarjanPgPool;
 }
 
+/** node-pg sends JS arrays as Postgres `{…}` arrays, not JSON — stringify for json/jsonb columns. */
+export function serializePgValue(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (typeof value !== "object") return value;
+  if (value instanceof Date) return value;
+  if (Buffer.isBuffer(value)) return value;
+  return JSON.stringify(value);
+}
+
 export async function pgQuery<T extends pg.QueryResultRow = pg.QueryResultRow>(
   text: string,
   params?: unknown[],
@@ -44,7 +53,7 @@ export async function pgInsertReturning<
   const placeholders = keys.map((_, index) => `$${index + 1}`);
   const { rows } = await pgQuery<T>(
     `insert into ${table} (${keys.join(", ")}) values (${placeholders.join(", ")}) returning *`,
-    keys.map((key) => row[key]),
+    keys.map((key) => serializePgValue(row[key])),
   );
   return rows[0] ?? null;
 }
@@ -61,7 +70,7 @@ export async function pgUpsertReturning<
     `insert into ${table} (${keys.join(", ")}) values (${placeholders.join(", ")})
      on conflict (${conflictTarget}) do update set ${updates.join(", ")}
      returning *`,
-    keys.map((key) => row[key]),
+    keys.map((key) => serializePgValue(row[key])),
   );
   return rows[0] ?? null;
 }
