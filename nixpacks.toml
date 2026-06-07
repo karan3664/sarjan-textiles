@@ -1,0 +1,3 @@
+# Coolify / Railway (Nixpacks) — GST govt portal uses curl for reliable sessions.
+[phases.setup]
+aptPkgs = ["curl", "ca-certificates"]
