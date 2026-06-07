@@ -42,5 +42,15 @@ export function sanitizeCmsHtml(value: string): string {
       "*": ["style", "class"],
       a: ["href", "target", "rel"],
     },
+    allowedStyles: {
+      "*": {
+        color: [/^#[0-9a-fA-F]{3,8}$/, /^rgb\(/],
+        "font-size": [/^\d+(?:px|rem|em|%)$/],
+        "font-family": [/.*/],
+        "font-weight": [/^\d{3}$/, /^bold$/, /^normal$/],
+        "text-align": [/^left$/, /^right$/, /^center$/, /^justify$/],
+        "line-height": [/^\d+(?:\.\d+)?(?:px|rem|em|%)?$/],
+      },
+    },
   });
 }
