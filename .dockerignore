@@ -9,3 +9,13 @@ data
 .cursor
 terminals
 **/.DS_Store
+
+# Keep sarjan-textiles.apk + mobile-release.json; skip versioned archives (~60MB each).
+public/downloads/sarjan-textiles-*.apk
+public/downloads/sarjan-admin.apk
+
+# Dev / docs not needed in production image
+docs
+scripts
+**/*.md
+!README.md

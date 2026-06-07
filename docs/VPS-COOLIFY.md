@@ -52,9 +52,13 @@ Output includes `DATABASE_URL` and saves `/root/sarjan-db-credentials.env`.
 1. **+ New Project** → `Sarjan Textiles`
 2. **+ New Resource → Application → GitHub** → `sarjan-textiles`
 3. Branch: `development` or `main`
-4. **Build pack**: Dockerfile (repo root `Dockerfile`)
+4. **Build pack**: **Dockerfile** (repo root `Dockerfile`) — do **not** use Nixpacks auto-detect (smaller image, fewer export failures).
 5. **Port**: `3000`
 6. **Domains**: `sarjantextiles.com` → enable Let's Encrypt
+
+If Coolify shows **Nixpacks** instead of Dockerfile: **Configuration → Build Pack → Dockerfile**.
+
+Remove env var **`NIXPACKS_NODE_VERSION=22`** if set in Coolify — it pins Node 22.11 and is ignored when using Dockerfile. The repo Dockerfile uses **Node 22.13**.
 
 ### Persistent storage (required)
 
@@ -126,6 +130,21 @@ Port **8000** (Coolify UI) is **not open** on the public internet — `http://69
 4. Push to `main` → **Actions** tab shows deploy → Coolify **Deployments** starts automatically.
 
 Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build.
+
+### Deploy failed at “exporting to image” (build OK, exit 255)
+
+The Next.js build finished but Docker could not save the image — usually **VPS disk full** or **build context too large** (APK files in git).
+
+**On VPS (SSH):**
+
+```bash
+df -h /
+docker system df
+docker system prune -af --volumes
+df -h /
+```
+
+Then **Redeploy** in Coolify. The repo `.dockerignore` excludes versioned APK archives (`sarjan-textiles-1.*.apk`) so only `sarjan-textiles.apk` (~60MB) ships in the image.
 
 **GitHub Actions fails in ~8s (SSH):**
 
