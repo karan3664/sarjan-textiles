@@ -123,7 +123,7 @@ function cookieHeaderFromNetscapeJar(jarText: string): string {
     const value = parts[6]?.trim();
     if (name && value) pairs.push(`${name}=${value}`);
   }
-  return mergeCookiePairs([pairs]);
+  return mergeCookiePairs(pairs);
 }
 
 function parseCurlHeaderFile(headerText: string): {
