@@ -26,7 +26,7 @@ import {
   normalizeOrderPlacedVia,
   type OrderPlacedVia,
 } from "@/lib/order-placed-via";
-import { computeGstOnSubtotal } from "@/lib/gst-display";
+import { computeGstOnSubtotal, enrichOrderPricing } from "@/lib/gst-display";
 
 export type LocalClient = {
   id: string;
@@ -207,7 +207,7 @@ function mapClient(row: Record<string, unknown>): LocalClient {
 }
 
 function mapOrder(row: Record<string, unknown>): LocalOrder {
-  return {
+  const base: LocalOrder = {
     id: String(row.id ?? ""),
     clientId: String(row.client_id ?? ""),
     clientEmail: String(row.client_email ?? ""),
@@ -251,6 +251,8 @@ function mapOrder(row: Record<string, unknown>): LocalOrder {
     placedVia: normalizeOrderPlacedVia(row.placed_via),
     createdAt: String(row.created_at ?? ""),
   };
+  const priced = enrichOrderPricing(base);
+  return { ...base, tax: priced.tax, total: priced.total };
 }
 
 function orderRow(order: Partial<LocalOrder>) {
@@ -265,8 +267,6 @@ function orderRow(order: Partial<LocalOrder>) {
     deposit_status: order.depositStatus,
     payment_received_at: order.paymentReceivedAt || null,
     subtotal: order.subtotal,
-    tax: order.tax ?? null,
-    total: order.total ?? null,
     items: order.items,
     dispatch_address: order.dispatchAddress,
     dispatch_date: order.dispatchDate || null,
@@ -1045,8 +1045,6 @@ export async function createOrder(
       credit_days: order.creditDays,
       deposit_status: order.depositStatus,
       subtotal: order.subtotal,
-      tax: order.tax ?? null,
-      total: order.total ?? null,
       items: order.items,
       dispatch_address: order.dispatchAddress,
       dispatch_history: order.dispatchHistory,
@@ -1151,8 +1149,6 @@ export async function createAdminOrder(input: {
         credit_days: order.creditDays,
         deposit_status: order.depositStatus,
         subtotal: order.subtotal,
-        tax: order.tax ?? null,
-        total: order.total ?? null,
         items: order.items,
         dispatch_address: order.dispatchAddress,
         dispatch_history: order.dispatchHistory,

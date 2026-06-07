@@ -29,6 +29,8 @@ create table if not exists orders (
   deposit_status text not null default 'Not deposited',
   payment_received_at date,
   subtotal numeric not null default 0,
+  tax numeric,
+  total numeric,
   items jsonb not null default '[]'::jsonb,
   dispatch_address text,
   dispatch_date date,
