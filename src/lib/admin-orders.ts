@@ -1,4 +1,5 @@
 import { clients as demoClients, orders as demoOrders } from "@/data/mock";
+import { includeAdminDemoData } from "@/lib/admin-demo-data";
 import { readLocalDb, type LocalOrder } from "@/lib/local-db";
 
 export const orderStatuses: LocalOrder["status"][] = [
@@ -37,6 +38,13 @@ export async function getAdminOrders() {
       creditDueOn: creditDueDate(order.createdAt, order.creditDays),
     };
   });
+
+  if (!includeAdminDemoData()) {
+    return localOrders.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }
 
   const demo = demoOrders.map((order) => {
     const client = demoClients.find((item) => item.name === order.client);

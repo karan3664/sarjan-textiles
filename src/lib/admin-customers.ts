@@ -1,4 +1,5 @@
 import { clients as demoClients, orders as demoOrders } from "@/data/mock";
+import { includeAdminDemoData } from "@/lib/admin-demo-data";
 import { orderStatuses } from "@/lib/admin-orders";
 import {
   getClients,
@@ -48,6 +49,10 @@ export async function getAdminCustomers() {
       db.orders.filter((order) => order.clientId === client.id),
     ),
   }));
+
+  if (!includeAdminDemoData()) {
+    return localCustomers;
+  }
 
   const demoCustomers = demoClients.map((client) => ({
     source: "demo" as const,
