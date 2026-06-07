@@ -4221,6 +4221,28 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   padding: 32px !important;
 }
 
+.sarjan-cms-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.sarjan-cms-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sarjan-cms-field-save {
+  min-height: 34px;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+}
+
 .sarjan-home-image-panel {
   height: 100%;
 }
@@ -9768,6 +9790,38 @@ button.accordion-button:not(.collapsed),
 
   .sarjan-account-orders .sarjan-account-orders__total {
     font-weight: 700;
+  }
+
+  .sarjan-account-orders .sarjan-account-orders__gst-note {
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .sarjan-order-totals-card {
+    border: 1px solid #ece8e1;
+    border-radius: 12px;
+    padding: 16px 18px;
+    background: #fbfaf7;
+    display: grid;
+    gap: 10px;
+    max-width: 420px;
+    margin-left: auto;
+  }
+
+  .sarjan-order-totals-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: #4d4843;
+    font-size: 14px;
+  }
+
+  .sarjan-order-totals-row--total {
+    padding-top: 10px;
+    border-top: 1px solid #e8e2d9;
+    color: #141414;
+    font-size: 15px;
   }
 
   .sarjan-account-orders .sarjan-account-orders__actions {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "@/data/mock";
 import type { CmsHome } from "@/lib/cms-store";
@@ -128,10 +128,66 @@ function joinLines(value: string[]) {
   return value.join("\n");
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function stripHtmlPreview(html: string, max = 52) {
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "—";
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
+function buildHomeDraft(initialHome: CmsHome | HomeDraft): HomeDraft {
+  const draft = initialHome as HomeDraft;
+  const videoUrls = getHeroVideos(draft.hero);
+  return {
+    ...draft,
+    hero: { ...draft.hero, videoUrls, videoUrl: videoUrls[0] ?? "" },
+    sections: draft.sections?.length ? draft.sections : defaultSections(),
+  };
+}
+
+type HomeEditorSaveContextValue = {
+  saveHome: () => Promise<void>;
+  saveState: SaveState;
+};
+
+const HomeEditorSaveContext = createContext<HomeEditorSaveContextValue | null>(
+  null,
+);
+
+function useHomeEditorSave() {
+  return useContext(HomeEditorSaveContext);
+}
+
+function Field({
+  label,
+  children,
+  dirty,
+  onSave,
+  saving,
+}: {
+  label: string;
+  children: ReactNode;
+  dirty?: boolean;
+  onSave?: () => void;
+  saving?: boolean;
+}) {
   return (
-    <fieldset>
-      <div className="body-title mb-10">{label}</div>
+    <fieldset className="sarjan-cms-field">
+      <div className="sarjan-cms-field-head">
+        <div className="body-title mb-0">{label}</div>
+        {dirty && onSave ? (
+          <button
+            type="button"
+            className="tf-button style-1 sarjan-cms-field-save"
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+        ) : null}
+      </div>
       {children}
     </fieldset>
   );
@@ -156,21 +212,57 @@ function TextInput({
   );
 }
 
+function TextField({
+  label,
+  value,
+  savedValue,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string | number;
+  savedValue: string | number;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  const save = useHomeEditorSave();
+  const dirty = String(value) !== String(savedValue);
+  return (
+    <Field
+      label={label}
+      dirty={dirty}
+      onSave={save?.saveHome}
+      saving={save?.saveState === "saving"}
+    >
+      <TextInput value={value} onChange={onChange} placeholder={placeholder} />
+    </Field>
+  );
+}
+
 function HtmlField({
   label,
   value,
+  savedValue,
   onChange,
-  rows = 4,
+  rows = 6,
   placeholder,
 }: {
   label: string;
   value: string;
+  savedValue: string;
   onChange: (value: string) => void;
   rows?: number;
   placeholder?: string;
 }) {
+  const save = useHomeEditorSave();
+  const dirty = value !== savedValue;
   return (
-    <Field label={label}>
+    <Field
+      label={label}
+      dirty={dirty}
+      onSave={save?.saveHome}
+      saving={save?.saveState === "saving"}
+    >
       <AdminHtmlEditor
         value={value}
         onChange={onChange}
@@ -435,15 +527,12 @@ export function AdminHomePageClient({
   initialHome: CmsHome;
   products: Product[];
 }) {
-  const [home, setHome] = useState<HomeDraft>(() => {
-    const draft = initialHome as HomeDraft;
-    const videoUrls = getHeroVideos(draft.hero);
-    return {
-      ...draft,
-      hero: { ...draft.hero, videoUrls, videoUrl: videoUrls[0] ?? "" },
-      sections: draft.sections?.length ? draft.sections : defaultSections(),
-    };
-  });
+  const [home, setHome] = useState<HomeDraft>(() =>
+    buildHomeDraft(initialHome),
+  );
+  const [savedHome, setSavedHome] = useState<HomeDraft>(() =>
+    buildHomeDraft(initialHome),
+  );
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState("");
   const [uploadState, setUploadState] = useState<UploadState>({});
@@ -451,7 +540,7 @@ export function AdminHomePageClient({
 
   const previewStats = useMemo(
     () => [
-      ["Hero", home.hero.title],
+      ["Hero", stripHtmlPreview(home.hero.title)],
       ["Categories", home.categories.length],
       ["Highlights", home.highlights.length],
     ],
@@ -469,15 +558,9 @@ export function AdminHomePageClient({
       const data = await putAdminCms<{ home?: HomeDraft }>({ home });
       const saved = data.home;
       if (saved) {
-        setHome({
-          ...saved,
-          hero: {
-            ...saved.hero,
-            videoUrls: getHeroVideos(saved.hero),
-            videoUrl: getHeroVideos(saved.hero)[0] ?? "",
-          },
-          sections: saved.sections?.length ? saved.sections : defaultSections(),
-        });
+        const next = buildHomeDraft(saved);
+        setHome(next);
+        setSavedHome(next);
       }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2500);
@@ -830,8 +913,15 @@ export function AdminHomePageClient({
     }
   };
 
+  const savedSections = savedHome.sections?.length
+    ? savedHome.sections
+    : defaultSections();
+
+  const savedSection = (sectionId: string) =>
+    savedSections.find((item) => item.id === sectionId);
+
   return (
-    <>
+    <HomeEditorSaveContext.Provider value={{ saveHome, saveState }}>
       <div className="sarjan-home-kpi-grid">
         {previewStats.map(([label, value], index) => (
           <div className="sarjan-home-kpi-card" key={label}>
@@ -884,6 +974,91 @@ export function AdminHomePageClient({
             <a className="tf-button" href="/" target="_blank">
               Preview Frontend
             </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="wg-box mb-30 sarjan-home-editor-card sarjan-home-hero-editor">
+        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
+          <div>
+            <h5>Homepage Banner</h5>
+            <div className="body-text text-secondary">
+              Banner images, hero text (rich HTML editor), and optional video
+              slides.
+            </div>
+          </div>
+          <div className="box-status text-button type-delivery">
+            Live Preview
+          </div>
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(360px,0.9fr)_minmax(500px,1.1fr)] gap-8 2xl:gap-10 items-start">
+          <div>
+            <div className="body-title mb-10">Banner Images</div>
+            <HeroImagesField
+              images={heroImages}
+              uploadState={uploadState}
+              onUpload={uploadHeroImages}
+              onPrimary={setPrimaryHeroImage}
+              onRemove={removeHeroImage}
+            />
+            <HeroVideosField
+              enabled={Boolean(home.hero.videoEnabled)}
+              videos={heroVideos}
+              poster={heroImages[0]}
+              uploadState={uploadState.heroVideo}
+              urlDraft={heroVideoUrlDraft}
+              onToggle={updateHeroVideoEnabled}
+              onUpload={uploadHeroVideos}
+              onAddUrl={addHeroVideoUrl}
+              onUrlDraftChange={setHeroVideoUrlDraft}
+              onPrimary={setPrimaryHeroVideo}
+              onRemove={removeHeroVideo}
+            />
+          </div>
+          <div className="sarjan-home-form-panel">
+            <div className="mb-24">
+              <h5>Banner Content</h5>
+              <div className="body-text text-secondary">
+                Select text, then pick font and size. Use Save on each field or
+                Save Home Page at the top.
+              </div>
+            </div>
+            <div className="cols gap22">
+              <HtmlField
+                label="Eyebrow"
+                value={home.hero.eyebrow}
+                savedValue={savedHome.hero.eyebrow}
+                onChange={(value) => updateHero("eyebrow", value)}
+                rows={3}
+              />
+              <HtmlField
+                label="Banner title"
+                value={home.hero.title}
+                savedValue={savedHome.hero.title}
+                onChange={(value) => updateHero("title", value)}
+                rows={6}
+              />
+              <HtmlField
+                label="Button label"
+                value={home.hero.primaryCta.label}
+                savedValue={savedHome.hero.primaryCta.label}
+                onChange={(value) => updateHeroCta("label", value)}
+                rows={3}
+              />
+              <TextField
+                label="Button link"
+                value={home.hero.primaryCta.href}
+                savedValue={savedHome.hero.primaryCta.href}
+                onChange={(value) => updateHeroCta("href", value)}
+              />
+            </div>
+            <HtmlField
+              label="Banner description"
+              value={home.hero.description}
+              savedValue={savedHome.hero.description}
+              onChange={(value) => updateHero("description", value)}
+              rows={7}
+            />
           </div>
         </div>
       </div>
@@ -986,10 +1161,11 @@ export function AdminHomePageClient({
                     <HtmlField
                       label="Section name"
                       value={section.title ?? ""}
+                      savedValue={savedSection(section.id)?.title ?? ""}
                       onChange={(value) =>
                         updateSection(index, { title: value })
                       }
-                      rows={2}
+                      rows={3}
                       placeholder="Example: Summer Collection"
                     />
                     <Field label="Layout">
@@ -1011,10 +1187,11 @@ export function AdminHomePageClient({
                   <HtmlField
                     label="Section subtitle"
                     value={section.subtitle ?? ""}
+                    savedValue={savedSection(section.id)?.subtitle ?? ""}
                     onChange={(value) =>
                       updateSection(index, { subtitle: value })
                     }
-                    rows={3}
+                    rows={4}
                     placeholder="Optional subtitle shown under section name"
                   />
                   <div className="sarjan-custom-block-actions">
@@ -1065,22 +1242,32 @@ export function AdminHomePageClient({
                               <HtmlField
                                 label="Heading"
                                 value={block.heading ?? ""}
+                                savedValue={
+                                  savedSection(section.id)?.blocks?.find(
+                                    (item) => item.id === block.id,
+                                  )?.heading ?? ""
+                                }
                                 onChange={(value) =>
                                   updateCustomBlock(index, blockIndex, {
                                     heading: value,
                                   })
                                 }
-                                rows={2}
+                                rows={3}
                               />
                               <HtmlField
                                 label="Text"
                                 value={block.body ?? ""}
+                                savedValue={
+                                  savedSection(section.id)?.blocks?.find(
+                                    (item) => item.id === block.id,
+                                  )?.body ?? ""
+                                }
                                 onChange={(value) =>
                                   updateCustomBlock(index, blockIndex, {
                                     body: value,
                                   })
                                 }
-                                rows={4}
+                                rows={6}
                               />
                             </div>
                           )}
@@ -1142,12 +1329,17 @@ export function AdminHomePageClient({
                               <HtmlField
                                 label="Button label"
                                 value={block.label ?? ""}
+                                savedValue={
+                                  savedSection(section.id)?.blocks?.find(
+                                    (item) => item.id === block.id,
+                                  )?.label ?? ""
+                                }
                                 onChange={(value) =>
                                   updateCustomBlock(index, blockIndex, {
                                     label: value,
                                   })
                                 }
-                                rows={2}
+                                rows={3}
                               />
                               <Field label="Button link">
                                 <TextInput
@@ -1192,86 +1384,6 @@ export function AdminHomePageClient({
               )}
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="wg-box mb-30 sarjan-home-editor-card">
-        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
-          <div>
-            <h5>Homepage Banner</h5>
-            <div className="body-text text-secondary">
-              Banner images plus optional video slides (multiple uploads, muted
-              autoplay).
-            </div>
-          </div>
-          <div className="box-status text-button type-delivery">
-            Live Preview
-          </div>
-        </div>
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(360px,0.9fr)_minmax(500px,1.1fr)] gap-8 2xl:gap-10 items-start">
-          <div>
-            <div className="body-title mb-10">Banner Images</div>
-            <HeroImagesField
-              images={heroImages}
-              uploadState={uploadState}
-              onUpload={uploadHeroImages}
-              onPrimary={setPrimaryHeroImage}
-              onRemove={removeHeroImage}
-            />
-            <HeroVideosField
-              enabled={Boolean(home.hero.videoEnabled)}
-              videos={heroVideos}
-              poster={heroImages[0]}
-              uploadState={uploadState.heroVideo}
-              urlDraft={heroVideoUrlDraft}
-              onToggle={updateHeroVideoEnabled}
-              onUpload={uploadHeroVideos}
-              onAddUrl={addHeroVideoUrl}
-              onUrlDraftChange={setHeroVideoUrlDraft}
-              onPrimary={setPrimaryHeroVideo}
-              onRemove={removeHeroVideo}
-            />
-          </div>
-          <div className="sarjan-home-form-panel">
-            <div className="mb-24">
-              <h5>Banner Content</h5>
-              <div className="body-text text-secondary">
-                Comprehensive insights into homepage hero section.
-              </div>
-            </div>
-            <div className="cols gap22">
-              <HtmlField
-                label="Eyebrow"
-                value={home.hero.eyebrow}
-                onChange={(value) => updateHero("eyebrow", value)}
-                rows={2}
-              />
-              <HtmlField
-                label="Banner title"
-                value={home.hero.title}
-                onChange={(value) => updateHero("title", value)}
-                rows={4}
-              />
-              <HtmlField
-                label="Button label"
-                value={home.hero.primaryCta.label}
-                onChange={(value) => updateHeroCta("label", value)}
-                rows={2}
-              />
-              <Field label="Button link">
-                <TextInput
-                  value={home.hero.primaryCta.href}
-                  onChange={(value) => updateHeroCta("href", value)}
-                />
-              </Field>
-            </div>
-            <HtmlField
-              label="Banner description"
-              value={home.hero.description}
-              onChange={(value) => updateHero("description", value)}
-              rows={5}
-            />
-          </div>
         </div>
       </div>
 
@@ -1327,8 +1439,9 @@ export function AdminHomePageClient({
                 <HtmlField
                   label="Card title"
                   value={category.name}
+                  savedValue={savedHome.categories[index]?.name ?? ""}
                   onChange={(value) => updateCategory(index, "name", value)}
-                  rows={2}
+                  rows={3}
                 />
                 <Field label="Link">
                   <TextInput
@@ -1368,21 +1481,23 @@ export function AdminHomePageClient({
               <HtmlField
                 label="Section title"
                 value={home.topPicksTitle ?? "Today's Top Picks"}
+                savedValue={savedHome.topPicksTitle ?? "Today's Top Picks"}
                 onChange={(value) =>
                   setHome((current) => ({ ...current, topPicksTitle: value }))
                 }
-                rows={2}
+                rows={3}
               />
               <HtmlField
                 label="Section subtitle"
                 value={home.topPicksDescription ?? ""}
+                savedValue={savedHome.topPicksDescription ?? ""}
                 onChange={(value) =>
                   setHome((current) => ({
                     ...current,
                     topPicksDescription: value,
                   }))
                 }
-                rows={3}
+                rows={4}
               />
             </div>
           </div>
@@ -1399,21 +1514,23 @@ export function AdminHomePageClient({
               <HtmlField
                 label="Section title"
                 value={home.trendingTitle}
+                savedValue={savedHome.trendingTitle}
                 onChange={(value) =>
                   setHome((current) => ({ ...current, trendingTitle: value }))
                 }
-                rows={2}
+                rows={3}
               />
               <HtmlField
                 label="Section subtitle"
                 value={home.trendingDescription}
+                savedValue={savedHome.trendingDescription}
                 onChange={(value) =>
                   setHome((current) => ({
                     ...current,
                     trendingDescription: value,
                   }))
                 }
-                rows={3}
+                rows={4}
               />
             </div>
           </div>
@@ -1433,24 +1550,26 @@ export function AdminHomePageClient({
               <HtmlField
                 label="Section title"
                 value={home.testimonialsTitle ?? "Customer Say!"}
+                savedValue={savedHome.testimonialsTitle ?? "Customer Say!"}
                 onChange={(value) =>
                   setHome((current) => ({
                     ...current,
                     testimonialsTitle: value,
                   }))
                 }
-                rows={2}
+                rows={3}
               />
               <HtmlField
                 label="Section subtitle"
                 value={home.testimonialsDescription ?? ""}
+                savedValue={savedHome.testimonialsDescription ?? ""}
                 onChange={(value) =>
                   setHome((current) => ({
                     ...current,
                     testimonialsDescription: value,
                   }))
                 }
-                rows={3}
+                rows={4}
               />
             </div>
           </div>
@@ -1467,21 +1586,23 @@ export function AdminHomePageClient({
               <HtmlField
                 label="Section title"
                 value={home.galleryTitle}
+                savedValue={savedHome.galleryTitle}
                 onChange={(value) =>
                   setHome((current) => ({ ...current, galleryTitle: value }))
                 }
-                rows={2}
+                rows={3}
               />
               <HtmlField
                 label="Section subtitle"
                 value={home.galleryDescription}
+                savedValue={savedHome.galleryDescription}
                 onChange={(value) =>
                   setHome((current) => ({
                     ...current,
                     galleryDescription: value,
                   }))
                 }
-                rows={3}
+                rows={4}
               />
             </div>
           </div>
@@ -1514,14 +1635,16 @@ export function AdminHomePageClient({
                 <HtmlField
                   label="Value"
                   value={highlight.value}
+                  savedValue={savedHome.highlights[index]?.value ?? ""}
                   onChange={(value) => updateHighlight(index, "value", value)}
-                  rows={2}
+                  rows={3}
                 />
                 <HtmlField
                   label="Label"
                   value={highlight.label}
+                  savedValue={savedHome.highlights[index]?.label ?? ""}
                   onChange={(value) => updateHighlight(index, "label", value)}
-                  rows={2}
+                  rows={3}
                 />
               </div>
             </div>
@@ -1616,14 +1739,16 @@ export function AdminHomePageClient({
                 <HtmlField
                   label="Title"
                   value={service.title}
+                  savedValue={savedHome.services[index]?.title ?? ""}
                   onChange={(value) => updateService(index, "title", value)}
-                  rows={2}
+                  rows={3}
                 />
                 <HtmlField
                   label="Body"
                   value={service.body}
+                  savedValue={savedHome.services[index]?.body ?? ""}
                   onChange={(value) => updateService(index, "body", value)}
-                  rows={4}
+                  rows={6}
                 />
               </div>
             </div>
@@ -1644,6 +1769,6 @@ export function AdminHomePageClient({
           Manage Testimonials
         </a>
       </div>
-    </>
+    </HomeEditorSaveContext.Provider>
   );
 }
