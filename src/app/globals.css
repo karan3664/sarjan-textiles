@@ -13721,8 +13721,16 @@ a.sarjan-order-bot-card:focus-visible {
 .sarjan-profile-avatar-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: var(--sarjan-surface, #faf7f2);
   display: block;
+}
+
+.sidebar-account .account-avatar .image img {
+  object-fit: contain;
+  object-position: center;
+  background: var(--sarjan-surface, #faf7f2);
 }
 
 /* India state / city picker — custom panel (avoids native OS mega-dropdown) */
