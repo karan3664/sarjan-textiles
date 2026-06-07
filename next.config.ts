@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   devIndicators: false,
   // Keep sharp + Supabase external so dev server does not emit fragile vendor-chunks
   // (fixes intermittent "Cannot find module './vendor-chunks/@supabase.js'" after cache churn).
