@@ -1,73 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  buildGoogleFontsUrl,
+  CMS_FONT_FAMILIES,
+  CMS_FONT_SIZES,
+  isSelectionWithinEditor,
+  matchCmsFontFamily,
+  normalizeFontFamily,
+} from "@/lib/cms-html-editor-utils";
 
-const CMS_FONT_FAMILIES = [
-  "Kumbh Sans",
-  "Inter",
-  "Poppins",
-  "Roboto",
-  "Open Sans",
-  "Lato",
-  "Montserrat",
-  "Raleway",
-  "Nunito",
-  "DM Sans",
-  "Source Sans 3",
-  "Oswald",
-  "Playfair Display",
-  "Merriweather",
-  "Libre Baskerville",
-  "Cormorant Garamond",
-  "Georgia",
-  "Times New Roman",
-  "Arial",
-  "Helvetica",
-  "Verdana",
-  "Tahoma",
-  "Trebuchet MS",
-  "Courier New",
-  "Palatino Linotype",
-] as const;
-
-const CMS_FONT_SIZES = [
-  { label: "12px", value: "12px" },
-  { label: "14px", value: "14px" },
-  { label: "16px", value: "16px" },
-  { label: "18px", value: "18px" },
-  { label: "20px", value: "20px" },
-  { label: "24px", value: "24px" },
-  { label: "28px", value: "28px" },
-  { label: "32px", value: "32px" },
-  { label: "40px", value: "40px" },
-  { label: "48px", value: "48px" },
-  { label: "56px", value: "56px" },
-  { label: "64px", value: "64px" },
-] as const;
-
-const GOOGLE_FONTS_URL = `https://fonts.googleapis.com/css2?family=${CMS_FONT_FAMILIES.filter(
-  (font) =>
-    ![
-      "Arial",
-      "Helvetica",
-      "Verdana",
-      "Tahoma",
-      "Trebuchet MS",
-      "Georgia",
-      "Times New Roman",
-      "Courier New",
-      "Palatino Linotype",
-    ].includes(font),
-)
-  .map((font) => `${font.replace(/ /g, "+")}:wght@400;500;600;700`)
-  .join("&family=")}&display=swap`;
+const GOOGLE_FONTS_URL = buildGoogleFontsUrl();
 
 function exec(command: string, value?: string) {
   document.execCommand(command, false, value);
-}
-
-function normalizeFontFamily(value: string) {
-  return value.replace(/['"]/g, "").split(",")[0]?.trim() ?? "";
 }
 
 function detectStyleAtSelection(
@@ -75,10 +21,13 @@ function detectStyleAtSelection(
   property: "fontFamily" | "fontSize",
 ): string {
   const selection = window.getSelection();
-  if (!selection?.anchorNode || !editor) {
+  if (!editor || !isSelectionWithinEditor(editor, selection)) {
     return "";
   }
-  let node: Node | null = selection.anchorNode;
+  let node: Node | null = selection!.anchorNode;
+  if (!node) {
+    return "";
+  }
   if (node.nodeType === Node.TEXT_NODE) {
     node = node.parentElement;
   }
@@ -90,12 +39,7 @@ function detectStyleAtSelection(
       }
       const computed = window.getComputedStyle(node)[property];
       if (property === "fontFamily") {
-        const normalized = normalizeFontFamily(computed);
-        const match = CMS_FONT_FAMILIES.find(
-          (font) =>
-            normalized.toLowerCase().includes(font.toLowerCase()) ||
-            font.toLowerCase().includes(normalized.toLowerCase()),
-        );
+        const match = matchCmsFontFamily(computed);
         if (match) {
           return match;
         }
@@ -112,17 +56,25 @@ function applyInlineStyle(
   editor: HTMLDivElement | null,
   property: "fontFamily" | "fontSize",
   value: string,
+  savedRange: Range | null,
 ) {
   if (!editor) {
     return;
   }
   editor.focus();
   const selection = window.getSelection();
-  if (!selection?.rangeCount) {
+  if (!selection) {
+    return;
+  }
+  if (savedRange) {
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
+  }
+  if (!selection.rangeCount) {
     return;
   }
   const range = selection.getRangeAt(0);
-  if (range.collapsed) {
+  if (!editor.contains(range.commonAncestorContainer) || range.collapsed) {
     return;
   }
 
@@ -164,12 +116,25 @@ export function AdminHtmlEditor({
   placeholder,
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [source, setSource] = useState(value);
   const [activeFont, setActiveFont] = useState("");
   const [activeSize, setActiveSize] = useState("");
 
   const minHeightPx = Math.max(140, rows * 36);
+
+  useEffect(() => {
+    if (document.getElementById("sarjan-cms-google-fonts")) {
+      return;
+    }
+    const link = document.createElement("link");
+    link.id = "sarjan-cms-google-fonts";
+    link.rel = "stylesheet";
+    link.href = GOOGLE_FONTS_URL;
+    document.head.appendChild(link);
+  }, []);
 
   useEffect(() => {
     setSource(value);
@@ -182,6 +147,18 @@ export function AdminHtmlEditor({
     }
   }, [value, mode]);
 
+  const saveSelection = useCallback(() => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection?.rangeCount) {
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
+    }
+  }, []);
+
   const syncVisual = useCallback(() => {
     const html = editorRef.current?.innerHTML ?? "";
     onChange(html);
@@ -189,9 +166,15 @@ export function AdminHtmlEditor({
   }, [onChange]);
 
   const refreshToolbar = useCallback(() => {
-    setActiveFont(detectStyleAtSelection(editorRef.current, "fontFamily"));
-    setActiveSize(detectStyleAtSelection(editorRef.current, "fontSize"));
-  }, []);
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!isSelectionWithinEditor(editor, selection)) {
+      return;
+    }
+    setActiveFont(detectStyleAtSelection(editor, "fontFamily"));
+    setActiveSize(detectStyleAtSelection(editor, "fontSize"));
+    saveSelection();
+  }, [saveSelection]);
 
   useEffect(() => {
     if (mode !== "visual") {
@@ -210,9 +193,27 @@ export function AdminHtmlEditor({
     refreshToolbar();
   };
 
+  const applyFontStyle = (
+    property: "fontFamily" | "fontSize",
+    nextValue: string,
+  ) => {
+    applyInlineStyle(
+      editorRef.current,
+      property,
+      nextValue,
+      savedRangeRef.current,
+    );
+    if (property === "fontFamily") {
+      setActiveFont(nextValue);
+    } else {
+      setActiveSize(nextValue);
+    }
+    saveSelection();
+    syncVisual();
+  };
+
   return (
-    <div className="sarjan-html-editor">
-      <link rel="stylesheet" href={GOOGLE_FONTS_URL} />
+    <div className="sarjan-html-editor" data-html-editor={instanceId}>
       <div className="sarjan-html-editor-toolbar">
         <button type="button" onClick={() => applyFormat("bold")} title="Bold">
           <strong>B</strong>
@@ -233,14 +234,16 @@ export function AdminHtmlEditor({
         </button>
         <select
           value={activeSize}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            saveSelection();
+          }}
           onChange={(event) => {
             const size = event.target.value;
             if (!size) {
               return;
             }
-            applyInlineStyle(editorRef.current, "fontSize", size);
-            setActiveSize(size);
-            syncVisual();
+            applyFontStyle("fontSize", size);
           }}
           aria-label="Font size"
           className="sarjan-html-editor-size"
@@ -254,14 +257,16 @@ export function AdminHtmlEditor({
         </select>
         <select
           value={activeFont}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            saveSelection();
+          }}
           onChange={(event) => {
             const font = event.target.value;
             if (!font) {
               return;
             }
-            applyInlineStyle(editorRef.current, "fontFamily", font);
-            setActiveFont(font);
-            syncVisual();
+            applyFontStyle("fontFamily", font);
           }}
           aria-label="Font family"
           className="sarjan-html-editor-font"
@@ -322,6 +327,7 @@ export function AdminHtmlEditor({
           onBlur={syncVisual}
           onKeyUp={refreshToolbar}
           onMouseUp={refreshToolbar}
+          onFocus={refreshToolbar}
         />
       ) : (
         <textarea
@@ -337,8 +343,8 @@ export function AdminHtmlEditor({
         />
       )}
       <p className="sarjan-html-editor-hint">
-        Select text, then pick font/size — selection stays visible in the
-        toolbar. Use HTML tab for advanced markup.
+        Select text, then pick font/size — each field keeps its own formatting.
+        Use HTML tab for advanced markup.
       </p>
       <style>{`
         .sarjan-html-editor { display: grid; gap: 10px; }
