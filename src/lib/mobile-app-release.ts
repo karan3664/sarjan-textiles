@@ -42,12 +42,13 @@ export async function getMobileAppRelease(): Promise<MobileAppRelease> {
     process.env.MOBILE_APP_APK_FILE?.trim() ||
     manifest?.apkFile ||
     "sarjan-textiles.apk";
+  // Git manifest from `npm run release:apk` is the source of truth; env is fallback only.
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() ||
     manifest?.latestVersion ||
-    "1.0.27";
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() ||
+    "1.0.28";
   const versionCode = Number(
-    process.env.MOBILE_APP_VERSION_CODE || manifest?.versionCode || "28",
+    manifest?.versionCode || process.env.MOBILE_APP_VERSION_CODE || "29",
   );
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||

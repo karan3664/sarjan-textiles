@@ -234,10 +234,7 @@ export function AdminHtmlEditor({
         </button>
         <select
           value={activeSize}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            saveSelection();
-          }}
+          onPointerDown={() => saveSelection()}
           onChange={(event) => {
             const size = event.target.value;
             if (!size) {
@@ -257,10 +254,7 @@ export function AdminHtmlEditor({
         </select>
         <select
           value={activeFont}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            saveSelection();
-          }}
+          onPointerDown={() => saveSelection()}
           onChange={(event) => {
             const font = event.target.value;
             if (!font) {

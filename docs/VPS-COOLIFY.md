@@ -92,10 +92,11 @@ SMTP_FROM="Sarjan Textiles <info@sarjantextiles.com>"
 
 FIREBASE_SERVICE_ACCOUNT=<one-line JSON>
 
-# Optional — version is read from public/downloads/mobile-release.json (updated by npm run release:apk).
-# Only set these if you need to override without a git push:
-# MOBILE_APP_LATEST_VERSION=1.0.27
-# MOBILE_APP_VERSION_CODE=28
+# Optional — normally leave UNSET. Version is read from public/downloads/mobile-release.json.
+# Remove MOBILE_APP_LATEST_VERSION / MOBILE_APP_VERSION_CODE from Coolify if already set (they block new APK releases).
+# Only set these for a temporary override without git:
+# MOBILE_APP_LATEST_VERSION=1.0.28
+# MOBILE_APP_VERSION_CODE=29
 ```
 
 ### Auto deploy on git push (no manual Redeploy)
