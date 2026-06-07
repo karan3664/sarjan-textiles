@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import DOMPurify from "isomorphic-dompurify";
 
 import { OrderedVendorScripts } from "@/components/shared/OrderedVendorScripts";
 import { getCartItems, mockApi } from "@/lib/mock-api";
@@ -445,7 +444,8 @@ export function ExactTemplatePage({
           href={`/${kind === "storefront" ? "template/storefront" : "template/admin"}/${style}`}
         />
       ))}
-      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
+      {/* Trusted static reference HTML from the local template bundle. */}
+      <div dangerouslySetInnerHTML={{ __html: html }} />
       <OrderedVendorScripts
         scope={`exact-${kind}`}
         basePath={scriptBase}

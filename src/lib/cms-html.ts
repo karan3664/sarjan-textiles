@@ -1,26 +1,23 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
-const CMS_HTML_CONFIG = {
-  ALLOWED_TAGS: [
-    "b",
-    "strong",
-    "i",
-    "em",
-    "u",
-    "br",
-    "p",
-    "span",
-    "a",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "small",
-    "sub",
-    "sup",
-  ],
-  ALLOWED_ATTR: ["style", "href", "target", "rel", "class"],
-};
+const CMS_ALLOWED_TAGS = [
+  "b",
+  "strong",
+  "i",
+  "em",
+  "u",
+  "br",
+  "p",
+  "span",
+  "a",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "small",
+  "sub",
+  "sup",
+];
 
 function looksLikeHtml(value: string) {
   return /<[a-z][\s\S]*>/i.test(value);
@@ -39,5 +36,11 @@ export function sanitizeCmsHtml(value: string): string {
   const raw = value?.trim() ?? "";
   if (!raw) return "";
   const html = looksLikeHtml(raw) ? raw : plainTextToCmsHtml(raw);
-  return DOMPurify.sanitize(html, CMS_HTML_CONFIG);
+  return sanitizeHtml(html, {
+    allowedTags: CMS_ALLOWED_TAGS,
+    allowedAttributes: {
+      "*": ["style", "class"],
+      a: ["href", "target", "rel"],
+    },
+  });
 }

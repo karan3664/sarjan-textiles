@@ -5,4 +5,4 @@ aptPkgs = ["curl", "ca-certificates"]
 # Hostinger KVM 2 — Next.js + TF.js builds can OOM without a higher heap.
 [variables]
 NODE_OPTIONS = "--max-old-space-size=4096"
-NIXPACKS_NODE_VERSION = "22"
+NIXPACKS_NODE_VERSION = "22.13"
