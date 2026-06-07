@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, Fragment, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "@/data/mock";
 import type { CmsHome } from "@/lib/cms-store";
@@ -17,6 +17,11 @@ import {
   syncHomeHeroFromBanners,
   type CmsHomeBanner,
 } from "@/lib/home-banners";
+import {
+  hasMarqueeCustomIcon,
+  marqueeIconClassName,
+  normalizeMarqueeIconClass,
+} from "@/lib/marquee-icon";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
@@ -197,6 +202,27 @@ function Field({
       </div>
       {children}
     </fieldset>
+  );
+}
+
+function MarqueePreviewIcon({
+  iconClass,
+  iconImage,
+}: {
+  iconClass?: string;
+  iconImage?: string;
+}) {
+  if (hasMarqueeCustomIcon(iconImage)) {
+    return (
+      <span className="sarjan-marquee-preview-icon" aria-hidden>
+        <img src={iconImage!.trim()} alt="" />
+      </span>
+    );
+  }
+  return (
+    <span className="sarjan-marquee-preview-icon" aria-hidden>
+      <i className={marqueeIconClassName(iconClass)} />
+    </span>
   );
 }
 
@@ -1727,11 +1753,117 @@ export function AdminHomePageClient({
             {home.marqueeTop.length + home.marqueeBottom.length} Lines
           </div>
         </div>
+        <div className="sarjan-marquee-icon-settings mb-24">
+          <div className="sarjan-marquee-icon-preview-card">
+            <span className="body-text text-secondary d-block mb-8">
+              Separator icon (between scrolling lines)
+            </span>
+            <div className="sarjan-marquee-icon-preview-row">
+              <span className="sarjan-marquee-preview-chip">Sample line</span>
+              <MarqueePreviewIcon
+                iconClass={home.marqueeIcon}
+                iconImage={home.marqueeIconImage}
+              />
+              <span className="sarjan-marquee-preview-chip">Next line</span>
+            </div>
+          </div>
+          <div className="sarjan-marquee-icon-fields">
+            <Field label="Icon class (Modave font)">
+              <TextInput
+                value={home.marqueeIcon ?? "icon-tshirt"}
+                placeholder="icon-tshirt"
+                onChange={(value) =>
+                  setHome((current) => ({
+                    ...current,
+                    marqueeIcon: normalizeMarqueeIconClass(value),
+                  }))
+                }
+              />
+              <p className="body-text text-secondary mt-8 mb-0">
+                Examples: icon-tshirt, icon-star, icon-sealCheck, icon-package,
+                icon-heart
+              </p>
+            </Field>
+            <Field label="Custom icon image (optional)">
+              <div className="flex flex-wrap gap14 items-center">
+                {hasMarqueeCustomIcon(home.marqueeIconImage) ? (
+                  <img
+                    src={home.marqueeIconImage}
+                    alt=""
+                    className="sarjan-marquee-icon-thumb"
+                  />
+                ) : null}
+                <label className="tf-button style-1 sarjan-file-label">
+                  {uploadState.marqueeIcon === "uploading"
+                    ? "Uploading…"
+                    : "Upload icon"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sarjan-hidden-file-input"
+                    disabled={uploadState.marqueeIcon === "uploading"}
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      setUploadState((current) => ({
+                        ...current,
+                        marqueeIcon: "uploading",
+                      }));
+                      try {
+                        const data = await uploadFile(file);
+                        setHome((current) => ({
+                          ...current,
+                          marqueeIconImage: data.url,
+                        }));
+                      } catch (error) {
+                        window.alert(
+                          error instanceof Error
+                            ? error.message
+                            : "Icon upload failed",
+                        );
+                      } finally {
+                        setUploadState((current) => ({
+                          ...current,
+                          marqueeIcon: undefined,
+                        }));
+                      }
+                    }}
+                  />
+                </label>
+                {hasMarqueeCustomIcon(home.marqueeIconImage) ? (
+                  <button
+                    type="button"
+                    className="tf-button style-2"
+                    onClick={() =>
+                      setHome((current) => ({
+                        ...current,
+                        marqueeIconImage: "",
+                      }))
+                    }
+                  >
+                    Use font icon
+                  </button>
+                ) : null}
+              </div>
+              <p className="body-text text-secondary mt-8 mb-0">
+                PNG or SVG-style image works best. When set, it replaces the
+                font icon above on both marquee bands.
+              </p>
+            </Field>
+          </div>
+        </div>
         <div className="sarjan-marquee-editor-grid">
           <div className="sarjan-marquee-editor-card">
             <div className="sarjan-marquee-preview">
               {home.marqueeTop.slice(0, 4).map((item, index) => (
-                <span key={`${item}-${index}`}>{item}</span>
+                <Fragment key={`${item}-${index}`}>
+                  <span>{item}</span>
+                  <MarqueePreviewIcon
+                    iconClass={home.marqueeIcon}
+                    iconImage={home.marqueeIconImage}
+                  />
+                </Fragment>
               ))}
             </div>
             <Field label="Top marquee, one per line">
@@ -1749,7 +1881,13 @@ export function AdminHomePageClient({
           <div className="sarjan-marquee-editor-card">
             <div className="sarjan-marquee-preview alt">
               {home.marqueeBottom.slice(0, 4).map((item, index) => (
-                <span key={`${item}-${index}`}>{item}</span>
+                <Fragment key={`${item}-${index}`}>
+                  <span>{item}</span>
+                  <MarqueePreviewIcon
+                    iconClass={home.marqueeIcon}
+                    iconImage={home.marqueeIconImage}
+                  />
+                </Fragment>
               ))}
             </div>
             <Field label="Bottom marquee, one per line">

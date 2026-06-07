@@ -35,6 +35,7 @@ import {
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { CmsHtml } from "@/components/shared/CmsHtml";
+import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
@@ -99,7 +100,41 @@ function repeatedMarquee(items: string[], repeat = 4) {
   return Array.from({ length: repeat }).flatMap(() => items);
 }
 
-function MarqueeBand({ items }: { items: string[] }) {
+function MarqueeSeparator({
+  iconClass,
+  iconImage,
+}: {
+  iconClass?: string;
+  iconImage?: string;
+}) {
+  if (hasMarqueeCustomIcon(iconImage)) {
+    return (
+      <div className="marquee-child-item">
+        <img
+          src={iconImage!.trim()}
+          alt=""
+          className="sarjan-marquee-separator-img"
+          decoding="async"
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="marquee-child-item">
+      <span className={marqueeIconClassName(iconClass)} />
+    </div>
+  );
+}
+
+function MarqueeBand({
+  items,
+  iconClass,
+  iconImage,
+}: {
+  items: string[];
+  iconClass?: string;
+  iconImage?: string;
+}) {
   return (
     <div className="marquee-wrapper">
       <div className="initial-child-container">
@@ -110,9 +145,7 @@ function MarqueeBand({ items }: { items: string[] }) {
                 <CmsHtml html={item} />
               </h3>
             </div>
-            <div className="marquee-child-item">
-              <span className="icon icon-tshirt" />
-            </div>
+            <MarqueeSeparator iconClass={iconClass} iconImage={iconImage} />
           </Fragment>
         ))}
       </div>
@@ -689,10 +722,18 @@ export async function HomeDynamic() {
     marquee: (
       <section className="flat-spacing pt-0">
         <div className="tf-marquee marquee-style2">
-          <MarqueeBand items={home.marqueeTop} />
+          <MarqueeBand
+            items={home.marqueeTop}
+            iconClass={home.marqueeIcon}
+            iconImage={home.marqueeIconImage}
+          />
         </div>
         <div className="tf-marquee marquee-style2 marquee-animation-right">
-          <MarqueeBand items={home.marqueeBottom} />
+          <MarqueeBand
+            items={home.marqueeBottom}
+            iconClass={home.marqueeIcon}
+            iconImage={home.marqueeIconImage}
+          />
         </div>
       </section>
     ),

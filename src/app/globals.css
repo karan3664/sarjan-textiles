@@ -4935,6 +4935,67 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   font-weight: 700;
 }
 
+.sarjan-marquee-icon-settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.sarjan-marquee-icon-preview-card {
+  padding: 18px;
+  border-radius: 8px;
+  background: #f7f7f8;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sarjan-marquee-icon-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.sarjan-marquee-preview-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #181818;
+  color: #fff;
+  font-size: 13px;
+}
+
+.sarjan-marquee-preview-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sarjan-accent, #8b2942);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.sarjan-marquee-preview-icon img,
+.sarjan-marquee-icon-thumb {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
+.sarjan-marquee-icon-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.sarjan-marquee-separator-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  display: inline-block;
+}
+
 .sarjan-marquee-editor-card fieldset {
   margin: 0;
 }
@@ -6874,6 +6935,7 @@ blockquote.sarjan-emoji-text,
   }
 
   .sarjan-highlight-editor-grid,
+  .sarjan-marquee-icon-settings,
   .sarjan-marquee-editor-grid,
   .sarjan-service-editor-grid,
   .sarjan-testimonial-kpi-grid,

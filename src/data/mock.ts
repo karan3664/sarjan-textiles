@@ -485,6 +485,10 @@ export const home = {
     "Craft Your Own Adventure",
     "Welcome Limitless Opportunities",
   ],
+  /** Modave icon font class between marquee lines (e.g. icon-tshirt). */
+  marqueeIcon: "icon-tshirt",
+  /** Optional custom image URL; overrides marqueeIcon when set. */
+  marqueeIconImage: "",
   trendingTitle: "Top Trending",
   trendingDescription:
     "Browse wholesale-ready Sarjan prints loved by retail buyers.",
