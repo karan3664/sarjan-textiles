@@ -14151,11 +14151,37 @@ a.sarjan-order-bot-card:focus-visible {
 }
 
 .sarjan-auth-page .sarjan-otp-actions .sarjan-auth-btn:disabled {
-  background-color: #ffffff !important;
-  color: #9ca3af !important;
+  background-color: #f9fafb !important;
+  color: #6b7280 !important;
   border-color: #d1d5db !important;
+  -webkit-text-fill-color: #6b7280 !important;
   opacity: 1 !important;
   cursor: not-allowed;
+}
+
+.sarjan-auth-page
+  .sarjan-otp-actions
+  .sarjan-auth-btn:disabled
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+.sarjan-auth-page .sarjan-otp-actions .sarjan-auth-btn--verified,
+.sarjan-auth-page .sarjan-otp-actions .sarjan-auth-btn--verified:disabled {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #6ee7b7 !important;
+  -webkit-text-fill-color: #047857 !important;
+  cursor: default;
+}
+
+.sarjan-auth-page
+  .sarjan-otp-actions
+  .sarjan-auth-btn--verified
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
 }
 
 /* Auth OTP CTAs sit outside #wrapper — beat Modave `button:hover { background: transparent }` */

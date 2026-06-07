@@ -683,7 +683,10 @@ function AuthPageClientInner({
                           <button
                             type="button"
                             className={withBtnIcon(
-                              sarjanButtonClass("sarjan-auth-btn"),
+                              sarjanButtonClass(
+                                "sarjan-auth-btn",
+                                emailVerified && "sarjan-auth-btn--verified",
+                              ),
                             )}
                             onClick={verifyEmailOtp}
                             disabled={
