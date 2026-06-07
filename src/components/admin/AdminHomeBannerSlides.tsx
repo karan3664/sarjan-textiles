@@ -122,7 +122,7 @@ export function AdminHomeBannerSlides({
                       <div className="body-text text-secondary">No image</div>
                     )}
                   </div>
-                  <label className="tf-button style-1 mb-0 w-full text-center">
+                  <label className="tf-button style-1 mb-0 w-full text-center sarjan-banner-file-label">
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/jpg"

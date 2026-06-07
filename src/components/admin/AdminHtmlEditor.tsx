@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
+  applyCmsEditorInlineStyle,
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
   CMS_FONT_SIZES,
   isSelectionWithinEditor,
   matchCmsFontFamily,
   normalizeFontFamily,
+  normalizeLegacyFontHtml,
 } from "@/lib/cms-html-editor-utils";
 
 const GOOGLE_FONTS_URL = buildGoogleFontsUrl();
@@ -33,6 +35,12 @@ function detectStyleAtSelection(
   }
   while (node && node !== editor) {
     if (node instanceof HTMLElement) {
+      if (node.tagName === "FONT") {
+        const face = node.getAttribute("face");
+        if (face && property === "fontFamily") {
+          return matchCmsFontFamily(face) || normalizeFontFamily(face);
+        }
+      }
       const inline = node.style[property];
       if (inline) {
         return property === "fontFamily" ? normalizeFontFamily(inline) : inline;
@@ -52,56 +60,6 @@ function detectStyleAtSelection(
   return "";
 }
 
-function applyInlineStyle(
-  editor: HTMLDivElement | null,
-  property: "fontFamily" | "fontSize",
-  value: string,
-  savedRange: Range | null,
-) {
-  if (!editor) {
-    return;
-  }
-  editor.focus();
-  const selection = window.getSelection();
-  if (!selection) {
-    return;
-  }
-  if (savedRange) {
-    selection.removeAllRanges();
-    selection.addRange(savedRange);
-  }
-  if (!selection.rangeCount) {
-    return;
-  }
-  const range = selection.getRangeAt(0);
-  if (!editor.contains(range.commonAncestorContainer) || range.collapsed) {
-    return;
-  }
-
-  const span = document.createElement("span");
-  if (property === "fontFamily") {
-    span.style.fontFamily = `'${value}', sans-serif`;
-  } else {
-    span.style.fontSize = value;
-  }
-
-  try {
-    const fragment = range.extractContents();
-    span.appendChild(fragment);
-    range.insertNode(span);
-    selection.removeAllRanges();
-    const next = document.createRange();
-    next.selectNodeContents(span);
-    selection.addRange(next);
-  } catch {
-    const css =
-      property === "fontFamily"
-        ? `font-family: '${value}', sans-serif`
-        : `font-size: ${value}`;
-    exec("insertHTML", `<span style="${css}">${range.toString()}</span>`);
-  }
-}
-
 type Props = {
   value: string;
   onChange: (html: string) => void;
@@ -117,6 +75,7 @@ export function AdminHtmlEditor({
 }: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  const isInternalUpdateRef = useRef(false);
   const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [source, setSource] = useState(value);
@@ -138,12 +97,15 @@ export function AdminHtmlEditor({
 
   useEffect(() => {
     setSource(value);
-    if (
-      mode === "visual" &&
-      editorRef.current &&
-      editorRef.current.innerHTML !== value
-    ) {
-      editorRef.current.innerHTML = value || "";
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      return;
+    }
+    if (mode === "visual" && editorRef.current) {
+      const normalized = normalizeLegacyFontHtml(value || "");
+      if (editorRef.current.innerHTML !== normalized) {
+        editorRef.current.innerHTML = normalized;
+      }
     }
   }, [value, mode]);
 
@@ -161,6 +123,7 @@ export function AdminHtmlEditor({
 
   const syncVisual = useCallback(() => {
     const html = editorRef.current?.innerHTML ?? "";
+    isInternalUpdateRef.current = true;
     onChange(html);
     setSource(html);
   }, [onChange]);
@@ -187,6 +150,7 @@ export function AdminHtmlEditor({
   }, [mode, refreshToolbar]);
 
   const applyFormat = (command: string, formatValue?: string) => {
+    saveSelection();
     editorRef.current?.focus();
     exec(command, formatValue);
     syncVisual();
@@ -197,7 +161,7 @@ export function AdminHtmlEditor({
     property: "fontFamily" | "fontSize",
     nextValue: string,
   ) => {
-    applyInlineStyle(
+    applyCmsEditorInlineStyle(
       editorRef.current,
       property,
       nextValue,
@@ -210,11 +174,19 @@ export function AdminHtmlEditor({
     }
     saveSelection();
     syncVisual();
+    refreshToolbar();
+  };
+
+  const handleToolbarPointerDown = () => {
+    saveSelection();
   };
 
   return (
     <div className="sarjan-html-editor" data-html-editor={instanceId}>
-      <div className="sarjan-html-editor-toolbar">
+      <div
+        className="sarjan-html-editor-toolbar"
+        onMouseDown={handleToolbarPointerDown}
+      >
         <button type="button" onClick={() => applyFormat("bold")} title="Bold">
           <strong>B</strong>
         </button>
@@ -234,7 +206,6 @@ export function AdminHtmlEditor({
         </button>
         <select
           value={activeSize}
-          onPointerDown={() => saveSelection()}
           onChange={(event) => {
             const size = event.target.value;
             if (!size) {
@@ -254,7 +225,6 @@ export function AdminHtmlEditor({
         </select>
         <select
           value={activeFont}
-          onPointerDown={() => saveSelection()}
           onChange={(event) => {
             const font = event.target.value;
             if (!font) {
@@ -318,7 +288,14 @@ export function AdminHtmlEditor({
             syncVisual();
             refreshToolbar();
           }}
-          onBlur={syncVisual}
+          onBlur={(event) => {
+            const related = event.relatedTarget as Node | null;
+            const root = event.currentTarget.closest(".sarjan-html-editor");
+            if (related && root?.contains(related)) {
+              saveSelection();
+            }
+            syncVisual();
+          }}
           onKeyUp={refreshToolbar}
           onMouseUp={refreshToolbar}
           onFocus={refreshToolbar}
@@ -332,52 +309,15 @@ export function AdminHtmlEditor({
           placeholder={placeholder}
           onChange={(event) => {
             setSource(event.target.value);
+            isInternalUpdateRef.current = true;
             onChange(event.target.value);
           }}
         />
       )}
       <p className="sarjan-html-editor-hint">
-        Select text, then pick font/size — each field keeps its own formatting.
-        Use HTML tab for advanced markup.
+        Select text (or click inside field) then pick font/size — each field
+        keeps its own formatting. Use HTML tab for advanced markup.
       </p>
-      <style>{`
-        .sarjan-html-editor { display: grid; gap: 10px; }
-        .sarjan-html-editor-toolbar {
-          display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-          padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px;
-          background: #fafafa;
-        }
-        .sarjan-html-editor-toolbar button,
-        .sarjan-html-editor-toolbar select {
-          border: 1px solid #d1d5db; background: #fff; border-radius: 8px;
-          padding: 6px 10px; font-size: 13px; cursor: pointer;
-        }
-        .sarjan-html-editor-toolbar button.active {
-          background: #111; color: #fff; border-color: #111;
-        }
-        .sarjan-html-editor-font { min-width: 168px; max-width: 220px; }
-        .sarjan-html-editor-size { min-width: 92px; }
-        .sarjan-html-editor-surface,
-        .sarjan-html-editor-source {
-          width: 100%; border: 1px solid #d1d5db; border-radius: 12px;
-          padding: 14px 16px; font-size: 15px; line-height: 1.6;
-          background: #fff; resize: vertical;
-        }
-        .sarjan-html-editor-surface {
-          font-family: "Kumbh Sans", Arial, sans-serif;
-        }
-        .sarjan-html-editor-surface:empty:before {
-          content: attr(data-placeholder);
-          color: #9ca3af;
-        }
-        .sarjan-html-editor-source {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-          font-size: 13px;
-        }
-        .sarjan-html-editor-hint {
-          margin: 0; font-size: 12px; color: #6b7280; line-height: 1.45;
-        }
-      `}</style>
     </div>
   );
 }
