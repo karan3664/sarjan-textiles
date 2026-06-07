@@ -21,6 +21,7 @@ import {
   pgInsertReturning,
   pgQuery,
   pgUpsertReturning,
+  serializePgValue,
 } from "@/lib/postgres";
 import {
   normalizeOrderPlacedVia,
@@ -176,7 +177,7 @@ async function pgUpdateReturning(
   const keys = Object.keys(patch);
   if (!keys.length) return null;
   const sets = keys.map((key, index) => `${key} = $${index + 1}`);
-  const params = [...keys.map((key) => patch[key]), id];
+  const params = [...keys.map((key) => serializePgValue(patch[key])), id];
   const { rows } = await pgQuery(
     `update ${table} set ${sets.join(", ")} where ${idColumn} = $${keys.length + 1} returning *`,
     params,
@@ -712,6 +713,14 @@ export async function syncPendingOrderDispatchAddresses(clientId: string) {
   const formatted = formatClientDispatchAddress(client);
   if (!formatted) return 0;
 
+  if (isPostgresEnabled()) {
+    const result = await pgQuery(
+      `update orders set dispatch_address = $1 where client_id = $2 and (dispatch_address is null or trim(dispatch_address) = '')`,
+      [formatted, clientId],
+    );
+    return result.rowCount ?? 0;
+  }
+
   let updated = 0;
   for (const order of db.orders) {
     if (
@@ -725,13 +734,6 @@ export async function syncPendingOrderDispatchAddresses(clientId: string) {
 
   if (updated) {
     await writeLocalDb(db);
-  }
-
-  if (isPostgresEnabled()) {
-    await pgQuery(
-      `update orders set dispatch_address = $1 where client_id = $2 and (dispatch_address is null or trim(dispatch_address) = '')`,
-      [formatted, clientId],
-    );
   }
 
   return updated;
