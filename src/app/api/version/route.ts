@@ -2,7 +2,7 @@ import { getMobileAppRelease } from "@/lib/mobile-app-release";
 
 /** Mobile app force-update check (Sarjan Textiles Android APK). */
 export async function GET() {
-  const release = getMobileAppRelease();
+  const release = await getMobileAppRelease();
   return Response.json({
     latestVersion: release.latestVersion,
     versionCode: release.versionCode,

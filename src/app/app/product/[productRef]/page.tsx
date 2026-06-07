@@ -33,7 +33,7 @@ export default async function ProductDeepLinkPage({ params }: Props) {
   const { productRef } = await params;
   const { products } = await getCachedCmsSnapshot();
   const product = findProduct(products, productRef);
-  const release = getMobileAppRelease();
+  const release = await getMobileAppRelease();
   const webProductUrl = `https://sarjantextiles.com/app/product/${encodeURIComponent(productRef)}`;
 
   return (

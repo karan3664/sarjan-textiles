@@ -15,7 +15,7 @@ type Props = {
 
 export default async function DownloadAppPage({ searchParams }: Props) {
   const { product } = await searchParams;
-  const release = getMobileAppRelease();
+  const release = await getMobileAppRelease();
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(release.apkUrl)}`;
   const productRef = product?.trim() || "";
   const productLink = productRef

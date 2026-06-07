@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** Serve the latest mobile APK with no-cache headers (avoids stale Cloudflare/static cache). */
 export async function GET() {
-  const release = getMobileAppRelease();
+  const release = await getMobileAppRelease();
   const apkPath = await resolveMobileApkPath(release.apkFile);
 
   if (!apkPath) {

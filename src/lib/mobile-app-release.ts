@@ -1,4 +1,5 @@
 import { siteSettings } from "@/data/mock";
+import { readMobileReleaseManifest } from "@/lib/mobile-release-manifest";
 
 const productionOrigin = `https://${siteSettings.domain}`.replace(/\/$/, "");
 
@@ -33,13 +34,21 @@ export type MobileAppRelease = {
 };
 
 /** Config for GET /api/version and the /download page. */
-export function getMobileAppRelease(): MobileAppRelease {
+export async function getMobileAppRelease(): Promise<MobileAppRelease> {
   const origin = siteOrigin();
+  const manifest = await readMobileReleaseManifest();
+
   const apkFile =
-    process.env.MOBILE_APP_APK_FILE?.trim() || "sarjan-textiles.apk";
+    process.env.MOBILE_APP_APK_FILE?.trim() ||
+    manifest?.apkFile ||
+    "sarjan-textiles.apk";
   const latestVersion =
-    process.env.MOBILE_APP_LATEST_VERSION?.trim() || "1.0.27";
-  const versionCode = Number(process.env.MOBILE_APP_VERSION_CODE || "28");
+    process.env.MOBILE_APP_LATEST_VERSION?.trim() ||
+    manifest?.latestVersion ||
+    "1.0.27";
+  const versionCode = Number(
+    process.env.MOBILE_APP_VERSION_CODE || manifest?.versionCode || "28",
+  );
   const forceUpdate =
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
@@ -56,7 +65,6 @@ export function getMobileAppRelease(): MobileAppRelease {
     versionCode,
     forceUpdate,
     apkFile,
-    // Dynamic route bypasses CDN/static cache for the same APK filename each release.
     apkUrl: `${origin}/api/download/apk?v=${versionCode}`,
     downloadPageUrl: `${origin}/download`,
     releaseNotes,

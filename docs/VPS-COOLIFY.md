@@ -92,9 +92,55 @@ SMTP_FROM="Sarjan Textiles <info@sarjantextiles.com>"
 
 FIREBASE_SERVICE_ACCOUNT=<one-line JSON>
 
-MOBILE_APP_LATEST_VERSION=1.0.26
-MOBILE_APP_VERSION_CODE=27
+# Optional — version is read from public/downloads/mobile-release.json (updated by npm run release:apk).
+# Only set these if you need to override without a git push:
+# MOBILE_APP_LATEST_VERSION=1.0.27
+# MOBILE_APP_VERSION_CODE=28
 ```
+
+### Auto deploy on git push (no manual Redeploy)
+
+**Advanced → Auto Deploy** should stay **ON**.
+
+Port **8000** (Coolify UI) is **not open** on the public internet — `http://69.62.77.149:8000/...` times out from Mac/GitHub. Use SSH tunnel only for the dashboard UI; webhooks from GitHub will not work until you expose Coolify on HTTPS (e.g. `coolify.sarjantextiles.com`).
+
+**Recommended: GitHub Actions** (repo includes `.github/workflows/deploy-coolify.yml`):
+
+1. Coolify → **Keys & Tokens** (sidebar) → **+ New** → name `github-deploy` → enable **deploy** → copy token (shown once).
+2. On VPS, test deploy (`401` without token is expected):
+   ```bash
+   curl -fsS -H "Authorization: Bearer YOUR_COOLIFY_TOKEN" \
+     "http://127.0.0.1:8000/api/v1/deploy?uuid=YOUR_APP_UUID&force=false"
+   ```
+3. GitHub repo → **Settings → Secrets and variables → Actions** → add:
+
+   | Secret                   | Value                                                                |
+   | ------------------------ | -------------------------------------------------------------------- |
+   | `VPS_HOST`               | `69.62.77.149`                                                       |
+   | `VPS_USER`               | `root`                                                               |
+   | `VPS_SSH_PRIVATE_KEY`    | private key that can SSH to VPS                                      |
+   | `COOLIFY_DEPLOY_WEBHOOK` | `http://127.0.0.1:8000/api/v1/deploy?uuid=YOUR_APP_UUID&force=false` |
+   | `COOLIFY_API_TOKEN`      | token from step 1 (**required**)                                     |
+
+4. Push to `main` → **Actions** tab shows deploy → Coolify **Deployments** starts automatically.
+
+Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build.
+
+### Mobile APK release (no Coolify env edits)
+
+Version comes from `public/downloads/mobile-release.json` (written automatically):
+
+```bash
+# In sarjan-textiles-app — bump build.gradle + config.ts first
+npm run release:apk
+
+# In sarjan-textiles — commit APK + manifest + push
+git add public/downloads/
+git commit -m "release: mobile APK 1.0.28"
+git push origin main
+```
+
+Coolify auto-deploy picks up the new APK and version. You do **not** need to change `MOBILE_APP_*` in Coolify each release.
 
 ### Cron (replaces Vercel)
 
