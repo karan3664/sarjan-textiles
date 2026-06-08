@@ -62,10 +62,11 @@ Remove env var **`NIXPACKS_NODE_VERSION=22`** if set in Coolify — it pins Node
 
 ### Persistent storage (required)
 
-| Container path        | Purpose              |
-| --------------------- | -------------------- |
-| `/app/public/uploads` | CMS images/videos    |
-| `/app/data`           | backups, local files |
+| Container path          | Purpose                                        |
+| ----------------------- | ---------------------------------------------- |
+| `/app/public/uploads`   | CMS images/videos                              |
+| `/app/public/downloads` | Mobile APK files (not baked into Docker image) |
+| `/app/data`             | backups, local files                           |
 
 ### Environment variables
 
@@ -164,13 +165,17 @@ Version comes from `public/downloads/mobile-release.json` (written automatically
 # In sarjan-textiles-app — bump build.gradle + config.ts first
 npm run release:apk
 
-# In sarjan-textiles — commit APK + manifest + push
-git add public/downloads/
-git commit -m "release: mobile APK 1.0.28"
+# In sarjan-textiles — commit manifest only (APK is excluded from Docker image)
+git add public/downloads/mobile-release.json
+git commit -m "release: mobile APK 1.0.30"
 git push origin main
+
+# Copy APK to VPS persistent volume (once per release; survives redeploys)
+scp public/downloads/sarjan-textiles.apk root@69.62.77.149:/data/coolify/applications/<app-id>/public/downloads/
+# Or use Coolify → Storage → mount `/app/public/downloads` and upload via SFTP
 ```
 
-Coolify auto-deploy picks up the new APK and version. You do **not** need to change `MOBILE_APP_*` in Coolify each release.
+Coolify auto-deploy picks up the new **version** from `mobile-release.json`. The **APK binary** must be on the `/app/public/downloads` volume (not in the Docker image — keeps builds small and avoids export OOM on the VPS).
 
 ### Cron (replaces Vercel)
 

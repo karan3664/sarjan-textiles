@@ -36,7 +36,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-RUN mkdir -p data public/uploads/cms
+RUN mkdir -p data data/downloads public/downloads public/uploads/cms
 
 EXPOSE 3000
 CMD ["npm", "start"]

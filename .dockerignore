@@ -10,9 +10,9 @@ data
 terminals
 **/.DS_Store
 
-# Keep sarjan-textiles.apk + mobile-release.json; skip versioned archives (~60MB each).
-public/downloads/sarjan-textiles-*.apk
-public/downloads/sarjan-admin.apk
+# APK binaries live on Coolify volume /app/public/downloads (not in image layers).
+# mobile-release.json is small and stays in git + image.
+public/downloads/*.apk
 
 # Dev / docs not needed in production image
 docs

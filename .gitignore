@@ -20,4 +20,7 @@ tsconfig.tsbuildinfo
 /playwright/.cache/
 /products/
 public/uploads/ai-products/
+# Large APK binaries — use VPS volume + mobile-release.json in git for version
+public/downloads/*.apk
+!public/downloads/mobile-release.json
 public/sarjan-assets/client-avatars/*.webp
