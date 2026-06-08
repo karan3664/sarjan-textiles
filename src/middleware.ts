@@ -14,6 +14,17 @@ import { localeCookieOptions } from "@/lib/locale-cookie";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
 const CLIENT_SESSION_COOKIE = "sarjan-client-token";
+const APEX_HOST = "sarjantextiles.com";
+
+/** Permanent apex canonical — SEO, sitemap, and cookies all use sarjantextiles.com. */
+function redirectWwwToApex(request: NextRequest): NextResponse | null {
+  const host = request.headers.get("host")?.split(":")[0]?.toLowerCase();
+  if (host !== `www.${APEX_HOST}`) return null;
+  const url = request.nextUrl.clone();
+  url.hostname = APEX_HOST;
+  url.protocol = "https:";
+  return NextResponse.redirect(url, 308);
+}
 
 /** Safe post-login redirect — only paths under /admin (blocks open redirects). */
 function adminPostLoginPath(next: string | null): string {
@@ -48,6 +59,9 @@ function clientTokenFromRequest(request: NextRequest): string | undefined {
 }
 
 export async function middleware(request: NextRequest) {
+  const wwwRedirect = redirectWwwToApex(request);
+  if (wwwRedirect) return wwwRedirect;
+
   if (request.nextUrl.pathname === "/downloads/sarjan-textiles.apk") {
     const url = request.nextUrl.clone();
     url.pathname = "/api/download/apk";

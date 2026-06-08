@@ -54,7 +54,7 @@ Output includes `DATABASE_URL` and saves `/root/sarjan-db-credentials.env`.
 3. Branch: `development` or `main`
 4. **Build pack**: **Dockerfile** (repo root `Dockerfile`) — do **not** use Nixpacks auto-detect (smaller image, fewer export failures).
 5. **Port**: `3000`
-6. **Domains**: `sarjantextiles.com` → enable Let's Encrypt
+6. **Domains**: add **both** `sarjantextiles.com` and `www.sarjantextiles.com` → enable Let's Encrypt on each. The app permanently redirects `www` → apex (`next.config.ts` + middleware); without `www` in Coolify, `https://www.sarjantextiles.com` returns 503.
 
 If Coolify shows **Nixpacks** instead of Dockerfile: **Configuration → Build Pack → Dockerfile**.
 
@@ -200,6 +200,7 @@ On VPS `/etc/cron.d/sarjan`:
 
 ```bash
 curl -sI https://sarjantextiles.com/api/health
+curl -sI https://www.sarjantextiles.com/   # expect 308 → https://sarjantextiles.com/
 docker exec sarjan-postgres psql -U sarjan -d sarjan_textiles -c "SELECT count(*) FROM clients;"
 ```
 
