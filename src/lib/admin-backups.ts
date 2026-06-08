@@ -29,6 +29,35 @@ export type BackupSummary = {
 
 const backupDir = path.join(process.cwd(), "data", "backups");
 
+export type BackupStorageInfo = {
+  modeLabel: string;
+  storageLabel: string;
+  storagePaths: string[];
+  dailySchedule: string;
+  cronEndpoint: string;
+  pgDumpPath: string;
+};
+
+export function getBackupStorageInfo(): BackupStorageInfo {
+  const postgres = isPostgresEnabled();
+  return {
+    modeLabel: postgres ? "Hostinger VPS · PostgreSQL" : "Local JSON (dev)",
+    storageLabel: postgres
+      ? "PostgreSQL app_backups table"
+      : "Local JSON files",
+    storagePaths: postgres
+      ? [
+          "PostgreSQL: app_backups (full CMS + orders JSON snapshot)",
+          "Coolify volume: /app/data/backups/*.json (fallback only)",
+          "VPS disk (optional): /var/backups/sarjan-YYYY-MM-DD.sql.gz (pg_dump)",
+        ]
+      : ["Project folder: data/backups/*.json"],
+    dailySchedule: "02:00 IST",
+    cronEndpoint: "/api/cron/daily-backup",
+    pgDumpPath: "/var/backups/sarjan-YYYY-MM-DD.sql.gz",
+  };
+}
+
 function backupId(createdAt: string, name: string) {
   return `${createdAt.replace(/[:.]/g, "-")}-${name
     .toLowerCase()

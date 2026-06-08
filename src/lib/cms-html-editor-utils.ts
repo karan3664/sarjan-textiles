@@ -1,3 +1,5 @@
+import type { Editor } from "@tiptap/core";
+
 export const CMS_FONT_FAMILIES = [
   "Kumbh Sans",
   "Inter",
@@ -172,13 +174,46 @@ function unwrapFontElements(container: ParentNode) {
   });
 }
 
-function normalizeEditorColor(value: string) {
+function rgbToHex(value: string) {
+  const match = value.trim().match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (!match) {
+    return "";
+  }
+  const [, red, green, blue] = match;
+  return `#${[red, green, blue]
+    .map((channel) => Number(channel).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+export function normalizeCmsEditorColor(value: string) {
   const trimmed = value.trim().toLowerCase();
-  if (!trimmed) return "";
+  if (!trimmed) {
+    return "";
+  }
   if (trimmed.startsWith("#") && trimmed.length === 4) {
     return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
   }
+  if (trimmed.startsWith("rgb")) {
+    return rgbToHex(trimmed) || trimmed;
+  }
   return trimmed;
+}
+
+export function normalizeCmsFontSize(value: string) {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) {
+    return "";
+  }
+  const exact = CMS_FONT_SIZES.find((size) => size.value === trimmed);
+  if (exact) {
+    return exact.value;
+  }
+  const numeric = Number.parseFloat(trimmed);
+  if (!Number.isNaN(numeric)) {
+    const rounded = `${Math.round(numeric)}px`;
+    return CMS_FONT_SIZES.find((size) => size.value === rounded)?.value ?? "";
+  }
+  return "";
 }
 
 function readInlineStyleFromNode(
@@ -202,7 +237,7 @@ function readInlineStyleFromNode(
         if (property === "color") {
           const color = current.getAttribute("color");
           if (color) {
-            return normalizeEditorColor(color);
+            return normalizeCmsEditorColor(color);
           }
         }
       }
@@ -212,7 +247,7 @@ function readInlineStyleFromNode(
           return normalizeFontFamily(inline);
         }
         if (property === "color") {
-          return normalizeEditorColor(inline);
+          return normalizeCmsEditorColor(inline);
         }
         return inline;
       }
@@ -224,7 +259,7 @@ function readInlineStyleFromNode(
 
 /** Dominant inline font/size on editor content (ignores surface default CSS). */
 export function detectEditorContentStyle(
-  editor: HTMLDivElement | null,
+  editor: HTMLElement | null,
   property: CmsEditorStyleProperty,
 ): string {
   if (!editor || typeof document === "undefined") {
@@ -251,7 +286,7 @@ export function detectEditorContentStyle(
 }
 
 export function resolveEditorToolbarStyle(
-  editor: HTMLDivElement | null,
+  editor: HTMLElement | null,
   property: CmsEditorStyleProperty,
   selection: Selection | null,
 ): string {
@@ -380,4 +415,83 @@ export function applyCmsEditorInlineStyle(
       `<span style="${css}">${range.toString()}</span>`,
     );
   }
+}
+
+function collectUniqueTextStyleValues(editor: Editor) {
+  const fonts = new Set<string>();
+  const sizes = new Set<string>();
+  const colors = new Set<string>();
+
+  editor.state.doc.descendants((node) => {
+    if (!node.isText) {
+      return;
+    }
+    for (const mark of node.marks) {
+      if (mark.type.name !== "textStyle") {
+        continue;
+      }
+      const fontFamily = mark.attrs.fontFamily as string | null | undefined;
+      const fontSize = mark.attrs.fontSize as string | null | undefined;
+      const color = mark.attrs.color as string | null | undefined;
+      if (fontFamily) {
+        fonts.add(
+          matchCmsFontFamily(fontFamily) || normalizeFontFamily(fontFamily),
+        );
+      }
+      if (fontSize) {
+        const normalized = normalizeCmsFontSize(fontSize);
+        if (normalized) {
+          sizes.add(normalized);
+        }
+      }
+      if (color) {
+        const normalized = normalizeCmsEditorColor(color);
+        if (normalized) {
+          colors.add(normalized);
+        }
+      }
+    }
+  });
+
+  return { fonts, sizes, colors };
+}
+
+export function resolveTiptapToolbarStyles(editor: Editor | null) {
+  if (!editor) {
+    return { font: "", size: "", color: "#ffffff" };
+  }
+
+  const attrs = editor.getAttributes("textStyle");
+  let font = matchCmsFontFamily(attrs.fontFamily || "");
+  let size = normalizeCmsFontSize(attrs.fontSize || "");
+  let color = normalizeCmsEditorColor(attrs.color || "");
+
+  const { fonts, sizes, colors } = collectUniqueTextStyleValues(editor);
+  if (!font && fonts.size === 1) {
+    font = [...fonts][0] ?? "";
+  }
+  if (!size && sizes.size === 1) {
+    size = [...sizes][0] ?? "";
+  }
+  if (!color && colors.size === 1) {
+    color = [...colors][0] ?? "";
+  }
+
+  const surface = editor.view.dom;
+  if (!font) {
+    const detected = detectEditorContentStyle(surface, "fontFamily");
+    font = matchCmsFontFamily(detected) || detected;
+  }
+  if (!size) {
+    size = normalizeCmsFontSize(detectEditorContentStyle(surface, "fontSize"));
+  }
+  if (!color) {
+    color = normalizeCmsEditorColor(detectEditorContentStyle(surface, "color"));
+  }
+
+  return {
+    font,
+    size,
+    color: color || "#ffffff",
+  };
 }

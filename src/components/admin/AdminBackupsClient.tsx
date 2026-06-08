@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { BackupSummary } from "@/lib/admin-backups";
+import type { BackupStorageInfo, BackupSummary } from "@/lib/admin-backups";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-IN", {
@@ -19,10 +19,19 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function formatBackupActor(actor: string) {
+  if (actor === "vps-cron" || actor === "vercel-cron") {
+    return "Hostinger VPS cron";
+  }
+  return actor;
+}
+
 export function AdminBackupsClient({
   initialBackups,
+  storageInfo,
 }: {
   initialBackups: BackupSummary[];
+  storageInfo: BackupStorageInfo;
 }) {
   const [backups, setBackups] = useState(initialBackups);
   const [name, setName] = useState("");
@@ -123,12 +132,12 @@ export function AdminBackupsClient({
     <>
       <div className="sarjan-home-kpi-grid sarjan-products-kpi-grid">
         {[
-          ["Backup Mode", "Supabase Production", "icon-archive"],
-          ["Daily Backup", "02:00 IST", "icon-calendar"],
-          ["Manual Restore", "JSON / Saved Backup", "icon-folders"],
+          ["Backup Mode", storageInfo.modeLabel, "icon-archive"],
+          ["Daily Backup", storageInfo.dailySchedule, "icon-calendar"],
+          ["Storage", storageInfo.storageLabel, "icon-folders"],
           [
-            "Retention View",
-            `${backups.length} backups`,
+            "Saved Backups",
+            `${backups.length} in admin`,
             "icon-clipboard-text",
           ],
         ].map(([label, value, icon]) => (
@@ -150,8 +159,15 @@ export function AdminBackupsClient({
             <h5>Database Backup / Restore</h5>
             <div className="body-text text-secondary">
               Backs up CMS, products, clients, orders, dispatch, payments,
-              inquiries, inventory, SEO, and audit data.
+              inquiries, inventory, SEO, and audit data. Auto backup runs on
+              Hostinger VPS via cron ({storageInfo.cronEndpoint}) at{" "}
+              {storageInfo.dailySchedule}.
             </div>
+            <ul className="body-text text-secondary mt-8 mb-0 pl-18">
+              {storageInfo.storagePaths.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
           </div>
           <div className="d-flex gap10 flex-wrap">
             <input
@@ -211,7 +227,7 @@ export function AdminBackupsClient({
                     </span>
                   </td>
                   <td>{formatDate(backup.createdAt)}</td>
-                  <td>{backup.createdBy}</td>
+                  <td>{formatBackupActor(backup.createdBy)}</td>
                   <td>{formatSize(backup.sizeBytes)}</td>
                   <td>
                     <div className="list-icon-function">

@@ -6,13 +6,16 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useId, useRef, useState } from "react";
+import type { Editor } from "@tiptap/core";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
   CMS_FONT_SIZES,
   CMS_TEXT_COLORS,
+  normalizeCmsEditorColor,
   normalizeLegacyFontHtml,
+  resolveTiptapToolbarStyles,
 } from "@/lib/cms-html-editor-utils";
 import { FontSize } from "@/lib/tiptap-font-size";
 
@@ -56,6 +59,13 @@ export function AdminHtmlEditor({
     ? Math.max(72, rows * 28)
     : Math.max(120, rows * 32);
 
+  const refreshToolbar = useCallback((current: Editor | null) => {
+    const styles = resolveTiptapToolbarStyles(current);
+    setActiveFont(styles.font);
+    setActiveSize(styles.size);
+    setActiveColor(styles.color);
+  }, []);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -83,16 +93,20 @@ export function AdminHtmlEditor({
         ...(placeholder ? { "data-placeholder": placeholder } : {}),
       },
     },
+    onCreate: ({ editor: current }) => {
+      refreshToolbar(current);
+    },
+    onFocus: ({ editor: current }) => {
+      refreshToolbar(current);
+    },
     onUpdate: ({ editor: current }) => {
       const html = normalizeEditorOutput(current.getHTML());
       setSource(html);
       onChange(html);
+      refreshToolbar(current);
     },
     onSelectionUpdate: ({ editor: current }) => {
-      const attrs = current.getAttributes("textStyle");
-      setActiveFont(attrs.fontFamily || "");
-      setActiveSize(attrs.fontSize || "");
-      setActiveColor(attrs.color || "#ffffff");
+      refreshToolbar(current);
     },
   });
 
@@ -116,8 +130,9 @@ export function AdminHtmlEditor({
     if (next !== current) {
       editor.commands.setContent(next || "<p></p>", { emitUpdate: false });
       setSource(next);
+      refreshToolbar(editor);
     }
-  }, [value, editor, mode]);
+  }, [value, editor, mode, refreshToolbar]);
 
   const runCommand = (
     build: (
@@ -135,18 +150,24 @@ export function AdminHtmlEditor({
       chain = chain.selectAll();
     }
     build(chain).run();
+    refreshToolbar(editor);
     const html = normalizeEditorOutput(editor.getHTML());
     setSource(html);
     onChange(html);
   };
 
   const applyColor = (color: string) => {
-    runCommand((chain) => chain.setColor(color), true);
+    setActiveColor(color);
+    runCommand(
+      (chain) => chain.extendMarkRange("textStyle").setColor(color),
+      true,
+    );
   };
 
-  const colorValue = /^#[0-9a-fA-F]{6}$/i.test(activeColor)
-    ? activeColor
-    : "#ffffff";
+  const colorValue = (() => {
+    const normalized = normalizeCmsEditorColor(activeColor);
+    return /^#[0-9a-fA-F]{6}$/i.test(normalized) ? normalized : "#ffffff";
+  })();
 
   return (
     <div
@@ -190,10 +211,16 @@ export function AdminHtmlEditor({
             <div className="sarjan-editor-tool-controls">
               <select
                 value={activeSize}
+                onMouseDown={(event) => event.preventDefault()}
                 onChange={(event) => {
                   const size = event.target.value;
                   if (!size || !editor) return;
-                  runCommand((chain) => chain.setFontSize(size), true);
+                  setActiveSize(size);
+                  runCommand(
+                    (chain) =>
+                      chain.extendMarkRange("textStyle").setFontSize(size),
+                    true,
+                  );
                 }}
                 aria-label="Font size"
                 className="sarjan-html-editor-size"
@@ -207,10 +234,16 @@ export function AdminHtmlEditor({
               </select>
               <select
                 value={activeFont}
+                onMouseDown={(event) => event.preventDefault()}
                 onChange={(event) => {
                   const font = event.target.value;
                   if (!font || !editor) return;
-                  runCommand((chain) => chain.setFontFamily(font), true);
+                  setActiveFont(font);
+                  runCommand(
+                    (chain) =>
+                      chain.extendMarkRange("textStyle").setFontFamily(font),
+                    true,
+                  );
                 }}
                 aria-label="Font family"
                 className="sarjan-html-editor-font"
@@ -271,7 +304,7 @@ export function AdminHtmlEditor({
               <button
                 key={color.value}
                 type="button"
-                className={`sarjan-editor-color-swatch${activeColor.toLowerCase() === color.value ? " is-active" : ""}`}
+                className={`sarjan-editor-color-swatch${colorValue === color.value ? " is-active" : ""}`}
                 style={{ backgroundColor: color.value }}
                 title={color.label}
                 aria-label={`${color.label} text color`}

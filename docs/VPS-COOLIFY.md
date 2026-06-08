@@ -175,8 +175,8 @@ Coolify auto-deploy picks up the new APK and version. You do **not** need to cha
 On VPS `/etc/cron.d/sarjan`:
 
 ```cron
-0 2 * * * root curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/daily-backup
-0 * * * * root curl -fsS -H "Authorization: Bearer YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/abandoned-cart-reminders
+0 2 * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/daily-backup
+0 * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/abandoned-cart-reminders
 ```
 
 ### DB backup
