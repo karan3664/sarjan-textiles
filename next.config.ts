@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    SITE_LAUNCH_AT: process.env.SITE_LAUNCH_AT ?? "",
+  },
   // Avoid standalone output — trace collection OOMs on small VPS Docker builds.
   productionBrowserSourceMaps: false,
   devIndicators: false,

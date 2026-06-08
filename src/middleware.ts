@@ -15,6 +15,11 @@ import {
   redirectAbsoluteUrl,
   redirectFromNextUrl,
 } from "@/lib/request-redirect-origin";
+import {
+  getSiteLaunchAtMs,
+  isLaunchBypassPath,
+  isSiteLaunchPending,
+} from "@/lib/site-launch";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
 const CLIENT_SESSION_COOKIE = "sarjan-client-token";
@@ -88,6 +93,29 @@ export async function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
+
+  if (isSiteLaunchPending()) {
+    if (!isLaunchBypassPath(pathname)) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Site launching soon. Please check back shortly." },
+          {
+            status: 503,
+            headers: { "Retry-After": "3600" },
+          },
+        );
+      }
+      if (pathname !== "/launch") {
+        return NextResponse.redirect(
+          redirectAbsoluteUrl(request, "/launch"),
+          307,
+        );
+      }
+    }
+  } else if (pathname === "/launch" && getSiteLaunchAtMs() !== null) {
+    return NextResponse.redirect(redirectAbsoluteUrl(request, "/"), 307);
+  }
+
   const returnPath = requestReturnPath(pathname, request.nextUrl.search);
 
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
