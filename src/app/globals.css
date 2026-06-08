@@ -4412,8 +4412,8 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: #fff;
 }
 
-.sarjan-html-editor-surface,
-.sarjan-html-editor-source {
+.sarjan-html-editor-source,
+.sarjan-tiptap-editor .sarjan-tiptap-surface {
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 12px;
@@ -4424,13 +4424,32 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   resize: vertical;
 }
 
-.sarjan-html-editor-surface {
+.sarjan-tiptap-editor .sarjan-tiptap-surface {
   font-family: "Kumbh Sans", Arial, sans-serif;
+  outline: none;
 }
 
-.sarjan-html-editor-surface:empty:before {
+.sarjan-tiptap-editor .sarjan-tiptap-surface p {
+  margin: 0 0 0.35em;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface p:last-child {
+  margin-bottom: 0;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface:focus {
+  border-color: #8b1f2d;
+  box-shadow: 0 0 0 3px rgba(139, 31, 45, 0.12);
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface[data-placeholder]:empty::before,
+.sarjan-tiptap-editor
+  .sarjan-tiptap-surface[data-placeholder]:has(> p:only-child:empty)::before {
   content: attr(data-placeholder);
   color: #9ca3af;
+  pointer-events: none;
+  float: left;
+  height: 0;
 }
 
 .sarjan-html-editor-source {

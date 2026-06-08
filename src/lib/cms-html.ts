@@ -46,7 +46,14 @@ export function sanitizeCmsHtml(value: string): string {
     },
     allowedStyles: {
       "*": {
-        color: [/^#[0-9a-fA-F]{3,8}$/, /^rgb\(/],
+        color: [
+          /^#[0-9a-fA-F]{3,8}$/i,
+          /^rgb\(/i,
+          /^rgba\(/i,
+          /^hsl\(/i,
+          /^hsla\(/i,
+        ],
+        "background-color": [/^#[0-9a-fA-F]{3,8}$/i, /^rgb\(/i, /^rgba\(/i],
         "font-size": [/^\d+(?:px|rem|em|%)$/],
         "font-family": [/.*/],
         "font-weight": [/^\d{3}$/, /^bold$/, /^normal$/],

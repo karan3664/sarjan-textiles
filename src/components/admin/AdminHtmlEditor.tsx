@@ -1,31 +1,20 @@
 "use client";
 
+import { Color } from "@tiptap/extension-color";
+import FontFamily from "@tiptap/extension-font-family";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useEffect, useState } from "react";
 import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import {
-  applyCmsEditorInlineStyle,
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
   CMS_FONT_SIZES,
   CMS_TEXT_COLORS,
-  detectEditorContentStyle,
-  isSelectionWithinEditor,
   normalizeLegacyFontHtml,
-  resolveEditorToolbarStyle,
-  type CmsEditorStyleProperty,
 } from "@/lib/cms-html-editor-utils";
-
-const GOOGLE_FONTS_URL = buildGoogleFontsUrl();
-
-function exec(command: string, value?: string) {
-  document.execCommand(command, false, value);
-}
+import { FontSize } from "@/lib/tiptap-font-size";
 
 type Props = {
   value: string;
@@ -34,24 +23,72 @@ type Props = {
   placeholder?: string;
 };
 
+function emptyEditorHtml(html: string) {
+  const trimmed = html.trim();
+  return !trimmed || trimmed === "<p></p>" || trimmed === "<p><br></p>";
+}
+
+function normalizeEditorOutput(html: string) {
+  return emptyEditorHtml(html) ? "" : html;
+}
+
+function normalizeEditorInput(value: string) {
+  const normalized = normalizeLegacyFontHtml(value || "");
+  return emptyEditorHtml(normalized) ? "" : normalized;
+}
+
 export function AdminHtmlEditor({
   value,
   onChange,
   rows = 6,
   placeholder,
 }: Props) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const savedRangeRef = useRef<Range | null>(null);
-  const isInternalUpdateRef = useRef(false);
-  const lastHtmlRef = useRef(value);
-  const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [source, setSource] = useState(value);
   const [activeFont, setActiveFont] = useState("");
   const [activeSize, setActiveSize] = useState("");
-  const [activeColor, setActiveColor] = useState("#ffffff");
-
+  const [activeColor, setActiveColor] = useState("#111111");
   const minHeightPx = Math.max(140, rows * 36);
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit.configure({
+        heading: false,
+        bulletList: false,
+        orderedList: false,
+        blockquote: false,
+        codeBlock: false,
+        horizontalRule: false,
+      }),
+      Underline,
+      TextStyle,
+      Color.configure({ types: ["textStyle"] }),
+      FontFamily.configure({
+        types: ["textStyle"],
+      }),
+      FontSize,
+    ],
+    content: normalizeEditorInput(value),
+    editorProps: {
+      attributes: {
+        class: "sarjan-tiptap-surface",
+        style: `min-height:${minHeightPx}px`,
+        ...(placeholder ? { "data-placeholder": placeholder } : {}),
+      },
+    },
+    onUpdate: ({ editor: current }) => {
+      const html = normalizeEditorOutput(current.getHTML());
+      setSource(html);
+      onChange(html);
+    },
+    onSelectionUpdate: ({ editor: current }) => {
+      const attrs = current.getAttributes("textStyle");
+      setActiveFont(attrs.fontFamily || "");
+      setActiveSize(attrs.fontSize || "");
+      setActiveColor(attrs.color || "#111111");
+    },
+  });
 
   useEffect(() => {
     if (document.getElementById("sarjan-cms-google-fonts")) {
@@ -60,185 +97,77 @@ export function AdminHtmlEditor({
     const link = document.createElement("link");
     link.id = "sarjan-cms-google-fonts";
     link.rel = "stylesheet";
-    link.href = GOOGLE_FONTS_URL;
+    link.href = buildGoogleFontsUrl();
     document.head.appendChild(link);
   }, []);
 
-  const refreshToolbar = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor) {
-      return;
-    }
-    const selection = window.getSelection();
-    setActiveFont(
-      resolveEditorToolbarStyle(editor, "fontFamily", selection) ||
-        detectEditorContentStyle(editor, "fontFamily"),
-    );
-    setActiveSize(
-      resolveEditorToolbarStyle(editor, "fontSize", selection) ||
-        detectEditorContentStyle(editor, "fontSize"),
-    );
-    setActiveColor(
-      resolveEditorToolbarStyle(editor, "color", selection) ||
-        detectEditorContentStyle(editor, "color") ||
-        "#ffffff",
-    );
-    if (isSelectionWithinEditor(editor, selection) && selection?.rangeCount) {
-      const range = selection.getRangeAt(0);
-      if (editor.contains(range.commonAncestorContainer)) {
-        savedRangeRef.current = range.cloneRange();
-      }
-    }
-  }, []);
-
-  const syncEditorHtml = useCallback(
-    (html: string) => {
-      if (!editorRef.current || mode !== "visual") {
-        return;
-      }
-      const normalized = normalizeLegacyFontHtml(html || "");
-      if (editorRef.current.innerHTML !== normalized) {
-        editorRef.current.innerHTML = normalized;
-      }
-      requestAnimationFrame(() => refreshToolbar());
-    },
-    [mode, refreshToolbar],
-  );
-
-  useLayoutEffect(() => {
-    setSource(value);
-    if (isInternalUpdateRef.current) {
-      isInternalUpdateRef.current = false;
-      lastHtmlRef.current = value;
-      requestAnimationFrame(() => refreshToolbar());
-      return;
-    }
-    if (value !== lastHtmlRef.current) {
-      lastHtmlRef.current = value;
-      syncEditorHtml(value);
-    }
-  }, [value, mode, syncEditorHtml, refreshToolbar]);
-
-  const saveSelection = useCallback(() => {
-    const editor = editorRef.current;
-    const selection = window.getSelection();
-    if (!editor || !selection?.rangeCount) {
-      return;
-    }
-    const range = selection.getRangeAt(0);
-    if (editor.contains(range.commonAncestorContainer)) {
-      savedRangeRef.current = range.cloneRange();
-    }
-  }, []);
-
-  const syncVisual = useCallback(() => {
-    const html = editorRef.current?.innerHTML ?? "";
-    if (html === lastHtmlRef.current) {
-      return;
-    }
-    lastHtmlRef.current = html;
-    isInternalUpdateRef.current = true;
-    onChange(html);
-    setSource(html);
-  }, [onChange]);
-
   useEffect(() => {
-    if (mode !== "visual") {
+    if (!editor || mode !== "visual") {
       return;
     }
-    const onSelectionChange = () => {
-      const editor = editorRef.current;
-      const selection = window.getSelection();
-      if (!isSelectionWithinEditor(editor, selection)) {
-        return;
-      }
-      refreshToolbar();
-    };
-    document.addEventListener("selectionchange", onSelectionChange);
-    return () =>
-      document.removeEventListener("selectionchange", onSelectionChange);
-  }, [mode, refreshToolbar]);
+    const next = normalizeEditorInput(value);
+    const current = normalizeEditorOutput(editor.getHTML());
+    if (next !== current) {
+      editor.commands.setContent(next || "<p></p>", { emitUpdate: false });
+      setSource(next);
+    }
+  }, [value, editor, mode]);
 
-  const applyFormat = (command: string, formatValue?: string) => {
-    saveSelection();
-    editorRef.current?.focus();
-    exec(command, formatValue);
-    syncVisual();
-    refreshToolbar();
-  };
-
-  const applyTextStyle = (
-    property: CmsEditorStyleProperty,
-    nextValue: string,
+  const runCommand = (
+    build: (
+      chain: ReturnType<NonNullable<typeof editor>["chain"]>,
+    ) => ReturnType<NonNullable<typeof editor>["chain"]>,
+    applyToAllIfCollapsed = false,
   ) => {
-    const editor = editorRef.current;
-    if (!editor) {
-      return;
+    if (!editor) return;
+    let chain = editor.chain().focus();
+    if (
+      applyToAllIfCollapsed &&
+      editor.state.selection.empty &&
+      editor.state.doc.textContent.trim()
+    ) {
+      chain = chain.selectAll();
     }
-
-    const selection = window.getSelection();
-    const saved = savedRangeRef.current;
-    const hasTextSelection =
-      saved &&
-      !saved.collapsed &&
-      editor.contains(saved.commonAncestorContainer);
-
-    applyCmsEditorInlineStyle(editor, property, nextValue, saved, {
-      applyToAll: !hasTextSelection,
-    });
-
-    if (property === "fontFamily") {
-      setActiveFont(nextValue);
-    } else if (property === "fontSize") {
-      setActiveSize(nextValue);
-    } else {
-      setActiveColor(nextValue);
-    }
-
-    syncVisual();
-    requestAnimationFrame(() => refreshToolbar());
-  };
-
-  const handleToolbarPointerDown = (event: React.MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.closest("select, input[type='color']")) {
-      saveSelection();
-      return;
-    }
-    saveSelection();
+    build(chain).run();
+    const html = normalizeEditorOutput(editor.getHTML());
+    setSource(html);
+    onChange(html);
   };
 
   return (
-    <div className="sarjan-html-editor" data-html-editor={instanceId}>
-      <div
-        className="sarjan-html-editor-toolbar"
-        onMouseDown={handleToolbarPointerDown}
-      >
-        <button type="button" onClick={() => applyFormat("bold")} title="Bold">
+    <div className="sarjan-html-editor sarjan-tiptap-editor">
+      <div className="sarjan-html-editor-toolbar sarjan-tiptap-toolbar">
+        <button
+          type="button"
+          className={editor?.isActive("bold") ? "active" : ""}
+          onClick={() => runCommand((chain) => chain.toggleBold())}
+          title="Bold"
+        >
           <strong>B</strong>
         </button>
         <button
           type="button"
-          onClick={() => applyFormat("italic")}
+          className={editor?.isActive("italic") ? "active" : ""}
+          onClick={() => runCommand((chain) => chain.toggleItalic())}
           title="Italic"
         >
           <em>I</em>
         </button>
         <button
           type="button"
-          onClick={() => applyFormat("underline")}
+          className={editor?.isActive("underline") ? "active" : ""}
+          onClick={() => runCommand((chain) => chain.toggleUnderline())}
           title="Underline"
         >
           <u>U</u>
         </button>
+
         <select
           value={activeSize}
           onChange={(event) => {
             const size = event.target.value;
-            if (!size) {
-              return;
-            }
-            applyTextStyle("fontSize", size);
+            if (!size || !editor) return;
+            runCommand((chain) => chain.setFontSize(size), true);
           }}
           aria-label="Font size"
           className="sarjan-html-editor-size"
@@ -250,14 +179,13 @@ export function AdminHtmlEditor({
             </option>
           ))}
         </select>
+
         <select
           value={activeFont}
           onChange={(event) => {
             const font = event.target.value;
-            if (!font) {
-              return;
-            }
-            applyTextStyle("fontFamily", font);
+            if (!font || !editor) return;
+            runCommand((chain) => chain.setFontFamily(font), true);
           }}
           aria-label="Font family"
           className="sarjan-html-editor-font"
@@ -269,6 +197,7 @@ export function AdminHtmlEditor({
             </option>
           ))}
         </select>
+
         <select
           value={
             CMS_TEXT_COLORS.some((item) => item.value === activeColor)
@@ -277,10 +206,8 @@ export function AdminHtmlEditor({
           }
           onChange={(event) => {
             const color = event.target.value;
-            if (!color) {
-              return;
-            }
-            applyTextStyle("color", color);
+            if (!color || !editor) return;
+            runCommand((chain) => chain.setColor(color), true);
           }}
           aria-label="Text color preset"
           className="sarjan-html-editor-color-preset"
@@ -292,30 +219,31 @@ export function AdminHtmlEditor({
             </option>
           ))}
         </select>
+
         <input
           type="color"
           value={
-            /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#ffffff"
+            /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#111111"
           }
-          onChange={(event) => applyTextStyle("color", event.target.value)}
+          onChange={(event) => {
+            if (!editor) return;
+            runCommand((chain) => chain.setColor(event.target.value), true);
+          }}
           aria-label="Custom text color"
           className="sarjan-html-editor-color"
           title="Custom color"
         />
+
         <button
           type="button"
-          onClick={() => applyFormat("insertLineBreak")}
-          title="Line break"
-        >
-          ↵
-        </button>
-        <button
-          type="button"
-          onClick={() => applyFormat("removeFormat")}
+          onClick={() =>
+            runCommand((chain) => chain.unsetAllMarks().clearNodes(), true)
+          }
           title="Clear formatting"
         >
           Clear
         </button>
+
         <button
           type="button"
           className={mode === "visual" ? "active" : ""}
@@ -327,8 +255,9 @@ export function AdminHtmlEditor({
           type="button"
           className={mode === "source" ? "active" : ""}
           onClick={() => {
-            if (mode === "visual") {
-              syncVisual();
+            if (mode === "visual" && editor) {
+              const html = normalizeEditorOutput(editor.getHTML());
+              setSource(html);
             }
             setMode("source");
           }}
@@ -336,29 +265,9 @@ export function AdminHtmlEditor({
           HTML
         </button>
       </div>
+
       {mode === "visual" ? (
-        <div
-          ref={editorRef}
-          className="sarjan-html-editor-surface"
-          contentEditable
-          suppressContentEditableWarning
-          data-placeholder={placeholder}
-          style={{ minHeight: `${minHeightPx}px` }}
-          onInput={() => {
-            syncVisual();
-          }}
-          onBlur={(event) => {
-            const related = event.relatedTarget as Node | null;
-            const root = event.currentTarget.closest(".sarjan-html-editor");
-            if (related && root?.contains(related)) {
-              saveSelection();
-            }
-            syncVisual();
-          }}
-          onFocus={refreshToolbar}
-          onMouseUp={saveSelection}
-          onKeyUp={saveSelection}
-        />
+        <EditorContent editor={editor} />
       ) : (
         <textarea
           className="sarjan-html-editor-source"
@@ -367,17 +276,23 @@ export function AdminHtmlEditor({
           value={source}
           placeholder={placeholder}
           onChange={(event) => {
-            setSource(event.target.value);
-            lastHtmlRef.current = event.target.value;
-            isInternalUpdateRef.current = true;
-            onChange(event.target.value);
+            const next = event.target.value;
+            setSource(next);
+            onChange(next);
+            if (editor) {
+              editor.commands.setContent(
+                normalizeEditorInput(next) || "<p></p>",
+                { emitUpdate: false },
+              );
+            }
           }}
         />
       )}
+
       <p className="sarjan-html-editor-hint">
-        Click inside a field and pick font, size, or color — applies to the
-        whole field. Select part of the text to format only that portion. Use
-        HTML tab for advanced markup.
+        Select text, then pick size, font, or color from the toolbar. No
+        selection applies formatting to the whole field. Use HTML tab for raw
+        markup.
       </p>
     </div>
   );
