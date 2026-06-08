@@ -4243,26 +4243,146 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   white-space: nowrap;
 }
 
-.sarjan-banner-slide-card {
-  border: 1px solid #e8e2d9;
-  border-radius: 16px;
-  padding: 18px 20px;
-  background: #fbfaf7;
-}
-
-.sarjan-banner-slide-head {
+.sarjan-banner-slides-intro {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px 20px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f3f1ec;
+  border: 1px solid #e8e2d9;
+}
+
+.sarjan-banner-slide-list {
+  display: grid;
   gap: 12px;
-  margin-bottom: 16px;
+}
+
+.sarjan-banner-slide-card {
+  border: 1px solid #e8e2d9;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.sarjan-banner-slide-card.is-open {
+  border-color: #c9bfb0;
+  box-shadow: 0 8px 24px rgba(17, 17, 17, 0.06);
+}
+
+.sarjan-banner-slide-summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 0;
+  background: #fbfaf7;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sarjan-banner-slide-summary:hover {
+  background: #f3f1ec;
+}
+
+.sarjan-banner-slide-summary-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ece7df;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.sarjan-banner-slide-summary-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sarjan-banner-slide-summary-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sarjan-banner-slide-summary-copy strong {
+  font-size: 14px;
+}
+
+.sarjan-banner-slide-summary-copy span {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sarjan-banner-slide-chevron {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.sarjan-banner-slide-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid #ece7df;
 }
 
 .sarjan-banner-slide-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 0;
+}
+
+.sarjan-banner-slide-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.sarjan-banner-slide-media {
+  display: grid;
+  gap: 10px;
+}
+
+.sarjan-banner-slide-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.sarjan-banner-field {
+  display: grid;
+  gap: 8px;
+}
+
+.sarjan-banner-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sarjan-banner-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .sarjan-banner-slide-layout,
+  .sarjan-banner-field-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sarjan-banner-slide-preview.sarjan-home-preview {
@@ -4295,7 +4415,8 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-section-banner-editor {
   border-top: 1px solid #e8e2d9;
-  padding-top: 20px;
+  padding: 20px 18px 18px;
+  background: #fbfaf7;
 }
 
 .sarjan-promo-banner-carousel {
@@ -4354,22 +4475,58 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-html-editor {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
-.sarjan-html-editor-toolbar {
+.sarjan-tiptap-toolbar {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8f7f4;
+}
+
+.sarjan-editor-toolbar-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fafafa;
+  gap: 14px 18px;
+  align-items: flex-end;
 }
 
-.sarjan-html-editor-toolbar button,
-.sarjan-html-editor-toolbar select {
+.sarjan-editor-color-row {
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #ece7df;
+}
+
+.sarjan-editor-tool-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sarjan-editor-tool-group--end {
+  margin-left: auto;
+}
+
+.sarjan-editor-tool-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.sarjan-editor-tool-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.sarjan-tiptap-toolbar button,
+.sarjan-tiptap-toolbar select {
   border: 1px solid #d1d5db;
   background: #fff;
   border-radius: 8px;
@@ -4378,33 +4535,100 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   cursor: pointer;
 }
 
-.sarjan-html-editor-toolbar button.active {
+.sarjan-tiptap-toolbar button.active {
   background: #111;
   color: #fff;
   border-color: #111;
 }
 
 .sarjan-html-editor-font {
-  min-width: 168px;
-  max-width: 220px;
+  min-width: 140px;
+  max-width: 180px;
 }
 
 .sarjan-html-editor-size {
-  min-width: 92px;
+  min-width: 84px;
 }
 
-.sarjan-html-editor-color-preset {
-  min-width: 96px;
+.sarjan-editor-color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
-.sarjan-html-editor-color {
-  width: 40px;
-  height: 34px;
-  padding: 2px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #fff;
+.sarjan-editor-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #d1d5db;
+  padding: 0;
   cursor: pointer;
+}
+
+.sarjan-editor-color-swatch.is-active {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #8b1f2d;
+}
+
+.sarjan-editor-color-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 12px 4px 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sarjan-editor-color-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sarjan-editor-color-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sarjan-editor-color-hex {
+  font-size: 11px;
+  color: #6b7280;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.sarjan-tiptap-body {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.sarjan-tiptap-editor.is-compact .sarjan-tiptap-toolbar {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.sarjan-tiptap-editor.is-compact .sarjan-editor-color-swatch {
+  width: 24px;
+  height: 24px;
+}
+
+.sarjan-tiptap-editor.is-compact .sarjan-editor-toolbar-row {
+  gap: 10px 12px;
 }
 
 .sarjan-cms-banner-text .cms-html-content,
@@ -4415,11 +4639,11 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-html-editor-source,
 .sarjan-tiptap-editor .sarjan-tiptap-surface {
   width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 15px;
-  line-height: 1.6;
+  border: 0;
+  border-radius: 0;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
   background: #fff;
   resize: vertical;
 }

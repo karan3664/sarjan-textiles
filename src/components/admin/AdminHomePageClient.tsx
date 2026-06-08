@@ -581,10 +581,9 @@ export function AdminHomePageClient({
       const initialSections = initialHome.sections?.length
         ? initialHome.sections
         : defaultSections();
-      for (const section of initialSections) {
-        if (section.type === "hero" || section.type === "bannerCarousel") {
-          ids.add(section.id);
-        }
+      const hero = initialSections.find((section) => section.type === "hero");
+      if (hero) {
+        ids.add(hero.id);
       }
       return ids;
     },

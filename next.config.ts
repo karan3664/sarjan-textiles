@@ -1,17 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Avoid standalone output — trace collection OOMs on small VPS Docker builds.
   productionBrowserSourceMaps: false,
   devIndicators: false,
-  outputFileTracingExcludes: {
-    "*": [
-      "node_modules/@tensorflow/**",
-      "node_modules/nsfwjs/**",
-      "public/downloads/**",
-      "public/template/**",
-    ],
-  },
   // Keep sharp external so dev server does not emit fragile vendor-chunks after cache churn.
   serverExternalPackages: [
     "sharp",

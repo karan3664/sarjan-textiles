@@ -6,7 +6,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
@@ -21,6 +21,7 @@ type Props = {
   onChange: (html: string) => void;
   rows?: number;
   placeholder?: string;
+  compact?: boolean;
 };
 
 function emptyEditorHtml(html: string) {
@@ -42,13 +43,18 @@ export function AdminHtmlEditor({
   onChange,
   rows = 6,
   placeholder,
+  compact = false,
 }: Props) {
+  const colorInputRef = useRef<HTMLInputElement>(null);
+  const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [source, setSource] = useState(value);
   const [activeFont, setActiveFont] = useState("");
   const [activeSize, setActiveSize] = useState("");
-  const [activeColor, setActiveColor] = useState("#111111");
-  const minHeightPx = Math.max(140, rows * 36);
+  const [activeColor, setActiveColor] = useState("#ffffff");
+  const minHeightPx = compact
+    ? Math.max(72, rows * 28)
+    : Math.max(120, rows * 32);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -86,7 +92,7 @@ export function AdminHtmlEditor({
       const attrs = current.getAttributes("textStyle");
       setActiveFont(attrs.fontFamily || "");
       setActiveSize(attrs.fontSize || "");
-      setActiveColor(attrs.color || "#111111");
+      setActiveColor(attrs.color || "#ffffff");
     },
   });
 
@@ -134,166 +140,200 @@ export function AdminHtmlEditor({
     onChange(html);
   };
 
+  const applyColor = (color: string) => {
+    runCommand((chain) => chain.setColor(color), true);
+  };
+
+  const colorValue = /^#[0-9a-fA-F]{6}$/i.test(activeColor)
+    ? activeColor
+    : "#ffffff";
+
   return (
-    <div className="sarjan-html-editor sarjan-tiptap-editor">
-      <div className="sarjan-html-editor-toolbar sarjan-tiptap-toolbar">
-        <button
-          type="button"
-          className={editor?.isActive("bold") ? "active" : ""}
-          onClick={() => runCommand((chain) => chain.toggleBold())}
-          title="Bold"
-        >
-          <strong>B</strong>
-        </button>
-        <button
-          type="button"
-          className={editor?.isActive("italic") ? "active" : ""}
-          onClick={() => runCommand((chain) => chain.toggleItalic())}
-          title="Italic"
-        >
-          <em>I</em>
-        </button>
-        <button
-          type="button"
-          className={editor?.isActive("underline") ? "active" : ""}
-          onClick={() => runCommand((chain) => chain.toggleUnderline())}
-          title="Underline"
-        >
-          <u>U</u>
-        </button>
+    <div
+      className={`sarjan-html-editor sarjan-tiptap-editor${compact ? " is-compact" : ""}`}
+      data-html-editor={instanceId}
+    >
+      <div className="sarjan-tiptap-toolbar">
+        <div className="sarjan-editor-toolbar-row">
+          <div className="sarjan-editor-tool-group">
+            <span className="sarjan-editor-tool-label">Style</span>
+            <div className="sarjan-editor-tool-controls">
+              <button
+                type="button"
+                className={editor?.isActive("bold") ? "active" : ""}
+                onClick={() => runCommand((chain) => chain.toggleBold())}
+                title="Bold"
+              >
+                <strong>B</strong>
+              </button>
+              <button
+                type="button"
+                className={editor?.isActive("italic") ? "active" : ""}
+                onClick={() => runCommand((chain) => chain.toggleItalic())}
+                title="Italic"
+              >
+                <em>I</em>
+              </button>
+              <button
+                type="button"
+                className={editor?.isActive("underline") ? "active" : ""}
+                onClick={() => runCommand((chain) => chain.toggleUnderline())}
+                title="Underline"
+              >
+                <u>U</u>
+              </button>
+            </div>
+          </div>
 
-        <select
-          value={activeSize}
-          onChange={(event) => {
-            const size = event.target.value;
-            if (!size || !editor) return;
-            runCommand((chain) => chain.setFontSize(size), true);
-          }}
-          aria-label="Font size"
-          className="sarjan-html-editor-size"
-        >
-          <option value="">Size</option>
-          {CMS_FONT_SIZES.map((size) => (
-            <option value={size.value} key={size.value}>
-              {size.label}
-            </option>
-          ))}
-        </select>
+          <div className="sarjan-editor-tool-group">
+            <span className="sarjan-editor-tool-label">Font</span>
+            <div className="sarjan-editor-tool-controls">
+              <select
+                value={activeSize}
+                onChange={(event) => {
+                  const size = event.target.value;
+                  if (!size || !editor) return;
+                  runCommand((chain) => chain.setFontSize(size), true);
+                }}
+                aria-label="Font size"
+                className="sarjan-html-editor-size"
+              >
+                <option value="">Size</option>
+                {CMS_FONT_SIZES.map((size) => (
+                  <option value={size.value} key={size.value}>
+                    {size.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={activeFont}
+                onChange={(event) => {
+                  const font = event.target.value;
+                  if (!font || !editor) return;
+                  runCommand((chain) => chain.setFontFamily(font), true);
+                }}
+                aria-label="Font family"
+                className="sarjan-html-editor-font"
+              >
+                <option value="">Family</option>
+                {CMS_FONT_FAMILIES.map((font) => (
+                  <option value={font} key={font} style={{ fontFamily: font }}>
+                    {font}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <select
-          value={activeFont}
-          onChange={(event) => {
-            const font = event.target.value;
-            if (!font || !editor) return;
-            runCommand((chain) => chain.setFontFamily(font), true);
-          }}
-          aria-label="Font family"
-          className="sarjan-html-editor-font"
-        >
-          <option value="">Font</option>
-          {CMS_FONT_FAMILIES.map((font) => (
-            <option value={font} key={font} style={{ fontFamily: font }}>
-              {font}
-            </option>
-          ))}
-        </select>
+          <div className="sarjan-editor-tool-group sarjan-editor-tool-group--end">
+            <span className="sarjan-editor-tool-label">View</span>
+            <div className="sarjan-editor-tool-controls">
+              <button
+                type="button"
+                onClick={() =>
+                  runCommand(
+                    (chain) => chain.unsetAllMarks().clearNodes(),
+                    true,
+                  )
+                }
+                title="Clear formatting"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className={mode === "visual" ? "active" : ""}
+                onClick={() => setMode("visual")}
+              >
+                Visual
+              </button>
+              <button
+                type="button"
+                className={mode === "source" ? "active" : ""}
+                onClick={() => {
+                  if (mode === "visual" && editor) {
+                    const html = normalizeEditorOutput(editor.getHTML());
+                    setSource(html);
+                  }
+                  setMode("source");
+                }}
+              >
+                HTML
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <select
-          value={
-            CMS_TEXT_COLORS.some((item) => item.value === activeColor)
-              ? activeColor
-              : ""
-          }
-          onChange={(event) => {
-            const color = event.target.value;
-            if (!color || !editor) return;
-            runCommand((chain) => chain.setColor(color), true);
-          }}
-          aria-label="Text color preset"
-          className="sarjan-html-editor-color-preset"
-        >
-          <option value="">Color</option>
-          {CMS_TEXT_COLORS.map((color) => (
-            <option value={color.value} key={color.value}>
-              {color.label}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="color"
-          value={
-            /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#111111"
-          }
-          onChange={(event) => {
-            if (!editor) return;
-            runCommand((chain) => chain.setColor(event.target.value), true);
-          }}
-          aria-label="Custom text color"
-          className="sarjan-html-editor-color"
-          title="Custom color"
-        />
-
-        <button
-          type="button"
-          onClick={() =>
-            runCommand((chain) => chain.unsetAllMarks().clearNodes(), true)
-          }
-          title="Clear formatting"
-        >
-          Clear
-        </button>
-
-        <button
-          type="button"
-          className={mode === "visual" ? "active" : ""}
-          onClick={() => setMode("visual")}
-        >
-          Visual
-        </button>
-        <button
-          type="button"
-          className={mode === "source" ? "active" : ""}
-          onClick={() => {
-            if (mode === "visual" && editor) {
-              const html = normalizeEditorOutput(editor.getHTML());
-              setSource(html);
-            }
-            setMode("source");
-          }}
-        >
-          HTML
-        </button>
+        <div className="sarjan-editor-toolbar-row sarjan-editor-color-row">
+          <span className="sarjan-editor-tool-label">Text color</span>
+          <div className="sarjan-editor-color-swatches">
+            {CMS_TEXT_COLORS.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                className={`sarjan-editor-color-swatch${activeColor.toLowerCase() === color.value ? " is-active" : ""}`}
+                style={{ backgroundColor: color.value }}
+                title={color.label}
+                aria-label={`${color.label} text color`}
+                onClick={() => applyColor(color.value)}
+              />
+            ))}
+            <button
+              type="button"
+              className="sarjan-editor-color-custom"
+              onClick={() => colorInputRef.current?.click()}
+              title="Pick custom color"
+            >
+              <span
+                className="sarjan-editor-color-preview"
+                style={{ backgroundColor: colorValue }}
+              />
+              <span>Custom</span>
+            </button>
+            <input
+              ref={colorInputRef}
+              type="color"
+              value={colorValue}
+              className="sarjan-editor-color-input-hidden"
+              onChange={(event) => applyColor(event.target.value)}
+              aria-label="Custom text color"
+            />
+            <span className="sarjan-editor-color-hex">{colorValue}</span>
+          </div>
+        </div>
       </div>
 
-      {mode === "visual" ? (
-        <EditorContent editor={editor} />
-      ) : (
-        <textarea
-          className="sarjan-html-editor-source"
-          rows={Math.max(rows + 2, 8)}
-          style={{ minHeight: `${minHeightPx}px` }}
-          value={source}
-          placeholder={placeholder}
-          onChange={(event) => {
-            const next = event.target.value;
-            setSource(next);
-            onChange(next);
-            if (editor) {
-              editor.commands.setContent(
-                normalizeEditorInput(next) || "<p></p>",
-                { emitUpdate: false },
-              );
-            }
-          }}
-        />
-      )}
+      <div className="sarjan-tiptap-body">
+        {mode === "visual" ? (
+          <EditorContent editor={editor} />
+        ) : (
+          <textarea
+            className="sarjan-html-editor-source"
+            rows={compact ? Math.max(rows, 4) : Math.max(rows + 2, 6)}
+            style={{ minHeight: `${minHeightPx}px` }}
+            value={source}
+            placeholder={placeholder}
+            onChange={(event) => {
+              const next = event.target.value;
+              setSource(next);
+              onChange(next);
+              if (editor) {
+                editor.commands.setContent(
+                  normalizeEditorInput(next) || "<p></p>",
+                  { emitUpdate: false },
+                );
+              }
+            }}
+          />
+        )}
+      </div>
 
-      <p className="sarjan-html-editor-hint">
-        Select text, then pick size, font, or color from the toolbar. No
-        selection applies formatting to the whole field. Use HTML tab for raw
-        markup.
-      </p>
+      {!compact ? (
+        <p className="sarjan-html-editor-hint">
+          Text select karke ya bina select kiye — size, font, color lagao. Color
+          dots se quick pick; Custom se exact shade.
+        </p>
+      ) : null}
     </div>
   );
 }
