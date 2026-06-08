@@ -15,7 +15,6 @@ import {
 } from "@/lib/mobile-profile-menus";
 import {
   coerceLocalized,
-  localizedFromEnglish,
   markTranslationAttempted,
   mergeTranslation,
   needsTranslation,
@@ -455,16 +454,14 @@ export function syncMobileBannerSectionsFromHome(
         banners,
         title: titleEn
           ? coerceLocalized(
-              existing.title?.en === titleEn
-                ? existing.title
-                : localizedFromEnglish(titleEn),
+              existing.title?.en === titleEn ? existing.title : titleEn,
             )
           : existing.title,
         subtitle: subtitleEn
           ? coerceLocalized(
               existing.subtitle?.en === subtitleEn
                 ? existing.subtitle
-                : localizedFromEnglish(subtitleEn),
+                : subtitleEn,
             )
           : existing.subtitle,
       };
@@ -476,8 +473,8 @@ export function syncMobileBannerSectionsFromHome(
       type: "promoBanners",
       enabled: true,
       banners,
-      title: titleEn ? localizedFromEnglish(titleEn) : undefined,
-      subtitle: subtitleEn ? localizedFromEnglish(subtitleEn) : undefined,
+      title: titleEn ? coerceLocalized(titleEn) : undefined,
+      subtitle: subtitleEn ? coerceLocalized(subtitleEn) : undefined,
     });
   }
 
