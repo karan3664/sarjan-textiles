@@ -1,4 +1,8 @@
 import type { CmsHome, CmsSiteSettings } from "@/lib/cms-store";
+import {
+  normalizeSectionBanners,
+  type CmsHomeBanner,
+} from "@/lib/home-banners";
 import { translateEnglishBatch } from "@/lib/auto-translate";
 import {
   applyProfileMenuTranslations,
@@ -81,6 +85,8 @@ export type MobileHomeSection = {
   endDate?: string;
   backgroundColor?: string;
   accentColor?: string;
+  /** Per-section promo carousel slides (synced from web banner sections). */
+  banners?: CmsHomeBanner[];
 };
 
 export type MobileAppConfig = {
@@ -394,7 +400,88 @@ function toStoredSection(
     endDate: section.endDate?.trim() || undefined,
     backgroundColor: section.backgroundColor?.trim() || undefined,
     accentColor: section.accentColor?.trim() || undefined,
+    banners: Array.isArray((section as StoredSection).banners)
+      ? normalizeSectionBanners((section as StoredSection).banners)
+      : undefined,
   };
+}
+
+type WebBannerSection = {
+  id: string;
+  type: string;
+  enabled?: boolean;
+  title?: string | LocalizedText;
+  subtitle?: string | LocalizedText;
+  banners?: CmsHomeBanner[];
+};
+
+/** Mirror web homepage banner-carousel sections into mobile promoBanners slots. */
+export function syncMobileBannerSectionsFromHome(
+  stored: MobileAppConfigStored,
+  home: CmsHome,
+): MobileAppConfigStored {
+  const webSections = (
+    (home as { sections?: WebBannerSection[] }).sections ?? []
+  ).filter(
+    (section) => section.type === "bannerCarousel" && section.enabled !== false,
+  );
+
+  if (!webSections.length) return stored;
+
+  const homeSections = [...stored.homeSections];
+
+  for (const web of webSections) {
+    const banners = normalizeSectionBanners(web.banners);
+    const titleEn = web.title
+      ? typeof web.title === "string"
+        ? web.title
+        : readEnglish(web.title)
+      : "";
+    const subtitleEn = web.subtitle
+      ? typeof web.subtitle === "string"
+        ? web.subtitle
+        : readEnglish(web.subtitle)
+      : "";
+
+    const existingIndex = homeSections.findIndex(
+      (section) => section.id === web.id && section.type === "promoBanners",
+    );
+
+    if (existingIndex >= 0) {
+      const existing = homeSections[existingIndex];
+      homeSections[existingIndex] = {
+        ...existing,
+        enabled: true,
+        banners,
+        title: titleEn
+          ? coerceLocalized(
+              existing.title?.en === titleEn
+                ? existing.title
+                : localizedFromEnglish(titleEn),
+            )
+          : existing.title,
+        subtitle: subtitleEn
+          ? coerceLocalized(
+              existing.subtitle?.en === subtitleEn
+                ? existing.subtitle
+                : localizedFromEnglish(subtitleEn),
+            )
+          : existing.subtitle,
+      };
+      continue;
+    }
+
+    homeSections.push({
+      id: web.id,
+      type: "promoBanners",
+      enabled: true,
+      banners,
+      title: titleEn ? localizedFromEnglish(titleEn) : undefined,
+      subtitle: subtitleEn ? localizedFromEnglish(subtitleEn) : undefined,
+    });
+  }
+
+  return { ...stored, homeSections };
 }
 
 function buildLocalizedExtrasFromHome(
@@ -713,14 +800,17 @@ export function syncMobileAppExtrasFromHome(
   site: CmsSiteSettings,
   home: CmsHome,
 ): MobileAppConfigStored {
-  return {
-    ...stored,
-    localizedExtras: buildLocalizedExtrasFromHome(
-      site,
-      home,
-      stored.localizedExtras,
-    ),
-  };
+  return syncMobileBannerSectionsFromHome(
+    {
+      ...stored,
+      localizedExtras: buildLocalizedExtrasFromHome(
+        site,
+        home,
+        stored.localizedExtras,
+      ),
+    },
+    home,
+  );
 }
 
 /** Admin save: normalize English input, auto-translate to Hindi & Gujarati. */
@@ -802,6 +892,7 @@ export function resolveMobileAppConfig(
       endDate: section.endDate,
       backgroundColor: section.backgroundColor,
       accentColor: section.accentColor,
+      banners: section.banners,
     })),
     profileMenus: resolveMobileProfileMenus(stored.profileMenus, locale),
     footerCredit: pick(stored.footerCredit) ?? "",

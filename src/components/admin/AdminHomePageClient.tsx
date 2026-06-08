@@ -13,7 +13,9 @@ import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
 import { AdminHomeBannerSlides } from "@/components/admin/AdminHomeBannerSlides";
 import { putAdminCms } from "@/lib/admin-cms-fetch";
 import {
+  defaultHomeBannerSlide,
   normalizeHomeBanners,
+  normalizeSectionBanners,
   syncHomeHeroFromBanners,
   type CmsHomeBanner,
 } from "@/lib/home-banners";
@@ -27,6 +29,7 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 type UploadState = Record<string, "uploading" | string | undefined>;
 type HomeSectionType =
   | "hero"
+  | "bannerCarousel"
   | "categories"
   | "topPicks"
   | "marquee"
@@ -57,10 +60,12 @@ type HomeSectionControl = {
   subtitle?: string;
   layout?: "grid" | "banner" | "split";
   blocks?: CustomBlock[];
+  banners?: CmsHomeBanner[];
 };
 
 const sectionOptions: Array<{ type: HomeSectionType; title: string }> = [
   { type: "hero", title: "Hero Banner" },
+  { type: "bannerCarousel", title: "Banner Carousel" },
   { type: "categories", title: "Category Cards" },
   { type: "topPicks", title: "Featured Products" },
   { type: "marquee", title: "Marquee Text" },
@@ -945,6 +950,10 @@ export function AdminHomePageClient({
         ...source,
         id: `${source.type}-${Date.now()}`,
         title: `${source.title ?? source.type} Copy`,
+        banners: source.banners?.map((banner, offset) => ({
+          ...banner,
+          id: `banner-${Date.now()}-${offset}`,
+        })),
       });
       return { ...current, sections: next };
     });
@@ -969,13 +978,123 @@ export function AdminHomePageClient({
           id: `${type}-${Date.now()}`,
           type,
           title:
-            type === "custom" ? "New Custom Section" : (option?.title ?? type),
+            type === "custom"
+              ? "New Custom Section"
+              : type === "bannerCarousel"
+                ? "Promo Banners"
+                : (option?.title ?? type),
           enabled: true,
           layout: type === "custom" ? "grid" : undefined,
           blocks: type === "custom" ? [blankBlock("text")] : undefined,
+          banners:
+            type === "bannerCarousel" ? [defaultHomeBannerSlide()] : undefined,
         },
       ],
     }));
+  };
+
+  const sectionBannerSlides = (sectionIndex: number) => {
+    const section = (home.sections?.length ? home.sections : sections)[
+      sectionIndex
+    ];
+    return normalizeSectionBanners(section?.banners);
+  };
+
+  const setSectionBannerSlides = (
+    sectionIndex: number,
+    nextBanners: CmsHomeBanner[],
+  ) => {
+    updateSection(sectionIndex, { banners: nextBanners });
+  };
+
+  const updateSectionBannerSlide = (
+    sectionIndex: number,
+    slideIndex: number,
+    patch: Partial<CmsHomeBanner>,
+  ) => {
+    const next = [...sectionBannerSlides(sectionIndex)];
+    next[slideIndex] = { ...next[slideIndex], ...patch };
+    setSectionBannerSlides(sectionIndex, next);
+  };
+
+  const moveSectionBannerSlide = (
+    sectionIndex: number,
+    slideIndex: number,
+    direction: -1 | 1,
+  ) => {
+    const next = [...sectionBannerSlides(sectionIndex)];
+    const target = slideIndex + direction;
+    if (target < 0 || target >= next.length) return;
+    [next[slideIndex], next[target]] = [next[target], next[slideIndex]];
+    setSectionBannerSlides(sectionIndex, next);
+  };
+
+  const removeSectionBannerSlide = (
+    sectionIndex: number,
+    slideIndex: number,
+  ) => {
+    setSectionBannerSlides(
+      sectionIndex,
+      sectionBannerSlides(sectionIndex).filter(
+        (_, index) => index !== slideIndex,
+      ),
+    );
+  };
+
+  const addSectionBannerSlide = (sectionIndex: number) => {
+    setSectionBannerSlides(sectionIndex, [
+      ...sectionBannerSlides(sectionIndex),
+      defaultHomeBannerSlide(),
+    ]);
+  };
+
+  const uploadSectionBannerSlides = async (
+    sectionIndex: number,
+    files: File[],
+  ) => {
+    if (!files.length) return;
+    const uploadKey = `section-${sectionIndex}-bulk`;
+    setUploadState((current) => ({ ...current, [uploadKey]: "uploading" }));
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const item = await uploadFile(file);
+        uploaded.push(item.url);
+      }
+      const next = [
+        ...sectionBannerSlides(sectionIndex),
+        ...uploaded.map((image, offset) => ({
+          ...defaultHomeBannerSlide(`banner-${Date.now()}-${offset}`),
+          image,
+        })),
+      ];
+      setSectionBannerSlides(sectionIndex, next);
+      setUploadState((current) => ({ ...current, [uploadKey]: undefined }));
+    } catch (error) {
+      setUploadState((current) => ({
+        ...current,
+        [uploadKey]: error instanceof Error ? error.message : "Upload failed",
+      }));
+    }
+  };
+
+  const replaceSectionBannerSlideImage = async (
+    sectionIndex: number,
+    slideIndex: number,
+    file: File,
+  ) => {
+    const uploadKey = `section-${sectionIndex}-banner-${slideIndex}`;
+    setUploadState((current) => ({ ...current, [uploadKey]: "uploading" }));
+    try {
+      const item = await uploadFile(file);
+      updateSectionBannerSlide(sectionIndex, slideIndex, { image: item.url });
+      setUploadState((current) => ({ ...current, [uploadKey]: undefined }));
+    } catch (error) {
+      setUploadState((current) => ({
+        ...current,
+        [uploadKey]: error instanceof Error ? error.message : "Upload failed",
+      }));
+    }
   };
 
   const addCustomBlock = (sectionIndex: number, type: CustomBlockType) => {
@@ -1243,6 +1362,60 @@ export function AdminHomePageClient({
                   </button>
                 </div>
               </div>
+
+              {section.type === "bannerCarousel" && (
+                <div className="sarjan-section-banner-editor mt-20">
+                  <div className="body-text text-secondary mb-16">
+                    This section has its own banner carousel. Add multiple
+                    sections to place different promos anywhere on the homepage
+                    (and matching slots in the mobile app after Save).
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
+                    <HtmlField
+                      label="Section heading (optional)"
+                      value={section.title ?? ""}
+                      savedValue={savedSection(section.id)?.title ?? ""}
+                      onChange={(value) =>
+                        updateSection(index, { title: value })
+                      }
+                      rows={3}
+                      placeholder="Example: Festive collection"
+                    />
+                    <HtmlField
+                      label="Section subtitle (optional)"
+                      value={section.subtitle ?? ""}
+                      savedValue={savedSection(section.id)?.subtitle ?? ""}
+                      onChange={(value) =>
+                        updateSection(index, { subtitle: value })
+                      }
+                      rows={3}
+                      placeholder="Short line under the heading"
+                    />
+                  </div>
+                  <AdminHomeBannerSlides
+                    banners={sectionBannerSlides(index)}
+                    uploadState={uploadState}
+                    bulkUploadKey={`section-${index}-bulk`}
+                    replaceKeyPrefix={`section-${index}-banner`}
+                    onUpload={(files) =>
+                      uploadSectionBannerSlides(index, files)
+                    }
+                    onReplace={(slideIndex, file) =>
+                      replaceSectionBannerSlideImage(index, slideIndex, file)
+                    }
+                    onUpdate={(slideIndex, patch) =>
+                      updateSectionBannerSlide(index, slideIndex, patch)
+                    }
+                    onMove={(slideIndex, direction) =>
+                      moveSectionBannerSlide(index, slideIndex, direction)
+                    }
+                    onRemove={(slideIndex) =>
+                      removeSectionBannerSlide(index, slideIndex)
+                    }
+                    onAdd={() => addSectionBannerSlide(index)}
+                  />
+                </div>
+              )}
 
               {section.type === "custom" && (
                 <div className="sarjan-custom-section-editor">

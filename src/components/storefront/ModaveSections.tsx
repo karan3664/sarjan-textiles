@@ -13,6 +13,7 @@ import {
   resolveTestimonials,
 } from "@/lib/content-localize";
 import { normalizeHomeBanners } from "@/lib/home-banners";
+import { PromoBannerCarousel } from "@/components/storefront/PromoBannerCarousel";
 import { resolveProducts } from "@/lib/product-localize";
 import { getServerClientId } from "@/lib/client-session-server";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
@@ -321,6 +322,7 @@ function ProductFeature({
 
 type HomeSectionType =
   | "hero"
+  | "bannerCarousel"
   | "categories"
   | "topPicks"
   | "marquee"
@@ -339,6 +341,7 @@ type HomeSectionControl = {
   enabled?: boolean;
   layout?: "grid" | "banner" | "split";
   blocks?: CmsCustomBlock[];
+  banners?: import("@/lib/home-banners").CmsHomeBanner[];
 };
 
 const defaultHomeSections = defaultHome.sections as HomeSectionControl[];
@@ -927,6 +930,7 @@ export async function HomeDynamic() {
       </section>
     ),
     custom: null,
+    bannerCarousel: null,
   };
 
   return (
@@ -935,6 +939,12 @@ export async function HomeDynamic() {
         <Fragment key={`${section.id}-${index}`}>
           {section.type === "custom" ? (
             <CustomHomeSection section={section} products={products} />
+          ) : section.type === "bannerCarousel" ? (
+            <PromoBannerCarousel
+              banners={section.banners}
+              title={section.title}
+              subtitle={section.subtitle}
+            />
           ) : (
             renderers[section.type]
           )}

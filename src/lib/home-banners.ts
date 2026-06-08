@@ -27,6 +27,35 @@ function readText(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
+export function defaultHomeBannerSlide(id?: string): CmsHomeBanner {
+  return {
+    id: id ?? `banner-${Date.now()}`,
+    image: "/sarjan-assets/banner-textiles-studio.webp",
+    eyebrow: "",
+    title: "",
+    description: "",
+    ctaLabel: "",
+    ctaHref: "",
+    actionType: "url",
+    actionValue: "",
+    enabled: true,
+  };
+}
+
+/** Banners stored on a homepage section (not the main hero carousel). */
+export function normalizeSectionBanners(
+  banners?: CmsHomeBanner[],
+): CmsHomeBanner[] {
+  if (!Array.isArray(banners) || !banners.length) return [];
+  return banners
+    .filter((banner) => banner.enabled !== false && banner.image?.trim())
+    .map((banner, index) => ({
+      ...banner,
+      id: banner.id || `banner-${index + 1}`,
+      enabled: banner.enabled !== false,
+    }));
+}
+
 export function normalizeHomeBanners(home: HomeBannerSource): CmsHomeBanner[] {
   const saved = (home.banners ?? []).filter(
     (banner) => banner.enabled !== false && banner.image?.trim(),

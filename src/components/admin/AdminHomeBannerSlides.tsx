@@ -34,9 +34,13 @@ export function AdminHomeBannerSlides({
   onMove,
   onRemove,
   onAdd,
+  bulkUploadKey = "hero",
+  replaceKeyPrefix = "banner",
 }: {
   banners: CmsHomeBanner[];
   uploadState: UploadState;
+  bulkUploadKey?: string;
+  replaceKeyPrefix?: string;
   onUpload: (files: File[]) => void;
   onReplace: (index: number, file: File) => void;
   onUpdate: (index: number, patch: Partial<CmsHomeBanner>) => void;
@@ -44,7 +48,7 @@ export function AdminHomeBannerSlides({
   onRemove: (index: number) => void;
   onAdd: () => void;
 }) {
-  const bulkState = uploadState.hero;
+  const bulkState = uploadState[bulkUploadKey];
 
   return (
     <div className="sarjan-banner-slides">
@@ -72,7 +76,7 @@ export function AdminHomeBannerSlides({
 
       <div className="cols gap20">
         {banners.map((banner, index) => {
-          const replaceKey = `banner-${index}`;
+          const replaceKey = `${replaceKeyPrefix}-${index}`;
           const replaceState = uploadState[replaceKey];
           return (
             <article
