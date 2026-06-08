@@ -1,0 +1,3 @@
+name,sku,category,price,moq,stock,colors,sizes,fabric,description,is_featured
+E2E Bulk Kurta Red,E2E-BLK-RED,Kurtas,890,5,120,Red,S M L XL,Cotton,E2E bulk import kurta,false
+E2E Bulk Shirt Blue,E2E-BLK-BLU,Printed Shirts,750,6,80,Blue,S M L XL,Cotton,E2E bulk import shirt,false

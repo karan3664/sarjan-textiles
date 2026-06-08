@@ -124,11 +124,16 @@ export async function POST(request: Request) {
       });
     }
 
+    const exposeOtpForE2e =
+      process.env.NODE_ENV === "development" &&
+      process.env.E2E_EXPOSE_OTP === "true";
+
     return Response.json({
       otpToken,
       message: devConsoleOtp
         ? "OTP printed in dev server terminal (no email sent)"
         : "OTP sent to email",
+      ...(exposeOtpForE2e ? { devOtp: otp } : {}),
     });
   } catch (error) {
     return Response.json(

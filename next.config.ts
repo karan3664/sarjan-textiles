@@ -43,6 +43,16 @@ const nextConfig: NextConfig = {
         destination: "/term-of-use",
         permanent: true,
       },
+      {
+        source: "/shop",
+        destination: "/products",
+        permanent: true,
+      },
+      {
+        source: "/shopping-cart",
+        destination: "/cart",
+        permanent: true,
+      },
     ];
   },
   async headers() {

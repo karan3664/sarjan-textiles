@@ -471,11 +471,13 @@ export function CheckoutPageClient({
                     <div className="grid-2">
                       <input
                         type="text"
+                        name="checkoutEmail"
                         placeholder={labels.emailAddress ?? "Email Address*"}
                         defaultValue={client?.email ?? ""}
                       />
                       <input
                         type="text"
+                        name="checkoutPhone"
                         placeholder={labels.phoneNumber ?? "Phone Number*"}
                         defaultValue={client?.phone ?? ""}
                       />

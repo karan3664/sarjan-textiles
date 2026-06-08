@@ -36,11 +36,13 @@ function InstagramPostImage({ image, alt }: { image: string; alt: string }) {
       ? alt
       : "Sarjan Textiles on Instagram";
 
+  const isLocalAsset = image.startsWith("/");
   return (
     <img
       src={resolveInstagramImageSrc(image, useProxy)}
       alt={label}
-      loading="lazy"
+      loading={isLocalAsset ? "eager" : "lazy"}
+      decoding="async"
       referrerPolicy="no-referrer"
       className="sarjan-instagram-post-img"
       onError={() => {

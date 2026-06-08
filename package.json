@@ -9,7 +9,15 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "test:notifications": "tsx --env-file=.env.local scripts/test-client-notifications.ts",
-    "test:admin-send": "tsx --env-file=.env.local scripts/test-admin-send-notification.ts"
+    "test:admin-send": "tsx --env-file=.env.local scripts/test-admin-send-notification.ts",
+    "test:e2e": "node --env-file=.env.local node_modules/@playwright/test/cli.js test",
+    "test:e2e:audit": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=chromium-desktop && node scripts/generate-e2e-audit-report.mjs",
+    "test:e2e:qa": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=chromium-desktop e2e/07-senior-qa-ui.spec.ts e2e/05-audit.spec.ts && node scripts/generate-e2e-audit-report.mjs",
+    "test:e2e:full": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=chromium-desktop --project=b2b-lifecycle && node scripts/generate-e2e-audit-report.mjs",
+    "test:e2e:b2b": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=b2b-lifecycle && node scripts/generate-e2e-audit-report.mjs",
+    "test:e2e:local": "PLAYWRIGHT_SKIP_WEBSERVER=1 node --env-file=.env.local node_modules/@playwright/test/cli.js test",
+    "test:e2e:report": "npx playwright show-report playwright-report",
+    "test:e2e:ui": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --ui"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
@@ -61,6 +69,7 @@
     "eslint-config-next": "^15.3.2",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@playwright/test": "^1.52.0"
   }
 }
