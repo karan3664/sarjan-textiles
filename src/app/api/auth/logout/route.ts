@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clearClientSessionCookie } from "@/lib/client-session-cookie";
+import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
 
 function safeLogoutRedirect(request: NextRequest) {
   const next = request.nextUrl.searchParams.get("next")?.trim() ?? "";
@@ -11,7 +12,7 @@ function safeLogoutRedirect(request: NextRequest) {
     !next.startsWith("/admin")
       ? next
       : "/login";
-  const response = NextResponse.redirect(new URL(dest, request.url), {
+  const response = NextResponse.redirect(redirectAbsoluteUrl(request, dest), {
     status: 303,
   });
   clearClientSessionCookie(response);

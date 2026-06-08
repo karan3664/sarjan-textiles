@@ -11,6 +11,10 @@ import {
 import { verifyClientToken } from "@/lib/client-token";
 import { isAppLocale } from "@/lib/localized-text";
 import { localeCookieOptions } from "@/lib/locale-cookie";
+import {
+  redirectAbsoluteUrl,
+  redirectFromNextUrl,
+} from "@/lib/request-redirect-origin";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
 const CLIENT_SESSION_COOKIE = "sarjan-client-token";
@@ -96,7 +100,7 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.searchParams.has("password") ||
       request.nextUrl.searchParams.has("pass")
     ) {
-      const url = request.nextUrl.clone();
+      const url = redirectFromNextUrl(request);
       url.searchParams.delete("password");
       url.searchParams.delete("pass");
       return NextResponse.redirect(url);
@@ -108,7 +112,7 @@ export async function middleware(request: NextRequest) {
     );
     if (session) {
       const dest = adminPostLoginPath(request.nextUrl.searchParams.get("next"));
-      return NextResponse.redirect(new URL(dest, request.url));
+      return NextResponse.redirect(redirectAbsoluteUrl(request, dest));
     }
   }
 
@@ -124,7 +128,7 @@ export async function middleware(request: NextRequest) {
           { status: 401 },
         );
       }
-      const url = new URL("/admin/login", request.url);
+      const url = redirectAbsoluteUrl(request, "/admin/login");
       url.searchParams.set("next", returnPath);
       return NextResponse.redirect(url);
     }
@@ -136,7 +140,7 @@ export async function middleware(request: NextRequest) {
           { status: 403 },
         );
       }
-      const url = request.nextUrl.clone();
+      const url = redirectFromNextUrl(request);
       url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
@@ -151,13 +155,13 @@ export async function middleware(request: NextRequest) {
       const dest = clientPostLoginPath(
         request.nextUrl.searchParams.get("next"),
       );
-      return NextResponse.redirect(new URL(dest, request.url));
+      return NextResponse.redirect(redirectAbsoluteUrl(request, dest));
     }
   }
 
   if (isClientProtectedPage(pathname)) {
     if (!clientSession) {
-      const url = new URL("/login", request.url);
+      const url = redirectAbsoluteUrl(request, "/login");
       url.searchParams.set("next", returnPath);
       return NextResponse.redirect(url);
     }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/admin-auth";
 import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
 import { createAdminToken } from "@/lib/admin-token";
+import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
 
 function safeAdminNextPath(raw: string | null | undefined) {
   const next = String(raw ?? "").trim();
@@ -18,7 +19,7 @@ function safeAdminNextPath(raw: string | null | undefined) {
 }
 
 function loginRedirect(request: Request, query: Record<string, string>) {
-  const url = new URL("/admin/login", request.url);
+  const url = redirectAbsoluteUrl(request, "/admin/login");
   for (const [key, value] of Object.entries(query)) {
     if (value) url.searchParams.set(key, value);
   }
@@ -55,7 +56,10 @@ export async function POST(request: Request) {
     iat: Date.now(),
   });
 
-  const response = NextResponse.redirect(new URL(next, request.url), 303);
+  const response = NextResponse.redirect(
+    redirectAbsoluteUrl(request, next),
+    303,
+  );
   setAdminSessionCookie(response, token);
   return response;
 }

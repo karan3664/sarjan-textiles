@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clearAdminSessionCookie } from "@/lib/admin-session-cookie";
+import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
 
 function logoutRedirect(request: NextRequest) {
-  const loginUrl = new URL("/admin/login", request.url);
+  const loginUrl = redirectAbsoluteUrl(request, "/admin/login");
   const response = NextResponse.redirect(loginUrl, { status: 303 });
   clearAdminSessionCookie(response);
   return response;
