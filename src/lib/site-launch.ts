@@ -30,6 +30,10 @@ export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname.startsWith("/api/admin")) return true;
   if (pathname.startsWith("/api/cron")) return true;
   if (pathname === "/api/health") return true;
+  if (pathname === "/api/download/apk") return true;
+  if (pathname === "/api/version") return true;
+  if (pathname === "/download") return true;
+  if (pathname === "/downloads/sarjan-textiles.apk") return true;
   if (pathname.startsWith("/_next/")) return true;
   if (pathname.startsWith("/.well-known/")) return true;
   // Public static files (logo, favicon, CSS) — must not redirect to /launch

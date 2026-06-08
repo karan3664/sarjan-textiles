@@ -29,3 +29,21 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
               "${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}"
             echo "Coolify deploy triggered."
+
+      - name: Sync mobile APK to Coolify volume
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            curl -fsSL \
+              "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/scripts/vps/sync-mobile-apk.sh" \
+              -o /tmp/sync-mobile-apk.sh
+            chmod +x /tmp/sync-mobile-apk.sh
+            /tmp/sync-mobile-apk.sh
