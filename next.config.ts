@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  env: {
-    SITE_LAUNCH_AT: process.env.SITE_LAUNCH_AT ?? "",
-  },
+  // SITE_LAUNCH_AT must stay a runtime env var (Coolify). Do not add to `env` here —
+  // that inlines an empty value at Docker build time and disables the launch gate.
   // Avoid standalone output — trace collection OOMs on small VPS Docker builds.
   productionBrowserSourceMaps: false,
   devIndicators: false,

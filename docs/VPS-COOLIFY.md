@@ -83,6 +83,7 @@ CLIENT_JWT_SECRET=<64+ random chars>
 ADMIN_EMAIL=admin@sarjantextiles.com
 ADMIN_PASSWORD=<strong>
 CRON_SECRET=<random>
+# Runtime env (Configuration → Environment Variables). Redeploy after adding/changing.
 SITE_LAUNCH_AT=2026-06-17T10:15:00+05:30
 
 SMTP_HOST=...

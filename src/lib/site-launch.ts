@@ -1,6 +1,13 @@
 /** ISO-8601 with offset, e.g. 2026-06-17T10:15:00+05:30 (IST). Unset = gate off. */
+function readSiteLaunchAtRaw(): string | undefined {
+  // Bracket access keeps middleware reading runtime env on Docker/Coolify (not build-time "").
+  const raw = process.env["SITE_LAUNCH_AT"];
+  const trimmed = raw?.trim();
+  return trimmed || undefined;
+}
+
 export function getSiteLaunchAtMs(): number | null {
-  const raw = process.env.SITE_LAUNCH_AT?.trim();
+  const raw = readSiteLaunchAtRaw();
   if (!raw) return null;
   const ms = Date.parse(raw);
   return Number.isNaN(ms) ? null : ms;
