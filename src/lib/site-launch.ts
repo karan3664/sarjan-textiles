@@ -34,6 +34,14 @@ export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname === "/api/version") return true;
   if (pathname === "/download") return true;
   if (pathname === "/downloads/sarjan-textiles.apk") return true;
+  // Mobile app + storefront JSON APIs (website HTML stays on /launch until go-live)
+  if (
+    pathname.startsWith("/api/") &&
+    !pathname.startsWith("/api/admin") &&
+    !pathname.startsWith("/api/mock/")
+  ) {
+    return true;
+  }
   if (pathname.startsWith("/_next/")) return true;
   if (pathname.startsWith("/.well-known/")) return true;
   // Public static files (logo, favicon, CSS) — must not redirect to /launch
