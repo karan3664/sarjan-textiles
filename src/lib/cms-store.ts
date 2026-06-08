@@ -803,22 +803,19 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
     if (!seoPages.some((item) => item.id === page.id)) seoPages.push(page);
   }
 
-  const rawProducts =
-    Array.isArray(input.products) && input.products.length
-      ? input.products
-      : defaultCmsSnapshot.products;
+  const rawProducts = Array.isArray(input.products)
+    ? input.products
+    : defaultCmsSnapshot.products;
   const products = ensureUniqueProductSlugs(
     migrateWeakProductSlugs(dedupeProductsByName(rawProducts)),
   ).map((product) => withProductImageAlts(product));
-  const rawBlogs =
-    Array.isArray(input.blogs) && input.blogs.length
-      ? input.blogs
-      : defaultCmsSnapshot.blogs;
+  const rawBlogs = Array.isArray(input.blogs)
+    ? input.blogs
+    : defaultCmsSnapshot.blogs;
   const blogs = dedupeBlogsByTitle(rawBlogs);
-  const rawTestimonials =
-    Array.isArray(input.testimonials) && input.testimonials.length
-      ? input.testimonials
-      : defaultCmsSnapshot.testimonials;
+  const rawTestimonials = Array.isArray(input.testimonials)
+    ? input.testimonials
+    : defaultCmsSnapshot.testimonials;
   const testimonials = dedupeTestimonialsByName(rawTestimonials);
 
   return optimizeMedia({
@@ -855,19 +852,17 @@ function normalizeSnapshot(input: Partial<CmsSnapshot>): CmsSnapshot {
       },
     },
     products,
-    productFilters:
-      Array.isArray(input.productFilters) && input.productFilters.length
-        ? input.productFilters
-        : defaultProductFilters(products),
+    productFilters: Array.isArray(input.productFilters)
+      ? input.productFilters
+      : defaultProductFilters(products),
     blogs,
     testimonials,
     clientPricing: Array.isArray(input.clientPricing)
       ? input.clientPricing
       : defaultCmsSnapshot.clientPricing,
-    categoryMaster:
-      Array.isArray(input.categoryMaster) && input.categoryMaster.length
-        ? input.categoryMaster
-        : defaultCategoryMaster(products),
+    categoryMaster: Array.isArray(input.categoryMaster)
+      ? input.categoryMaster
+      : defaultCategoryMaster(products),
     categoryHubPages: Array.isArray(input.categoryHubPages)
       ? input.categoryHubPages
       : defaultCmsSnapshot.categoryHubPages,
