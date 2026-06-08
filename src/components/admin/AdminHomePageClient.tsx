@@ -575,6 +575,20 @@ export function AdminHomePageClient({
   const [saveError, setSaveError] = useState("");
   const [uploadState, setUploadState] = useState<UploadState>({});
   const [heroVideoUrlDraft, setHeroVideoUrlDraft] = useState("");
+  const [expandedSectionIds, setExpandedSectionIds] = useState<Set<string>>(
+    () => {
+      const ids = new Set<string>();
+      const initialSections = initialHome.sections?.length
+        ? initialHome.sections
+        : defaultSections();
+      for (const section of initialSections) {
+        if (section.type === "hero" || section.type === "bannerCarousel") {
+          ids.add(section.id);
+        }
+      }
+      return ids;
+    },
+  );
 
   const previewStats = useMemo(
     () => [
@@ -941,14 +955,22 @@ export function AdminHomePageClient({
   };
 
   const duplicateSection = (index: number) => {
+    const source = (home.sections?.length ? home.sections : sections)[index];
+    const copyId = `${source.type}-${Date.now()}`;
+    if (
+      source.type === "hero" ||
+      source.type === "bannerCarousel" ||
+      source.type === "custom"
+    ) {
+      setExpandedSectionIds((current) => new Set(current).add(copyId));
+    }
     setHome((current) => {
       const next = [
         ...(current.sections?.length ? current.sections : sections),
       ];
-      const source = next[index];
       next.splice(index + 1, 0, {
         ...source,
-        id: `${source.type}-${Date.now()}`,
+        id: copyId,
         title: `${source.title ?? source.type} Copy`,
         banners: source.banners?.map((banner, offset) => ({
           ...banner,
@@ -968,14 +990,27 @@ export function AdminHomePageClient({
     }));
   };
 
+  const toggleSectionExpanded = (sectionId: string) => {
+    setExpandedSectionIds((current) => {
+      const next = new Set(current);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
+    });
+  };
+
   const addSection = (type: HomeSectionType) => {
     const option = sectionOptions.find((item) => item.type === type);
+    const sectionId = `${type}-${Date.now()}`;
+    if (type === "hero" || type === "bannerCarousel" || type === "custom") {
+      setExpandedSectionIds((current) => new Set(current).add(sectionId));
+    }
     setHome((current) => ({
       ...current,
       sections: [
         ...(current.sections?.length ? current.sections : sections),
         {
-          id: `${type}-${Date.now()}`,
+          id: sectionId,
           type,
           title:
             type === "custom"
@@ -1228,74 +1263,41 @@ export function AdminHomePageClient({
         </div>
       </div>
 
-      <div className="wg-box mb-30 sarjan-home-editor-card sarjan-home-hero-editor">
-        <div className="flex flex-wrap justify-between gap14 items-center mb-24">
-          <div>
-            <h5>Homepage Banner Slides</h5>
-            <div className="body-text text-secondary">
-              Add multiple banners — each slide has its own image, text, fonts,
-              and button. Same order on website and mobile app after Save.
-            </div>
-          </div>
-          <div className="box-status text-button type-delivery">
-            Live Preview
-          </div>
-        </div>
-
-        <AdminHomeBannerSlides
-          banners={bannerSlides}
-          uploadState={uploadState}
-          onUpload={uploadBannerSlides}
-          onReplace={replaceBannerSlideImage}
-          onUpdate={updateBannerSlide}
-          onMove={moveBannerSlide}
-          onRemove={removeBannerSlide}
-          onAdd={addBannerSlide}
-        />
-
-        <div className="mt-24 pt-24 border-top">
-          <div className="body-title mb-10">Optional video slides</div>
-          <HeroVideosField
-            enabled={Boolean(home.hero.videoEnabled)}
-            videos={heroVideos}
-            poster={heroImages[0]}
-            uploadState={uploadState.heroVideo}
-            urlDraft={heroVideoUrlDraft}
-            onToggle={updateHeroVideoEnabled}
-            onUpload={uploadHeroVideos}
-            onAddUrl={addHeroVideoUrl}
-            onUrlDraftChange={setHeroVideoUrlDraft}
-            onPrimary={setPrimaryHeroVideo}
-            onRemove={removeHeroVideo}
-          />
-        </div>
-      </div>
-
       <div className="wg-box mb-30 sarjan-home-editor-card">
         <div className="flex flex-wrap justify-between gap14 items-center mb-24">
           <div>
-            <h5>Shopify-style Section Builder</h5>
+            <h5>Homepage Sections</h5>
             <div className="body-text text-secondary">
-              Add, hide/show, reorder, duplicate, and remove homepage sections.
-              Frontend renders in this exact order.
+              Shopify-style builder: add multiple banner sections, use Up/Down
+              to set position, hide or duplicate any block. Website and mobile
+              app follow this order after Save.
             </div>
           </div>
-          <select
-            className="w-auto"
-            defaultValue=""
-            onChange={(event) => {
-              if (event.target.value)
-                addSection(event.target.value as HomeSectionType);
-              event.currentTarget.value = "";
-            }}
-          >
-            <option value="">Add Section</option>
-            {sectionOptions.map((item) => (
-              <option value={item.type} key={item.type}>
-                {item.title}
-              </option>
-            ))}
-          </select>
+          <div className="sarjan-home-action-row">
+            <button
+              type="button"
+              className="tf-button style-1"
+              onClick={() => addSection("bannerCarousel")}
+            >
+              + Add Banner Section
+            </button>
+            <select
+              className="w-auto"
+              defaultValue=""
+              onChange={(event) => {
+                if (event.target.value)
+                  addSection(event.target.value as HomeSectionType);
+                event.currentTarget.value = "";
+              }}
+            >
+              <option value="">Add other section</option>
+              {sectionOptions.map((item) => (
+                <option value={item.type} key={item.type}>
+                  {item.title}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="d-grid gap-3">
           {sections.map((section, index) => (
@@ -1315,10 +1317,26 @@ export function AdminHomePageClient({
                     </h6>
                     <div className="text-caption-1 text-secondary">
                       {section.type}
+                      {section.type === "hero"
+                        ? ` · ${bannerSlides.length} slide${bannerSlides.length === 1 ? "" : "s"}`
+                        : section.type === "bannerCarousel"
+                          ? ` · ${sectionBannerSlides(index).length} slide${sectionBannerSlides(index).length === 1 ? "" : "s"}`
+                          : ""}
                     </div>
                   </div>
                 </div>
                 <div className="sarjan-section-builder-actions">
+                  {(section.type === "hero" ||
+                    section.type === "bannerCarousel" ||
+                    section.type === "custom") && (
+                    <button
+                      type="button"
+                      className="tf-button style-1"
+                      onClick={() => toggleSectionExpanded(section.id)}
+                    >
+                      {expandedSectionIds.has(section.id) ? "Close" : "Edit"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="tf-button"
@@ -1363,287 +1381,328 @@ export function AdminHomePageClient({
                 </div>
               </div>
 
-              {section.type === "bannerCarousel" && (
-                <div className="sarjan-section-banner-editor mt-20">
-                  <div className="body-text text-secondary mb-16">
-                    This section has its own banner carousel. Add multiple
-                    sections to place different promos anywhere on the homepage
-                    (and matching slots in the mobile app after Save).
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
-                    <HtmlField
-                      label="Section heading (optional)"
-                      value={section.title ?? ""}
-                      savedValue={savedSection(section.id)?.title ?? ""}
-                      onChange={(value) =>
-                        updateSection(index, { title: value })
-                      }
-                      rows={3}
-                      placeholder="Example: Festive collection"
+              {section.type === "hero" &&
+                expandedSectionIds.has(section.id) && (
+                  <div className="sarjan-section-banner-editor">
+                    <div className="body-text text-secondary mb-16">
+                      Main hero carousel — add multiple slides with image, text,
+                      fonts, and button. Use Up/Down above to move this block
+                      anywhere on the page. Optional video slides below.
+                    </div>
+                    <AdminHomeBannerSlides
+                      banners={bannerSlides}
+                      uploadState={uploadState}
+                      onUpload={uploadBannerSlides}
+                      onReplace={replaceBannerSlideImage}
+                      onUpdate={updateBannerSlide}
+                      onMove={moveBannerSlide}
+                      onRemove={removeBannerSlide}
+                      onAdd={addBannerSlide}
                     />
+                    <div className="mt-24 pt-24 border-top">
+                      <div className="body-title mb-10">
+                        Optional video slides
+                      </div>
+                      <HeroVideosField
+                        enabled={Boolean(home.hero.videoEnabled)}
+                        videos={heroVideos}
+                        poster={heroImages[0]}
+                        uploadState={uploadState.heroVideo}
+                        urlDraft={heroVideoUrlDraft}
+                        onToggle={updateHeroVideoEnabled}
+                        onUpload={uploadHeroVideos}
+                        onAddUrl={addHeroVideoUrl}
+                        onUrlDraftChange={setHeroVideoUrlDraft}
+                        onPrimary={setPrimaryHeroVideo}
+                        onRemove={removeHeroVideo}
+                      />
+                    </div>
+                  </div>
+                )}
+
+              {section.type === "bannerCarousel" &&
+                expandedSectionIds.has(section.id) && (
+                  <div className="sarjan-section-banner-editor">
+                    <div className="body-text text-secondary mb-16">
+                      Full banner section — add slides here, then use Up/Down to
+                      place this promo block anywhere on the homepage (syncs to
+                      mobile app after Save).
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
+                      <HtmlField
+                        label="Section heading (optional)"
+                        value={section.title ?? ""}
+                        savedValue={savedSection(section.id)?.title ?? ""}
+                        onChange={(value) =>
+                          updateSection(index, { title: value })
+                        }
+                        rows={3}
+                        placeholder="Example: Festive collection"
+                      />
+                      <HtmlField
+                        label="Section subtitle (optional)"
+                        value={section.subtitle ?? ""}
+                        savedValue={savedSection(section.id)?.subtitle ?? ""}
+                        onChange={(value) =>
+                          updateSection(index, { subtitle: value })
+                        }
+                        rows={3}
+                        placeholder="Short line under the heading"
+                      />
+                    </div>
+                    <AdminHomeBannerSlides
+                      banners={sectionBannerSlides(index)}
+                      uploadState={uploadState}
+                      bulkUploadKey={`section-${index}-bulk`}
+                      replaceKeyPrefix={`section-${index}-banner`}
+                      onUpload={(files) =>
+                        uploadSectionBannerSlides(index, files)
+                      }
+                      onReplace={(slideIndex, file) =>
+                        replaceSectionBannerSlideImage(index, slideIndex, file)
+                      }
+                      onUpdate={(slideIndex, patch) =>
+                        updateSectionBannerSlide(index, slideIndex, patch)
+                      }
+                      onMove={(slideIndex, direction) =>
+                        moveSectionBannerSlide(index, slideIndex, direction)
+                      }
+                      onRemove={(slideIndex) =>
+                        removeSectionBannerSlide(index, slideIndex)
+                      }
+                      onAdd={() => addSectionBannerSlide(index)}
+                    />
+                  </div>
+                )}
+
+              {section.type === "custom" &&
+                expandedSectionIds.has(section.id) && (
+                  <div className="sarjan-custom-section-editor">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
+                      <HtmlField
+                        label="Section name"
+                        value={section.title ?? ""}
+                        savedValue={savedSection(section.id)?.title ?? ""}
+                        onChange={(value) =>
+                          updateSection(index, { title: value })
+                        }
+                        rows={3}
+                        placeholder="Example: Summer Collection"
+                      />
+                      <Field label="Layout">
+                        <select
+                          value={section.layout ?? "grid"}
+                          onChange={(event) =>
+                            updateSection(index, {
+                              layout: event.target
+                                .value as HomeSectionControl["layout"],
+                            })
+                          }
+                        >
+                          <option value="grid">Grid</option>
+                          <option value="banner">Banner</option>
+                          <option value="split">Split</option>
+                        </select>
+                      </Field>
+                    </div>
                     <HtmlField
-                      label="Section subtitle (optional)"
+                      label="Section subtitle"
                       value={section.subtitle ?? ""}
                       savedValue={savedSection(section.id)?.subtitle ?? ""}
                       onChange={(value) =>
                         updateSection(index, { subtitle: value })
                       }
-                      rows={3}
-                      placeholder="Short line under the heading"
+                      rows={4}
+                      placeholder="Optional subtitle shown under section name"
                     />
-                  </div>
-                  <AdminHomeBannerSlides
-                    banners={sectionBannerSlides(index)}
-                    uploadState={uploadState}
-                    bulkUploadKey={`section-${index}-bulk`}
-                    replaceKeyPrefix={`section-${index}-banner`}
-                    onUpload={(files) =>
-                      uploadSectionBannerSlides(index, files)
-                    }
-                    onReplace={(slideIndex, file) =>
-                      replaceSectionBannerSlideImage(index, slideIndex, file)
-                    }
-                    onUpdate={(slideIndex, patch) =>
-                      updateSectionBannerSlide(index, slideIndex, patch)
-                    }
-                    onMove={(slideIndex, direction) =>
-                      moveSectionBannerSlide(index, slideIndex, direction)
-                    }
-                    onRemove={(slideIndex) =>
-                      removeSectionBannerSlide(index, slideIndex)
-                    }
-                    onAdd={() => addSectionBannerSlide(index)}
-                  />
-                </div>
-              )}
-
-              {section.type === "custom" && (
-                <div className="sarjan-custom-section-editor">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
-                    <HtmlField
-                      label="Section name"
-                      value={section.title ?? ""}
-                      savedValue={savedSection(section.id)?.title ?? ""}
-                      onChange={(value) =>
-                        updateSection(index, { title: value })
-                      }
-                      rows={3}
-                      placeholder="Example: Summer Collection"
-                    />
-                    <Field label="Layout">
-                      <select
-                        value={section.layout ?? "grid"}
-                        onChange={(event) =>
-                          updateSection(index, {
-                            layout: event.target
-                              .value as HomeSectionControl["layout"],
-                          })
-                        }
-                      >
-                        <option value="grid">Grid</option>
-                        <option value="banner">Banner</option>
-                        <option value="split">Split</option>
-                      </select>
-                    </Field>
-                  </div>
-                  <HtmlField
-                    label="Section subtitle"
-                    value={section.subtitle ?? ""}
-                    savedValue={savedSection(section.id)?.subtitle ?? ""}
-                    onChange={(value) =>
-                      updateSection(index, { subtitle: value })
-                    }
-                    rows={4}
-                    placeholder="Optional subtitle shown under section name"
-                  />
-                  <div className="sarjan-custom-block-actions">
-                    <span className="body-title">Add content:</span>
-                    {(
-                      [
-                        "text",
-                        "image",
-                        "button",
-                        "product",
-                      ] as CustomBlockType[]
-                    ).map((type) => (
-                      <button
-                        type="button"
-                        className="tf-button"
-                        onClick={() => addCustomBlock(index, type)}
-                        key={type}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="sarjan-custom-block-grid">
-                    {(section.blocks ?? []).map((block, blockIndex) => {
-                      const uploadKey = `custom-${index}-${blockIndex}`;
-                      return (
-                        <div
-                          className="sarjan-custom-block-card"
-                          key={block.id}
+                    <div className="sarjan-custom-block-actions">
+                      <span className="body-title">Add content:</span>
+                      {(
+                        [
+                          "text",
+                          "image",
+                          "button",
+                          "product",
+                        ] as CustomBlockType[]
+                      ).map((type) => (
+                        <button
+                          type="button"
+                          className="tf-button"
+                          onClick={() => addCustomBlock(index, type)}
+                          key={type}
                         >
-                          <div className="flex justify-between gap10 items-center mb-16">
-                            <span className="box-status text-button type-delivery">
-                              {block.type}
-                            </span>
-                            <button
-                              type="button"
-                              className="tf-button"
-                              onClick={() =>
-                                removeCustomBlock(index, blockIndex)
-                              }
-                            >
-                              Remove
-                            </button>
-                          </div>
-
-                          {block.type === "text" && (
-                            <div className="d-grid gap-3">
-                              <HtmlField
-                                label="Heading"
-                                value={block.heading ?? ""}
-                                savedValue={
-                                  savedSection(section.id)?.blocks?.find(
-                                    (item) => item.id === block.id,
-                                  )?.heading ?? ""
-                                }
-                                onChange={(value) =>
-                                  updateCustomBlock(index, blockIndex, {
-                                    heading: value,
-                                  })
-                                }
-                                rows={3}
-                              />
-                              <HtmlField
-                                label="Text"
-                                value={block.body ?? ""}
-                                savedValue={
-                                  savedSection(section.id)?.blocks?.find(
-                                    (item) => item.id === block.id,
-                                  )?.body ?? ""
-                                }
-                                onChange={(value) =>
-                                  updateCustomBlock(index, blockIndex, {
-                                    body: value,
-                                  })
-                                }
-                                rows={6}
-                              />
-                            </div>
-                          )}
-
-                          {block.type === "image" && (
-                            <div className="d-grid gap-3">
-                              <div className="sarjan-custom-image-preview">
-                                <img
-                                  src={
-                                    block.image ||
-                                    "/sarjan-assets/banner-textiles-studio.webp"
-                                  }
-                                  alt={block.alt ?? ""}
-                                />
-                              </div>
-                              <label className="sarjan-category-upload">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(event) => {
-                                    const file = event.target.files?.[0];
-                                    if (file)
-                                      uploadCustomBlockImage(
-                                        index,
-                                        blockIndex,
-                                        file,
-                                      );
-                                    event.currentTarget.value = "";
-                                  }}
-                                />
-                                <span>
-                                  {uploadState[uploadKey] === "uploading"
-                                    ? "Uploading..."
-                                    : "Upload Image / Banner"}
-                                </span>
-                                <small>JPG, PNG, WEBP</small>
-                              </label>
-                              {uploadState[uploadKey] &&
-                                uploadState[uploadKey] !== "uploading" && (
-                                  <div className="text-tiny text-danger">
-                                    {uploadState[uploadKey]}
-                                  </div>
-                                )}
-                              <Field label="Alt text">
-                                <TextInput
-                                  value={block.alt ?? ""}
-                                  onChange={(value) =>
-                                    updateCustomBlock(index, blockIndex, {
-                                      alt: value,
-                                    })
-                                  }
-                                />
-                              </Field>
-                            </div>
-                          )}
-
-                          {block.type === "button" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <HtmlField
-                                label="Button label"
-                                value={block.label ?? ""}
-                                savedValue={
-                                  savedSection(section.id)?.blocks?.find(
-                                    (item) => item.id === block.id,
-                                  )?.label ?? ""
-                                }
-                                onChange={(value) =>
-                                  updateCustomBlock(index, blockIndex, {
-                                    label: value,
-                                  })
-                                }
-                                rows={3}
-                              />
-                              <Field label="Button link">
-                                <TextInput
-                                  value={block.href ?? ""}
-                                  onChange={(value) =>
-                                    updateCustomBlock(index, blockIndex, {
-                                      href: value,
-                                    })
-                                  }
-                                />
-                              </Field>
-                            </div>
-                          )}
-
-                          {block.type === "product" && (
-                            <Field label="Product">
-                              <select
-                                value={block.productSlug ?? ""}
-                                onChange={(event) =>
-                                  updateCustomBlock(index, blockIndex, {
-                                    productSlug: event.target.value,
-                                  })
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="sarjan-custom-block-grid">
+                      {(section.blocks ?? []).map((block, blockIndex) => {
+                        const uploadKey = `custom-${index}-${blockIndex}`;
+                        return (
+                          <div
+                            className="sarjan-custom-block-card"
+                            key={block.id}
+                          >
+                            <div className="flex justify-between gap10 items-center mb-16">
+                              <span className="box-status text-button type-delivery">
+                                {block.type}
+                              </span>
+                              <button
+                                type="button"
+                                className="tf-button"
+                                onClick={() =>
+                                  removeCustomBlock(index, blockIndex)
                                 }
                               >
-                                <option value="">Select Product</option>
-                                {products.slice(0, 500).map((product) => (
-                                  <option
-                                    value={product.slug}
-                                    key={product.slug}
-                                  >
-                                    {product.name} / {product.sku}
-                                  </option>
-                                ))}
-                              </select>
-                            </Field>
-                          )}
-                        </div>
-                      );
-                    })}
+                                Remove
+                              </button>
+                            </div>
+
+                            {block.type === "text" && (
+                              <div className="d-grid gap-3">
+                                <HtmlField
+                                  label="Heading"
+                                  value={block.heading ?? ""}
+                                  savedValue={
+                                    savedSection(section.id)?.blocks?.find(
+                                      (item) => item.id === block.id,
+                                    )?.heading ?? ""
+                                  }
+                                  onChange={(value) =>
+                                    updateCustomBlock(index, blockIndex, {
+                                      heading: value,
+                                    })
+                                  }
+                                  rows={3}
+                                />
+                                <HtmlField
+                                  label="Text"
+                                  value={block.body ?? ""}
+                                  savedValue={
+                                    savedSection(section.id)?.blocks?.find(
+                                      (item) => item.id === block.id,
+                                    )?.body ?? ""
+                                  }
+                                  onChange={(value) =>
+                                    updateCustomBlock(index, blockIndex, {
+                                      body: value,
+                                    })
+                                  }
+                                  rows={6}
+                                />
+                              </div>
+                            )}
+
+                            {block.type === "image" && (
+                              <div className="d-grid gap-3">
+                                <div className="sarjan-custom-image-preview">
+                                  <img
+                                    src={
+                                      block.image ||
+                                      "/sarjan-assets/banner-textiles-studio.webp"
+                                    }
+                                    alt={block.alt ?? ""}
+                                  />
+                                </div>
+                                <label className="sarjan-category-upload">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      const file = event.target.files?.[0];
+                                      if (file)
+                                        uploadCustomBlockImage(
+                                          index,
+                                          blockIndex,
+                                          file,
+                                        );
+                                      event.currentTarget.value = "";
+                                    }}
+                                  />
+                                  <span>
+                                    {uploadState[uploadKey] === "uploading"
+                                      ? "Uploading..."
+                                      : "Upload Image / Banner"}
+                                  </span>
+                                  <small>JPG, PNG, WEBP</small>
+                                </label>
+                                {uploadState[uploadKey] &&
+                                  uploadState[uploadKey] !== "uploading" && (
+                                    <div className="text-tiny text-danger">
+                                      {uploadState[uploadKey]}
+                                    </div>
+                                  )}
+                                <Field label="Alt text">
+                                  <TextInput
+                                    value={block.alt ?? ""}
+                                    onChange={(value) =>
+                                      updateCustomBlock(index, blockIndex, {
+                                        alt: value,
+                                      })
+                                    }
+                                  />
+                                </Field>
+                              </div>
+                            )}
+
+                            {block.type === "button" && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <HtmlField
+                                  label="Button label"
+                                  value={block.label ?? ""}
+                                  savedValue={
+                                    savedSection(section.id)?.blocks?.find(
+                                      (item) => item.id === block.id,
+                                    )?.label ?? ""
+                                  }
+                                  onChange={(value) =>
+                                    updateCustomBlock(index, blockIndex, {
+                                      label: value,
+                                    })
+                                  }
+                                  rows={3}
+                                />
+                                <Field label="Button link">
+                                  <TextInput
+                                    value={block.href ?? ""}
+                                    onChange={(value) =>
+                                      updateCustomBlock(index, blockIndex, {
+                                        href: value,
+                                      })
+                                    }
+                                  />
+                                </Field>
+                              </div>
+                            )}
+
+                            {block.type === "product" && (
+                              <Field label="Product">
+                                <select
+                                  value={block.productSlug ?? ""}
+                                  onChange={(event) =>
+                                    updateCustomBlock(index, blockIndex, {
+                                      productSlug: event.target.value,
+                                    })
+                                  }
+                                >
+                                  <option value="">Select Product</option>
+                                  {products.slice(0, 500).map((product) => (
+                                    <option
+                                      value={product.slug}
+                                      key={product.slug}
+                                    >
+                                      {product.name} / {product.sku}
+                                    </option>
+                                  ))}
+                                </select>
+                              </Field>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           ))}
         </div>
