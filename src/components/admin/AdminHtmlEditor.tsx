@@ -13,10 +13,12 @@ import {
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
   CMS_FONT_SIZES,
+  CMS_TEXT_COLORS,
   detectEditorContentStyle,
   isSelectionWithinEditor,
   normalizeLegacyFontHtml,
   resolveEditorToolbarStyle,
+  type CmsEditorStyleProperty,
 } from "@/lib/cms-html-editor-utils";
 
 const GOOGLE_FONTS_URL = buildGoogleFontsUrl();
@@ -47,6 +49,7 @@ export function AdminHtmlEditor({
   const [source, setSource] = useState(value);
   const [activeFont, setActiveFont] = useState("");
   const [activeSize, setActiveSize] = useState("");
+  const [activeColor, setActiveColor] = useState("#ffffff");
 
   const minHeightPx = Math.max(140, rows * 36);
 
@@ -74,6 +77,11 @@ export function AdminHtmlEditor({
     setActiveSize(
       resolveEditorToolbarStyle(editor, "fontSize", selection) ||
         detectEditorContentStyle(editor, "fontSize"),
+    );
+    setActiveColor(
+      resolveEditorToolbarStyle(editor, "color", selection) ||
+        detectEditorContentStyle(editor, "color") ||
+        "#ffffff",
     );
     if (isSelectionWithinEditor(editor, selection) && selection?.rangeCount) {
       const range = selection.getRangeAt(0);
@@ -159,8 +167,8 @@ export function AdminHtmlEditor({
     refreshToolbar();
   };
 
-  const applyFontStyle = (
-    property: "fontFamily" | "fontSize",
+  const applyTextStyle = (
+    property: CmsEditorStyleProperty,
     nextValue: string,
   ) => {
     const editor = editorRef.current;
@@ -181,8 +189,10 @@ export function AdminHtmlEditor({
 
     if (property === "fontFamily") {
       setActiveFont(nextValue);
-    } else {
+    } else if (property === "fontSize") {
       setActiveSize(nextValue);
+    } else {
+      setActiveColor(nextValue);
     }
 
     syncVisual();
@@ -191,7 +201,7 @@ export function AdminHtmlEditor({
 
   const handleToolbarPointerDown = (event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
-    if (target.closest("select")) {
+    if (target.closest("select, input[type='color']")) {
       saveSelection();
       return;
     }
@@ -228,7 +238,7 @@ export function AdminHtmlEditor({
             if (!size) {
               return;
             }
-            applyFontStyle("fontSize", size);
+            applyTextStyle("fontSize", size);
           }}
           aria-label="Font size"
           className="sarjan-html-editor-size"
@@ -247,7 +257,7 @@ export function AdminHtmlEditor({
             if (!font) {
               return;
             }
-            applyFontStyle("fontFamily", font);
+            applyTextStyle("fontFamily", font);
           }}
           aria-label="Font family"
           className="sarjan-html-editor-font"
@@ -259,6 +269,39 @@ export function AdminHtmlEditor({
             </option>
           ))}
         </select>
+        <select
+          value={
+            CMS_TEXT_COLORS.some((item) => item.value === activeColor)
+              ? activeColor
+              : ""
+          }
+          onChange={(event) => {
+            const color = event.target.value;
+            if (!color) {
+              return;
+            }
+            applyTextStyle("color", color);
+          }}
+          aria-label="Text color preset"
+          className="sarjan-html-editor-color-preset"
+        >
+          <option value="">Color</option>
+          {CMS_TEXT_COLORS.map((color) => (
+            <option value={color.value} key={color.value}>
+              {color.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="color"
+          value={
+            /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#ffffff"
+          }
+          onChange={(event) => applyTextStyle("color", event.target.value)}
+          aria-label="Custom text color"
+          className="sarjan-html-editor-color"
+          title="Custom color"
+        />
         <button
           type="button"
           onClick={() => applyFormat("insertLineBreak")}
@@ -332,9 +375,9 @@ export function AdminHtmlEditor({
         />
       )}
       <p className="sarjan-html-editor-hint">
-        Click inside a field and pick font/size — applies to the whole field.
-        Select part of the text to format only that portion. Use HTML tab for
-        advanced markup.
+        Click inside a field and pick font, size, or color — applies to the
+        whole field. Select part of the text to format only that portion. Use
+        HTML tab for advanced markup.
       </p>
     </div>
   );

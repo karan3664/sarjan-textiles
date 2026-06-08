@@ -2,7 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  productionBrowserSourceMaps: false,
   devIndicators: false,
+  outputFileTracingExcludes: {
+    "*": [
+      "node_modules/@tensorflow/**",
+      "node_modules/nsfwjs/**",
+      "public/downloads/**",
+      "public/template/**",
+    ],
+  },
   // Keep sharp external so dev server does not emit fragile vendor-chunks after cache churn.
   serverExternalPackages: [
     "sharp",
@@ -16,6 +25,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   experimental: {
+    webpackMemoryOptimizations: true,
     serverActions: {
       bodySizeLimit: "80mb",
     },

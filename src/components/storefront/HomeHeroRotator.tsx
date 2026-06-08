@@ -196,14 +196,14 @@ export function HomeHeroRotator({
             <div className="content-slider sarjan-hero-copy-stack">
               <div className="box-title-slider sarjan-hero-copy-titles">
                 {slideEyebrow ? (
-                  <p className="text-button text-white sarjan-hero-eyebrow mb-8">
+                  <p className="text-button sarjan-hero-eyebrow mb-8 sarjan-cms-banner-text">
                     <CmsHtml html={slideEyebrow} />
                   </p>
                 ) : null}
-                <h2 className="heading text-white sarjan-hero-heading sarjan-hero-heading-multiline">
+                <h2 className="heading sarjan-hero-heading sarjan-hero-heading-multiline sarjan-cms-banner-text">
                   <CmsHtml html={slideTitle} />
                 </h2>
-                <p className="body-text-1 subheading text-white sarjan-hero-subheading">
+                <p className="body-text-1 subheading sarjan-hero-subheading sarjan-cms-banner-text">
                   <CmsHtml html={slideDescription} />
                 </p>
               </div>

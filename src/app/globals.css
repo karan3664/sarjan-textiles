@@ -4393,6 +4393,25 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   min-width: 92px;
 }
 
+.sarjan-html-editor-color-preset {
+  min-width: 96px;
+}
+
+.sarjan-html-editor-color {
+  width: 40px;
+  height: 34px;
+  padding: 2px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.sarjan-cms-banner-text .cms-html-content,
+.sarjan-promo-banner-caption .cms-html-content {
+  color: #fff;
+}
+
 .sarjan-html-editor-surface,
 .sarjan-html-editor-source {
   width: 100%;

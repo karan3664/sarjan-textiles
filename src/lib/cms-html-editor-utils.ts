@@ -26,6 +26,20 @@ export const CMS_FONT_FAMILIES = [
   "Palatino Linotype",
 ] as const;
 
+export const CMS_TEXT_COLORS = [
+  { label: "White", value: "#ffffff" },
+  { label: "Black", value: "#111111" },
+  { label: "Maroon", value: "#8b1f2d" },
+  { label: "Gold", value: "#c9a227" },
+  { label: "Cream", value: "#f5f0e8" },
+  { label: "Gray", value: "#6b7280" },
+  { label: "Red", value: "#dc2626" },
+  { label: "Green", value: "#16a34a" },
+  { label: "Blue", value: "#2563eb" },
+] as const;
+
+export type CmsEditorStyleProperty = "fontFamily" | "fontSize" | "color";
+
 export const CMS_FONT_SIZES = [
   { label: "12px", value: "12px" },
   { label: "14px", value: "14px" },
@@ -158,10 +172,19 @@ function unwrapFontElements(container: ParentNode) {
   });
 }
 
+function normalizeEditorColor(value: string) {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("#") && trimmed.length === 4) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+  return trimmed;
+}
+
 function readInlineStyleFromNode(
   node: Node | null,
   editor: HTMLElement,
-  property: "fontFamily" | "fontSize",
+  property: CmsEditorStyleProperty,
 ): string {
   let current: Node | null = node;
   if (current?.nodeType === Node.TEXT_NODE) {
@@ -169,15 +192,29 @@ function readInlineStyleFromNode(
   }
   while (current && current !== editor) {
     if (current instanceof HTMLElement) {
-      if (current.tagName === "FONT" && property === "fontFamily") {
-        const face = current.getAttribute("face");
-        if (face) {
-          return matchCmsFontFamily(face) || normalizeFontFamily(face);
+      if (current.tagName === "FONT") {
+        if (property === "fontFamily") {
+          const face = current.getAttribute("face");
+          if (face) {
+            return matchCmsFontFamily(face) || normalizeFontFamily(face);
+          }
+        }
+        if (property === "color") {
+          const color = current.getAttribute("color");
+          if (color) {
+            return normalizeEditorColor(color);
+          }
         }
       }
       const inline = current.style[property];
       if (inline) {
-        return property === "fontFamily" ? normalizeFontFamily(inline) : inline;
+        if (property === "fontFamily") {
+          return normalizeFontFamily(inline);
+        }
+        if (property === "color") {
+          return normalizeEditorColor(inline);
+        }
+        return inline;
       }
     }
     current = current.parentElement;
@@ -188,7 +225,7 @@ function readInlineStyleFromNode(
 /** Dominant inline font/size on editor content (ignores surface default CSS). */
 export function detectEditorContentStyle(
   editor: HTMLDivElement | null,
-  property: "fontFamily" | "fontSize",
+  property: CmsEditorStyleProperty,
 ): string {
   if (!editor || typeof document === "undefined") {
     return "";
@@ -215,7 +252,7 @@ export function detectEditorContentStyle(
 
 export function resolveEditorToolbarStyle(
   editor: HTMLDivElement | null,
-  property: "fontFamily" | "fontSize",
+  property: CmsEditorStyleProperty,
   selection: Selection | null,
 ): string {
   if (!editor) {
@@ -254,9 +291,19 @@ function selectEntireEditor(editor: HTMLDivElement, selection: Selection) {
   return range;
 }
 
+function cssForEditorStyle(property: CmsEditorStyleProperty, value: string) {
+  if (property === "fontFamily") {
+    return `font-family: '${value}', sans-serif`;
+  }
+  if (property === "fontSize") {
+    return `font-size: ${value}`;
+  }
+  return `color: ${value}`;
+}
+
 export function applyCmsEditorInlineStyle(
   editor: HTMLDivElement | null,
-  property: "fontFamily" | "fontSize",
+  property: CmsEditorStyleProperty,
   value: string,
   savedRange: Range | null,
   options?: { applyToAll?: boolean },
@@ -296,10 +343,7 @@ export function applyCmsEditorInlineStyle(
   if (range.collapsed) {
     range = selectEntireEditor(editor, selection);
     if (!range.toString().trim() && !editor.textContent?.trim()) {
-      const css =
-        property === "fontFamily"
-          ? `font-family: '${value}', sans-serif`
-          : `font-size: ${value}`;
+      const css = cssForEditorStyle(property, value);
       editor.innerHTML = `<span style="${css}"><br></span>`;
       const next = document.createRange();
       next.selectNodeContents(editor);
@@ -313,8 +357,10 @@ export function applyCmsEditorInlineStyle(
   const span = document.createElement("span");
   if (property === "fontFamily") {
     span.style.fontFamily = `'${value}', sans-serif`;
-  } else {
+  } else if (property === "fontSize") {
     span.style.fontSize = value;
+  } else {
+    span.style.color = value;
   }
 
   try {
@@ -327,10 +373,7 @@ export function applyCmsEditorInlineStyle(
     next.selectNodeContents(span);
     selection.addRange(next);
   } catch {
-    const css =
-      property === "fontFamily"
-        ? `font-family: '${value}', sans-serif`
-        : `font-size: ${value}`;
+    const css = cssForEditorStyle(property, value);
     document.execCommand(
       "insertHTML",
       false,

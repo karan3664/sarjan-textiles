@@ -65,12 +65,12 @@ export function PromoBannerCarousel({
             {banner.eyebrow?.trim() || banner.title?.trim() ? (
               <div className="sarjan-promo-banner-caption">
                 {banner.eyebrow?.trim() ? (
-                  <span className="text-caption-1 text-white">
+                  <span className="text-caption-1 sarjan-cms-banner-text">
                     <CmsHtml html={banner.eyebrow} />
                   </span>
                 ) : null}
                 {banner.title?.trim() ? (
-                  <h4 className="text-white mb_0">
+                  <h4 className="mb_0 sarjan-cms-banner-text">
                     <CmsHtml html={banner.title} />
                   </h4>
                 ) : null}
