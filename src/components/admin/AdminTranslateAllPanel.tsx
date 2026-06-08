@@ -15,6 +15,7 @@ type TranslateStepResponse = TranslateStatus & {
   message?: string;
   error?: string;
   stepLabel?: string | null;
+  sectionStillPending?: boolean;
   translatedLabels?: string[];
 };
 
@@ -111,8 +112,13 @@ export function AdminTranslateAllPanel({
         }
 
         const pending = data.pendingLabels.join(", ") || "remaining sections";
+        const partial =
+          data.sectionStillPending && data.stepLabel
+            ? ` (batch saved in ${data.stepLabel} — section not finished yet)`
+            : "";
         setMessage(
-          `Step ${steps}: saved ${data.stepLabel ?? "content"}. Still pending: ${pending}. Continuing…`,
+          data.message ??
+            `Step ${steps}: saved ${data.stepLabel ?? "content"}${partial}. Still pending: ${pending}. Continuing…`,
         );
 
         if (!data.changed) {
@@ -190,8 +196,10 @@ export function AdminTranslateAllPanel({
               </p>
               {running ? (
                 <p className="text-caption-1 text-secondary mb-0">
-                  Translates in small steps to avoid server timeouts. Keep this
-                  tab open — progress is saved after each step.
+                  Translates in small batches (24 strings per step) to avoid
+                  server timeouts. Large sections like Mobile app CMS may need
+                  several steps — keep this tab open; progress saves after each
+                  batch.
                 </p>
               ) : (
                 <p className="text-caption-1 text-secondary mb-0">

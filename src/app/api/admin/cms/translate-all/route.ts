@@ -92,16 +92,23 @@ export async function POST() {
       }).catch(() => null);
     }
 
+    const sectionStillPending =
+      synced.stepSection != null &&
+      afterStatus.pendingSections.includes(synced.stepSection);
+
     return NextResponse.json({
       ok: true,
       done: !afterStatus.pending,
       changed: synced.changed,
       stepSection: synced.stepSection,
       stepLabel,
+      sectionStillPending,
       message: !afterStatus.pending
         ? "Hindi and Gujarati translations generated and saved."
         : stepLabel
-          ? `Saved progress for ${stepLabel}. Run again or keep this tab open to continue.`
+          ? sectionStillPending
+            ? `Saved a batch in ${stepLabel} (large section — more keys remain). Keep going…`
+            : `Saved ${stepLabel}. Run again or keep this tab open to continue.`
           : "Translation step finished.",
       translatedSections: synced.stepSection ? [synced.stepSection] : [],
       translatedLabels: stepLabel ? [stepLabel] : [],
