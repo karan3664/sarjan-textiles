@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type UploadStatus = "queued" | "uploading" | "done" | "error";
 
@@ -14,11 +14,37 @@ type UploadRow = {
   previewUrl?: string;
 };
 
+type LibraryImage = {
+  fileName: string;
+  url: string;
+  absoluteUrl: string;
+  size: number;
+  updatedAt: string;
+};
+
 function toAbsoluteUrl(path: string) {
   if (/^https?:\/\//i.test(path)) {
     return path;
   }
   return new URL(path, window.location.origin).toString();
+}
+
+function formatBytes(size: number) {
+  if (size < 1024) {
+    return `${size} B`;
+  }
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatUploadedAt(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+  return date.toLocaleString();
 }
 
 async function uploadOne(file: File) {
@@ -69,10 +95,57 @@ async function copyText(text: string) {
 export function AdminBulkImageUploadClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<UploadRow[]>([]);
+  const [library, setLibrary] = useState<LibraryImage[]>([]);
+  const [libraryTotal, setLibraryTotal] = useState(0);
+  const [libraryLoading, setLibraryLoading] = useState(true);
+  const [libraryQuery, setLibraryQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [copyNote, setCopyNote] = useState("");
   const previewUrlsRef = useRef<string[]>([]);
+
+  const loadLibrary = useCallback(async (query: string) => {
+    setLibraryLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (query.trim()) {
+        params.set("q", query.trim());
+      }
+      params.set("limit", "500");
+      const res = await fetch(`/api/admin/uploads?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error("Could not load uploaded images");
+      }
+      const data = (await res.json()) as {
+        images?: Array<{
+          fileName: string;
+          url: string;
+          size: number;
+          updatedAt: string;
+        }>;
+        total?: number;
+      };
+      setLibrary(
+        (data.images ?? []).map((image) => ({
+          ...image,
+          absoluteUrl: toAbsoluteUrl(image.url),
+        })),
+      );
+      setLibraryTotal(data.total ?? data.images?.length ?? 0);
+    } catch (error) {
+      setCopyNote(
+        error instanceof Error
+          ? error.message
+          : "Could not load uploaded images",
+      );
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadLibrary("");
+  }, [loadLibrary]);
 
   useEffect(() => {
     const previews = previewUrlsRef.current;
@@ -142,6 +215,7 @@ export function AdminBulkImageUploadClient() {
           });
         }
       });
+      await loadLibrary(libraryQuery);
     } finally {
       setUploading(false);
     }
@@ -157,17 +231,29 @@ export function AdminBulkImageUploadClient() {
     }
   };
 
+  const copyLines = async (lines: string[], message: string) => {
+    if (!lines.length) {
+      setCopyNote("Koi image URL nahi mili.");
+      return;
+    }
+    await copyText(lines.join("\n"));
+    setCopyNote(message);
+  };
+
   const copyAllUrls = async (absolute: boolean) => {
     const lines = completedRows.map((row) =>
       absolute ? row.absoluteUrl! : row.relativeUrl!,
     );
-    if (!lines.length) {
-      setCopyNote("Pehle kuch images upload karein.");
-      return;
-    }
-    await copyText(lines.join("\n"));
-    setCopyNote(
+    await copyLines(
+      lines,
       `${lines.length} URL${lines.length > 1 ? "s" : ""} copied — sheet mein paste karein.`,
+    );
+  };
+
+  const copyLibraryUrls = async () => {
+    await copyLines(
+      library.map((image) => image.absoluteUrl),
+      `${library.length} library URL${library.length === 1 ? "" : "s"} copied.`,
     );
   };
 
@@ -185,6 +271,22 @@ export function AdminBulkImageUploadClient() {
       .join("\n");
     await copyText(`"File name","Image URL"\n${csv}`);
     setCopyNote("CSV copied — Excel / Google Sheet mein paste karein.");
+  };
+
+  const copyLibraryCsv = async () => {
+    if (!library.length) {
+      setCopyNote("Library mein koi image nahi hai.");
+      return;
+    }
+    const csv = library
+      .map((image) => {
+        const name = image.fileName.replace(/"/g, '""');
+        const url = image.absoluteUrl.replace(/"/g, '""');
+        return `"${name}","${url}"`;
+      })
+      .join("\n");
+    await copyText(`"File name","Image URL"\n${csv}`);
+    setCopyNote("Library CSV copied — sheet mein paste karein.");
   };
 
   const clearDone = () => {
@@ -257,11 +359,130 @@ export function AdminBulkImageUploadClient() {
         ) : null}
       </div>
 
+      <div className="wg-box sarjan-report-box mb-30">
+        <div className="sarjan-bulk-upload-actions">
+          <div>
+            <strong>Uploaded images library</strong>
+            <div className="body-text text-secondary">
+              {libraryLoading
+                ? "Loading…"
+                : `${libraryTotal} image${libraryTotal === 1 ? "" : "s"} on server`}
+            </div>
+          </div>
+          <div className="sarjan-bulk-upload-actions__buttons">
+            <input
+              type="search"
+              className="sarjan-bulk-upload-search"
+              placeholder="Search file name…"
+              value={libraryQuery}
+              onChange={(event) => setLibraryQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void loadLibrary(event.currentTarget.value);
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="tf-button style-2"
+              disabled={libraryLoading}
+              onClick={() => void loadLibrary(libraryQuery)}
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              className="tf-button style-2"
+              disabled={!library.length || libraryLoading}
+              onClick={() => void copyLibraryUrls()}
+            >
+              Copy all URLs
+            </button>
+            <button
+              type="button"
+              className="tf-button style-2"
+              disabled={!library.length || libraryLoading}
+              onClick={() => void copyLibraryCsv()}
+            >
+              Copy CSV
+            </button>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Preview</th>
+                <th>File</th>
+                <th>Image URL (sheet ke liye)</th>
+                <th>Uploaded</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {libraryLoading ? (
+                <tr>
+                  <td colSpan={6}>Loading uploaded images…</td>
+                </tr>
+              ) : library.length ? (
+                library.map((image, index) => (
+                  <tr key={image.url}>
+                    <td>{index + 1}</td>
+                    <td>
+                      <img
+                        src={image.url}
+                        alt=""
+                        className="sarjan-bulk-upload-thumb"
+                        loading="lazy"
+                      />
+                    </td>
+                    <td className="sarjan-bulk-upload-filename">
+                      <div>{image.fileName}</div>
+                      <div className="body-text text-secondary">
+                        {formatBytes(image.size)}
+                      </div>
+                    </td>
+                    <td>
+                      <code className="sarjan-bulk-upload-url">
+                        {image.absoluteUrl}
+                      </code>
+                    </td>
+                    <td>{formatUploadedAt(image.updatedAt)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="tf-button style-2"
+                        onClick={() =>
+                          void copyText(image.absoluteUrl).then(() =>
+                            setCopyNote(`Copied: ${image.fileName}`),
+                          )
+                        }
+                      >
+                        Copy
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6}>Abhi koi uploaded image nahi mili.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {rows.length > 0 ? (
         <div className="wg-box sarjan-report-box">
           <div className="sarjan-bulk-upload-actions">
             <div>
-              <strong>{completedRows.length}</strong> / {rows.length} uploaded
+              <strong>This upload session</strong>
+              <div className="body-text text-secondary">
+                <strong>{completedRows.length}</strong> / {rows.length} uploaded
+              </div>
             </div>
             <div className="sarjan-bulk-upload-actions__buttons">
               <button

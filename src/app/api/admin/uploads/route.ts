@@ -7,8 +7,26 @@ import {
   toAuthBannerAsset,
 } from "@/lib/auth-banner-process";
 import { resolveCmsUploadsRoot } from "@/lib/cms-uploads-path";
+import { listCmsUploadImages } from "@/lib/cms-uploads-index";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/** List CMS images already on disk (newest first). */
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.get("q") ?? undefined;
+  const limit = Number(searchParams.get("limit") ?? "300");
+  const offset = Number(searchParams.get("offset") ?? "0");
+
+  const result = await listCmsUploadImages({
+    query,
+    limit: Number.isFinite(limit) ? limit : 300,
+    offset: Number.isFinite(offset) ? offset : 0,
+  });
+
+  return Response.json(result);
+}
 
 const uploadDir = resolveCmsUploadsRoot();
 const maxUploadBytes = 30 * 1024 * 1024;
