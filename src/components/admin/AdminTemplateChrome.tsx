@@ -87,6 +87,7 @@ type AdminActiveSection =
   | "newsletter"
   | "sendNotifications"
   | "mobileApp"
+  | "bulkImages"
   | "accountMenu"
   | "account";
 
@@ -241,6 +242,12 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-smartphone",
     label: "Mobile app CMS",
     section: "mobileApp",
+  },
+  {
+    href: "/admin/bulk-images",
+    icon: "icon-image",
+    label: "Bulk image upload",
+    section: "bulkImages",
   },
   {
     href: "/admin/category-pages",

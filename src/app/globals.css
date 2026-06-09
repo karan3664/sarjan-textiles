@@ -4765,6 +4765,80 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   line-height: 1.45;
 }
 
+.sarjan-bulk-image-upload .sarjan-bulk-upload-dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 36px 24px;
+  border: 2px dashed #d8d2c8;
+  border-radius: 16px;
+  background: #faf8f4;
+  text-align: center;
+}
+
+.sarjan-bulk-image-upload .sarjan-bulk-upload-dropzone.is-dragover {
+  border-color: #8b1f2d;
+  background: #fff7f8;
+}
+
+.sarjan-bulk-image-upload .sarjan-bulk-upload-dropzone .icon-image {
+  font-size: 34px;
+  color: #8b1f2d;
+}
+
+.sarjan-bulk-image-upload .sarjan-bulk-upload-dropzone__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #181818;
+}
+
+.sarjan-bulk-image-upload .sarjan-bulk-upload-dropzone__hint {
+  margin: 0 0 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.sarjan-bulk-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sarjan-bulk-upload-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sarjan-bulk-upload-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ece7df;
+  background: #f5f0e8;
+}
+
+.sarjan-bulk-upload-filename {
+  max-width: 180px;
+  word-break: break-word;
+}
+
+.sarjan-bulk-upload-url {
+  display: block;
+  max-width: 420px;
+  white-space: normal;
+  word-break: break-all;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8f7f4;
+}
+
 /* Product card — hanging promo tag + star rating (logo maroon) */
 .sarjan-product-promo-tag {
   position: absolute;
