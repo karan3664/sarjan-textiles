@@ -266,6 +266,24 @@ async function writeCmsSnapshotToPostgres(next: CmsSnapshot) {
   );
 }
 
+/** Merge only changed top-level CMS keys — avoids re-uploading the full snapshot on home/settings saves. */
+async function patchCmsSnapshotToPostgres(
+  patch: Record<string, unknown>,
+  updatedAt: string,
+) {
+  if (!isPostgresEnabled()) {
+    throw new Error("PostgreSQL CMS is not configured (DATABASE_URL missing)");
+  }
+  await pgQuery(
+    `insert into cms_snapshots (id, data, updated_at)
+     values (1, $1::jsonb, $2::timestamptz)
+     on conflict (id) do update set
+       data = cms_snapshots.data || excluded.data,
+       updated_at = excluded.updated_at`,
+    [JSON.stringify({ ...patch, updatedAt }), updatedAt],
+  );
+}
+
 function revalidateCmsCache() {
   try {
     revalidateTag("cms-snapshot");
@@ -961,17 +979,27 @@ export const getCachedCmsSnapshot = unstable_cache(
 
 export async function saveCmsSnapshot(
   input: Partial<CmsSnapshot>,
+  current?: CmsSnapshot,
 ): Promise<CmsSnapshot> {
-  const current = await getCmsSnapshot();
+  const base = current ?? (await getCmsSnapshot());
   const next = normalizeSnapshot({
-    ...current,
+    ...base,
     ...input,
     updatedAt: new Date().toISOString(),
   });
   if (isPostgresCmsPrimary()) {
     try {
-      await writeCmsSnapshotToPostgres(next);
-      await mirrorCmsSnapshotToFile(next);
+      const patchKeys = Object.keys(input);
+      if (patchKeys.length > 0) {
+        const patch: Record<string, unknown> = {};
+        for (const key of patchKeys) {
+          patch[key] = next[key as keyof CmsSnapshot];
+        }
+        await patchCmsSnapshotToPostgres(patch, next.updatedAt);
+      } else {
+        await writeCmsSnapshotToPostgres(next);
+      }
+      void mirrorCmsSnapshotToFile(next);
       revalidateCmsCache();
       return next;
     } catch (error) {
@@ -1096,7 +1124,6 @@ export async function deleteClientPricingRule(
 export async function appendAuditLog(
   input: Omit<AuditLog, "id" | "createdAt">,
 ) {
-  const cms = await getCmsSnapshot();
   const log: AuditLog = {
     ...input,
     id: crypto.randomUUID(),
@@ -1115,18 +1142,17 @@ export async function appendAuditLog(
           log.entity,
           log.entityId ?? null,
           JSON.stringify({
-            before: log.before,
-            after: log.after,
             note: log.note,
           }),
           log.createdAt,
         ],
       );
-      return cms;
+      return;
     } catch {
       // CMS audit fallback below keeps admin history usable if the table is not migrated yet.
     }
   }
+  const cms = await getCmsSnapshot();
   return saveCmsSnapshot({
     auditLogs: [
       { ...log, before: undefined, after: undefined },

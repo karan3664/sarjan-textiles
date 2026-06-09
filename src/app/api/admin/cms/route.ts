@@ -105,21 +105,20 @@ export async function PUT(request: Request) {
       );
     }
 
-    const next = await saveCmsSnapshot(body);
+    const bodyKeys = Object.keys(body);
+    const next = await saveCmsSnapshot(body, before);
     if (session) {
-      await appendAuditLog({
+      void appendAuditLog({
         actor: session.email,
         role: session.role,
         action: "update_cms",
         entity: "cms_snapshot",
         entityId: "main",
-        before,
-        after: next,
-        note: Object.keys(body).join(", "),
+        note: bodyKeys.join(", "),
       }).catch(() => null);
     }
 
-    return Response.json(adminCmsPutResponse(next, Object.keys(body)));
+    return Response.json(adminCmsPutResponse(next, bodyKeys));
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "CMS save failed" },
