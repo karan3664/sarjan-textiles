@@ -11,9 +11,12 @@ import { createPortal } from "react-dom";
 import {
   clientAuthJsonHeaders,
   clientAuthToken,
+  clearExpiredClientSession,
   isClientApproved,
+  isClientTokenExpired,
   readStoredClientId,
   restoreClientSessionFromCookie,
+  validateAndRefreshClientSession,
 } from "@/lib/client-auth-browser";
 import { clientStatusAuthError } from "@/lib/client-status-auth";
 import { readStoredClient } from "@/lib/client-session";
@@ -66,6 +69,9 @@ const GUEST_NAV: BotNavAction[] = [
   { label: "Register", href: "/register" },
 ];
 
+const LOGIN_REQUIRED_MESSAGE =
+  "You are not signed in, or your session expired. Please **sign in** first, then try again.";
+
 type BotAccess =
   | "loading"
   | "guest"
@@ -74,10 +80,22 @@ type BotAccess =
   | "inactive"
   | "approved";
 
+function isOrderBotLoginRequired(res: Response, error?: string) {
+  const msg = (error ?? "").toLowerCase();
+  return (
+    res.status === 401 ||
+    (res.status === 404 && msg.includes("client not found")) ||
+    msg.includes("valid client token required") ||
+    msg.includes("please sign in again")
+  );
+}
+
 function resolveBotAccess(): BotAccess {
+  const token = clientAuthToken();
+  if (token && isClientTokenExpired(token)) return "guest";
   const client = readStoredClient();
   const clientId = readStoredClientId();
-  if (!clientId && !clientAuthToken()) return "guest";
+  if (!clientId && !token) return "guest";
   const status = client?.status;
   if (!status || status === "pending") return "pending";
   if (status === "approved") return "approved";
@@ -88,7 +106,7 @@ function resolveBotAccess(): BotAccess {
 function gateMessage(access: BotAccess): string {
   switch (access) {
     case "guest":
-      return "To use Sarjan AI, **sign in** or **register** for a wholesale account. After admin approval you can chat here for products, cart, and order tracking.";
+      return "To use Sarjan AI, please **sign in** first (or **register** for a wholesale account). After admin approval you can browse products, cart, and track orders here.";
     case "pending":
       return (
         clientStatusAuthError("pending") ??
@@ -181,7 +199,9 @@ export function OrderBotWidget() {
   }, []);
 
   const syncAccess = useCallback(async () => {
-    if (!clientAuthToken()) {
+    if (clientAuthToken()) {
+      await validateAndRefreshClientSession();
+    } else {
       await restoreClientSessionFromCookie();
     }
 
@@ -383,16 +403,24 @@ export function OrderBotWidget() {
         }
 
         if (!res.ok) {
+          if (isOrderBotLoginRequired(res, data.error)) {
+            clearExpiredClientSession();
+            setAccess("guest");
+            setCanChat(false);
+            setNavActions(GUEST_NAV);
+            setQuickReplies([]);
+          }
           setMessages((prev) => [
             ...prev,
             {
               id: nextId(),
               role: "assistant",
-              text:
-                data.error ??
-                (res.status === 401
-                  ? "Session expired. Please sign in again from **My Account**."
-                  : "Something went wrong. Please try again."),
+              text: isOrderBotLoginRequired(res, data.error)
+                ? LOGIN_REQUIRED_MESSAGE
+                : (data.error ??
+                  (res.status === 401
+                    ? LOGIN_REQUIRED_MESSAGE
+                    : "Something went wrong. Please try again.")),
             },
           ]);
           return;
@@ -560,7 +588,7 @@ export function OrderBotWidget() {
               ))}
             </div>
           ) : null}
-          {accessUi === "approved" && quickReplies.length ? (
+          {accessUi === "approved" && canChat && quickReplies.length ? (
             <div className="sarjan-order-bot-quick">
               {quickReplies.map((chip) => (
                 <button

@@ -24,7 +24,10 @@ export async function requireApprovedClientRequest(
   }
   const client = await getClient(session.clientId);
   if (!client) {
-    return Response.json({ error: "Client not found" }, { status: 404 });
+    return Response.json(
+      { error: "Please sign in again to continue." },
+      { status: 401 },
+    );
   }
   const msg = clientStatusAuthError(client.status);
   if (msg) return Response.json({ error: msg }, { status: 403 });
