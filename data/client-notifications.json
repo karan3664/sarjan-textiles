@@ -1,0 +1,62 @@
+[
+  {
+    "id": "30a4215d-7c1d-4ac8-8574-04c3b281a445",
+    "clientId": "8cdff387-e64f-486f-a74e-81183ca4221d",
+    "title": "Order dispatched 🚚",
+    "body": "Order ST-1780936465531 has been dispatched.",
+    "type": "dispatch",
+    "data": {
+      "type": "dispatch",
+      "id": "ST-1780936465531",
+      "orderId": "ST-1780936465531",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-08T16:34:54.609Z"
+  },
+  {
+    "id": "d88bec13-b4e0-420c-8e8a-23683cf96241",
+    "clientId": "8cdff387-e64f-486f-a74e-81183ca4221d",
+    "title": "Order approved ✅",
+    "body": "Great news! Order ST-1780936465531 has been approved.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1780936465531",
+      "orderId": "ST-1780936465531",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-08T16:34:44.330Z"
+  },
+  {
+    "id": "6fd0e314-275c-40fe-9255-cbeb127187bb",
+    "clientId": "8cdff387-e64f-486f-a74e-81183ca4221d",
+    "title": "Order placed 🎉",
+    "body": "Order ST-1780936465531 placed for ₹3,160. We'll review it shortly.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1780936465531",
+      "orderId": "ST-1780936465531",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-08T16:34:25.545Z"
+  },
+  {
+    "id": "93b3525d-79d5-405f-8829-d89df2b35919",
+    "clientId": "f7b550e7-edbd-4401-afde-c86bc4b0c1d4",
+    "title": "Order placed 🎉",
+    "body": "Order ST-1780936298588 placed for ₹3,160. We'll review it shortly.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1780936298588",
+      "orderId": "ST-1780936298588",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-08T16:31:38.600Z"
+  }
+]
