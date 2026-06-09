@@ -226,7 +226,7 @@ export function AdminHeaderNavEditor() {
                 onChange={(event) =>
                   updateItem(item.id, { href: event.target.value })
                 }
-                placeholder="/faqs or /site/your-page"
+                placeholder="/faqs or /your-page"
               />
             </fieldset>
 

@@ -49,6 +49,10 @@ import { WishlistPageClient } from "./WishlistPageClient";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import type { CmsCustomBlock, CmsCustomSection } from "@/types/cms-custom";
 import {
+  customBlockHasContent,
+  hasVisibleCmsText,
+} from "@/lib/cms-custom-section-utils";
+import {
   getInstagramPosts,
   instagramProfileUrl,
   instagramUsernameFromUrl,
@@ -401,6 +405,104 @@ function ServiceIconBox({
   );
 }
 
+function renderCustomBlock(
+  block: CmsCustomBlock,
+  section: HomeSectionControl,
+  products: Product[],
+) {
+  if (!customBlockHasContent(block)) {
+    return null;
+  }
+
+  if (block.type === "text") {
+    const hasHeading = hasVisibleCmsText(block.heading);
+    const hasBody = hasVisibleCmsText(block.body);
+    if (!hasHeading && !hasBody) {
+      return null;
+    }
+    return (
+      <div className="sarjan-custom-text-block" key={block.id}>
+        {hasHeading ? (
+          <h4>
+            <CmsHtml html={block.heading!} />
+          </h4>
+        ) : null}
+        {hasBody ? (
+          <p className="text-secondary">
+            <CmsHtml html={block.body!} />
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (block.type === "image") {
+    return block.image ? (
+      <div className="sarjan-custom-image-block hover-img" key={block.id}>
+        <img
+          src={block.image}
+          alt={block.alt ?? section.title ?? "Sarjan Textiles"}
+        />
+      </div>
+    ) : null;
+  }
+
+  if (block.type === "button") {
+    return (
+      <div className="sarjan-custom-button-block" key={block.id}>
+        <Link className="tf-btn btn-fill" href={block.href || "/products"}>
+          <span className="text">
+            <CmsHtml html={block.label || "Explore Now"} />
+          </span>
+          <i className="icon icon-arrowUpRight" />
+        </Link>
+      </div>
+    );
+  }
+
+  if (block.type === "cards") {
+    const items = (block.items ?? []).filter(
+      (card) =>
+        hasVisibleCmsText(card.title) ||
+        hasVisibleCmsText(card.body) ||
+        Boolean(card.image?.trim()),
+    );
+    if (!items.length) {
+      return null;
+    }
+    return (
+      <div className="sarjan-custom-cards-block w-100" key={block.id}>
+        <div className="tf-grid-layout md-col-3 sm-col-2 sarjan-custom-card-grid">
+          {items.map((card) => (
+            <Link
+              key={card.id}
+              href={card.href || "/products"}
+              className="sarjan-hub-subcard hover-img wg-blog style-1"
+            >
+              {card.image ? (
+                <div className="image">
+                  <img src={card.image} alt={card.title} />
+                </div>
+              ) : null}
+              <div className="content">
+                <h6 className="title fw-5">{card.title}</h6>
+                {card.body ? (
+                  <p className="body-text text-secondary mb_0">{card.body}</p>
+                ) : null}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const product = products.find((item) => item.slug === block.productSlug);
+  return product ? (
+    <ModaveProductCard product={product} key={block.id} />
+  ) : null;
+}
+
 function CustomHomeSection({
   section,
   products,
@@ -411,6 +513,13 @@ function CustomHomeSection({
   const blocks = section.blocks ?? [];
   if (!blocks.length) return null;
 
+  const renderedBlocks = blocks
+    .map((block) => renderCustomBlock(block, section, products))
+    .filter(Boolean);
+  if (!renderedBlocks.length) return null;
+
+  const hasTitle = hasVisibleCmsText(section.title);
+  const hasSubtitle = hasVisibleCmsText(section.subtitle);
   const layoutClass =
     section.layout === "banner"
       ? "sarjan-custom-section-banner"
@@ -419,109 +528,23 @@ function CustomHomeSection({
         : "sarjan-custom-section-grid";
 
   return (
-    <section className="flat-spacing sarjan-custom-storefront-section">
+    <section className="sarjan-custom-storefront-section">
       <div className="container">
-        <div className="heading-section text-center wow fadeInUp">
-          {section.title ? (
-            <h3 className="heading">
-              <CmsHtml html={section.title} />
-            </h3>
-          ) : null}
-          {section.subtitle ? (
-            <p className="subheading text-secondary">
-              <CmsHtml html={section.subtitle} />
-            </p>
-          ) : null}
-        </div>
-        <div className={layoutClass}>
-          {blocks.map((block) => {
-            if (block.type === "text") {
-              return (
-                <div className="sarjan-custom-text-block" key={block.id}>
-                  {block.heading ? (
-                    <h4>
-                      <CmsHtml html={block.heading} />
-                    </h4>
-                  ) : null}
-                  {block.body ? (
-                    <p className="text-secondary">
-                      <CmsHtml html={block.body} />
-                    </p>
-                  ) : null}
-                </div>
-              );
-            }
-
-            if (block.type === "image") {
-              return block.image ? (
-                <div
-                  className="sarjan-custom-image-block hover-img"
-                  key={block.id}
-                >
-                  <img
-                    src={block.image}
-                    alt={block.alt ?? section.title ?? "Sarjan Textiles"}
-                  />
-                </div>
-              ) : null;
-            }
-
-            if (block.type === "button") {
-              return (
-                <div className="sarjan-custom-button-block" key={block.id}>
-                  <Link
-                    className="tf-btn btn-fill"
-                    href={block.href || "/products"}
-                  >
-                    <span className="text">
-                      <CmsHtml html={block.label || "Explore Now"} />
-                    </span>
-                    <i className="icon icon-arrowUpRight" />
-                  </Link>
-                </div>
-              );
-            }
-
-            if (block.type === "cards") {
-              const items = (block.items ?? []).filter((c) => c.title?.trim());
-              if (!items.length) return null;
-              return (
-                <div className="sarjan-custom-cards-block w-100" key={block.id}>
-                  <div className="tf-grid-layout md-col-3 sm-col-2 sarjan-custom-card-grid">
-                    {items.map((card) => (
-                      <Link
-                        key={card.id}
-                        href={card.href || "/products"}
-                        className="sarjan-hub-subcard hover-img wg-blog style-1"
-                      >
-                        {card.image ? (
-                          <div className="image">
-                            <img src={card.image} alt={card.title} />
-                          </div>
-                        ) : null}
-                        <div className="content">
-                          <h6 className="title fw-5">{card.title}</h6>
-                          {card.body ? (
-                            <p className="body-text text-secondary mb_0">
-                              {card.body}
-                            </p>
-                          ) : null}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-
-            const product = products.find(
-              (item) => item.slug === block.productSlug,
-            );
-            return product ? (
-              <ModaveProductCard product={product} key={block.id} />
-            ) : null;
-          })}
-        </div>
+        {hasTitle || hasSubtitle ? (
+          <div className="heading-section text-center sarjan-custom-site-heading">
+            {hasTitle ? (
+              <h3 className="heading">
+                <CmsHtml html={section.title!} />
+              </h3>
+            ) : null}
+            {hasSubtitle ? (
+              <p className="subheading text-secondary">
+                <CmsHtml html={section.subtitle!} />
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        <div className={layoutClass}>{renderedBlocks}</div>
       </div>
     </section>
   );
@@ -534,16 +557,11 @@ export function CustomContentSections({
   sections?: CmsCustomSection[];
   products: Product[];
 }) {
-  const visibleSections = Array.isArray(sections)
-    ? sections.filter(
-        (section) => section.enabled !== false && (section.blocks ?? []).length,
-      )
-    : [];
-  if (!visibleSections.length) return null;
+  if (!Array.isArray(sections) || !sections.length) return null;
 
   return (
     <>
-      {visibleSections.map((section) => (
+      {sections.map((section) => (
         <CustomHomeSection
           key={section.id}
           section={{ ...section, type: "custom" }}

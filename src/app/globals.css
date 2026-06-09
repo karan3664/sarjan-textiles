@@ -13513,6 +13513,46 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   font-weight: 600;
 }
 
+/* Custom CMS pages — only show spacing for real content */
+.sarjan-custom-site-page .sarjan-custom-site-hero {
+  padding: 28px 0 12px;
+}
+
+.sarjan-custom-site-page .sarjan-breadcrumb {
+  margin-bottom: 12px;
+}
+
+.sarjan-custom-site-page .sarjan-custom-site-heading {
+  margin-bottom: 0;
+}
+
+.sarjan-custom-site-page .sarjan-custom-site-heading.has-subtitle {
+  margin-bottom: 12px;
+}
+
+.sarjan-custom-site-page .sarjan-custom-site-hero-image {
+  margin-top: 16px;
+}
+
+.sarjan-custom-site-page .sarjan-custom-storefront-section {
+  padding: 28px 0;
+}
+
+.sarjan-custom-site-page .sarjan-custom-storefront-section:first-of-type {
+  padding-top: 16px;
+}
+
+.sarjan-custom-site-page .sarjan-custom-storefront-section .heading-section {
+  margin-bottom: 20px;
+}
+
+.sarjan-custom-site-page
+  .sarjan-custom-storefront-section
+  .heading-section:empty {
+  display: none;
+  margin: 0;
+}
+
 /* Category hub + custom site pages */
 .sarjan-hub-hero-banner img {
   width: 100%;

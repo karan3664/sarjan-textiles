@@ -80,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const customPageUrls = (customSitePages ?? [])
     .filter((page) => page.enabled !== false && page.slug?.trim())
     .map((page) => ({
-      url: `${base}/site/${String(page.slug).trim()}`,
+      url: `${base}/${String(page.slug).trim()}`,
       lastModified: cmsLastModified,
       changeFrequency: "monthly" as const,
       priority: 0.65,

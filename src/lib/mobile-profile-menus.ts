@@ -288,7 +288,7 @@ function normalizeAction(action: string) {
     return trimmed;
   }
   if (trimmed.startsWith("/site/")) {
-    return `site:${trimmed.slice("/site/".length)}`;
+    return `site:${trimmed.slice("/site/".length).replace(/\/+$/, "")}`;
   }
   if (trimmed.startsWith("/")) {
     return `path:${trimmed}`;

@@ -139,7 +139,7 @@ export type CategoryHubPage = {
 /** Multi-purpose page: hero + ordered custom sections (text, image/banner, buttons, product cards, card grids). */
 export type CustomSitePage = {
   id: string;
-  /** URL segment: /site/[slug] */
+  /** Public URL: /[slug] (legacy /site/[slug] redirects) */
   slug: string;
   title: string | LocalizedText;
   heroImage?: string;

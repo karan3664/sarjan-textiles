@@ -51,7 +51,7 @@ export function AdminAccountNavEditor() {
     ...ACCOUNT_NAV_PAGE_OPTIONS,
     ...customPages.map((page) => ({
       label: `Custom: ${page.title}`,
-      href: `/site/${page.slug}`,
+      href: `/${page.slug}`,
     })),
   ];
 
@@ -148,8 +148,8 @@ export function AdminAccountNavEditor() {
           <h5>Account menu</h5>
           <p className="body-text text-secondary mt-8 mb-0">
             Profile dropdown (header) and account sidebar links. Add custom
-            pages at /site/your-slug — no app update needed on mobile when
-            linked via Mobile app → Profile menus.
+            pages at /your-slug — no app update needed on mobile when linked via
+            Mobile app → Profile menus.
           </p>
         </div>
         <div className="flex flex-wrap gap-10">
@@ -244,7 +244,7 @@ export function AdminAccountNavEditor() {
               </select>
               <input
                 className="mt-8"
-                placeholder="/site/my-page or https://…"
+                placeholder="/my-page or https://…"
                 value={item.href}
                 onChange={(event) =>
                   updateItem(item.id, { href: event.target.value })

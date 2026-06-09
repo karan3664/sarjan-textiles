@@ -119,7 +119,7 @@ export function AdminCustomSitePagesClient({
         <div className="body-text text-secondary">
           Build flexible landing pages with sections: text, images/banners,
           buttons, product cards, and card grids. Public URL:{" "}
-          <code className="text-1">/site/your-slug</code>
+          <code className="text-1">/your-slug</code>
         </div>
         <div className="d-flex gap10 flex-wrap">
           <button type="button" className="tf-button style-1" onClick={addPage}>
@@ -200,7 +200,7 @@ export function AdminCustomSitePagesClient({
                     }
                   />
                   <div className="text-caption-1 text-secondary mt-8">
-                    /site/{slugifyCmsSegment(selected.slug || selected.title)}
+                    /{slugifyCmsSegment(selected.slug || selected.title)}
                   </div>
                 </fieldset>
               </div>

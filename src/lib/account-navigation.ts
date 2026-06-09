@@ -236,7 +236,7 @@ export function appendCustomPageToAccountNav(
   slug: string,
   title: string,
 ): AccountNavItem[] {
-  const href = `/site/${slug.replace(/^\/+/, "")}`;
+  const href = `/${slug.replace(/^\/+/, "")}`;
   if (items.some((item) => item.href === href)) return items;
   return [
     ...items,

@@ -122,7 +122,7 @@ export async function buildSitemapTree(): Promise<{
       node({
         id: `custom-${page.slug}`,
         label: readEnglish(page.title) || page.slug || "Page",
-        path: `/site/${String(page.slug).trim()}`,
+        path: `/${String(page.slug).trim()}`,
         priority: 0.65,
         changeFrequency: "monthly",
         section: "custom",
