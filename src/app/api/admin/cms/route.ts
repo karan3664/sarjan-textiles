@@ -10,6 +10,7 @@ import {
   syncMobileAppExtrasFromHome,
 } from "@/lib/mobile-app-cms";
 import { localizeHomeOnSave } from "@/lib/content-localize";
+import { syncCustomSitePagesToProfileMenus } from "@/lib/custom-site-page-mobile";
 import {
   localizeCategoryHubsOnSave,
   localizeCollectionsOnSave,
@@ -17,6 +18,7 @@ import {
   localizeProductFiltersOnSave,
   localizeSeoPagesOnSave,
 } from "@/lib/pages-localize";
+import { normalizeMobileProfileMenus } from "@/lib/mobile-profile-menus";
 import {
   asStoredCategoryHubs,
   asStoredCollectionPages,
@@ -82,6 +84,16 @@ export async function PUT(request: Request) {
       body.customSitePages = await localizeCustomSitePagesOnSave(
         body.customSitePages,
       );
+      const profileMenus = normalizeMobileProfileMenus(
+        body.mobileApp?.profileMenus ?? before.mobileApp.profileMenus,
+      );
+      body.mobileApp = {
+        ...(body.mobileApp ?? before.mobileApp),
+        profileMenus: syncCustomSitePagesToProfileMenus(
+          body.customSitePages,
+          profileMenus,
+        ),
+      };
     }
 
     if (body.mobileApp) {

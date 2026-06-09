@@ -25,6 +25,7 @@ function blankPage(): PublicCustomSitePage {
     heroSubtitle: "",
     heroImage: "",
     enabled: true,
+    showInMobile: false,
     sections: [],
     updatedAt: new Date().toISOString(),
   };
@@ -114,7 +115,7 @@ export function AdminCustomSitePagesClient({
 
   return (
     <form
-      className="form-products-create form-type-2 sarjan-product-create"
+      className="form-products-create form-type-2 sarjan-product-create sarjan-custom-pages-admin"
       onSubmit={save}
     >
       <div className="flex flex-wrap justify-between gap14 items-center mb-30">
@@ -136,21 +137,25 @@ export function AdminCustomSitePagesClient({
         <div className="sarjan-admin-message mb-20">{message}</div>
       ) : null}
 
-      <div className="d-flex flex-wrap gap-20 mb-30">
-        <div
-          className="wg-box p-24"
-          style={{ minWidth: 220, flex: "0 0 240px" }}
-        >
+      <div className="sarjan-custom-pages-layout mb-30">
+        <div className="wg-box p-24 sarjan-custom-pages-list">
           <h6 className="mb-16">Pages</h6>
           <div className="d-grid gap-2">
             {pages.map((p) => (
               <div key={p.id} className="d-flex gap8 align-items-center">
                 <button
                   type="button"
-                  className={`tf-button flex-grow-1 text-start${selectedId === p.id ? " style-1" : ""}`}
+                  className={`tf-button flex-grow-1 text-start sarjan-custom-page-list-btn${selectedId === p.id ? " style-1" : ""}`}
                   onClick={() => setSelectedId(p.id)}
                 >
-                  {p.title || p.slug}
+                  <span className="sarjan-custom-page-list-title">
+                    {p.title || p.slug}
+                  </span>
+                  {p.showInMobile ? (
+                    <span className="sarjan-custom-page-mobile-tag">
+                      Mobile
+                    </span>
+                  ) : null}
                 </button>
                 <button
                   type="button"
@@ -169,9 +174,9 @@ export function AdminCustomSitePagesClient({
           ) : null}
         </div>
 
-        <div style={{ flex: "1 1 480px", minWidth: 0 }}>
+        <div className="sarjan-custom-pages-editor">
           {selected ? (
-            <div className="wg-box p-40 sarjan-product-create-box mb-30">
+            <div className="wg-box p-40 sarjan-product-create-box sarjan-custom-pages-editor-box mb-30">
               <h5 className="mb-20">Edit: {selected.title}</h5>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
                 <fieldset>
@@ -240,16 +245,36 @@ export function AdminCustomSitePagesClient({
                   onChange={(patch) => updateSelected(patch)}
                 />
               </div>
-              <label className="d-flex align-items-center gap10 mb-20">
-                <input
-                  type="checkbox"
-                  checked={selected.enabled !== false}
-                  onChange={(e) =>
-                    updateSelected({ enabled: e.target.checked })
-                  }
-                />
-                <span>Published</span>
-              </label>
+              <div className="sarjan-custom-pages-toggles mb-20">
+                <label className="sarjan-custom-pages-toggle">
+                  <input
+                    type="checkbox"
+                    checked={selected.enabled !== false}
+                    onChange={(e) =>
+                      updateSelected({ enabled: e.target.checked })
+                    }
+                  />
+                  <span>Published on website</span>
+                </label>
+                <label className="sarjan-custom-pages-toggle">
+                  <input
+                    type="checkbox"
+                    checked={selected.showInMobile === true}
+                    onChange={(e) =>
+                      updateSelected({ showInMobile: e.target.checked })
+                    }
+                  />
+                  <span>Show in mobile app</span>
+                </label>
+              </div>
+              <p className="text-caption-1 text-secondary mb-20 sarjan-custom-pages-mobile-hint">
+                Mobile app → Profile tab → <strong>Info</strong> section mein
+                link dikhega (Save ke baad). Website par URL hamesha{" "}
+                <code>
+                  /{slugifyCmsSegment(selected.slug || selected.title)}
+                </code>{" "}
+                se khulega jab Published on hai.
+              </p>
               <div className="sarjan-seo-panel mb-24">
                 <h6>SEO</h6>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

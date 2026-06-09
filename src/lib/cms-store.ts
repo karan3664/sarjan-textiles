@@ -145,6 +145,8 @@ export type CustomSitePage = {
   heroImage?: string;
   heroSubtitle?: string | LocalizedText;
   enabled?: boolean;
+  /** When true, page appears in the mobile app Profile → Info menu. */
+  showInMobile?: boolean;
   metaTitle?: string | LocalizedText;
   metaDescription?: string | LocalizedText;
   keywords?: string;

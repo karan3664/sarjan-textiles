@@ -13,7 +13,10 @@ export async function GET(
   const cms = await getLocalizedCmsSnapshot();
   const pageRaw =
     cms.customSitePages.find(
-      (page) => page.slug === slug && page.enabled !== false,
+      (page) =>
+        page.slug === slug &&
+        page.enabled !== false &&
+        page.showInMobile === true,
     ) ?? null;
   if (!pageRaw) {
     return new Response(JSON.stringify({ error: "Page not found" }), {

@@ -13701,6 +13701,116 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   margin: 0;
 }
 
+/* Admin — custom site pages editor */
+.sarjan-custom-pages-admin .sarjan-custom-pages-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.sarjan-custom-pages-admin .sarjan-custom-pages-list {
+  min-width: 0;
+}
+
+.sarjan-custom-pages-admin .sarjan-custom-pages-editor {
+  min-width: 0;
+}
+
+.sarjan-custom-pages-admin .sarjan-custom-pages-editor-box fieldset input,
+.sarjan-custom-pages-admin .sarjan-custom-pages-editor-box fieldset textarea,
+.sarjan-custom-pages-admin .sarjan-custom-pages-editor-box fieldset select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.sarjan-custom-page-list-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sarjan-custom-page-list-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sarjan-custom-page-mobile-tag {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.sarjan-custom-pages-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+
+.sarjan-custom-pages-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.sarjan-custom-pages-mobile-hint {
+  margin-top: -8px;
+  line-height: 1.5;
+}
+
+@media (max-width: 991px) {
+  .sarjan-custom-pages-admin .sarjan-custom-pages-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Storefront — custom CMS pages responsive */
+@media (max-width: 767px) {
+  .sarjan-custom-site-page .sarjan-custom-site-hero {
+    padding: 18px 0 8px;
+  }
+
+  .sarjan-custom-site-page .sarjan-custom-site-heading .heading {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    line-height: 1.2;
+  }
+
+  .sarjan-custom-site-page .sarjan-custom-storefront-section {
+    padding: 20px 0;
+  }
+
+  .sarjan-custom-site-page .sarjan-custom-section-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .sarjan-custom-site-page .sarjan-custom-section-split {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .sarjan-custom-site-page .sarjan-custom-text-block {
+    max-width: none;
+  }
+
+  .sarjan-custom-site-page .sarjan-breadcrumb {
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
 /* Category hub + custom site pages */
 .sarjan-hub-hero-banner img {
   width: 100%;
