@@ -199,6 +199,7 @@ export function AdminHomeBannerSlides({
                           Eyebrow
                         </span>
                         <AdminHtmlEditor
+                          key={`${banner.id}-eyebrow`}
                           compact
                           value={banner.eyebrow ?? ""}
                           onChange={(value) =>
@@ -211,6 +212,7 @@ export function AdminHomeBannerSlides({
                       <div className="sarjan-banner-field">
                         <span className="sarjan-banner-field-label">Title</span>
                         <AdminHtmlEditor
+                          key={`${banner.id}-title`}
                           compact
                           value={banner.title ?? ""}
                           onChange={(value) =>
@@ -225,6 +227,7 @@ export function AdminHomeBannerSlides({
                           Description
                         </span>
                         <AdminHtmlEditor
+                          key={`${banner.id}-description`}
                           compact
                           value={banner.description ?? ""}
                           onChange={(value) =>
@@ -240,6 +243,7 @@ export function AdminHomeBannerSlides({
                             Button label
                           </span>
                           <AdminHtmlEditor
+                            key={`${banner.id}-cta`}
                             compact
                             value={banner.ctaLabel ?? ""}
                             onChange={(value) =>

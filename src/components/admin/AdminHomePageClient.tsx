@@ -154,6 +154,19 @@ function stripHtmlPreview(html: string, max = 52) {
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
+function HtmlPreviewText({
+  html,
+  fallback = "—",
+  max = 120,
+}: {
+  html?: string;
+  fallback?: string;
+  max?: number;
+}) {
+  const text = stripHtmlPreview(html ?? "", max);
+  return text === "—" ? fallback : text;
+}
+
 function buildHomeDraft(initialHome: CmsHome | HomeDraft): HomeDraft {
   const draft = initialHome as HomeDraft;
   const videoUrls = getHeroVideos(draft.hero);
@@ -284,6 +297,7 @@ function HtmlField({
   onChange,
   rows = 6,
   placeholder,
+  editorKey,
 }: {
   label: string;
   value: string;
@@ -291,6 +305,8 @@ function HtmlField({
   onChange: (value: string) => void;
   rows?: number;
   placeholder?: string;
+  /** Stable key — prevents editor remount when the edited HTML value changes. */
+  editorKey?: string;
 }) {
   const save = useHomeEditorSave();
   const dirty = value !== savedValue;
@@ -302,6 +318,7 @@ function HtmlField({
       saving={save?.saveState === "saving"}
     >
       <AdminHtmlEditor
+        key={editorKey}
         value={value}
         onChange={onChange}
         rows={rows}
@@ -1308,11 +1325,16 @@ export function AdminHomePageClient({
                   </span>
                   <div>
                     <h6>
-                      {section.title ??
-                        sectionOptions.find(
-                          (item) => item.type === section.type,
-                        )?.title ??
-                        section.type}
+                      <HtmlPreviewText
+                        html={
+                          section.title ??
+                          sectionOptions.find(
+                            (item) => item.type === section.type,
+                          )?.title ??
+                          section.type
+                        }
+                        fallback={section.type}
+                      />
                     </h6>
                     <div className="text-caption-1 text-secondary">
                       {section.type}
@@ -1723,13 +1745,15 @@ export function AdminHomePageClient({
           {(home.categories as Category[]).map((category, index) => (
             <div
               className="sarjan-category-editor-card"
-              key={`${category.name}-${index}`}
+              key={`category-card-${index}`}
             >
               <div className="sarjan-category-preview">
                 <img src={category.image} alt="" />
                 <div className="sarjan-category-preview-label">
                   <span>{index + 1}</span>
-                  <strong>{category.name}</strong>
+                  <strong>
+                    <HtmlPreviewText html={category.name} fallback="Untitled" />
+                  </strong>
                 </div>
               </div>
               <label className="sarjan-category-upload">
@@ -1758,6 +1782,7 @@ export function AdminHomePageClient({
               <div className="sarjan-category-fields">
                 <HtmlField
                   label="Card title"
+                  editorKey={`category-name-${index}`}
                   value={category.name}
                   savedValue={savedHome.categories[index]?.name ?? ""}
                   onChange={(value) => updateCategory(index, "name", value)}
@@ -1790,16 +1815,24 @@ export function AdminHomePageClient({
             <div className="sarjan-heading-preview">
               <span>01</span>
               <div>
-                <h6>{home.topPicksTitle ?? "Today's Top Picks"}</h6>
+                <h6>
+                  <HtmlPreviewText
+                    html={home.topPicksTitle}
+                    fallback="Today's Top Picks"
+                  />
+                </h6>
                 <p>
-                  {home.topPicksDescription ??
-                    "Fresh Sarjan textile products from admin-managed data."}
+                  <HtmlPreviewText
+                    html={home.topPicksDescription}
+                    fallback="Fresh Sarjan textile products from admin-managed data."
+                  />
                 </p>
               </div>
             </div>
             <div className="sarjan-heading-fields">
               <HtmlField
                 label="Section title"
+                editorKey="heading-top-picks-title"
                 value={home.topPicksTitle ?? "Today's Top Picks"}
                 savedValue={savedHome.topPicksTitle ?? "Today's Top Picks"}
                 onChange={(value) =>
@@ -1809,6 +1842,7 @@ export function AdminHomePageClient({
               />
               <HtmlField
                 label="Section subtitle"
+                editorKey="heading-top-picks-subtitle"
                 value={home.topPicksDescription ?? ""}
                 savedValue={savedHome.topPicksDescription ?? ""}
                 onChange={(value) =>
@@ -1826,13 +1860,24 @@ export function AdminHomePageClient({
             <div className="sarjan-heading-preview">
               <span>02</span>
               <div>
-                <h6>{home.trendingTitle}</h6>
-                <p>{home.trendingDescription}</p>
+                <h6>
+                  <HtmlPreviewText
+                    html={home.trendingTitle}
+                    fallback="Trending"
+                  />
+                </h6>
+                <p>
+                  <HtmlPreviewText
+                    html={home.trendingDescription}
+                    fallback="Trending products"
+                  />
+                </p>
               </div>
             </div>
             <div className="sarjan-heading-fields">
               <HtmlField
                 label="Section title"
+                editorKey="heading-trending-title"
                 value={home.trendingTitle}
                 savedValue={savedHome.trendingTitle}
                 onChange={(value) =>
@@ -1842,6 +1887,7 @@ export function AdminHomePageClient({
               />
               <HtmlField
                 label="Section subtitle"
+                editorKey="heading-trending-subtitle"
                 value={home.trendingDescription}
                 savedValue={savedHome.trendingDescription}
                 onChange={(value) =>
@@ -1859,16 +1905,24 @@ export function AdminHomePageClient({
             <div className="sarjan-heading-preview">
               <span>03</span>
               <div>
-                <h6>{home.testimonialsTitle ?? "Customer Say!"}</h6>
+                <h6>
+                  <HtmlPreviewText
+                    html={home.testimonialsTitle}
+                    fallback="Customer Say!"
+                  />
+                </h6>
                 <p>
-                  {home.testimonialsDescription ??
-                    "Our customers adore our products, and we constantly aim to delight them."}
+                  <HtmlPreviewText
+                    html={home.testimonialsDescription}
+                    fallback="Our customers adore our products, and we constantly aim to delight them."
+                  />
                 </p>
               </div>
             </div>
             <div className="sarjan-heading-fields">
               <HtmlField
                 label="Section title"
+                editorKey="heading-testimonials-title"
                 value={home.testimonialsTitle ?? "Customer Say!"}
                 savedValue={savedHome.testimonialsTitle ?? "Customer Say!"}
                 onChange={(value) =>
@@ -1881,6 +1935,7 @@ export function AdminHomePageClient({
               />
               <HtmlField
                 label="Section subtitle"
+                editorKey="heading-testimonials-subtitle"
                 value={home.testimonialsDescription ?? ""}
                 savedValue={savedHome.testimonialsDescription ?? ""}
                 onChange={(value) =>
@@ -1898,13 +1953,24 @@ export function AdminHomePageClient({
             <div className="sarjan-heading-preview">
               <span>04</span>
               <div>
-                <h6>{home.galleryTitle}</h6>
-                <p>{home.galleryDescription}</p>
+                <h6>
+                  <HtmlPreviewText
+                    html={home.galleryTitle}
+                    fallback="Shop Instagram"
+                  />
+                </h6>
+                <p>
+                  <HtmlPreviewText
+                    html={home.galleryDescription}
+                    fallback="Fresh textile stories from Sarjan collections."
+                  />
+                </p>
               </div>
             </div>
             <div className="sarjan-heading-fields">
               <HtmlField
                 label="Section title"
+                editorKey="heading-gallery-title"
                 value={home.galleryTitle}
                 savedValue={savedHome.galleryTitle}
                 onChange={(value) =>
@@ -1914,6 +1980,7 @@ export function AdminHomePageClient({
               />
               <HtmlField
                 label="Section subtitle"
+                editorKey="heading-gallery-subtitle"
                 value={home.galleryDescription}
                 savedValue={savedHome.galleryDescription}
                 onChange={(value) =>
@@ -1945,15 +2012,20 @@ export function AdminHomePageClient({
           {home.highlights.map((highlight, index) => (
             <div
               className="sarjan-highlight-editor-card"
-              key={`${highlight.label}-${index}`}
+              key={`highlight-${index}`}
             >
               <div className="sarjan-highlight-preview">
-                <div className="sarjan-highlight-value">{highlight.value}</div>
-                <div className="sarjan-highlight-label">{highlight.label}</div>
+                <div className="sarjan-highlight-value">
+                  <HtmlPreviewText html={highlight.value} fallback="0" />
+                </div>
+                <div className="sarjan-highlight-label">
+                  <HtmlPreviewText html={highlight.label} fallback="Label" />
+                </div>
               </div>
               <div className="sarjan-compact-fields">
                 <HtmlField
                   label="Value"
+                  editorKey={`highlight-value-${index}`}
                   value={highlight.value}
                   savedValue={savedHome.highlights[index]?.value ?? ""}
                   onChange={(value) => updateHighlight(index, "value", value)}
@@ -1961,6 +2033,7 @@ export function AdminHomePageClient({
                 />
                 <HtmlField
                   label="Label"
+                  editorKey={`highlight-label-${index}`}
                   value={highlight.label}
                   savedValue={savedHome.highlights[index]?.label ?? ""}
                   onChange={(value) => updateHighlight(index, "label", value)}
@@ -2152,14 +2225,18 @@ export function AdminHomePageClient({
           {home.services.map((service, index) => (
             <div
               className="sarjan-service-editor-card"
-              key={`${service.title}-${index}`}
+              key={`service-${index}`}
             >
               <div className="sarjan-service-preview">
                 <div className="sarjan-service-icon">
                   <i className={service.icon} />
                 </div>
-                <h6>{service.title}</h6>
-                <p>{service.body}</p>
+                <h6>
+                  <HtmlPreviewText html={service.title} fallback="Service" />
+                </h6>
+                <p>
+                  <HtmlPreviewText html={service.body} fallback="Description" />
+                </p>
               </div>
               <div className="sarjan-compact-fields">
                 <Field label="Icon class">
@@ -2170,6 +2247,7 @@ export function AdminHomePageClient({
                 </Field>
                 <HtmlField
                   label="Title"
+                  editorKey={`service-title-${index}`}
                   value={service.title}
                   savedValue={savedHome.services[index]?.title ?? ""}
                   onChange={(value) => updateService(index, "title", value)}
@@ -2177,6 +2255,7 @@ export function AdminHomePageClient({
                 />
                 <HtmlField
                   label="Body"
+                  editorKey={`service-body-${index}`}
                   value={service.body}
                   savedValue={savedHome.services[index]?.body ?? ""}
                   onChange={(value) => updateService(index, "body", value)}
