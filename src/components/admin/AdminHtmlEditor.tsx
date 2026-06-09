@@ -8,6 +8,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import type { Editor } from "@tiptap/core";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { AdminEditorToolbarMenu } from "@/components/admin/AdminEditorToolbarMenu";
 import {
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
@@ -50,6 +51,7 @@ export function AdminHtmlEditor({
 }: Props) {
   const colorInputRef = useRef<HTMLInputElement>(null);
   const skipExternalSyncRef = useRef(false);
+  const openToolbarMenusRef = useRef(new Set<string>());
   const lastEmittedValueRef = useRef(normalizeEditorInput(value));
   const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
@@ -61,7 +63,22 @@ export function AdminHtmlEditor({
     ? Math.max(72, rows * 28)
     : Math.max(120, rows * 32);
 
+  const handleToolbarMenuOpenChange = useCallback(
+    (menuId: string, open: boolean) => {
+      const menus = openToolbarMenusRef.current;
+      if (open) {
+        menus.add(menuId);
+      } else {
+        menus.delete(menuId);
+      }
+    },
+    [],
+  );
+
   const refreshToolbar = useCallback((current: Editor | null) => {
+    if (openToolbarMenusRef.current.size > 0) {
+      return;
+    }
     const styles = resolveTiptapToolbarStyles(current);
     setActiveFont(styles.font);
     setActiveSize(styles.size);
@@ -227,11 +244,20 @@ export function AdminHtmlEditor({
           <div className="sarjan-editor-tool-group">
             <span className="sarjan-editor-tool-label">Font</span>
             <div className="sarjan-editor-tool-controls">
-              <select
+              <AdminEditorToolbarMenu
+                menuId="font-size"
+                ariaLabel="Font size"
+                placeholder="Size"
                 value={activeSize}
-                onMouseDown={(event) => event.preventDefault()}
-                onChange={(event) => {
-                  const size = event.target.value;
+                className="sarjan-html-editor-size"
+                options={CMS_FONT_SIZES.map((size) => ({
+                  value: size.value,
+                  label: size.label,
+                }))}
+                onOpenChange={(open) =>
+                  handleToolbarMenuOpenChange("font-size", open)
+                }
+                onChange={(size) => {
                   if (!size || !editor) return;
                   setActiveSize(size);
                   runCommand(
@@ -240,21 +266,22 @@ export function AdminHtmlEditor({
                     true,
                   );
                 }}
-                aria-label="Font size"
-                className="sarjan-html-editor-size"
-              >
-                <option value="">Size</option>
-                {CMS_FONT_SIZES.map((size) => (
-                  <option value={size.value} key={size.value}>
-                    {size.label}
-                  </option>
-                ))}
-              </select>
-              <select
+              />
+              <AdminEditorToolbarMenu
+                menuId="font-family"
+                ariaLabel="Font family"
+                placeholder="Family"
                 value={activeFont}
-                onMouseDown={(event) => event.preventDefault()}
-                onChange={(event) => {
-                  const font = event.target.value;
+                className="sarjan-html-editor-font"
+                options={CMS_FONT_FAMILIES.map((font) => ({
+                  value: font,
+                  label: font,
+                  style: { fontFamily: font },
+                }))}
+                onOpenChange={(open) =>
+                  handleToolbarMenuOpenChange("font-family", open)
+                }
+                onChange={(font) => {
                   if (!font || !editor) return;
                   setActiveFont(font);
                   runCommand(
@@ -263,16 +290,7 @@ export function AdminHtmlEditor({
                     true,
                   );
                 }}
-                aria-label="Font family"
-                className="sarjan-html-editor-font"
-              >
-                <option value="">Family</option>
-                {CMS_FONT_FAMILIES.map((font) => (
-                  <option value={font} key={font} style={{ fontFamily: font }}>
-                    {font}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 
