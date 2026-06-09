@@ -1,4 +1,5 @@
 import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { buildMobileCustomSitePage } from "@/lib/mobile-custom-page";
 import { resolveCustomSitePage } from "@/lib/pages-localize";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 
@@ -25,5 +26,9 @@ export async function GET(
     });
   }
   const page = resolveCustomSitePage(pageRaw, locale);
-  return jsonLocalized({ page, locale }, locale);
+  const origin = new URL(request.url).origin;
+  return jsonLocalized(
+    { page: buildMobileCustomSitePage(page, origin), locale },
+    locale,
+  );
 }
