@@ -6,6 +6,7 @@ import {
   hasVisibleCmsText,
   visibleCustomSections,
 } from "@/lib/cms-custom-section-utils";
+import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 
 export async function CustomSitePageView({
   page,
@@ -36,9 +37,12 @@ export async function CustomSitePageView({
             ) : null}
           </div>
           {hasHeroImage ? (
-            <div className="sarjan-hub-hero-banner hover-img sarjan-custom-site-hero-image">
-              <img src={page.heroImage} alt={page.title} />
-            </div>
+            <CustomCmsImageBlock
+              className="sarjan-custom-site-hero-image"
+              src={page.heroImage!}
+              alt={page.title}
+              display={page}
+            />
           ) : null}
         </div>
       </section>

@@ -36,6 +36,7 @@ import {
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { CmsHtml } from "@/components/shared/CmsHtml";
+import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
@@ -438,12 +439,12 @@ function renderCustomBlock(
 
   if (block.type === "image") {
     return block.image ? (
-      <div className="sarjan-custom-image-block hover-img" key={block.id}>
-        <img
-          src={block.image}
-          alt={block.alt ?? section.title ?? "Sarjan Textiles"}
-        />
-      </div>
+      <CustomCmsImageBlock
+        key={block.id}
+        src={block.image}
+        alt={block.alt ?? section.title ?? "Sarjan Textiles"}
+        display={block}
+      />
     ) : null;
   }
 

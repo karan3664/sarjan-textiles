@@ -10,7 +10,7 @@ import {
   siteSettings as defaultSiteSettings,
 } from "@/data/mock";
 import type { Product } from "@/data/mock";
-import type { CmsCustomSection } from "@/types/cms-custom";
+import type { CmsCustomSection, CmsImageDisplay } from "@/types/cms-custom";
 import type { LocalizedText } from "@/lib/localized-text";
 import type { CmsInstagramFeed } from "@/lib/instagram-types";
 import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
@@ -150,7 +150,7 @@ export type CustomSitePage = {
   keywords?: string;
   sections: CmsCustomSection[];
   updatedAt?: string;
-};
+} & CmsImageDisplay;
 
 export type InventoryMovement = {
   id: string;

@@ -11443,17 +11443,84 @@ button.accordion-button:not(.collapsed),
   max-width: 720px;
 }
 
+.sarjan-custom-image-wrap {
+  width: 100%;
+  display: flex;
+}
+
+.sarjan-custom-image-wrap--align-left {
+  justify-content: flex-start;
+}
+
+.sarjan-custom-image-wrap--align-center {
+  justify-content: center;
+}
+
+.sarjan-custom-image-wrap--align-right {
+  justify-content: flex-end;
+}
+
 .sarjan-custom-image-block {
   overflow: hidden;
   border-radius: 12px;
   background: var(--surface);
+  max-width: 100%;
 }
 
 .sarjan-custom-image-block img {
   display: block;
   width: 100%;
+  height: auto;
+}
+
+.sarjan-custom-image-block--aspect-auto img {
+  aspect-ratio: auto;
+}
+
+.sarjan-custom-image-block--aspect-16-9 img {
   aspect-ratio: 16 / 9;
+}
+
+.sarjan-custom-image-block--aspect-4-3 img {
+  aspect-ratio: 4 / 3;
+}
+
+.sarjan-custom-image-block--aspect-1-1 img {
+  aspect-ratio: 1 / 1;
+}
+
+.sarjan-custom-image-block--aspect-3-4 img {
+  aspect-ratio: 3 / 4;
+}
+
+.sarjan-custom-image-block--fit-cover img {
   object-fit: cover;
+}
+
+.sarjan-custom-image-block--fit-contain img {
+  object-fit: contain;
+}
+
+.sarjan-custom-image-admin-preview {
+  padding: 12px;
+  border: 1px dashed #d8d2c8;
+  border-radius: 12px;
+  background: #faf8f4;
+}
+
+.sarjan-cms-image-display-fields select,
+.sarjan-cms-image-display-fields input[type="range"] {
+  width: 100%;
+}
+
+.sarjan-custom-site-hero-image .sarjan-custom-image-block img {
+  max-height: min(70vh, 520px);
+}
+
+@media (max-width: 767px) {
+  .sarjan-custom-image-wrap .sarjan-custom-image-block {
+    max-width: 100%;
+  }
 }
 
 .sarjan-custom-button-block {

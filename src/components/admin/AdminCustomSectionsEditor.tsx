@@ -9,6 +9,9 @@ import type {
   CmsCustomCardItem,
   CmsCustomSection,
 } from "@/types/cms-custom";
+import { AdminCmsImageDisplayFields } from "@/components/admin/AdminCmsImageDisplayFields";
+import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
+import { CMS_IMAGE_DEFAULTS } from "@/lib/cms-image-display";
 
 type UploadState = Record<string, "uploading" | string | undefined>;
 
@@ -26,6 +29,11 @@ function blankBlock(type: CmsCustomBlockType): CmsCustomBlock {
       type,
       image: "/sarjan-assets/banner-textiles-studio.webp",
       alt: "Sarjan Textiles",
+      imageSize: CMS_IMAGE_DEFAULTS.imageSize,
+      imageWidthPercent: CMS_IMAGE_DEFAULTS.imageWidthPercent,
+      imageAlign: CMS_IMAGE_DEFAULTS.imageAlign,
+      imageFit: CMS_IMAGE_DEFAULTS.imageFit,
+      imageAspect: CMS_IMAGE_DEFAULTS.imageAspect,
     };
   if (type === "button")
     return { id, type, label: "Explore Now", href: "/products" };
@@ -518,15 +526,15 @@ export function AdminCustomSectionsEditor({
 
                       {block.type === "image" ? (
                         <div className="d-grid gap-3">
-                          <div className="sarjan-custom-image-preview">
-                            <img
-                              src={
-                                block.image ||
-                                "/sarjan-assets/banner-textiles-studio.webp"
-                              }
-                              alt={block.alt ?? ""}
-                            />
-                          </div>
+                          <CustomCmsImageBlock
+                            className="sarjan-custom-image-admin-preview"
+                            src={
+                              block.image ||
+                              "/sarjan-assets/banner-textiles-studio.webp"
+                            }
+                            alt={block.alt ?? ""}
+                            display={block}
+                          />
                           <label className="sarjan-category-upload">
                             <input
                               type="file"
@@ -559,6 +567,12 @@ export function AdminCustomSectionsEditor({
                               }
                             />
                           </Field>
+                          <AdminCmsImageDisplayFields
+                            value={block}
+                            onChange={(patch) =>
+                              updateBlock(index, blockIndex, patch)
+                            }
+                          />
                         </div>
                       ) : null}
 

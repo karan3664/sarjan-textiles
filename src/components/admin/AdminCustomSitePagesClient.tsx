@@ -8,6 +8,8 @@ import {
 import type { CustomSitePage } from "@/lib/cms-store";
 import type { CmsCustomSection } from "@/types/cms-custom";
 import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
+import { AdminCmsImageDisplayFields } from "@/components/admin/AdminCmsImageDisplayFields";
+import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { slugifyCmsSegment } from "@/lib/slug";
 import type { Product } from "@/data/mock";
 
@@ -221,7 +223,23 @@ export function AdminCustomSitePagesClient({
                     updateSelected({ heroImage: e.target.value })
                   }
                 />
+                {selected.heroImage?.trim() ? (
+                  <div className="mt-16">
+                    <CustomCmsImageBlock
+                      className="sarjan-custom-image-admin-preview"
+                      src={selected.heroImage}
+                      alt={selected.title}
+                      display={selected}
+                    />
+                  </div>
+                ) : null}
               </fieldset>
+              <div className="mb-20">
+                <AdminCmsImageDisplayFields
+                  value={selected}
+                  onChange={(patch) => updateSelected(patch)}
+                />
+              </div>
               <label className="d-flex align-items-center gap10 mb-20">
                 <input
                   type="checkbox"
