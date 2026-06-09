@@ -5,6 +5,8 @@ export type MobileReleaseManifest = {
   latestVersion: string;
   versionCode: number;
   apkFile: string;
+  /** Remote fallback when APK is not on the VPS volume (GitHub raw / release asset). */
+  apkSourceUrl?: string;
   updatedAt?: string;
 };
 
@@ -44,10 +46,13 @@ export async function readMobileReleaseManifest(): Promise<MobileReleaseManifest
       return null;
     }
 
+    const apkSourceUrl = data.apkSourceUrl?.trim() || undefined;
+
     return {
       latestVersion,
       versionCode,
       apkFile,
+      apkSourceUrl,
       updatedAt: data.updatedAt,
     };
   } catch {

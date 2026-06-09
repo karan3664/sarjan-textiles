@@ -95,7 +95,16 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (isSiteLaunchPending()) {
-    if (!isLaunchBypassPath(pathname)) {
+    const launchBlocked = !isLaunchBypassPath(pathname);
+    const adminStorefrontPreview =
+      launchBlocked &&
+      !pathname.startsWith("/api/") &&
+      (await verifyAdminFromRequest(
+        request,
+        request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+      ));
+
+    if (launchBlocked && !adminStorefrontPreview) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json(
           { error: "Site launching soon. Please check back shortly." },

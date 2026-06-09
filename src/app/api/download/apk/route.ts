@@ -2,7 +2,7 @@ import { createReadStream } from "fs";
 import { stat } from "fs/promises";
 import { Readable } from "stream";
 import { getMobileAppRelease } from "@/lib/mobile-app-release";
-import { resolveMobileApkPath } from "@/lib/mobile-apk-path";
+import { ensureMobileApkPath } from "@/lib/mobile-apk-path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 /** Serve the latest mobile APK with no-cache headers (avoids stale Cloudflare/static cache). */
 export async function GET() {
   const release = await getMobileAppRelease();
-  const apkPath = await resolveMobileApkPath(release.apkFile);
+  const apkPath = await ensureMobileApkPath(release.apkFile);
 
   if (!apkPath) {
     return new Response("APK not found on server", { status: 404 });
