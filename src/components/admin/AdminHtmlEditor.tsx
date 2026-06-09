@@ -49,6 +49,8 @@ export function AdminHtmlEditor({
   compact = false,
 }: Props) {
   const colorInputRef = useRef<HTMLInputElement>(null);
+  const skipExternalSyncRef = useRef(false);
+  const lastEmittedValueRef = useRef(normalizeEditorInput(value));
   const instanceId = useId();
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [source, setSource] = useState(value);
@@ -101,6 +103,8 @@ export function AdminHtmlEditor({
     },
     onUpdate: ({ editor: current }) => {
       const html = normalizeEditorOutput(current.getHTML());
+      skipExternalSyncRef.current = true;
+      lastEmittedValueRef.current = html;
       setSource(html);
       onChange(html);
       refreshToolbar(current);
@@ -125,10 +129,22 @@ export function AdminHtmlEditor({
     if (!editor || mode !== "visual") {
       return;
     }
+    if (skipExternalSyncRef.current) {
+      skipExternalSyncRef.current = false;
+      return;
+    }
+    // Never reset the document while the user is typing — avoids cursor jump / scroll to top.
+    if (editor.isFocused()) {
+      return;
+    }
     const next = normalizeEditorInput(value);
+    if (next === lastEmittedValueRef.current) {
+      return;
+    }
     const current = normalizeEditorOutput(editor.getHTML());
     if (next !== current) {
       editor.commands.setContent(next || "<p></p>", { emitUpdate: false });
+      lastEmittedValueRef.current = next;
       setSource(next);
       refreshToolbar(editor);
     }
@@ -152,6 +168,8 @@ export function AdminHtmlEditor({
     build(chain).run();
     refreshToolbar(editor);
     const html = normalizeEditorOutput(editor.getHTML());
+    skipExternalSyncRef.current = true;
+    lastEmittedValueRef.current = html;
     setSource(html);
     onChange(html);
   };
@@ -348,11 +366,13 @@ export function AdminHtmlEditor({
             placeholder={placeholder}
             onChange={(event) => {
               const next = event.target.value;
+              skipExternalSyncRef.current = true;
+              lastEmittedValueRef.current = normalizeEditorInput(next);
               setSource(next);
               onChange(next);
               if (editor) {
                 editor.commands.setContent(
-                  normalizeEditorInput(next) || "<p></p>",
+                  lastEmittedValueRef.current || "<p></p>",
                   { emitUpdate: false },
                 );
               }

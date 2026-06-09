@@ -591,11 +591,11 @@ export function AdminHomePageClient({
 
   const previewStats = useMemo(
     () => [
-      ["Hero", stripHtmlPreview(home.hero.title)],
+      ["Hero", stripHtmlPreview(savedHome.hero.title)],
       ["Categories", home.categories.length],
       ["Highlights", home.highlights.length],
     ],
-    [home],
+    [savedHome.hero.title, home.categories.length, home.highlights.length],
   );
 
   const heroImages = getHeroImages(home.hero);
