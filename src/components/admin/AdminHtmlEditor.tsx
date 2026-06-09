@@ -204,6 +204,10 @@ export function AdminHtmlEditor({
     return /^#[0-9a-fA-F]{6}$/i.test(normalized) ? normalized : "#ffffff";
   })();
 
+  const colorLabel =
+    CMS_TEXT_COLORS.find((color) => color.value === colorValue)?.label ??
+    "Custom";
+
   return (
     <div
       className={`sarjan-html-editor sarjan-tiptap-editor${compact ? " is-compact" : ""}`}
@@ -373,36 +377,54 @@ export function AdminHtmlEditor({
       </div>
 
       <div className="sarjan-tiptap-body">
-        {mode === "visual" ? (
-          <EditorContent editor={editor} />
-        ) : (
-          <textarea
-            className="sarjan-html-editor-source"
-            rows={compact ? Math.max(rows, 4) : Math.max(rows + 2, 6)}
-            style={{ minHeight: `${minHeightPx}px` }}
-            value={source}
-            placeholder={placeholder}
-            onChange={(event) => {
-              const next = event.target.value;
-              skipExternalSyncRef.current = true;
-              lastEmittedValueRef.current = normalizeEditorInput(next);
-              setSource(next);
-              onChange(next);
-              if (editor) {
-                editor.commands.setContent(
-                  lastEmittedValueRef.current || "<p></p>",
-                  { emitUpdate: false },
-                );
-              }
-            }}
+        <div className="sarjan-tiptap-body-main">
+          {mode === "visual" ? (
+            <EditorContent editor={editor} />
+          ) : (
+            <textarea
+              className="sarjan-html-editor-source"
+              rows={compact ? Math.max(rows, 4) : Math.max(rows + 2, 6)}
+              style={{ minHeight: `${minHeightPx}px` }}
+              value={source}
+              placeholder={placeholder}
+              onChange={(event) => {
+                const next = event.target.value;
+                skipExternalSyncRef.current = true;
+                lastEmittedValueRef.current = normalizeEditorInput(next);
+                setSource(next);
+                onChange(next);
+                if (editor) {
+                  editor.commands.setContent(
+                    lastEmittedValueRef.current || "<p></p>",
+                    { emitUpdate: false },
+                  );
+                }
+              }}
+            />
+          )}
+        </div>
+        <aside
+          className="sarjan-editor-frontend-color"
+          aria-label="Selected frontend text color"
+          title="Ye color website par dikhega; editor mein text hamesha black rahega"
+        >
+          <span className="sarjan-editor-frontend-color-label">Site color</span>
+          <span
+            className="sarjan-editor-frontend-color-swatch"
+            style={{ backgroundColor: colorValue }}
           />
-        )}
+          <span className="sarjan-editor-frontend-color-name">
+            {colorLabel}
+          </span>
+          <span className="sarjan-editor-frontend-color-hex">{colorValue}</span>
+        </aside>
       </div>
 
       {!compact ? (
         <p className="sarjan-html-editor-hint">
-          Text select karke ya bina select kiye — size, font, color lagao. Color
-          dots se quick pick; Custom se exact shade.
+          Text select karke ya bina select kiye — size, font, color lagao.
+          Editor mein text black dikhega; right side par site par dikhne wala
+          color.
         </p>
       ) : null}
     </div>

@@ -4688,10 +4688,74 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-tiptap-body {
+  display: flex;
+  align-items: stretch;
   border: 1px solid #d1d5db;
   border-radius: 12px;
   background: #fff;
   overflow: hidden;
+}
+
+.sarjan-tiptap-body-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.sarjan-editor-frontend-color {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 72px;
+  flex-shrink: 0;
+  padding: 12px 10px;
+  border-left: 1px solid #ece7df;
+  background: #f8f7f4;
+  text-align: center;
+}
+
+.sarjan-editor-frontend-color-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  line-height: 1.2;
+}
+
+.sarjan-editor-frontend-color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #d1d5db;
+}
+
+.sarjan-editor-frontend-color-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1.2;
+}
+
+.sarjan-editor-frontend-color-hex {
+  font-size: 10px;
+  color: #6b7280;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.sarjan-tiptap-editor.is-compact .sarjan-editor-frontend-color {
+  width: 60px;
+  padding: 10px 8px;
+  gap: 6px;
+}
+
+.sarjan-tiptap-editor.is-compact .sarjan-editor-frontend-color-swatch {
+  width: 28px;
+  height: 28px;
 }
 
 .sarjan-tiptap-editor.is-compact .sarjan-tiptap-toolbar {
@@ -4727,7 +4791,14 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
 .sarjan-tiptap-editor .sarjan-tiptap-surface {
   font-family: "Kumbh Sans", Arial, sans-serif;
+  color: #111111;
   outline: none;
+}
+
+/* Keep editor text readable (black); inline color is saved for the storefront. */
+.sarjan-tiptap-editor .sarjan-tiptap-surface,
+.sarjan-tiptap-editor .sarjan-tiptap-surface * {
+  color: #111111 !important;
 }
 
 .sarjan-tiptap-editor .sarjan-tiptap-surface p {
