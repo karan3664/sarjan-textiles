@@ -97,6 +97,12 @@ export default async function DownloadAppPage({ searchParams }: Props) {
                       Download the APK (QR scan or button above).
                     </li>
                     <li className="mb-2">
+                      If Chrome shows <strong>File might be harmful</strong>,
+                      tap <strong>Download anyway</strong> — this is normal for
+                      apps installed outside Google Play. Sarjan Textiles is
+                      published only from sarjantextiles.com.
+                    </li>
+                    <li className="mb-2">
                       If Android asks, allow install from browser / files.
                     </li>
                     <li className="mb-2">

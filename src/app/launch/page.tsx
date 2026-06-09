@@ -1,6 +1,6 @@
 import { LaunchBrandLogo } from "@/components/storefront/LaunchBrandLogo";
 import { LaunchCountdown } from "@/components/storefront/LaunchCountdown";
-import { LaunchHeroVisual } from "@/components/storefront/LaunchHeroVisual";
+import { LaunchNotifySignup } from "@/components/storefront/LaunchNotifySignup";
 import { siteSettings } from "@/data/mock";
 import {
   buildLaunchCalendarUrl,
@@ -73,14 +73,12 @@ export default function LaunchPage() {
             </svg>
           </a>
 
+          <LaunchNotifySignup />
+
           <footer className="sarjan-launch-page__footer">
             <a href={`mailto:${siteSettings.email}`}>{siteSettings.email}</a>
           </footer>
         </main>
-
-        <aside className="sarjan-launch-page__visual-wrap">
-          <LaunchHeroVisual />
-        </aside>
       </div>
     </div>
   );

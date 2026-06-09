@@ -16456,22 +16456,29 @@ body.sarjan-storefront
 .sarjan-launch-page__shell {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(24px, 4vw, 48px);
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   min-height: 100dvh;
-  max-width: 1180px;
+  max-width: 720px;
   margin: 0 auto;
   padding: clamp(32px, 5vw, 64px) clamp(20px, 4vw, 48px);
+  text-align: center;
 }
 
 .sarjan-launch-page__content {
+  width: 100%;
   max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .sarjan-launch-page__brand {
   margin-bottom: 28px;
+  display: flex;
+  justify-content: center;
 }
 
 .sarjan-launch-page__logo {
@@ -16521,6 +16528,7 @@ body.sarjan-storefront
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: center;
   gap: 0;
   margin: 0 0 20px;
 }
@@ -16579,7 +16587,7 @@ body.sarjan-storefront
 
 .sarjan-launch-page__lead {
   margin: 0 0 18px;
-  max-width: 32rem;
+  max-width: 36rem;
   font-size: clamp(0.92rem, 1.8vw, 1.02rem);
   line-height: 1.7;
   color: rgba(245, 240, 232, 0.68);
@@ -16633,126 +16641,76 @@ body.sarjan-storefront
   text-decoration: underline;
 }
 
-.sarjan-launch-page__visual-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sarjan-launch-visual {
-  position: relative;
-  width: min(420px, 88vw);
-  aspect-ratio: 1;
-}
-
-.sarjan-launch-visual__svg {
+.sarjan-launch-page__notify {
   width: 100%;
-  height: 100%;
-  animation: sarjan-launch-float 5s ease-in-out infinite;
-}
-
-.sarjan-launch-visual__orbit {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px dashed rgba(201, 162, 39, 0.25);
-  animation: sarjan-launch-spin 24s linear infinite;
-}
-
-.sarjan-launch-visual__orbit--one {
-  inset: 4%;
-}
-
-.sarjan-launch-visual__orbit--two {
-  inset: 14%;
-  animation-direction: reverse;
-  animation-duration: 32s;
-}
-
-.sarjan-launch-visual__badge {
-  position: absolute;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: rgba(18, 12, 14, 0.82);
-  border: 1px solid rgba(201, 162, 39, 0.35);
-  color: #f5f0e8;
+  max-width: 420px;
+  margin-top: 28px;
+  padding: 20px 18px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(8px);
-  white-space: nowrap;
 }
 
-.sarjan-launch-visual__badge--one {
-  top: 8%;
-  left: 0;
+.sarjan-launch-page__notify-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
 }
 
-.sarjan-launch-visual__badge--two {
-  top: 42%;
-  right: -4%;
+.sarjan-launch-page__notify-lead {
+  margin: 0 0 14px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: rgba(245, 240, 232, 0.62);
 }
 
-.sarjan-launch-visual__badge--three {
-  bottom: 10%;
-  left: 8%;
+.sarjan-launch-page__notify-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-@keyframes sarjan-launch-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
+.sarjan-launch-page__notify-input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font-size: 0.95rem;
 }
 
-@keyframes sarjan-launch-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.sarjan-launch-page__notify-input::placeholder {
+  color: rgba(245, 240, 232, 0.42);
 }
 
-@media (max-width: 900px) {
-  .sarjan-launch-page__shell {
-    grid-template-columns: 1fr;
-    text-align: center;
-    padding-top: 40px;
-    padding-bottom: 48px;
-  }
+.sarjan-launch-page__notify-btn {
+  padding: 13px 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #c9a227 0%, #e8d5a3 100%);
+  color: #2a1a08;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-  .sarjan-launch-page__content {
-    max-width: none;
-    margin: 0 auto;
-  }
+.sarjan-launch-page__notify-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
 
-  .sarjan-launch-page__brand {
-    display: flex;
-    justify-content: center;
-  }
+.sarjan-launch-page__notify-msg {
+  margin: 12px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #c9a227;
+}
 
-  .sarjan-launch-countdown {
-    justify-content: center;
-  }
-
-  .sarjan-launch-page__lead,
-  .sarjan-launch-page__when {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .sarjan-launch-page__visual-wrap {
-    order: -1;
-  }
-
-  .sarjan-launch-visual {
-    width: min(300px, 78vw);
-  }
-
-  .sarjan-launch-visual__badge--two {
-    right: 0;
-  }
+.sarjan-launch-page__notify-msg.is-error {
+  color: #ffb4b4;
 }
 
 @media (max-width: 520px) {

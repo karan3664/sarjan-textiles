@@ -8,6 +8,7 @@ import {
   newsletterSubscriberConfirmationInnerHtml,
 } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
+import { isSilentNewsletterSource } from "@/lib/launch-newsletter";
 import { subscribeNewsletterEmail } from "@/lib/newsletter-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -57,59 +58,62 @@ export async function POST(request: Request) {
     return rateLimitResponse(limit.resetAt);
   }
 
-  const cms = await getCachedCmsSnapshot();
-  const settings = { ...defaultSiteSettings, ...cms.siteSettings };
-  const notifyTo =
-    settings.ordersEmail?.trim() ||
-    process.env.ADMIN_EMAIL?.trim() ||
-    defaultSiteSettings.ordersEmail;
-
-  const brand = settings.brandName;
+  const silent = isSilentNewsletterSource(source);
   let created = true;
 
   try {
     const subscribed = await subscribeNewsletterEmail(email, source);
     const { subscriber } = subscribed;
     created = subscribed.created;
-    const unsubUrl = `${emailSiteOrigin()}/newsletter/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribeToken)}`;
 
-    await sendDomainMail({
-      to: email,
-      subject: `${brand} — newsletter subscription confirmed`,
-      text: [
-        `Thank you for subscribing to the ${brand} newsletter.`,
-        "",
-        `We saved your address: ${email}`,
-        "",
-        "We may send occasional updates on collections and B2B programs.",
-        `Reply to this email to reach ${brand}.`,
-        "",
-        `Unsubscribe anytime: ${unsubUrl}`,
-      ].join("\n"),
-      html: buildSarjanEmailHtml({
-        preheader: "You are subscribed to Sarjan Textiles updates",
-        eyebrow: "Newsletter",
-        heading: "You are subscribed",
-        innerHtml: `${newsletterSubscriberConfirmationInnerHtml(email)}<p style="margin:18px 0 0;font-size:13px;color:#6f6a64;line-height:1.5;">You can <a href="${unsubUrl}" style="color:#8b1e2d;">unsubscribe</a> at any time.</p>`,
-      }),
-    });
+    if (!silent) {
+      const cms = await getCachedCmsSnapshot();
+      const settings = { ...defaultSiteSettings, ...cms.siteSettings };
+      const notifyTo =
+        settings.ordersEmail?.trim() ||
+        process.env.ADMIN_EMAIL?.trim() ||
+        defaultSiteSettings.ordersEmail;
+      const brand = settings.brandName;
+      const unsubUrl = `${emailSiteOrigin()}/newsletter/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribeToken)}`;
 
-    await sendDomainMail({
-      to: notifyTo,
-      subject: `Newsletter signup: ${email}`,
-      text: [
-        `New ${source === "app" ? "mobile app" : source} newsletter signup.`,
-        "",
-        `Subscriber email: ${email}`,
-      ].join("\n"),
-      replyTo: email,
-      html: buildSarjanEmailHtml({
-        preheader: `New subscriber: ${email}`,
-        eyebrow: source === "app" ? "Mobile app" : "Website",
-        heading: "Newsletter signup",
-        innerHtml: newsletterAdminNotificationInnerHtml(email, source),
-      }),
-    });
+      await sendDomainMail({
+        to: email,
+        subject: `${brand} — newsletter subscription confirmed`,
+        text: [
+          `Thank you for subscribing to the ${brand} newsletter.`,
+          "",
+          `We saved your address: ${email}`,
+          "",
+          "We may send occasional updates on collections and B2B programs.",
+          `Reply to this email to reach ${brand}.`,
+          "",
+          `Unsubscribe anytime: ${unsubUrl}`,
+        ].join("\n"),
+        html: buildSarjanEmailHtml({
+          preheader: "You are subscribed to Sarjan Textiles updates",
+          eyebrow: "Newsletter",
+          heading: "You are subscribed",
+          innerHtml: `${newsletterSubscriberConfirmationInnerHtml(email)}<p style="margin:18px 0 0;font-size:13px;color:#6f6a64;line-height:1.5;">You can <a href="${unsubUrl}" style="color:#8b1e2d;">unsubscribe</a> at any time.</p>`,
+        }),
+      });
+
+      await sendDomainMail({
+        to: notifyTo,
+        subject: `Newsletter signup: ${email}`,
+        text: [
+          `New ${source === "app" ? "mobile app" : source} newsletter signup.`,
+          "",
+          `Subscriber email: ${email}`,
+        ].join("\n"),
+        replyTo: email,
+        html: buildSarjanEmailHtml({
+          preheader: `New subscriber: ${email}`,
+          eyebrow: source === "app" ? "Mobile app" : "Website",
+          heading: "Newsletter signup",
+          innerHtml: newsletterAdminNotificationInnerHtml(email, source),
+        }),
+      });
+    }
   } catch (error) {
     return NextResponse.json(
       {
@@ -125,8 +129,12 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     created,
-    message: created
-      ? "Thanks — check your inbox for a confirmation email."
-      : "You are already subscribed. We sent a confirmation email again.",
+    message: isSilentNewsletterSource(source)
+      ? created
+        ? "You are on the list — we will email you when we go live."
+        : "You are already on the list — we will email you at launch."
+      : created
+        ? "Thanks — check your inbox for a confirmation email."
+        : "You are already subscribed. We sent a confirmation email again.",
   });
 }

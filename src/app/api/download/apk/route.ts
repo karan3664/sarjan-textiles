@@ -27,6 +27,8 @@ export async function GET() {
       "Content-Disposition": `attachment; filename="${downloadName}"`,
       "Cache-Control": "no-store, no-cache, must-revalidate",
       Pragma: "no-cache",
+      "X-Content-Type-Options": "nosniff",
+      "X-Download-Options": "noopen",
       "X-App-Version": release.latestVersion,
       "X-App-Version-Code": String(release.versionCode),
     },

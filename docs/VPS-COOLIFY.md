@@ -85,7 +85,7 @@ ADMIN_EMAIL=admin@sarjantextiles.com
 ADMIN_PASSWORD=<strong>
 CRON_SECRET=<random>
 # Runtime env (Configuration → Environment Variables). Redeploy after adding/changing.
-SITE_LAUNCH_AT=2026-06-17T10:15:00+05:30
+SITE_LAUNCH_AT=2026-06-17T12:39:00+05:30
 
 SMTP_HOST=...
 SMTP_PORT=587
@@ -184,7 +184,10 @@ On VPS `/etc/cron.d/sarjan`:
 ```cron
 0 2 * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/daily-backup
 0 * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/abandoned-cart-reminders
+*/10 * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/launch-newsletter
 ```
+
+The launch-newsletter job sends the **Website launch** template once to all subscribers after `SITE_LAUNCH_AT` (inquiry, register, and launch-page signups are added automatically).
 
 ### DB backup
 

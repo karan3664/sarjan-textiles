@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/local-db";
 import { verifyEmailOtpToken } from "@/lib/email-otp";
 import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
+import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
             : undefined,
       ownerLegalName: String(body.ownerLegalName ?? "").trim() || undefined,
     });
+    await addLaunchNewsletterSubscriber(String(body.email), "register");
     return Response.json({
       ok: true,
       pendingApproval: true,

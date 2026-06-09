@@ -112,7 +112,115 @@ function mergeVars(
   return merged;
 }
 
+function featurePill(text: string) {
+  return `<p style="margin:0 0 6px;padding:8px 12px;background:#fff;border-radius:999px;border:1px solid #e8e2d9;color:#4d4843;font-size:13px;line-height:1.4;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(text)}</p>`;
+}
+
+function secondaryCta(text: string, url: string) {
+  const label = escapeHtml(text);
+  const href = escapeHtml(url);
+  return `<p style="margin:8px 0 0;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+  <a href="${href}" style="color:#8b1e2d;text-decoration:underline;font-weight:600;font-size:14px;">${label}</a>
+</p>`;
+}
+
 export const NEWSLETTER_TEMPLATES: NewsletterTemplate[] = [
+  {
+    id: "website-launch",
+    name: "Website launch",
+    description:
+      "Premium go-live announcement — hero, three highlights, primary + secondary CTA.",
+    category: "Launch",
+    eyebrow: "We are live",
+    defaultSubject: "Sarjan Textiles is live — explore your wholesale catalog",
+    fields: [
+      {
+        key: "headline",
+        label: "Headline",
+        type: "text",
+        defaultValue: "Sarjan Textiles is live",
+        required: true,
+      },
+      {
+        key: "subheadline",
+        label: "Subheadline",
+        type: "text",
+        defaultValue:
+          "Your wholesale catalog, MOQ ordering, and B2B client portal are ready.",
+      },
+      {
+        key: "body",
+        label: "Main message",
+        type: "textarea",
+        defaultValue:
+          "Thank you for waiting with us. Explore craft-based garments, browse collections by category, send inquiries, and register for approved wholesale access — all in one place.",
+        required: true,
+      },
+      {
+        key: "feature_one",
+        label: "Highlight 1",
+        type: "text",
+        defaultValue: "Wholesale catalog & categories",
+      },
+      {
+        key: "feature_two",
+        label: "Highlight 2",
+        type: "text",
+        defaultValue: "MOQ-friendly B2B ordering",
+      },
+      {
+        key: "feature_three",
+        label: "Highlight 3",
+        type: "text",
+        defaultValue: "Client portal & order tracking",
+      },
+      {
+        key: "cta_text",
+        label: "Primary button",
+        type: "text",
+        defaultValue: "Explore the website",
+      },
+      {
+        key: "cta_url",
+        label: "Primary link",
+        type: "url",
+        defaultValue: "https://sarjantextiles.com",
+      },
+      {
+        key: "secondary_cta_text",
+        label: "Secondary link text",
+        type: "text",
+        defaultValue: "Register for wholesale",
+      },
+      {
+        key: "secondary_cta_url",
+        label: "Secondary link",
+        type: "url",
+        defaultValue: "https://sarjantextiles.com/register",
+      },
+      {
+        key: "image_url",
+        label: "Hero image URL",
+        type: "url",
+        defaultValue:
+          "https://sarjantextiles.com/sarjan-assets/sarjan-logo-full.png",
+      },
+    ],
+    renderBody: (v) =>
+      [
+        heroImage(v.image_url, "Sarjan Textiles launch"),
+        card([h2(v.headline), p(v.subheadline), p(v.body)].join("")),
+        card(
+          [
+            featurePill(v.feature_one),
+            featurePill(v.feature_two),
+            featurePill(v.feature_three),
+          ].join(""),
+        ),
+        cta(v.cta_text, v.cta_url),
+        secondaryCta(v.secondary_cta_text, v.secondary_cta_url),
+      ].join(""),
+  },
   {
     id: "classic-announcement",
     name: "Classic announcement",

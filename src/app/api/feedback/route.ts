@@ -1,4 +1,5 @@
 import { createFeedback } from "@/lib/local-db";
+import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
 import {
   sanitizeUserText,
   USER_TEXT_LIMITS,
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       orderId: sanitizeUserText(String(raw.orderId ?? "")),
       message: messageCheck.value,
     });
+    await addLaunchNewsletterSubscriber(email, "inquiry");
     return Response.json({ feedback });
   } catch (error) {
     return Response.json(
