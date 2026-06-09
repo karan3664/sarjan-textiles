@@ -134,7 +134,7 @@ export function AdminHtmlEditor({
       return;
     }
     // Never reset the document while the user is typing — avoids cursor jump / scroll to top.
-    if (editor.isFocused()) {
+    if (editor.isFocused) {
       return;
     }
     const next = normalizeEditorInput(value);
