@@ -3,6 +3,7 @@ import {
   customSectionHasContent,
 } from "@/lib/cms-custom-section-utils";
 import type { PublicCustomSitePage } from "@/lib/pages-localize";
+import { siteUrl } from "@/lib/seo";
 import type { CmsCustomBlock, CmsCustomSection } from "@/types/cms-custom";
 
 export type MobileCustomSitePage = {
@@ -14,28 +15,39 @@ export type MobileCustomSitePage = {
   sections: CmsCustomSection[];
 };
 
-function absoluteMediaUrl(url: string | undefined, origin: string) {
+function absoluteMediaUrl(url: string | undefined) {
   const trimmed = url?.trim() ?? "";
   if (!trimmed) {
     return undefined;
   }
+  const base = siteUrl.replace(/\/$/, "");
+
   if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const parsed = new URL(trimmed);
+      if (
+        parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        parsed.hostname.endsWith(".local")
+      ) {
+        return `${base}${parsed.pathname}${parsed.search}`;
+      }
+    } catch {
+      return trimmed;
+    }
     return trimmed;
   }
-  const base = origin.replace(/\/$/, "");
+
   return `${base}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
 }
 
-function mapBlockForMobile(
-  block: CmsCustomBlock,
-  origin: string,
-): CmsCustomBlock {
+function mapBlockForMobile(block: CmsCustomBlock): CmsCustomBlock {
   return {
     ...block,
-    image: absoluteMediaUrl(block.image, origin),
+    image: absoluteMediaUrl(block.image),
     items: block.items?.map((item) => ({
       ...item,
-      image: absoluteMediaUrl(item.image, origin) ?? item.image,
+      image: absoluteMediaUrl(item.image) ?? item.image,
     })),
   };
 }
@@ -43,7 +55,6 @@ function mapBlockForMobile(
 /** Payload tuned for the React Native app (absolute media URLs, no empty blocks). */
 export function buildMobileCustomSitePage(
   page: PublicCustomSitePage,
-  origin: string,
 ): MobileCustomSitePage {
   const sections = (page.sections ?? [])
     .filter(customSectionHasContent)
@@ -51,14 +62,14 @@ export function buildMobileCustomSitePage(
       ...section,
       blocks: (section.blocks ?? [])
         .filter(customBlockHasContent)
-        .map((block) => mapBlockForMobile(block, origin)),
+        .map((block) => mapBlockForMobile(block)),
     }))
     .filter(customSectionHasContent);
 
   return {
     slug: page.slug,
     title: page.title,
-    heroImage: absoluteMediaUrl(page.heroImage, origin),
+    heroImage: absoluteMediaUrl(page.heroImage),
     heroSubtitle: page.heroSubtitle,
     metaDescription: page.metaDescription,
     sections,

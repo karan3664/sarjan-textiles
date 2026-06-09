@@ -26,9 +26,8 @@ export async function GET(
     });
   }
   const page = resolveCustomSitePage(pageRaw, locale);
-  const origin = new URL(request.url).origin;
   return jsonLocalized(
-    { page: buildMobileCustomSitePage(page, origin), locale },
+    { page: buildMobileCustomSitePage(page), locale },
     locale,
   );
 }

@@ -9,6 +9,7 @@ import type {
   CmsCustomCardItem,
   CmsCustomSection,
 } from "@/types/cms-custom";
+import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
 import { AdminCmsImageDisplayFields } from "@/components/admin/AdminCmsImageDisplayFields";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { CMS_IMAGE_DEFAULTS } from "@/lib/cms-image-display";
@@ -502,7 +503,9 @@ export function AdminCustomSectionsEditor({
                       {block.type === "text" ? (
                         <div className="d-grid gap-3">
                           <Field label="Heading">
-                            <TextInput
+                            <AdminHtmlEditor
+                              compact
+                              rows={2}
                               value={block.heading ?? ""}
                               onChange={(value) =>
                                 updateBlock(index, blockIndex, {
@@ -512,11 +515,13 @@ export function AdminCustomSectionsEditor({
                             />
                           </Field>
                           <Field label="Text">
-                            <textarea
+                            <AdminHtmlEditor
+                              compact
+                              rows={6}
                               value={block.body ?? ""}
-                              onChange={(event) =>
+                              onChange={(value) =>
                                 updateBlock(index, blockIndex, {
-                                  body: event.target.value,
+                                  body: value,
                                 })
                               }
                             />
