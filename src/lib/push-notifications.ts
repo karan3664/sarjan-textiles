@@ -147,6 +147,28 @@ export async function sendOrderStatusPush(order: LocalOrder) {
   });
 }
 
+export async function sendReviewReminderPush(
+  order: LocalOrder,
+  product: { slug: string; name: string; image?: string },
+) {
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sarjantextiles.com";
+  const url = `${base}/products/${encodeURIComponent(product.slug)}?review=1&orderId=${encodeURIComponent(order.id)}`;
+  await pushToClient(order.clientId, {
+    title: "How was your order?",
+    body: `Share your experience with ${product.name}.`,
+    type: "general",
+    data: {
+      type: "general",
+      url,
+      screen: "WriteReview",
+      orderId: order.id,
+      productSlug: product.slug,
+      productId: product.slug,
+      productName: product.name,
+    },
+  });
+}
+
 async function multicastPush(
   tokens: string[],
   message: {

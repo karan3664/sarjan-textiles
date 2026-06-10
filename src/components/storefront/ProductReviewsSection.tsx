@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProductCardRating } from "@/components/storefront/ProductCardRating";
 
 type PublicReview = {
@@ -44,12 +45,44 @@ function formatDate(value: string) {
   }
 }
 
-export function ProductReviewsSection({
+export function ProductReviewsSection(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <ProductReviewsSectionFallback productName={props.productName} />
+      }
+    >
+      <ProductReviewsSectionInner {...props} />
+    </Suspense>
+  );
+}
+
+function ProductReviewsSectionFallback({
+  productName,
+}: {
+  productName: string;
+}) {
+  return (
+    <section className="sarjan-product-reviews flat-spacing-3" aria-busy="true">
+      <div className="container text-center">
+        <h3 className="title">Customer reviews</h3>
+        <p className="text-secondary">Loading reviews for {productName}…</p>
+      </div>
+    </section>
+  );
+}
+
+function ProductReviewsSectionInner({
   productSlug,
   productName,
-  canWrite = false,
-  orderId,
+  canWrite: canWriteProp = false,
+  orderId: orderIdProp,
 }: Props) {
+  const searchParams = useSearchParams();
+  const urlReviewIntent = searchParams.get("review") === "1";
+  const urlOrderId = searchParams.get("orderId")?.trim() || undefined;
+  const urlRating = Number(searchParams.get("rating") ?? "");
+
   const [reviews, setReviews] = useState<PublicReview[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [sort, setSort] = useState<Sort>("newest");
@@ -63,6 +96,13 @@ export function ProductReviewsSection({
   const [body, setBody] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [eligibleToWrite, setEligibleToWrite] = useState(false);
+  const [resolvedOrderId, setResolvedOrderId] = useState<string | undefined>(
+    orderIdProp ?? urlOrderId,
+  );
+
+  const orderId = resolvedOrderId ?? orderIdProp ?? urlOrderId;
+  const canWrite = canWriteProp || eligibleToWrite;
 
   const load = useCallback(
     async (nextPage: number, replace = false) => {
@@ -95,6 +135,64 @@ export function ProductReviewsSection({
     setPage(1);
     void load(1, true);
   }, [load]);
+
+  useEffect(() => {
+    const activeOrderId = orderIdProp ?? urlOrderId;
+    if (!activeOrderId) {
+      setEligibleToWrite(false);
+      return;
+    }
+    setResolvedOrderId(activeOrderId);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/reviews/eligible?orderId=${encodeURIComponent(activeOrderId)}&productSlug=${encodeURIComponent(productSlug)}`,
+          { credentials: "include" },
+        );
+        if (!res.ok) {
+          if (res.status === 401) {
+            setMessage("Sign in to write a review for this order.");
+          }
+          return;
+        }
+        const data = (await res.json()) as {
+          canReview?: boolean;
+          hasReview?: boolean;
+          reviewStatus?: string;
+        };
+        if (cancelled) return;
+        setEligibleToWrite(Boolean(data.canReview));
+        if (data.hasReview) {
+          setMessage(
+            data.reviewStatus === "pending"
+              ? "Your review is pending moderation."
+              : "You already submitted a review for this order.",
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setMessage("Could not verify review eligibility.");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderIdProp, urlOrderId, productSlug]);
+
+  useEffect(() => {
+    if (!urlReviewIntent || !canWrite) return;
+    setShowForm(true);
+    if (Number.isFinite(urlRating) && urlRating >= 1 && urlRating <= 5) {
+      setRating(urlRating);
+    }
+    requestAnimationFrame(() => {
+      document
+        .getElementById("product-reviews-heading")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [urlReviewIntent, canWrite, urlRating]);
 
   const distributionRows = useMemo(() => {
     if (!stats) return [];

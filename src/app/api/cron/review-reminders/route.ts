@@ -1,15 +1,16 @@
 import { getCmsSnapshot } from "@/lib/cms-store";
+import { verifyCronRequest } from "@/lib/cron-auth";
 import { readLocalDb } from "@/lib/local-db";
+import { sendReviewReminderPush } from "@/lib/push-notifications";
 import {
   getReminderCount,
   recordReminderSent,
   sendReviewRequestEmail,
 } from "@/lib/review-emails";
 import { listPendingReviewItems } from "@/lib/review-eligibility";
+import { readEnglish } from "@/lib/cms-localize";
 
 export const runtime = "nodejs";
-
-const CRON_SECRET = process.env.CRON_SECRET?.trim();
 
 function daysAgo(dateIso: string, days: number) {
   const anchor = new Date(dateIso).getTime();
@@ -18,14 +19,8 @@ function daysAgo(dateIso: string, days: number) {
 }
 
 export async function GET(request: Request) {
-  if (CRON_SECRET) {
-    const auth = request.headers
-      .get("authorization")
-      ?.replace(/^Bearer\s+/i, "");
-    if (auth !== CRON_SECRET) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const denied = verifyCronRequest(request);
+  if (denied) return denied;
 
   const db = await readLocalDb();
   const cms = await getCmsSnapshot();
@@ -45,11 +40,16 @@ export async function GET(request: Request) {
 
     const item = pending[0]!;
     const product = cms.products.find((p) => p.slug === item.productSlug);
-    await sendReviewRequestEmail(order, {
+    const productName =
+      readEnglish(product?.name) || item.productName || item.productSlug;
+    const payload = {
       slug: item.productSlug,
-      name: item.productName,
+      name: productName,
       image: product?.images?.[0],
-    });
+    };
+
+    await sendReviewRequestEmail(order, payload);
+    await sendReviewReminderPush(order, payload);
     await recordReminderSent(order.id, order.clientId);
     sent += 1;
   }

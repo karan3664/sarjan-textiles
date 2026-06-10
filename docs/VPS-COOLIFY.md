@@ -210,8 +210,11 @@ On VPS `/etc/cron.d/sarjan`:
 ```cron
 0 2 * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/daily-backup
 0 * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/abandoned-cart-reminders
+0 10 * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/review-reminders
 * * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/launch-newsletter
 ```
+
+**Review reminders** (`/api/cron/review-reminders`): sends email + push for delivered orders with no review yet — first reminder **3 days** after delivery, second **7 days** after delivery, **max 2** per order.
 
 The launch-newsletter job sends the **Website launch** template once to all active subscribers after `SITE_LAUNCH_AT` (launch page “Notify me”, inquiry, and registration signups). Admin inbox alerts go to **info@sarjantextiles.com** when someone joins the list.
 
