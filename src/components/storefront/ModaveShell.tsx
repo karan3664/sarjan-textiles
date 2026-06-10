@@ -16,7 +16,6 @@ import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { getStorefrontHeaderData } from "@/lib/storefront-header-data";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { StorefrontScrollChrome } from "./StorefrontScrollChrome";
-import { StorefrontThemeProvider } from "./StorefrontThemeProvider";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
 
 export async function ModaveShell({ children }: { children: React.ReactNode }) {
@@ -26,7 +25,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
   const brandLogo = normalizeBrandLogo(cms.siteSettings.logo);
 
   return (
-    <StorefrontThemeProvider>
+    <>
       <button id="scroll-top" aria-label="Scroll to top">
         <svg
           width="24"
@@ -74,6 +73,6 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
       <SarjanButtonHoverFix />
       <OrderBotWidget />
       <PwaInstallPrompt />
-    </StorefrontThemeProvider>
+    </>
   );
 }

@@ -28,57 +28,70 @@ export async function POST(request: Request) {
     if (!emailOtp.ok)
       return Response.json({ error: emailOtp.error }, { status: 400 });
 
-    if (!body.gst) {
+    const companyName = String(body.companyName ?? "").trim();
+    const ownerLegalName = String(body.ownerLegalName ?? "").trim();
+    const gstRaw = String(body.gst ?? "").trim();
+    const hasGst = gstRaw.length > 0;
+
+    if (!companyName) {
       return Response.json(
-        { error: "GST number is required for wholesale registration" },
-        { status: 400 },
-      );
-    }
-    body.gst = normalizeGstin(String(body.gst));
-    if (!isValidGstin(body.gst)) {
-      return Response.json(
-        { error: "Invalid GST number format" },
+        { error: "Trade / business name is required." },
         { status: 400 },
       );
     }
 
-    const manualCompany = String(body.companyName ?? "").trim();
-    const manualOwner = String(body.ownerLegalName ?? "").trim();
-    try {
-      const verified = await verifyGstinFromPortal(body.gst);
-      body.companyName =
-        verified.tradeName?.trim() || verified.legalName.trim();
-      body.ownerLegalName = verified.legalName.trim();
-    } catch (error) {
-      if (!manualCompany) {
+    let gst: string | undefined;
+    if (hasGst) {
+      gst = normalizeGstin(gstRaw);
+      if (!isValidGstin(gst)) {
         return Response.json(
-          {
-            error:
-              error instanceof Error && /invalid/i.test(error.message)
-                ? error.message
-                : "GST portal unavailable. Enter trade name and legal name manually; admin will verify GST during approval.",
-          },
+          { error: "Invalid GST number format" },
           { status: 400 },
         );
       }
-      if (!manualOwner) {
-        return Response.json(
-          {
-            error:
-              "Legal / proprietor full name (as on GST certificate) is required when verifying manually.",
-          },
-          { status: 400 },
-        );
+
+      try {
+        const verified = await verifyGstinFromPortal(gst);
+        body.companyName =
+          verified.tradeName?.trim() || verified.legalName.trim();
+        body.ownerLegalName = verified.legalName.trim();
+      } catch (error) {
+        if (!companyName) {
+          return Response.json(
+            {
+              error:
+                error instanceof Error && /invalid/i.test(error.message)
+                  ? error.message
+                  : "GST portal unavailable. Enter trade name and legal name manually; admin will verify GST during approval.",
+            },
+            { status: 400 },
+          );
+        }
+        if (!ownerLegalName) {
+          return Response.json(
+            {
+              error:
+                "Legal / proprietor full name (as on GST certificate) is required when verifying manually.",
+            },
+            { status: 400 },
+          );
+        }
+        body.companyName = companyName;
+        body.ownerLegalName = ownerLegalName;
       }
-      body.companyName = manualCompany;
-      body.ownerLegalName = manualOwner;
+    } else {
+      body.companyName = companyName;
+      body.ownerLegalName =
+        ownerLegalName ||
+        String(body.fullName ?? body.contactName ?? "").trim() ||
+        undefined;
     }
 
     await createClient({
       email: String(body.email),
       password: String(body.password),
       companyName: String(body.companyName ?? "").trim(),
-      gst: String(body.gst),
+      gst,
       city: body.city != null ? String(body.city).trim() : undefined,
       state: body.state != null ? String(body.state).trim() : undefined,
       phone:

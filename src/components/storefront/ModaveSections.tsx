@@ -501,8 +501,13 @@ function CustomHomeSection({
         ? "sarjan-custom-section-split"
         : "sarjan-custom-section-grid";
 
+  const sectionClass =
+    section.id === "partner-cta"
+      ? "sarjan-custom-storefront-section sarjan-partner-cta-band"
+      : "sarjan-custom-storefront-section";
+
   return (
-    <section className="sarjan-custom-storefront-section">
+    <section className={sectionClass}>
       <div className="container">
         {hasTitle || hasSubtitle ? (
           <div className="heading-section text-center sarjan-custom-site-heading">
@@ -608,6 +613,14 @@ export async function HomeDynamic() {
         title={home.hero.title}
         description={home.hero.description}
         cta={home.hero.primaryCta}
+        secondaryCta={
+          homeContent.hero.secondaryCta
+            ? {
+                label: homeContent.hero.secondaryCta.label ?? "",
+                href: homeContent.hero.secondaryCta.href ?? "",
+              }
+            : undefined
+        }
         videoEnabled={Boolean(homeContent.hero.videoEnabled)}
         videoUrls={homeContent.hero.videoUrls}
         videoUrl={homeContent.hero.videoUrl ?? ""}

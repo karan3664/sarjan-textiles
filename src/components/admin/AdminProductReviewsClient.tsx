@@ -40,6 +40,20 @@ function statusBadge(status: ProductReviewStatus) {
   return "badge bg-warning text-dark";
 }
 
+const STAT_CARDS: Array<{
+  key: keyof Pick<
+    Metrics,
+    "totalReviews" | "pendingReviews" | "approvedReviews" | "rejectedReviews"
+  >;
+  label: string;
+  tone?: "pending" | "approved" | "rejected";
+}> = [
+  { key: "totalReviews", label: "Total" },
+  { key: "pendingReviews", label: "Pending", tone: "pending" },
+  { key: "approvedReviews", label: "Approved", tone: "approved" },
+  { key: "rejectedReviews", label: "Rejected", tone: "rejected" },
+];
+
 export function AdminProductReviewsClient({
   initialReviews,
   initialMetrics,
@@ -119,46 +133,33 @@ export function AdminProductReviewsClient({
   };
 
   return (
-    <div className="wg-box">
-      <div className="mb-20 d-flex flex-wrap justify-content-between gap-10 align-items-center">
-        <div>
-          <h4 className="mb-4">Product reviews</h4>
-          <p className="body-text text-secondary mb-0">
-            Moderate verified purchase reviews before they appear on web and
-            app.
-          </p>
-        </div>
-      </div>
-
-      <div className="row g-3 mb-20">
-        {[
-          ["Total", metrics.totalReviews],
-          ["Pending", metrics.pendingReviews],
-          ["Approved", metrics.approvedReviews],
-          ["Rejected", metrics.rejectedReviews],
-        ].map(([label, value]) => (
-          <div className="col-6 col-md-3" key={String(label)}>
-            <div className="p-3 border rounded-3 h-100">
-              <div className="body-text text-secondary">{label}</div>
-              <div className="h4 mb-0">{value}</div>
+    <div className="wg-box sarjan-admin-product-reviews">
+      <div className="sarjan-admin-product-reviews-stats">
+        {STAT_CARDS.map(({ key, label, tone }) => (
+          <div
+            key={key}
+            className={`sarjan-admin-product-reviews-stat${tone ? ` is-${tone}` : ""}`}
+          >
+            <div className="sarjan-admin-product-reviews-stat__label">
+              {label}
+            </div>
+            <div className="sarjan-admin-product-reviews-stat__value">
+              {metrics[key]}
             </div>
           </div>
         ))}
       </div>
 
-      {notice ? <div className="alert alert-info">{notice}</div> : null}
-
-      <div className="d-flex flex-wrap gap-10 mb-20">
+      <div className="sarjan-admin-product-reviews-toolbar">
         <input
-          className="form-control"
-          style={{ maxWidth: 280 }}
+          type="search"
+          className="form-control sarjan-admin-product-reviews-search"
           placeholder="Search product, customer, order…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <select
-          className="form-control"
-          style={{ maxWidth: 180 }}
+          className="form-select sarjan-admin-product-reviews-filter"
           value={statusFilter}
           onChange={(e) =>
             setStatusFilter(e.target.value as typeof statusFilter)
@@ -171,8 +172,7 @@ export function AdminProductReviewsClient({
           <option value="hidden">Hidden</option>
         </select>
         <select
-          className="form-control"
-          style={{ maxWidth: 140 }}
+          className="form-select sarjan-admin-product-reviews-filter sarjan-admin-product-reviews-filter--rating"
           value={ratingFilter}
           onChange={(e) =>
             setRatingFilter(
@@ -189,8 +189,14 @@ export function AdminProductReviewsClient({
         </select>
       </div>
 
+      {notice ? (
+        <p className="sarjan-admin-product-reviews-notice" role="status">
+          {notice}
+        </p>
+      ) : null}
+
       <div className="table-responsive">
-        <table className="table">
+        <table className="table table-bordered sarjan-admin-product-reviews-table">
           <thead>
             <tr>
               <th>Product</th>
@@ -199,89 +205,108 @@ export function AdminProductReviewsClient({
               <th>Review</th>
               <th>Status</th>
               <th>Date</th>
-              <th />
+              <th className="sarjan-admin-product-reviews-actions-th">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((review) => (
-              <tr key={review.id}>
-                <td>
-                  <div className="fw-semibold">{review.productSlug}</div>
-                  <div className="small text-secondary">{review.orderId}</div>
-                </td>
-                <td>{review.clientName}</td>
-                <td>{"★".repeat(review.rating)}</td>
-                <td style={{ minWidth: 240 }}>
-                  <div className="fw-semibold">{review.title}</div>
-                  <div className="small">{review.body}</div>
-                  {review.images.length ? (
-                    <div className="small text-secondary mt-1">
-                      {review.images.length} photo(s)
+            {filtered.length ? (
+              filtered.map((review) => (
+                <tr key={review.id}>
+                  <td>
+                    <div className="text-title">{review.productSlug}</div>
+                    <div className="text-caption-1 text-muted">
+                      {review.orderId}
                     </div>
-                  ) : null}
-                  {review.videos.length ? (
-                    <div className="small text-secondary">
-                      {review.videos.length} video(s)
-                    </div>
-                  ) : null}
-                </td>
-                <td>
-                  <span className={statusBadge(review.status)}>
-                    {review.status}
-                  </span>
-                </td>
-                <td>{formatDate(review.createdAt)}</td>
-                <td>
-                  <div className="d-flex flex-wrap gap-2">
-                    {review.status !== "approved" ? (
-                      <button
-                        type="button"
-                        className="tf-button style-2"
-                        disabled={busyId === review.id}
-                        onClick={() => void patchReview(review.id, "approve")}
-                      >
-                        Approve
-                      </button>
-                    ) : null}
-                    {review.status !== "rejected" ? (
-                      <button
-                        type="button"
-                        className="tf-button style-3"
-                        disabled={busyId === review.id}
-                        onClick={() => void patchReview(review.id, "reject")}
-                      >
-                        Reject
-                      </button>
-                    ) : null}
-                    {review.status !== "hidden" ? (
-                      <button
-                        type="button"
-                        className="tf-button style-3"
-                        disabled={busyId === review.id}
-                        onClick={() => void patchReview(review.id, "hide")}
-                      >
-                        Hide
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="tf-button style-3"
-                      disabled={busyId === review.id}
-                      onClick={() => void patchReview(review.id, "delete")}
+                  </td>
+                  <td>{review.clientName}</td>
+                  <td>
+                    <span
+                      className="sarjan-admin-product-reviews-stars"
+                      aria-label={`${review.rating} out of 5 stars`}
                     >
-                      Delete
-                    </button>
-                  </div>
+                      {"★".repeat(review.rating)}
+                    </span>
+                  </td>
+                  <td className="sarjan-admin-product-reviews-copy">
+                    <div className="text-title">{review.title}</div>
+                    <div className="body-text text-secondary">
+                      {review.body}
+                    </div>
+                    {review.images.length ? (
+                      <div className="text-caption-1 text-muted">
+                        {review.images.length} photo(s)
+                      </div>
+                    ) : null}
+                    {review.videos.length ? (
+                      <div className="text-caption-1 text-muted">
+                        {review.videos.length} video(s)
+                      </div>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span className={statusBadge(review.status)}>
+                      {review.status}
+                    </span>
+                  </td>
+                  <td className="text-nowrap">
+                    {formatDate(review.createdAt)}
+                  </td>
+                  <td className="sarjan-admin-product-reviews-actions-cell">
+                    <div className="sarjan-admin-product-reviews-actions">
+                      {review.status !== "approved" ? (
+                        <button
+                          type="button"
+                          className="tf-button style-1"
+                          disabled={busyId === review.id}
+                          onClick={() => void patchReview(review.id, "approve")}
+                        >
+                          Approve
+                        </button>
+                      ) : null}
+                      {review.status !== "rejected" ? (
+                        <button
+                          type="button"
+                          className="tf-button sarjan-danger-button"
+                          disabled={busyId === review.id}
+                          onClick={() => void patchReview(review.id, "reject")}
+                        >
+                          Reject
+                        </button>
+                      ) : null}
+                      {review.status !== "hidden" ? (
+                        <button
+                          type="button"
+                          className="tf-button"
+                          disabled={busyId === review.id}
+                          onClick={() => void patchReview(review.id, "hide")}
+                        >
+                          Hide
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="tf-button sarjan-danger-button"
+                        disabled={busyId === review.id}
+                        onClick={() => void patchReview(review.id, "delete")}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="sarjan-admin-product-reviews-empty">
+                  No reviews in this queue.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
-
-      {!filtered.length ? (
-        <p className="body-text text-secondary">No reviews in this queue.</p>
-      ) : null}
     </div>
   );
 }

@@ -3346,6 +3346,215 @@ img.sarjan-product-img-placeholder {
   font-weight: 500;
 }
 
+/* Admin product reviews moderation */
+.sarjan-admin-product-reviews-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sarjan-admin-product-reviews-stat {
+  padding: 14px 16px;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.sarjan-admin-product-reviews-stat.is-pending {
+  border-color: rgba(180, 120, 0, 0.22);
+  background: #fffaf0;
+}
+
+.sarjan-admin-product-reviews-stat.is-approved {
+  border-color: rgba(25, 135, 84, 0.22);
+  background: #f4fbf7;
+}
+
+.sarjan-admin-product-reviews-stat.is-rejected {
+  border-color: rgba(108, 117, 125, 0.22);
+  background: #f7f7f8;
+}
+
+.sarjan-admin-product-reviews-stat__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6f6a64;
+  margin-bottom: 6px;
+}
+
+.sarjan-admin-product-reviews-stat__value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #181818;
+}
+
+.sarjan-admin-product-reviews-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-search,
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-filter {
+  box-sizing: border-box;
+  min-height: 46px;
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: var(--sarjan-ui-font, inherit);
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background-color: #fff;
+  color: #181818;
+  box-shadow: none;
+}
+
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-search {
+  flex: 1 1 240px;
+  max-width: 360px;
+  min-width: 200px;
+}
+
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-filter {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 180px;
+  min-width: 150px;
+  padding-right: 36px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23555' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+}
+
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-filter--rating {
+  max-width: 140px;
+  min-width: 120px;
+}
+
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-search:hover,
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-filter:hover {
+  border-color: #c4c4c4;
+}
+
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-search:focus,
+.sarjan-admin-product-reviews .sarjan-admin-product-reviews-filter:focus {
+  border-color: #181818;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 24, 0.1);
+}
+
+.sarjan-admin-product-reviews-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #eef6ff;
+  border: 1px solid #cfe4ff;
+  color: #184c7a;
+  font-size: 14px;
+}
+
+.sarjan-admin-product-reviews-table thead th {
+  background: #f3f0eb;
+  color: #181818;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.sarjan-admin-product-reviews-table tbody td {
+  vertical-align: top;
+}
+
+.sarjan-admin-product-reviews-stars {
+  color: #c9922e;
+  letter-spacing: 1px;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.sarjan-admin-product-reviews-copy {
+  min-width: 240px;
+  max-width: 360px;
+}
+
+.sarjan-admin-product-reviews-copy .text-title {
+  margin-bottom: 4px;
+}
+
+.sarjan-admin-product-reviews-copy .body-text {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.sarjan-admin-product-reviews .badge {
+  display: inline-block;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+}
+
+.sarjan-admin-product-reviews-actions-th,
+.sarjan-admin-product-reviews-actions-cell {
+  width: 148px;
+  min-width: 148px;
+}
+
+.sarjan-admin-product-reviews-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sarjan-admin-product-reviews-actions .tf-button {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.sarjan-admin-product-reviews-empty {
+  padding: 28px 16px !important;
+  text-align: center;
+  color: #6f6a64 !important;
+  font-size: 14px;
+}
+
+@media (max-width: 991px) {
+  .sarjan-admin-product-reviews-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575px) {
+  .sarjan-admin-product-reviews-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-admin-product-reviews .sarjan-admin-product-reviews-search,
+  .sarjan-admin-product-reviews .sarjan-admin-product-reviews-filter {
+    max-width: none;
+    width: 100%;
+  }
+}
+
 /* Admin blog comments: toolbar, table cells, tf-button column */
 .sarjan-admin-blog-comments-toolbar {
   display: flex;
@@ -4179,426 +4388,7 @@ img.sarjan-product-img-placeholder {
   }
 }
 
-/* Emoji: never use Kumbh/Plus Jakarta in input stack — their symbol subsets steal emoji codepoints */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
-
-:root {
-  --sarjan-emoji-font:
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-    "Noto Color Emoji", emoji;
-  --sarjan-text-emoji-font:
-    var(--sarjan-emoji-font), ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --sarjan-ui-font:
-    "Plus Jakarta Sans", "Instrument Sans", "Kumbh Sans", ui-sans-serif,
-    system-ui, sans-serif;
-}
-
-.sarjan-emoji-text,
-.sarjan-emoji-field textarea.sarjan-emoji-text,
-.form-leave-comment .sarjan-emoji-field textarea,
-.sarjan-testimonial-submit-form .sarjan-emoji-field textarea,
-textarea.sarjan-emoji-field-input {
-  font-family: var(--sarjan-text-emoji-font) !important;
-  font-variant-emoji: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-/* Display-only user text (comments, testimonials) */
-p.sarjan-emoji-text,
-blockquote.sarjan-emoji-text,
-.sarjan-inquiry-body-text.sarjan-emoji-text {
-  font-family: var(--sarjan-text-emoji-font);
-  font-variant-emoji: emoji;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-/* Modave: .form-leave-comment button adds borders to ALL buttons — breaks emoji picker */
-.form-leave-comment .button-submit > button,
-.form-leave-comment .button-submit button[type="submit"] {
-  border: 1px solid var(--main);
-}
-
-.form-leave-comment .sarjan-emoji-trigger {
-  position: relative;
-  z-index: 5;
-  width: 36px !important;
-  min-height: 36px !important;
-  padding: 0 !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  border-radius: 8px !important;
-  background: #fff !important;
-  color: inherit !important;
-  pointer-events: auto !important;
-  overflow: visible !important;
-}
-
-.sarjan-emoji-field {
-  position: relative;
-  display: block;
-  width: 100%;
-}
-
-.sarjan-emoji-field textarea {
-  width: 100%;
-  padding-right: 2.75rem;
-  padding-bottom: 2.25rem;
-}
-
-.sarjan-emoji-field-toolbar {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  z-index: 3;
-}
-
-.sarjan-emoji-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.sarjan-emoji-trigger:hover,
-.sarjan-emoji-trigger:focus-visible {
-  border-color: rgba(0, 0, 0, 0.22);
-  background: #faf8f5;
-}
-
-.sarjan-emoji-trigger-icon {
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-/* Portal-mounted picker (outside .form-leave-comment) — no template button borders */
-.sarjan-emoji-picker-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 10049;
-  margin: 0;
-  padding: 0;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  min-height: unset !important;
-  width: 100% !important;
-  height: 100% !important;
-  cursor: default;
-  appearance: none;
-}
-
-.sarjan-emoji-picker-portal {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
-  overflow: hidden;
-}
-
-.sarjan-emoji-picker-portal aside.EmojiPickerReact,
-.sarjan-emoji-picker-portal .EmojiPickerReact,
-.sarjan-emoji-picker-portal .epr-main {
-  box-sizing: border-box !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  /* Keep library grid math — only tweak density via vars, not cell width !important */
-  --epr-horizontal-padding: 8px;
-  --epr-emoji-size: 28px;
-  --epr-emoji-padding: 2px;
-  --epr-category-navigation-button-size: 28px;
-  --epr-hover-bg-color: #e8f2fc;
-  --epr-focus-bg-color: #d6e9ff;
-  --epr-emoji-hover-color: var(--epr-hover-bg-color);
-  --epr-category-label-bg-color: rgba(255, 255, 255, 0.96);
-  --epr-preview-border-color: #e8e2d9;
-  --epr-skin-tone-size: 22px;
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 auto;
-  overflow: hidden !important;
-}
-
-/* UI font on chrome only — Kumbh/Plus Jakarta on .epr-main steals emoji glyphs */
-.sarjan-emoji-picker-portal .epr-header,
-.sarjan-emoji-picker-portal .epr-category-nav,
-.sarjan-emoji-picker-portal h2.epr-emoji-category-label,
-.sarjan-emoji-picker-portal .epr-search-container input,
-.sarjan-emoji-picker-portal .epr-body ~ div {
-  font-family: var(--sarjan-ui-font) !important;
-}
-
-.sarjan-emoji-picker-portal .epr-header {
-  flex-shrink: 0;
-  background: #fff;
-  position: relative;
-  z-index: 4;
-}
-
-/* Search row + skin tone swatches — keep on one line, no overlap */
-.sarjan-emoji-picker-portal .epr-header > div:first-child {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 10px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 12px 14px 8px !important;
-  z-index: auto !important;
-}
-
-.sarjan-emoji-picker-portal .epr-search-container {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  position: relative !important;
-  z-index: 1 !important;
-}
-
-/* Skin tone row — library handles layout/colors; only undo Modave padding */
-.sarjan-emoji-picker-portal .epr-skin-tones {
-  flex-shrink: 0 !important;
-  align-self: center !important;
-}
-
-.sarjan-emoji-picker-portal button.epr-tone {
-  margin: 0 !important;
-  padding: 0 !important;
-  min-height: 0 !important;
-  text-transform: none !important;
-  font-weight: 400 !important;
-  gap: 0 !important;
-}
-
-/* Modave `button { background: … }` wipes sprites — use background-color only */
-.sarjan-emoji-picker-portal button:not(.epr-emoji):not(.epr-tone) {
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  background-color: transparent !important;
-  color: unset !important;
-  font-weight: 400 !important;
-  line-height: 1 !important;
-  text-transform: none !important;
-  min-height: 0 !important;
-}
-
-/* Category nav sprites — never use background: shorthand (kills SVG sprite) */
-.sarjan-emoji-picker-portal .epr-cat-btn {
-  display: inline-block !important;
-  width: var(--epr-category-navigation-button-size, 30px) !important;
-  height: var(--epr-category-navigation-button-size, 30px) !important;
-  min-width: var(--epr-category-navigation-button-size, 30px) !important;
-  min-height: var(--epr-category-navigation-button-size, 30px) !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 6px !important;
-  background-color: transparent !important;
-  flex-shrink: 0;
-  opacity: 0.85;
-  visibility: visible !important;
-}
-
-.sarjan-emoji-picker-portal .epr-cat-btn:hover,
-.sarjan-emoji-picker-portal .epr-cat-btn:focus-visible,
-.sarjan-emoji-picker-portal .epr-cat-btn.epr-active,
-.sarjan-emoji-picker-portal
-  .epr-category-nav
-  .epr-cat-btn[aria-selected="true"] {
-  opacity: 1 !important;
-  background-color: transparent !important;
-  box-shadow: inset 0 0 0 2px rgba(0, 122, 235, 0.45) !important;
-}
-
-.sarjan-emoji-picker-portal .epr-category-nav {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-around !important;
-  gap: 4px;
-  padding: 6px 12px 10px !important;
-  min-height: 46px;
-  background-color: #fff !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-.sarjan-emoji-picker-portal .epr-body {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  background: #fff;
-  position: relative;
-  z-index: 1;
-  font-family: var(--sarjan-emoji-font) !important;
-  font-variant-emoji: emoji;
-}
-
-.sarjan-emoji-picker-portal .epr-emoji-list {
-  list-style: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.sarjan-emoji-picker-portal .epr-emoji-category {
-  position: relative !important;
-  display: block !important;
-}
-
-.sarjan-emoji-picker-portal h2.epr-emoji-category-label {
-  display: flex !important;
-  align-items: center !important;
-  margin: 0 !important;
-  padding: 6px var(--epr-horizontal-padding, 4px) !important;
-  background: #fff !important;
-  background-color: #fff !important;
-  color: #555 !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  font-family: var(--sarjan-ui-font) !important;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
-  border-bottom: 1px solid #ebe6de !important;
-  box-shadow: none !important;
-}
-
-/*
- * Emoji grid: do NOT override display/position/width on .epr-emoji-category-content
- * or button.epr-emoji — library uses absolute top/left from measured --epr-emoji-fullsize.
- */
-
-/* Undo Modave button styles only — keep emoji-picker-react cell sizing/position */
-.sarjan-emoji-picker-portal button.epr-emoji,
-.sarjan-emoji-picker-portal .epr-btn.epr-emoji {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 0 !important;
-  padding: var(--epr-emoji-padding) !important;
-  border: 0 !important;
-  background: none !important;
-  background-color: transparent !important;
-  color: unset !important;
-  font-weight: 400 !important;
-  line-height: normal !important;
-  text-transform: none !important;
-  box-shadow: none !important;
-  gap: 0 !important;
-  overflow: visible !important;
-  min-height: 0 !important;
-}
-
-/* Glyphs: UI fonts steal emoji; library __EmojiPicker__ uses font-size:0 */
-.sarjan-emoji-picker-portal .__EmojiPicker__,
-.sarjan-emoji-picker-portal .epr-emoji-native {
-  font-family: var(--sarjan-emoji-font) !important;
-  font-size: var(--epr-emoji-size) !important;
-  line-height: 1 !important;
-}
-
-.sarjan-emoji-picker-portal .epr-emoji-img {
-  font-size: var(--epr-emoji-size) !important;
-}
-
-.sarjan-emoji-picker-portal .epr-btn-clear-search,
-.sarjan-emoji-picker-portal .epr-btn-clear-search:hover,
-.sarjan-emoji-picker-portal .epr-btn-clear-search:focus-visible {
-  width: 30px !important;
-  height: 30px !important;
-  min-height: 30px !important;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 50% !important;
-  background-color: transparent !important;
-}
-
-.sarjan-emoji-picker-portal .epr-btn-clear-search:hover,
-.sarjan-emoji-picker-portal .epr-btn-clear-search:focus-visible {
-  background-color: var(--epr-hover-bg-color) !important;
-}
-
-.sarjan-emoji-picker-portal .epr-body ~ div {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 4;
-  background: #faf8f5 !important;
-  border-top: 1px solid var(--epr-preview-border-color) !important;
-  min-height: 56px;
-}
-
-.sarjan-emoji-picker-portal .epr-emoji-variation-picker {
-  z-index: 10 !important;
-  background: #fff !important;
-  border: 1px solid #e8e2d9 !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-}
-
-/* Modave template sets input[type=text] padding — overlaps picker search icon */
-.sarjan-emoji-picker-portal .epr-search-container input,
-.sarjan-emoji-picker-portal .epr-search-container input[type="text"] {
-  padding: 0 40px 0 42px !important;
-  height: 40px !important;
-  line-height: 40px !important;
-  font-size: 14px !important;
-  border: 1px solid #e8e2d9 !important;
-  border-radius: 8px !important;
-  font-family: var(--sarjan-ui-font) !important;
-  box-shadow: none !important;
-  width: 100% !important;
-  background-color: #f6f6f6 !important;
-  color: #555 !important;
-}
-
-.sarjan-emoji-picker-portal .epr-icn-search {
-  left: 14px !important;
-  width: 18px !important;
-  height: 18px !important;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.sarjan-emoji-picker-portal .epr-btn-clear-search {
-  right: 10px !important;
-}
-
-.sarjan-emoji-picker-loading {
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  font-size: 14px;
-  color: #666;
-}
-
-.form-leave-comment .sarjan-emoji-field textarea,
-.sarjan-testimonial-submit-form .sarjan-emoji-field textarea {
-  min-height: 120px;
-}
+/* Emoji field + picker styles live in emoji-picker.css (via globals.css). */
 
 @media (max-width: 1199px) {
   .sarjan-admin-section-grid,
@@ -5704,4 +5494,150 @@ blockquote.sarjan-emoji-text,
   .sarjan-seo-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* Modave admin theme customizer — dark page background (gear → Theme Style) */
+body[data-theme-background="theme-background-252E3A"],
+body[data-theme-background="theme-background-1E1D2A"],
+body[data-theme-background="theme-background-1B2627"] {
+  color: #e8e6e3;
+}
+
+body[data-theme-background="theme-background-252E3A"] .main-content,
+body[data-theme-background="theme-background-1E1D2A"] .main-content,
+body[data-theme-background="theme-background-1B2627"] .main-content,
+body[data-theme-background="theme-background-252E3A"] .main-content-inner,
+body[data-theme-background="theme-background-1E1D2A"] .main-content-inner,
+body[data-theme-background="theme-background-1B2627"] .main-content-inner {
+  color: #e8e6e3;
+}
+
+body[data-theme-background="theme-background-252E3A"] .text-title,
+body[data-theme-background="theme-background-1E1D2A"] .text-title,
+body[data-theme-background="theme-background-1B2627"] .text-title,
+body[data-theme-background="theme-background-252E3A"] .body-text,
+body[data-theme-background="theme-background-1E1D2A"] .body-text,
+body[data-theme-background="theme-background-1B2627"] .body-text,
+body[data-theme-background="theme-background-252E3A"] .text-secondary,
+body[data-theme-background="theme-background-1E1D2A"] .text-secondary,
+body[data-theme-background="theme-background-1B2627"] .text-secondary,
+body[data-theme-background="theme-background-252E3A"] .text-caption-1,
+body[data-theme-background="theme-background-1E1D2A"] .text-caption-1,
+body[data-theme-background="theme-background-1B2627"] .text-caption-1,
+body[data-theme-background="theme-background-252E3A"] h4.heading,
+body[data-theme-background="theme-background-1E1D2A"] h4.heading,
+body[data-theme-background="theme-background-1B2627"] h4.heading {
+  color: #f2efe9 !important;
+}
+
+body[data-theme-background="theme-background-252E3A"] .wg-box,
+body[data-theme-background="theme-background-1E1D2A"] .wg-box,
+body[data-theme-background="theme-background-1B2627"] .wg-box,
+body[data-theme-background="theme-background-252E3A"] .wg-card,
+body[data-theme-background="theme-background-1E1D2A"] .wg-card,
+body[data-theme-background="theme-background-1B2627"] .wg-card {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e8e6e3;
+  box-shadow: none;
+}
+
+body[data-theme-background="theme-background-252E3A"] .wg-table table,
+body[data-theme-background="theme-background-1E1D2A"] .wg-table table,
+body[data-theme-background="theme-background-1B2627"] .wg-table table {
+  color: #e8e6e3;
+}
+
+body[data-theme-background="theme-background-252E3A"] .wg-table th,
+body[data-theme-background="theme-background-1E1D2A"] .wg-table th,
+body[data-theme-background="theme-background-1B2627"] .wg-table th,
+body[data-theme-background="theme-background-252E3A"] .wg-table td,
+body[data-theme-background="theme-background-1E1D2A"] .wg-table td,
+body[data-theme-background="theme-background-1B2627"] .wg-table td {
+  color: #e8e6e3;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body[data-theme-background="theme-background-252E3A"] .form-control,
+body[data-theme-background="theme-background-1E1D2A"] .form-control,
+body[data-theme-background="theme-background-1B2627"] .form-control,
+body[data-theme-background="theme-background-252E3A"] .form-select,
+body[data-theme-background="theme-background-1E1D2A"] .form-select,
+body[data-theme-background="theme-background-1B2627"] .form-select,
+body[data-theme-background="theme-background-252E3A"] textarea,
+body[data-theme-background="theme-background-1E1D2A"] textarea,
+body[data-theme-background="theme-background-1B2627"] textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #f2efe9 !important;
+}
+
+body[data-theme-background="theme-background-252E3A"] .bottom-page .body-text,
+body[data-theme-background="theme-background-1E1D2A"] .bottom-page .body-text,
+body[data-theme-background="theme-background-1B2627"] .bottom-page .body-text,
+body[data-theme-background="theme-background-252E3A"] .bottom-page a,
+body[data-theme-background="theme-background-1E1D2A"] .bottom-page a,
+body[data-theme-background="theme-background-1B2627"] .bottom-page a {
+  color: rgba(242, 239, 233, 0.72) !important;
+}
+
+body[data-theme-background="theme-background-252E3A"] .sarjan-inline-code,
+body[data-theme-background="theme-background-1E1D2A"] .sarjan-inline-code,
+body[data-theme-background="theme-background-1B2627"] .sarjan-inline-code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f2efe9 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-product-reviews-stat,
+body[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-product-reviews-stat,
+body[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-product-reviews-stat {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-product-reviews-stat__label,
+body[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-product-reviews-stat__label,
+body[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-product-reviews-stat__label {
+  color: rgba(242, 239, 233, 0.68) !important;
+}
+
+body[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-product-reviews-stat__value,
+body[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-product-reviews-stat__value,
+body[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-product-reviews-stat__value {
+  color: #f2efe9 !important;
+}
+
+body[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-product-reviews-table
+  thead
+  th,
+body[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-product-reviews-table
+  thead
+  th,
+body[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-product-reviews-table
+  thead
+  th {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f2efe9 !important;
+}
+
+body[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-product-reviews-empty,
+body[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-product-reviews-empty,
+body[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-product-reviews-empty {
+  color: rgba(242, 239, 233, 0.65) !important;
 }

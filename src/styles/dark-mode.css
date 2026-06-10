@@ -11,7 +11,10 @@ html[data-theme="light"] {
   color-scheme: light;
 }
 
-html[data-theme="dark"] body.sarjan-storefront:not(:has(.sarjan-launch-page)) {
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  ) {
   --sarjan-ink: #f2efe9;
   --sarjan-muted: #a8a39a;
   --sarjan-border: #3a3834;
@@ -50,36 +53,51 @@ html[data-theme="dark"] body.sarjan-storefront:not(:has(.sarjan-launch-page)) {
   --text-3: #9c968d;
 }
 
-html[data-theme="dark"] body.sarjan-storefront:not(:has(.sarjan-launch-page)) {
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  ) {
   background: var(--sarjan-bg);
   color: var(--sarjan-text);
 }
 
 /* Header + sticky chrome */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   header,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   header.header-bg,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   #header.sarjan-sticky-header {
   background-color: var(--sarjan-chrome-bg) !important;
   border-color: var(--sarjan-chrome-border);
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   #header
   .nav-icon
   .nav-icon-item,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   #header
   .mobile-menu,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   #header
   .box-nav-ul
   .item-link {
@@ -87,7 +105,9 @@ html[data-theme="dark"]
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-scroll-chrome.sarjan-chrome-elevated
   #header.sarjan-sticky-header {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -95,31 +115,49 @@ html[data-theme="dark"]
 
 /* Cards, product grids */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .card-product,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .card,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .wg-quantity,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .tf-product-info-list,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .tf-cart-item,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .modal-content,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .offcanvas,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .canvas-filter,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .dropdown-account {
   background-color: var(--sarjan-bg-elevated);
   color: var(--sarjan-text);
@@ -127,46 +165,72 @@ html[data-theme="dark"]
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .text-secondary,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .text-secondary-2,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .text-caption-1.text-secondary,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .text-muted,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .description.text-secondary {
   color: var(--sarjan-muted) !important;
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .form-control,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .form-select,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   input[type="text"],
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   input[type="email"],
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   input[type="password"],
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   input[type="search"],
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   textarea,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   select {
   background-color: var(--sarjan-input-bg);
   border-color: var(--sarjan-input-border);
@@ -174,10 +238,14 @@ html[data-theme="dark"]
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-theme-select,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-lang-select {
   background-color: var(--sarjan-input-bg);
   border-color: var(--sarjan-input-border);
@@ -186,17 +254,23 @@ html[data-theme="dark"]
 
 /* Footer */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   footer.bg-main,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   footer {
   background-color: #0e0d0c !important;
 }
 
 /* Cookie consent */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-cookie-consent {
   background: var(--sarjan-chrome-bg);
   color: var(--sarjan-text);
@@ -205,7 +279,9 @@ html[data-theme="dark"]
 
 /* Mobile bottom nav */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-bottom-nav__inner {
   background: var(--sarjan-chrome-bg);
   border-color: var(--sarjan-chrome-border);
@@ -213,33 +289,45 @@ html[data-theme="dark"]
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-bottom-nav__item {
   color: var(--sarjan-chrome-text-muted);
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-bottom-nav__item.is-active {
   color: var(--primary, #c45a6a);
 }
 
 /* Mobile menu drawer */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-menu,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-menu__canvas,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-menu__body {
   background: var(--sarjan-bg-elevated);
   color: var(--sarjan-text);
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-mobile-menu__btn {
   background: var(--sarjan-bg-muted);
   color: var(--sarjan-text);
@@ -248,10 +336,14 @@ html[data-theme="dark"]
 
 /* Order bot + scroll top */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-order-bot-panel,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-order-bot-launcher {
   background: var(--sarjan-bg-elevated);
   color: var(--sarjan-text);
@@ -259,14 +351,18 @@ html[data-theme="dark"]
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   #scroll-top {
   background: var(--sarjan-bg-muted);
   border: 1px solid var(--sarjan-border);
 }
 
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   #scroll-top
   svg
   path {
@@ -275,10 +371,14 @@ html[data-theme="dark"]
 
 /* Compare drawer */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .canvas-compare,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-compare-drawer-header {
   background: var(--sarjan-bg-elevated);
   color: var(--sarjan-text);
@@ -286,10 +386,14 @@ html[data-theme="dark"]
 
 /* Auth pages */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-auth-page,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-auth-card {
   background: var(--sarjan-bg);
   color: var(--sarjan-text);
@@ -297,34 +401,183 @@ html[data-theme="dark"]
 
 /* Breadcrumb */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .tf-breadcrumb {
   background: var(--sarjan-bg-elevated);
 }
 
 /* Flat sections */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .flat-spacing,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .bg-surface {
   background-color: var(--sarjan-surface) !important;
 }
 
 /* Product image placeholders */
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-product-img-primary,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .img-product.sarjan-product-img-placeholder,
 html[data-theme="dark"]
-  body.sarjan-storefront:not(:has(.sarjan-launch-page))
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-category-strip
   .collection-position-2
   .img-style {
   background: var(--sarjan-bg-muted) !important;
+}
+
+/* Page title banners use a light peach photo — keep dark ink in every theme */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title {
+  background-color: #faf6f1;
+  background-blend-mode: multiply;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .heading
+  h1,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .heading
+  h3,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .breadcrumbs,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .breadcrumbs
+  li,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .breadcrumbs
+  .link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .page-title
+  .breadcrumbs
+  i {
+  color: #181818 !important;
+}
+
+/* Account sidebar — active tab uses light surface, not inverted --white token */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sidebar-account
+  .my-account-nav
+  .my-account-nav-item,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sidebar-account
+  button.my-account-nav-item.sarjan-account-nav-logout {
+  color: #f2efe9 !important;
+  -webkit-text-fill-color: #f2efe9 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sidebar-account
+  .my-account-nav
+  .my-account-nav-item:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sidebar-account
+  .my-account-nav
+  .my-account-nav-item.active,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sidebar-account
+  button.sarjan-account-nav-logout:hover {
+  background-color: #2a2826 !important;
+  color: #f2efe9 !important;
+  -webkit-text-fill-color: #f2efe9 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sidebar-account
+  .my-account-nav
+  .my-account-nav-item.active {
+  color: #c45a6a !important;
+  -webkit-text-fill-color: #c45a6a !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .account-details
+  .text-title,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .account-details
+  .text-secondary {
+  color: var(--sarjan-text) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

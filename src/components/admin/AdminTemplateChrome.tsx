@@ -25,6 +25,7 @@ const adminScripts = [
   "lazysize.min.js",
   "swiper-bundle.min.js",
   "carousel.js",
+  "switcher.js",
   "theme-settings.js",
   "main.js",
 ];
@@ -423,7 +424,7 @@ export function AdminTemplateChrome({
       <AdminGlobalLoader />
       <div id="wrapper">
         <div id="page">
-          <div className="layout-wrap loader-off">
+          <div className="layout-wrap loader-off sarjan-admin-shell">
             <Sidebar active={active} />
             <AdminSidebarController />
             <div className="section-content-right">

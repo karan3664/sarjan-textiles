@@ -38,6 +38,7 @@ export function themeCookieOptions(preference: ThemePreference) {
   };
 }
 
+/** Parse `sarjan-theme` from a raw `Cookie` request header. */
 export function readThemePreferenceFromCookie(
   cookieHeader?: string | null,
 ): ThemePreference {
@@ -47,7 +48,15 @@ export function readThemePreferenceFromCookie(
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${SARJAN_THEME_COOKIE}=`));
   const value = match?.split("=")[1]?.trim();
-  return isThemePreference(value) ? value : "system";
+  return readThemePreferenceValue(value);
+}
+
+/** Parse a single cookie value (e.g. from `cookies().get("sarjan-theme")`). */
+export function readThemePreferenceValue(
+  value?: string | null,
+): ThemePreference {
+  const trimmed = value?.trim();
+  return isThemePreference(trimmed) ? trimmed : "system";
 }
 
 /** Blocking inline script — prevents light flash before React hydrates. */

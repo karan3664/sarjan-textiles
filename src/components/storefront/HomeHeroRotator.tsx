@@ -23,6 +23,7 @@ export function HomeHeroRotator({
   title,
   description,
   cta,
+  secondaryCta,
   bannerSlides = [],
   videoEnabled = false,
   videoUrls = [],
@@ -32,6 +33,7 @@ export function HomeHeroRotator({
   title: string;
   description: string;
   cta: { label: string; href: string };
+  secondaryCta?: { label: string; href: string };
   bannerSlides?: CmsHomeBanner[];
   videoEnabled?: boolean;
   videoUrls?: string[];
@@ -218,6 +220,18 @@ export function HomeHeroRotator({
                   </span>
                   <i className="icon icon-arrowUpRight" />
                 </Link>
+                {activeBannerIndex === 0 &&
+                secondaryCta?.label?.trim() &&
+                secondaryCta.href?.trim() ? (
+                  <Link
+                    href={secondaryCta.href}
+                    className="tf-btn btn-outline btn-white sarjan-hero-cta-secondary"
+                  >
+                    <span className="text">
+                      <CmsHtml html={secondaryCta.label} />
+                    </span>
+                  </Link>
+                ) : null}
               </div>
             </div>
           </div>

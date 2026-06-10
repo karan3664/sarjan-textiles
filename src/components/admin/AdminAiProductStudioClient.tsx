@@ -395,8 +395,10 @@ export function AdminAiProductStudioClient() {
       }>(response);
       if (!response.ok) throw new Error(data.error || "Prompt save failed");
       setPromptDraft(data.promptTemplate);
+      setSnapshot((current) =>
+        current ? { ...current, promptTemplate: data.promptTemplate } : current,
+      );
       setMessage("Prompt saved. New queued images inherit this prompt.");
-      await refresh();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Prompt save failed.",
@@ -745,11 +747,11 @@ export function AdminAiProductStudioClient() {
           </div>
           <div className="sarjan-ai-rules">
             {[
-              "Maintain original fabric",
-              "Maintain exact color and texture",
-              "Preserve stitching, buttons, collar, shape",
-              "Generate white or #f5f5f5 catalog outputs",
-              "Create web-ready, thumbnail, zoom, compressed variants",
+              "Preserve print, color, pattern, fabric, and texture",
+              "Keep buttons, collar, stitching, label, and proportions exact",
+              "Flat lay with soft contact + directional shadows on #fafafa",
+              "Subtle exposure/contrast/saturation; reduce extra wrinkles",
+              "4K web-ready outputs (web, thumbnail, zoom, compressed)",
             ].map((rule) => (
               <div key={rule}>
                 <i className="icon-check" />

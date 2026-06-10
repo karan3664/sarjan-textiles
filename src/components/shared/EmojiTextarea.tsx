@@ -61,17 +61,28 @@ export function EmojiTextarea({
     const trigger = triggerRef.current;
     if (!trigger || typeof window === "undefined") return;
     const rect = trigger.getBoundingClientRect();
-    const width = Math.min(PICKER_WIDTH, window.innerWidth - 16);
-    const height = Math.min(PICKER_HEIGHT, window.innerHeight - 16);
-    const left = Math.min(
-      Math.max(8, rect.right - width),
-      window.innerWidth - width - 8,
-    );
-    const topAbove = rect.top - height - 10;
-    const top =
-      topAbove >= 8
-        ? topAbove
-        : Math.min(rect.bottom + 10, window.innerHeight - height - 8);
+    const margin = 12;
+    const gap = 8;
+    const width = Math.min(PICKER_WIDTH, window.innerWidth - margin * 2);
+    const height = Math.min(PICKER_HEIGHT, window.innerHeight - margin * 2);
+
+    let left = rect.right - width;
+    if (left < margin) {
+      left = Math.max(margin, rect.left);
+    }
+    left = Math.min(left, window.innerWidth - width - margin);
+
+    const aboveTop = rect.top - height - gap;
+    const belowTop = rect.bottom + gap;
+    let top = aboveTop;
+    if (aboveTop < margin) {
+      top =
+        belowTop + height <= window.innerHeight - margin
+          ? belowTop
+          : Math.max(margin, window.innerHeight - height - margin);
+    }
+    top = Math.max(margin, Math.min(top, window.innerHeight - height - margin));
+
     setPickerSize({ width, height });
     setPickerStyle({
       position: "fixed",
@@ -133,7 +144,10 @@ export function EmojiTextarea({
     setPickerOpen((open) => {
       if (!open) {
         openingGuardRef.current = true;
-        positionPicker();
+        requestAnimationFrame(() => {
+          positionPicker();
+          requestAnimationFrame(positionPicker);
+        });
         window.setTimeout(() => {
           openingGuardRef.current = false;
         }, PICKER_OPEN_GUARD_MS);

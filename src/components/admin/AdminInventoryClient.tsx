@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import type { InventoryMovement } from "@/lib/cms-store";
+import {
+  isProductPlaceholderImage,
+  PRODUCT_PLACEHOLDER_IMAGE,
+  productGalleryImages,
+} from "@/lib/product-placeholder-image";
 
 type Operation = InventoryMovement["operation"];
 type InventorySortKey =
@@ -24,26 +29,45 @@ const operationLabels: Record<Operation, string> = {
   damage: "Damaged Stock",
 };
 
+function stockValue(value: number | undefined) {
+  return Number.isFinite(value) ? Number(value) : 0;
+}
+
 function available(product: Product) {
-  return Math.max(0, product.stock - product.reserved);
+  return Math.max(0, stockValue(product.stock) - stockValue(product.reserved));
 }
 
 function statusInfo(product: Product) {
-  if (product.stock <= 0)
-    return { label: "Out of Stock", className: "type-inactive" };
-  if (available(product) <= product.moq)
+  const stock = stockValue(product.stock);
+  const moq = stockValue(product.moq);
+  if (stock <= 0) return { label: "Out of Stock", className: "type-inactive" };
+  if (available(product) <= moq)
     return { label: "Low Stock", className: "type-pending" };
   return { label: "Healthy", className: "type-completed" };
 }
 
+function productThumb(product: Product) {
+  return productGalleryImages(product.images)[0] ?? PRODUCT_PLACEHOLDER_IMAGE;
+}
+
+function searchText(value: unknown) {
+  return String(value ?? "").toLowerCase();
+}
+
 function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(date);
+}
+
+function operationLabel(operation: InventoryMovement["operation"]) {
+  return operationLabels[operation] ?? operation;
 }
 
 function downloadCsv(
@@ -105,12 +129,12 @@ function visiblePageNumbers(totalPages: number, currentPage: number) {
 }
 
 function sortValue(product: Product, key: InventorySortKey) {
-  if (key === "product") return product.name.toLowerCase();
+  if (key === "product") return searchText(product.name);
   if (key === "available") return available(product);
-  if (key === "reserved") return product.reserved;
-  if (key === "sold") return product.sold;
-  if (key === "returned") return product.returned ?? 0;
-  if (key === "damaged") return product.damaged ?? 0;
+  if (key === "reserved") return stockValue(product.reserved);
+  if (key === "sold") return stockValue(product.sold);
+  if (key === "returned") return stockValue(product.returned);
+  if (key === "damaged") return stockValue(product.damaged);
   return statusInfo(product).label;
 }
 
@@ -185,7 +209,7 @@ export function AdminInventoryClient({
       (product) =>
         !normalized ||
         [product.name, product.sku, product.category, product.fabric].some(
-          (value) => value.toLowerCase().includes(normalized),
+          (value) => searchText(value).includes(normalized),
         ),
     );
     return [...matches].sort((a, b) => {
@@ -246,7 +270,7 @@ export function AdminInventoryClient({
       date: formatDate(log.createdAt),
       product: log.productName,
       sku: log.sku,
-      operation: operationLabels[log.operation],
+      operation: operationLabel(log.operation),
       quantity: log.quantity,
       beforeStock: log.beforeStock,
       afterStock: log.afterStock,
@@ -258,20 +282,28 @@ export function AdminInventoryClient({
   const totals = useMemo(() => {
     return {
       available: products.reduce((sum, product) => sum + available(product), 0),
-      reserved: products.reduce((sum, product) => sum + product.reserved, 0),
-      sold: products.reduce((sum, product) => sum + product.sold, 0),
+      reserved: products.reduce(
+        (sum, product) => sum + stockValue(product.reserved),
+        0,
+      ),
+      sold: products.reduce(
+        (sum, product) => sum + stockValue(product.sold),
+        0,
+      ),
       returned: products.reduce(
-        (sum, product) => sum + (product.returned ?? 0),
+        (sum, product) => sum + stockValue(product.returned),
         0,
       ),
       damaged: products.reduce(
-        (sum, product) => sum + (product.damaged ?? 0),
+        (sum, product) => sum + stockValue(product.damaged),
         0,
       ),
       low: products.filter(
-        (product) => available(product) <= product.moq && product.stock > 0,
+        (product) =>
+          available(product) <= stockValue(product.moq) &&
+          stockValue(product.stock) > 0,
       ).length,
-      out: products.filter((product) => product.stock <= 0).length,
+      out: products.filter((product) => stockValue(product.stock) <= 0).length,
     };
   }, [products]);
 
@@ -437,8 +469,22 @@ export function AdminInventoryClient({
                     >
                       <td>
                         <li className="product-item type-1">
-                          <div className="image rounded-circle sarjan-product-table-image">
-                            <img src={product.images[0]} alt={product.name} />
+                          <div
+                            className={`image rounded-circle sarjan-product-table-image${
+                              isProductPlaceholderImage(productThumb(product))
+                                ? " sarjan-product-table-image--placeholder"
+                                : ""
+                            }`}
+                          >
+                            <img
+                              src={productThumb(product)}
+                              alt={product.name}
+                              className={
+                                isProductPlaceholderImage(productThumb(product))
+                                  ? "sarjan-product-img-placeholder"
+                                  : undefined
+                              }
+                            />
                           </div>
                           <div className="content">
                             <div className="text-title name text-line-clamp-1">
@@ -451,10 +497,10 @@ export function AdminInventoryClient({
                         </li>
                       </td>
                       <td>{available(product)}</td>
-                      <td>{product.reserved}</td>
-                      <td>{product.sold}</td>
-                      <td>{product.returned ?? 0}</td>
-                      <td>{product.damaged ?? 0}</td>
+                      <td>{stockValue(product.reserved)}</td>
+                      <td>{stockValue(product.sold)}</td>
+                      <td>{stockValue(product.returned)}</td>
+                      <td>{stockValue(product.damaged)}</td>
                       <td>
                         <span
                           className={`box-status text-button ${info.className}`}
@@ -557,7 +603,8 @@ export function AdminInventoryClient({
                   <h5>{selected.name}</h5>
                   <div className="text-caption-1 text-secondary">
                     Available {available(selected)} / Reserved{" "}
-                    {selected.reserved} / Sold {selected.sold}
+                    {stockValue(selected.reserved)} / Sold{" "}
+                    {stockValue(selected.sold)}
                   </div>
                 </div>
                 <span
@@ -688,7 +735,7 @@ export function AdminInventoryClient({
                   </td>
                   <td>
                     <span className="box-status text-button type-pending">
-                      {operationLabels[log.operation]}
+                      {operationLabel(log.operation)}
                     </span>
                   </td>
                   <td>{log.quantity}</td>

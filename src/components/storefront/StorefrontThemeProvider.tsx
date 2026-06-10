@@ -45,20 +45,33 @@ function applyThemeToDocument(
   root.style.colorScheme = resolved;
 }
 
+function readThemeFromDocument(): {
+  preference: ThemePreference;
+  resolved: ResolvedTheme;
+} {
+  const pref = readPreferenceFromDom();
+  return {
+    preference: pref,
+    resolved: resolveTheme(pref, readSystemPrefersDark()),
+  };
+}
+
 export function StorefrontThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+  /** Blocks the OS-sync effect until cookie/DOM preference is read (avoids resetting light → system/dark on remount). */
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const pref = readPreferenceFromDom();
-    const resolved = resolveTheme(pref, readSystemPrefersDark());
+    const { preference: pref, resolved } = readThemeFromDocument();
     setPreferenceState(pref);
     setResolvedTheme(resolved);
     applyThemeToDocument(pref, resolved);
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (preference !== "system") return;
+    if (!ready || preference !== "system") return;
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const sync = () => {
@@ -71,7 +84,7 @@ export function StorefrontThemeProvider({ children }: { children: ReactNode }) {
     sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
-  }, [preference]);
+  }, [ready, preference]);
 
   const setPreference = useCallback((next: ThemePreference) => {
     const { name, path, maxAge, sameSite } = themeCookieOptions(next);

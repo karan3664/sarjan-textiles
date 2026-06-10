@@ -203,9 +203,11 @@ function AuthPageClientInner({
       setMessage("Email OTP verification required");
       return;
     }
-    if (isRegister && !isValidGstin(String(payload.gst ?? ""))) {
+    const normalizedGstInput = normalizeGstin(String(payload.gst ?? ""));
+    const hasGst = isRegister && normalizedGstInput.length > 0;
+    if (isRegister && hasGst && !isValidGstin(normalizedGstInput)) {
       setLoading(false);
-      setMessage("Valid GST number is required for wholesale registration");
+      setMessage("Enter a valid 15-character GSTIN or leave GST blank.");
       return;
     }
     if (isRegister && !String(payload.companyName ?? "").trim()) {
@@ -213,22 +215,27 @@ function AuthPageClientInner({
       setMessage("Trade / business name is required.");
       return;
     }
-    if (isRegister && !String(payload.ownerLegalName ?? "").trim()) {
+    if (
+      isRegister &&
+      hasGst &&
+      !String(payload.ownerLegalName ?? "").trim() &&
+      gstManualAllowed
+    ) {
       setLoading(false);
       setMessage("Legal / proprietor full name (as on GST) is required.");
       return;
     }
-    if (isRegister && !gstVerified && !gstManualAllowed) {
+    if (isRegister && hasGst && !gstVerified && !gstManualAllowed) {
       setLoading(false);
       setMessage(
-        "Verify GST with the captcha so trade and legal names load from the portal.",
+        "Verify GST with the captcha, or leave GST blank to register without it.",
       );
       return;
     }
     if (isRegister) {
       const unique = await checkClientFieldsUnique({
         email: String(payload.email ?? "").trim(),
-        gst: normalizeGstin(String(payload.gst ?? "")),
+        ...(hasGst ? { gst: normalizedGstInput } : {}),
       });
       if (!unique.ok) {
         setLoading(false);
@@ -250,6 +257,11 @@ function AuthPageClientInner({
       }
       payload.state = registerState;
       payload.city = registerCity;
+      if (!hasGst) {
+        delete payload.gst;
+      } else {
+        payload.gst = normalizedGstInput;
+      }
     }
 
     const res = await fetch(endpoint, {
@@ -453,15 +465,14 @@ function AuthPageClientInner({
                   {isRegister ? (
                     <>
                       <p className="sarjan-auth-intro">
-                        GST registration is required for all wholesale accounts.
-                        Verify with the GST portal to load trade and legal
-                        names.
+                        GST is optional. Add and verify your GSTIN to auto-fill
+                        trade and legal names from the portal, or register with
+                        your business details only.
                       </p>
-                      <input type="hidden" name="hasGst" value="true" />
                       <fieldset>
                         <input
                           type="text"
-                          placeholder="GST number*"
+                          placeholder="GST number (optional)"
                           name="gst"
                           value={gst}
                           readOnly={gstVerified && !gstManualAllowed}
@@ -472,16 +483,15 @@ function AuthPageClientInner({
                             setCompanyName("");
                             setOwnerFullName("");
                           }}
-                          required
                         />
                       </fieldset>
-                      {!gstinReady ? (
+                      {gst.trim() && !gstinReady ? (
                         <p className="sarjan-gst-captcha-hint">
                           Enter a full 15-character GSTIN. A captcha from the
                           official GST portal will load automatically.
                         </p>
                       ) : null}
-                      {gstinReady && !gstVerified ? (
+                      {gst.trim() && gstinReady && !gstVerified ? (
                         <>
                           <p className="sarjan-gst-captcha-hint">
                             Security check from{" "}
@@ -580,16 +590,22 @@ function AuthPageClientInner({
                         <input
                           type="text"
                           placeholder={
-                            gstManualAllowed
-                              ? "Trade / business name*"
-                              : "Trade / business name (as on GST)*"
+                            gst.trim()
+                              ? gstManualAllowed
+                                ? "Trade / business name*"
+                                : "Trade / business name (as on GST)*"
+                              : "Trade / business name*"
                           }
                           name="companyName"
                           value={companyName}
                           onChange={(event) =>
                             setCompanyName(event.target.value)
                           }
-                          readOnly={!gstManualAllowed}
+                          readOnly={
+                            Boolean(gst.trim()) &&
+                            !gstManualAllowed &&
+                            gstVerified
+                          }
                           required
                         />
                       </fieldset>
@@ -597,17 +613,23 @@ function AuthPageClientInner({
                         <input
                           type="text"
                           placeholder={
-                            gstManualAllowed
-                              ? "Legal name / proprietor full name*"
-                              : "Legal name / proprietor (lgnm on GST)*"
+                            gst.trim()
+                              ? gstManualAllowed
+                                ? "Legal name / proprietor full name*"
+                                : "Legal name / proprietor (lgnm on GST)*"
+                              : "Legal name / proprietor (optional)"
                           }
                           name="ownerLegalName"
                           value={ownerFullName}
                           onChange={(event) =>
                             setOwnerFullName(event.target.value)
                           }
-                          readOnly={!gstManualAllowed}
-                          required
+                          readOnly={
+                            Boolean(gst.trim()) &&
+                            !gstManualAllowed &&
+                            gstVerified
+                          }
+                          required={Boolean(gst.trim())}
                         />
                       </fieldset>
                       {gstMessage ? (

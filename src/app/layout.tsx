@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
-import { STOREFRONT_THEME_INIT_SCRIPT } from "@/lib/storefront-theme";
+import {
+  readThemePreferenceValue,
+  SARJAN_THEME_COOKIE,
+  STOREFRONT_THEME_INIT_SCRIPT,
+} from "@/lib/storefront-theme";
+import { StorefrontThemeProvider } from "@/components/storefront/StorefrontThemeProvider";
 import { siteSettings } from "@/data/mock";
 import { STOREFRONT_TEMPLATE_STYLESHEETS } from "@/lib/storefront-template-styles";
 import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
@@ -67,8 +73,24 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const themePreference = readThemePreferenceValue(
+    cookieStore.get(SARJAN_THEME_COOKIE)?.value,
+  );
+  const serverResolvedTheme =
+    themePreference === "light"
+      ? "light"
+      : themePreference === "dark"
+        ? "dark"
+        : undefined;
+
   return (
-    <html lang={DEFAULT_STOREFRONT_LOCALE} suppressHydrationWarning>
+    <html
+      lang={DEFAULT_STOREFRONT_LOCALE}
+      data-theme-pref={themePreference}
+      {...(serverResolvedTheme ? { "data-theme": serverResolvedTheme } : {})}
+      suppressHydrationWarning
+    >
       <head>
         <Script
           id="sarjan-theme-init"
@@ -87,11 +109,13 @@ export default async function RootLayout({
         <link rel="stylesheet" href="/sarjan-pdp-cta.css?v=20260526d" />
       </head>
       <body className="sarjan-storefront" suppressHydrationWarning>
-        <SiteAnalytics />
-        <AnalyticsTracker />
-        <CookieConsentBanner />
-        <StorefrontPwaRegistration />
-        {children}
+        <StorefrontThemeProvider>
+          <SiteAnalytics />
+          <AnalyticsTracker />
+          <CookieConsentBanner />
+          <StorefrontPwaRegistration />
+          {children}
+        </StorefrontThemeProvider>
       </body>
     </html>
   );

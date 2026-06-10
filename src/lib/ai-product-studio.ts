@@ -155,38 +155,88 @@ Task:
 Create a highly realistic eCommerce product image with natural depth and shadows.
 
 STRICT RULES (MANDATORY):
-- Do NOT change color, pattern, fabric, or texture
-- Do NOT modify buttons, collar, stitching, or shape
-- Maintain exact proportions and details
+- Do NOT change print, color, pattern, fabric, or texture. See the print in detail.
+- Do NOT modify buttons, collar, stitching, label, pocket, sleeve shape, hem, proportions, or any detail.
+- Maintain exact proportions and all visible details from the reference product.
+- Product should look exact same as real, like clicked by camera professionally.
 
-Photoshoot Setup:
-- Shirt laid flat, top-down view (perfectly aligned)
-- Add realistic soft shadows under the shirt (contact shadow)
-- Add subtle directional shadow (light coming from top-left or top-right)
-- Natural depth with slight gradient shadow under edges
-- Background: clean white or light neutral (#f5f5f5)
+Photoshoot setup:
+- Product laid flat, top-down view.
+- Perfect alignment.
+- Add realistic soft contact shadow beneath product.
+- Add subtle directional shadow.
+- Natural depth with gradient shadow.
+- Do a little adjustment of brightness and exposure, contrast and saturation but it should look realistic.
+- Reduce the extra wrinkles.
+
+Background:
+- Clean white or light neutral #fafafa.
 
 Lighting:
-- Soft studio lighting with slight direction (NOT flat lighting)
-- Realistic shadow falloff (not hard shadow, not zero shadow)
-- Slight highlights on fabric folds for depth
+- Soft studio lighting.
+- Slight directional lighting.
+- Natural shadow falloff.
+- Realistic highlights on folds.
 
-Realism Enhancements:
-- Add natural fabric depth and texture visibility
-- Slight wrinkles allowed but clean look
-- Ensure shirt does NOT look floating - it should feel placed on surface
+Realism enhancements:
+- Fabric depth visibility.
+- Natural texture visibility.
+- Slight wrinkles allowed only if product shape, pattern, and proportions remain exact.
 
 Style:
-- Premium fashion product (Zara / Myntra style)
-- Ultra realistic, not AI-looking
+- Zara style.
+- Premium fashion ecommerce.
 
 Output:
-- 4K resolution
-- Website-ready
-- Photorealistic with depth and shadow
+- 4K resolution.
+- Website-ready.
+- Photorealistic.
+- Ultra realistic.
+- No text.
+- No watermark.`;
 
-Add soft contact shadow directly beneath the shirt to ground it naturally.
-Avoid flat lighting - ensure realistic depth and dimension.`;
+function resolveAiStudioPromptFile() {
+  return path.join(resolveAiStudioStateDir(), "prompt-template.txt");
+}
+
+export async function readStudioPromptTemplate(): Promise<string> {
+  await ensureProductFolders();
+  try {
+    const fromFile = (
+      await readFile(resolveAiStudioPromptFile(), "utf8")
+    ).trim();
+    if (fromFile) return fromFile;
+  } catch {
+    /* use state.json or default */
+  }
+  try {
+    const data = JSON.parse(
+      await readFile(resolveAiStudioStateFile(), "utf8"),
+    ) as Partial<StudioState>;
+    const fromState = data.promptTemplate?.trim();
+    if (fromState) return fromState;
+  } catch {
+    /* use default */
+  }
+  return productStudioPrompt;
+}
+
+async function writeStudioPromptTemplate(promptTemplate: string) {
+  const nextPrompt = promptTemplate.trim() || productStudioPrompt;
+  await ensureProductFolders();
+  await writeFile(resolveAiStudioPromptFile(), nextPrompt, "utf8");
+  const state = await readStudioState();
+  await writeStudioState({
+    ...state,
+    promptTemplate: nextPrompt,
+    records: state.records.map((record) =>
+      record.status === "approved"
+        ? record
+        : { ...record, prompt: nextPrompt, updatedAt: now() },
+    ),
+  });
+  return nextPrompt;
+}
 
 function now() {
   return new Date().toISOString();
@@ -373,21 +423,18 @@ async function readRecords() {
 
 async function readStudioState(): Promise<StudioState> {
   await ensureProductFolders();
+  const promptTemplate = await readStudioPromptTemplate();
 
   try {
     const data = JSON.parse(
       await readFile(resolveAiStudioStateFile(), "utf8"),
     ) as Partial<StudioState>;
-    const promptTemplate = data.promptTemplate?.trim() || productStudioPrompt;
     return {
       promptTemplate,
       records: (data.records ?? []).map((record) => ({
         ...record,
         originalName: cleanOriginalName(record.originalName),
-        prompt:
-          record.status === "approved"
-            ? record.prompt?.trim() || promptTemplate
-            : promptTemplate,
+        prompt: record.prompt?.trim() || promptTemplate,
         shootStyle: "current-style",
         qaNote: record.qaNote?.toLowerCase().includes("model")
           ? "Strict AI flat-lay catalog prompt queued. Run process."
@@ -396,7 +443,7 @@ async function readStudioState(): Promise<StudioState> {
     };
   } catch {
     return {
-      promptTemplate: productStudioPrompt,
+      promptTemplate,
       records: [],
     };
   }
@@ -450,18 +497,7 @@ export async function getStudioSnapshot(): Promise<StudioSnapshot> {
 }
 
 export async function updateStudioPrompt(promptTemplate: string) {
-  const state = await readStudioState();
-  const nextPrompt = promptTemplate.trim() || productStudioPrompt;
-  await writeStudioState({
-    ...state,
-    promptTemplate: nextPrompt,
-    records: state.records.map((record) =>
-      record.status === "approved"
-        ? record
-        : { ...record, prompt: nextPrompt, updatedAt: now() },
-    ),
-  });
-  return nextPrompt;
+  return writeStudioPromptTemplate(promptTemplate);
 }
 
 export async function saveRawUploads(
@@ -1271,7 +1307,7 @@ async function processRecord(
   try {
     await stat(inputPath);
 
-    const prompt = record.prompt?.trim() || productStudioPrompt;
+    const prompt = record.prompt?.trim() || (await readStudioPromptTemplate());
     const generated = await generateAiCatalogShoot(inputPath, prompt);
     const source = sharp(generated)
       .rotate()
