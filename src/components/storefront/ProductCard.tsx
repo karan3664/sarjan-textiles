@@ -12,6 +12,7 @@ import { ProductPromoTag } from "./ProductPromoTag";
 import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
 import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 
 export function ProductCard({ product }: { product: Product }) {
   const altText = buildProductImageAlt(product);
@@ -34,7 +35,11 @@ export function ProductCard({ product }: { product: Product }) {
         {SHOW_PRODUCT_PROMO_TAG ? <ProductPromoTag /> : null}
         <ProductCardRating rating={product.rating} />
         <ProductDealCountdown product={product} variant="card" />
-        <img src={product.images[0]} alt={altText} />
+        <img
+          src={product.images[0]}
+          alt={altText}
+          className={productImageClassName(product.images[0])}
+        />
       </Link>
       <div className="p-3">
         <div className="d-flex justify-content-between gap-2 mb-2">

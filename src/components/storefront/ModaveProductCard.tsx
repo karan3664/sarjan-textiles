@@ -14,6 +14,7 @@ import { ProductPromoTag } from "./ProductPromoTag";
 import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
 import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 
 export function ModaveProductCard({
   product,
@@ -53,13 +54,16 @@ export function ModaveProductCard({
       <div className="card-product-wrapper position-relative">
         <a href={`/products/${product.slug}`} className="product-img">
           <img
-            className="lazyload img-product"
+            className={productImageClassName(
+              primaryImage,
+              "lazyload img-product",
+            )}
             data-src={primaryImage}
             src={primaryImage}
             alt={altText}
           />
           <img
-            className="lazyload img-hover"
+            className={productImageClassName(hoverImage, "lazyload img-hover")}
             data-src={hoverImage}
             src={hoverImage}
             alt={buildProductImageAlt(product, { variant: "alternate" })}

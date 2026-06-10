@@ -2280,6 +2280,35 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   object-fit: cover;
 }
 
+.sarjan-product-table-image.sarjan-product-table-image--placeholder img,
+img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  object-position: center;
+  padding: 18%;
+  background: #f4f1ec;
+  box-sizing: border-box;
+}
+
+.card-product .product-img img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  padding: 14%;
+  background: #f4f1ec;
+}
+
+.tf-product-media-thumbs .item img.sarjan-product-img-placeholder,
+.tf-product-media-main .item img.sarjan-product-img-placeholder,
+.tf-add-cart-product .image img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  padding: 16%;
+  background: #f4f1ec;
+}
+
+.sarjan-card-img img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  padding: 12%;
+  background: #f4f1ec;
+}
+
 /* Action column: <td> must stay table-cell (admin table reset); flex lives on inner wrapper */
 .sarjan-products-table .sarjan-product-row-actions {
   display: flex;

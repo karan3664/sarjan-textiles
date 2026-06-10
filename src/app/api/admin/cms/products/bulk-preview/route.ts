@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import type { Product } from "@/data/mock";
+import { PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/product-placeholder-image";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -91,7 +92,7 @@ function productFromRow(row: SheetRow, index: number): Product {
     sizes: splitList(stringValue(row, "sizes")),
     images: splitList(imageUrls).length
       ? splitList(imageUrls)
-      : ["/sarjan-assets/sarjan-logo-icon.png"],
+      : [PRODUCT_PLACEHOLDER_IMAGE],
     imageAlt: firstStringValue(row, ["image_alt", "alt_text", "alt"]),
     description: stringValue(row, "description"),
     care: stringValue(row, "care"),

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
+import { isProductPlaceholderImage } from "@/lib/product-placeholder-image";
 
 type StatusFilter = "all" | "published" | "low" | "out";
 type SortOption = "default" | "name" | "price" | "stock";
@@ -244,8 +245,22 @@ export function AdminProductListClient({
                     <td>{product.id}</td>
                     <td>
                       <li className="product-item type-1">
-                        <div className="image rounded-circle sarjan-product-table-image">
-                          <img src={product.images[0]} alt={product.name} />
+                        <div
+                          className={`image rounded-circle sarjan-product-table-image${
+                            isProductPlaceholderImage(product.images[0])
+                              ? " sarjan-product-table-image--placeholder"
+                              : ""
+                          }`}
+                        >
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className={
+                              isProductPlaceholderImage(product.images[0])
+                                ? "sarjan-product-img-placeholder"
+                                : undefined
+                            }
+                          />
                         </div>
                         <div className="content">
                           <div className="text-title name text-line-clamp-1">

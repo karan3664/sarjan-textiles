@@ -21,6 +21,10 @@ import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import {
+  productGalleryImages,
+  productImageClassName,
+} from "@/lib/product-placeholder-image";
 import { productSetPrice } from "@/lib/product-pricing";
 import {
   productStockOnHand,
@@ -166,11 +170,7 @@ function ProductFeature({
   product: Product;
   viewerLoggedIn: boolean;
 }) {
-  const images = [
-    product.images[0],
-    product.images[1] ?? product.images[0],
-    ...products.slice(1, 3).map((item) => item.images[0]),
-  ];
+  const images = productGalleryImages(product.images);
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = buildProductImageAlt(product);
   const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
@@ -203,7 +203,7 @@ function ProductFeature({
                       >
                         <div className="item">
                           <img
-                            className="lazyload"
+                            className={productImageClassName(image, "lazyload")}
                             data-src={image}
                             src={image}
                             alt={`${altText} thumbnail ${index + 1}`}
@@ -235,7 +235,10 @@ function ProductFeature({
                           data-pswp-height="1000px"
                         >
                           <img
-                            className="tf-image-zoom lazyload"
+                            className={productImageClassName(
+                              image,
+                              "tf-image-zoom lazyload",
+                            )}
                             data-zoom={image}
                             data-src={image}
                             src={image}
@@ -992,14 +995,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         : catalogProducts[idx + 1]
       : (products[1] ?? products[0]);
 
-  const gallerySources = catalogProducts.filter(
-    (item) => item.slug !== product.slug,
-  );
-  const galleryImages = [
-    product.images[0],
-    product.images[1] ?? product.images[0],
-    ...gallerySources.slice(0, 4).map((item) => item.images[0]),
-  ];
+  const galleryImages = productGalleryImages(product.images);
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = buildProductImageAlt(product);
@@ -1050,7 +1046,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         <div className="tf-add-cart-product">
           <div className="image">
             <img
-              className="lazyload"
+              className={productImageClassName(product.images[0], "lazyload")}
               data-src={product.images[0]}
               alt={altText}
               src={product.images[0]}
@@ -1106,7 +1102,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                               >
                                 <div className="item">
                                   <img
-                                    className="lazyload"
+                                    className={productImageClassName(
+                                      image,
+                                      "lazyload",
+                                    )}
                                     data-src={image}
                                     src={image}
                                     alt={`${altText} thumbnail ${index + 1}`}
@@ -1138,7 +1137,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                   data-pswp-height="1000px"
                                 >
                                   <img
-                                    className="tf-image-zoom lazyload"
+                                    className={productImageClassName(
+                                      image,
+                                      "tf-image-zoom lazyload",
+                                    )}
                                     data-zoom={image}
                                     data-src={image}
                                     src={image}
