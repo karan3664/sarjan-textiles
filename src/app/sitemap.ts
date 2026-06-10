@@ -14,6 +14,35 @@ import { siteUrl } from "@/lib/seo";
 /** ISR sitemap — uses tagged CMS snapshot cache. */
 export const revalidate = 3600;
 
+const FALLBACK_LAST_MODIFIED = new Date("2024-01-01T00:00:00.000Z");
+
+/** Avoid build failures when CMS dates are missing, localized, or malformed. */
+function parseLastModified(
+  value: unknown,
+  fallback: Date = FALLBACK_LAST_MODIFIED,
+): Date {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? fallback : value;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? fallback : parsed;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return fallback;
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? fallback : parsed;
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.en === "string") {
+      return parseLastModified(record.en, fallback);
+    }
+  }
+  return fallback;
+}
+
 function absolute(path: string) {
   return new URL(path.startsWith("/") ? path : `/${path}`, siteUrl).toString();
 }
@@ -27,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = `https://${siteSettings.domain}`;
   const { blogs, products, seoPages, customSitePages, updatedAt } =
     await getCachedCmsSnapshot();
-  const cmsLastModified = new Date(updatedAt);
+  const cmsLastModified = parseLastModified(updatedAt);
   const categoryHubs = await listActiveCategoryHubPages();
 
   const seoUrls = seoPages
@@ -90,7 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const images = sitemapImageUrls(blog.image ? [blog.image] : [], 3);
     return {
       url: `${base}/blog/${String(blog.slug).trim()}`,
-      lastModified: new Date(blog.date),
+      lastModified: parseLastModified(blog.date, cmsLastModified),
       changeFrequency: "monthly" as const,
       priority: 0.7,
       ...(images.length ? { images } : {}),

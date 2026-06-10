@@ -311,7 +311,7 @@ async function readCmsSnapshotFromPostgresRaw(): Promise<CmsSnapshot | null> {
   return {
     ...defaultCmsSnapshot,
     ...(row.data as Partial<CmsSnapshot>),
-    updatedAt: row.updated_at,
+    updatedAt: row.updated_at ?? defaultCmsSnapshot.updatedAt,
   };
 }
 
