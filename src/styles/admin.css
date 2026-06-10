@@ -128,6 +128,8 @@
 body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
   display: none !important;
   pointer-events: none !important;
+}
+
 .sarjan-band .sarjan-footer-credit {
   color: #8b1e2d !important;
 }
@@ -3342,6 +3344,8 @@ img.sarjan-product-img-placeholder {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
   font-weight: 500;
+}
+
 /* Admin blog comments: toolbar, table cells, tf-button column */
 .sarjan-admin-blog-comments-toolbar {
   display: flex;

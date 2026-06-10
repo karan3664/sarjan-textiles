@@ -394,7 +394,6 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: #f1c46a !important;
 }
 
-
 .sarjan-logo {
   width: 150px;
   height: 58px;
@@ -906,8 +905,6 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
     height: 320px !important;
   }
 }
-
-
 
 /* Sprint 2 — next/image product cards: reserve space, keep hover swap */
 .card-product .product-img {
@@ -1580,19 +1577,6 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-home-upload-row input {
   display: none;
 }
-
-  line-height: 1.45;
-  vertical-align: middle;
-  color: #9d2d63;
-  background: #f4f2ee;
-  border: 1px solid #e5dfd6;
-  white-space: nowrap;
-}
-
-
-
-
-
 
 .sarjan-home-thumb-grid {
   display: grid;
@@ -2342,14 +2326,6 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-
-
-
-
-
-
-
-
 /* Customer testimonial submit form */
 .sarjan-testimonial-submit-form {
   width: 100%;
@@ -2934,9 +2910,6 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
   aspect-ratio: 4 / 5;
   object-fit: cover;
 }
-
-
-
 
 .sarjan-stat {
   border: 1px solid #ded8ce;
@@ -6437,6 +6410,36 @@ button.accordion-button:not(.collapsed),
   grid-template-columns: 1fr;
 }
 
+.sarjan-partner-cta-band {
+  background: #7a1f1f;
+  color: #fff;
+  border-radius: 16px;
+  margin: 24px 0;
+  padding: 28px 0 32px;
+}
+
+.sarjan-partner-cta-band .heading,
+.sarjan-partner-cta-band .subheading,
+.sarjan-partner-cta-band .sarjan-cms-banner-text {
+  color: #fff !important;
+}
+
+.sarjan-partner-cta-band .tf-btn {
+  margin-top: 8px;
+}
+
+.sarjan-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.sarjan-hero-cta-secondary.tf-btn.btn-outline.btn-white {
+  border-color: rgba(255, 255, 255, 0.85);
+  color: #fff;
+}
+
 .sarjan-custom-text-block {
   max-width: 720px;
 }
@@ -6605,7 +6608,6 @@ button.accordion-button:not(.collapsed),
 .sarjan-password-modal .password-item input {
   width: 100%;
 }
-
 
 .sarjan-backup-name {
   min-width: 220px;
@@ -10738,7 +10740,8 @@ body.sarjan-storefront
 
 .sarjan-theme-select:focus {
   border-color: var(--primary, #111);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary, #111) 12%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--primary, #111) 12%, transparent);
 }
 
 .sarjan-theme-toggle--icon {
@@ -11606,7 +11609,11 @@ body.sarjan-scroll-chrome:has(.sarjan-mobile-bottom-nav):has(
   height: 56px;
   margin-bottom: 14px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--sarjan-accent, #8b1e2d) 12%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--sarjan-accent, #8b1e2d) 12%,
+    transparent
+  );
   color: var(--sarjan-accent, #8b1e2d);
   font-size: 24px;
 }

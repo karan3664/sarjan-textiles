@@ -86,7 +86,7 @@ export async function buildSitemapTree(): Promise<{
   const hubChildren = categoryHubs.map((hub) =>
     node({
       id: `hub-${hub.slug}`,
-      label: hub.title ?? hub.slug,
+      label: readEnglish(hub.title) || hub.slug,
       path: `/categories/${hub.slug}`,
       priority: 0.75,
       changeFrequency: "weekly",
@@ -97,7 +97,7 @@ export async function buildSitemapTree(): Promise<{
   const productChildren = products.map((product) =>
     node({
       id: `p-${product.slug}`,
-      label: product.name,
+      label: readEnglish(product.name) || product.slug,
       path: `/products/${product.slug}`,
       priority: 0.8,
       changeFrequency: "weekly",
@@ -108,7 +108,7 @@ export async function buildSitemapTree(): Promise<{
   const blogChildren = blogs.map((blog) =>
     node({
       id: `b-${blog.slug}`,
-      label: blog.title,
+      label: readEnglish(blog.title) || String(blog.slug).trim(),
       path: `/blog/${String(blog.slug).trim()}`,
       priority: 0.7,
       changeFrequency: "monthly",

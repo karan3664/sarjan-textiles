@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { type AppLocale, isAppLocale } from "@/lib/localized-text";
 import { localeCookieOptions, SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
@@ -17,6 +17,32 @@ function readCookieLocale(): AppLocale | null {
 }
 
 export function LanguageSwitcher({
+  className = "",
+  initialLocale = "en",
+}: {
+  className?: string;
+  initialLocale?: AppLocale;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <LanguageSwitcherSelect
+          className={className}
+          locale={initialLocale}
+          onChange={() => {}}
+          disabled
+        />
+      }
+    >
+      <LanguageSwitcherInner
+        className={className}
+        initialLocale={initialLocale}
+      />
+    </Suspense>
+  );
+}
+
+function LanguageSwitcherInner({
   className = "",
   initialLocale = "en",
 }: {
@@ -49,14 +75,35 @@ export function LanguageSwitcher({
   };
 
   return (
+    <LanguageSwitcherSelect
+      className={className}
+      locale={locale}
+      onChange={switchLocale}
+    />
+  );
+}
+
+function LanguageSwitcherSelect({
+  className,
+  locale,
+  onChange,
+  disabled = false,
+}: {
+  className?: string;
+  locale: AppLocale;
+  onChange: (next: AppLocale) => void;
+  disabled?: boolean;
+}) {
+  return (
     <label
-      className={`sarjan-lang-select-wrap ${className}`.trim()}
+      className={`sarjan-lang-select-wrap ${className ?? ""}`.trim()}
       aria-label="Language"
     >
       <select
         className="form-select form-select-sm sarjan-lang-select"
         value={locale}
-        onChange={(event) => switchLocale(event.target.value as AppLocale)}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value as AppLocale)}
       >
         {LANGUAGE_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
