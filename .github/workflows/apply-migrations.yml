@@ -1,0 +1,33 @@
+name: Apply VPS migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Git branch to pull migrations from
+        required: false
+        default: development
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply pending SQL migrations on VPS Postgres
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            curl -fsSL \
+              "https://raw.githubusercontent.com/karan3664/sarjan-textiles/${{ inputs.branch }}/scripts/vps/apply-pending-migrations.sh" \
+              -o /tmp/apply-pending-migrations.sh
+            chmod +x /tmp/apply-pending-migrations.sh
+            REPO_URL=https://github.com/karan3664/sarjan-textiles.git \
+            REPO_BRANCH=${{ inputs.branch }} \
+            bash /tmp/apply-pending-migrations.sh
