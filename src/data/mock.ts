@@ -85,8 +85,8 @@ export const siteSettings = {
   domain: "sarjantextiles.com",
   brandName: "Sarjan Textiles",
   legalName: "Sarjan Textiles",
-  logo: asset("sarjan-logo-full.png"),
-  logoIcon: asset("sarjan-logo-icon.png"),
+  logo: asset("sarjan-logo.svg"),
+  logoIcon: asset("sarjan-logo.svg"),
   favicon: asset("sarjan-favicon-192.png"),
   email: "info@sarjantextiles.com",
   /** Deprecated on storefront contact; kept for CMS / older snapshots. */

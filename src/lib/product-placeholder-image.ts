@@ -1,12 +1,13 @@
 /** Default image when bulk import / create has no `image_urls`. */
-export const PRODUCT_PLACEHOLDER_IMAGE = "/sarjan-assets/sarjan-logo-full.png";
+export const PRODUCT_PLACEHOLDER_IMAGE = "/sarjan-assets/sarjan-logo.svg";
 
 export function isProductPlaceholderImage(url?: string | null): boolean {
   if (!url?.trim()) return true;
   const normalized = url.trim().toLowerCase();
   return (
     normalized.includes("sarjan-logo-icon") ||
-    normalized.includes("sarjan-logo-full")
+    normalized.includes("sarjan-logo-full") ||
+    normalized.includes("sarjan-logo.svg")
   );
 }
 
@@ -29,4 +30,16 @@ export function productImageClassName(url?: string | null, extra = ""): string {
   return classes
     ? `${classes} sarjan-product-img-placeholder`
     : "sarjan-product-img-placeholder";
+}
+
+/** Cart / checkout thumb wrappers — square frame so logo placeholders are not cropped. */
+export function productImageThumbWrapClassName(
+  url?: string | null,
+  extra = "",
+): string {
+  const classes = extra.trim();
+  if (!isProductPlaceholderImage(url)) return classes;
+  return classes
+    ? `${classes} sarjan-product-thumb--placeholder`
+    : "sarjan-product-thumb--placeholder";
 }

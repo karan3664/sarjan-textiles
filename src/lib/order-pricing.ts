@@ -1,5 +1,6 @@
 import { getCatalogProducts } from "@/lib/catalog";
 import { computeGstOnSubtotal } from "@/lib/gst-display";
+import { assertInventoryAvailableForOrder } from "@/lib/order-inventory";
 import { productSetPrice } from "@/lib/product-pricing";
 import type { LocalOrder } from "@/lib/local-db";
 
@@ -59,7 +60,7 @@ export async function buildValidatedOrderPayload(
   const gst = computeGstOnSubtotal(subtotal, null, { b2bPricing: true });
   const tax = gst.amount;
   const total = subtotal + tax;
-  return {
+  const payload = {
     clientId,
     clientEmail: input.clientEmail,
     dispatchAddress: input.dispatchAddress?.trim() ?? "",
@@ -69,4 +70,16 @@ export async function buildValidatedOrderPayload(
     tax,
     total,
   };
+  await assertInventoryAvailableForOrder({
+    ...payload,
+    id: "validate",
+    status: "Pending approval",
+    paymentMode: "cheque",
+    paymentStatus: "Pending",
+    creditDays: 90,
+    depositStatus: "Not deposited",
+    dispatchHistory: [],
+    createdAt: new Date().toISOString(),
+  });
+  return payload;
 }

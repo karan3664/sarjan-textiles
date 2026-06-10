@@ -1,0 +1,48 @@
+/**
+ * Loaded after Modave template CSS — cart/checkout thumb fixes + brand logo sizing.
+ */
+.sidebar-checkout-content .item-product .img-product img,
+.tf-cart-item .tf-cart-item_product .img-box img,
+.modal-shopping-cart .tf-mini-cart-item .tf-mini-cart-image img {
+  object-fit: cover;
+}
+
+.sidebar-checkout-content
+  .item-product
+  .img-product.sarjan-product-thumb--placeholder,
+.tf-cart-item .tf-cart-item_product .img-box.sarjan-product-thumb--placeholder,
+.modal-shopping-cart
+  .tf-mini-cart-item
+  .tf-mini-cart-image.sarjan-product-thumb--placeholder {
+  width: 90px !important;
+  height: 90px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #f4f1ec;
+}
+
+.sidebar-checkout-content
+  .item-product
+  .img-product.sarjan-product-thumb--placeholder
+  img,
+.tf-cart-item
+  .tf-cart-item_product
+  .img-box.sarjan-product-thumb--placeholder
+  img,
+.modal-shopping-cart
+  .tf-mini-cart-item
+  .tf-mini-cart-image.sarjan-product-thumb--placeholder
+  img,
+img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  object-position: center !important;
+  box-sizing: border-box !important;
+}
+
+.header-style-4 .logo-header .sarjan-brand-logo {
+  width: auto !important;
+  max-width: 150px !important;
+  max-height: 58px !important;
+  object-fit: contain;
+}

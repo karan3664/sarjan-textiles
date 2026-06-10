@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { footerInformationLinks, siteSettings } from "@/data/mock";
+import { normalizeBrandLogo } from "@/data/site";
 import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { localeFromHeaders } from "@/lib/server-locale";
 import {
@@ -11,7 +12,11 @@ import { FooterNewsletterForm } from "./FooterNewsletterForm";
 export async function ModaveFooter() {
   const locale = await localeFromHeaders();
   const cms = await getLocalizedCmsSnapshot();
-  const settings = { ...siteSettings, ...cms.siteSettings };
+  const settings = {
+    ...siteSettings,
+    ...cms.siteSettings,
+    logo: normalizeBrandLogo(cms.siteSettings.logo ?? siteSettings.logo),
+  };
   const directionsHref =
     settings.directionsUrl?.trim() ||
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;

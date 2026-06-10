@@ -10,12 +10,16 @@ import { SavedListsSync } from "./SavedListsSync";
 import { ClientSessionBootstrap } from "./ClientSessionBootstrap";
 import { SarjanButtonHoverFix } from "./SarjanButtonHoverFix";
 import { TemplateScripts } from "./TemplateScripts";
+import { normalizeBrandLogo } from "@/data/site";
+import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { localeFromHeaders } from "@/lib/server-locale";
 import { getStorefrontHeaderData } from "@/lib/storefront-header-data";
 
 export async function ModaveShell({ children }: { children: React.ReactNode }) {
   const locale = await localeFromHeaders();
   const header = await getStorefrontHeaderData(locale);
+  const cms = await getLocalizedCmsSnapshot();
+  const brandLogo = normalizeBrandLogo(cms.siteSettings.logo);
 
   return (
     <>
@@ -42,6 +46,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
         <ModaveHeader
           key={locale}
           initialLocale={header.locale}
+          initialLogo={brandLogo}
           initialNavItems={header.items}
           initialCategories={header.categories}
           initialHubs={header.hubs}

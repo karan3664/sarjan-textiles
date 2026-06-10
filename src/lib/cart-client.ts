@@ -4,6 +4,7 @@ import {
   clientAuthJsonHeaders,
   readStoredClientId,
 } from "@/lib/client-auth-browser";
+import { reconcileCartLineQuantity } from "@/lib/cart-stock";
 import { resolveSyncedSnapshot } from "@/lib/client-sync-timestamp";
 
 export const CART_KEY = "sarjan-cart";
@@ -220,10 +221,17 @@ export async function reconcileCartWithCatalog(
   if (products === null) return cart;
 
   const normalized = normalizeCartSlugs(cart, products);
-  if (JSON.stringify(normalized) !== JSON.stringify(cart)) {
-    writeCart(normalized, { syncApi: false });
+  const bySlug = new Map(products.map((product) => [product.slug, product]));
+  const clamped = normalized.map((item) => {
+    const product = bySlug.get(item.slug);
+    if (!product) return item;
+    const quantity = reconcileCartLineQuantity(item, product);
+    return quantity === item.quantity ? item : { ...item, quantity };
+  });
+  if (JSON.stringify(clamped) !== JSON.stringify(cart)) {
+    writeCart(clamped, { syncApi: false });
   }
-  return normalized;
+  return clamped;
 }
 
 let cartSyncInFlight: Promise<StoredCartItem[]> | null = null;

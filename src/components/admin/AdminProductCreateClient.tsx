@@ -189,7 +189,7 @@ function productFromForm(
     sizes: splitList(form.sizes),
     images: form.images.length
       ? form.images
-      : ["/sarjan-assets/sarjan-logo-icon.png"],
+      : ["/sarjan-assets/sarjan-logo.svg"],
     spin360Images:
       form.spin360Images.length >= 8 ? form.spin360Images : undefined,
     fabricSwatchImage: form.fabricSwatchImage.trim() || undefined,

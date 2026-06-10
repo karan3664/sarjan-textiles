@@ -48,11 +48,13 @@ function catalogCategoryHref(slug: string) {
 
 export function ModaveHeader({
   initialLocale = "en",
+  initialLogo,
   initialNavItems,
   initialCategories = [],
   initialHubs = [],
 }: {
   initialLocale?: AppLocale;
+  initialLogo?: string;
   initialNavItems?: HeaderNavLink[];
   initialCategories?: StorefrontCatalogCategory[];
   initialHubs?: StorefrontCategoryHub[];
@@ -246,9 +248,9 @@ export function ModaveHeader({
             <div className="col-xl-2 col-md-4 col-6 text-center">
               <Link href="/" className="logo-header">
                 <img
-                  src={siteSettings.logo}
+                  src={initialLogo ?? siteSettings.logo}
                   alt={siteSettings.brandName}
-                  className="logo"
+                  className="logo sarjan-brand-logo"
                 />
               </Link>
             </div>

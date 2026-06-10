@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
-import { showProductSoldOutToViewer } from "@/lib/product-availability";
+import {
+  clampCartSetQuantity,
+  productMaxSets,
+  productWholesaleMinSets,
+} from "@/lib/product-availability";
+import { cartHasStockIssues, cartLineSoldOut } from "@/lib/cart-stock";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -21,7 +26,10 @@ import {
   slugsMissingFromCache,
 } from "@/lib/catalog-product-cache";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
-import { productImageClassName } from "@/lib/product-placeholder-image";
+import {
+  productImageClassName,
+  productImageThumbWrapClassName,
+} from "@/lib/product-placeholder-image";
 import { productSetPrice } from "@/lib/product-pricing";
 import type { StorefrontCommerceLabels } from "@/lib/storefront-ui";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
@@ -167,13 +175,17 @@ export function CartPageClient({
   const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
 
   const updateQuantity = (item: CartLine, quantity: number) => {
-    const nextQuantity = Math.max(1, quantity);
+    const minSets = productWholesaleMinSets(item.product, item.sizes);
+    const maxSets = productMaxSets(item.product, item.sizes);
+    const nextQuantity = clampCartSetQuantity(quantity, minSets, maxSets);
     writeCart(
       readCart().map((line) =>
         sameCartLine(line, item) ? { ...line, quantity: nextQuantity } : line,
       ),
     );
   };
+
+  const stockBlocked = cartHasStockIssues(lines, viewerLoggedIn);
 
   const removeItem = (item: CartLine) => {
     writeCart(readCart().filter((line) => !sameCartLine(line, item)));
@@ -215,10 +227,14 @@ export function CartPageClient({
                         <td className="tf-cart-item_product">
                           <Link
                             href={`/products/${item.product.slug}`}
-                            className="img-box position-relative d-inline-block"
+                            className={productImageThumbWrapClassName(
+                              item.product.images[0],
+                              "img-box position-relative d-inline-block",
+                            )}
                           >
-                            {showProductSoldOutToViewer(
+                            {cartLineSoldOut(
                               item.product,
+                              item.sizes,
                               viewerLoggedIn,
                             ) ? (
                               <div
@@ -276,44 +292,58 @@ export function CartPageClient({
                           data-cart-title={labels.quantity ?? "Quantity"}
                           className="tf-cart-item_quantity"
                         >
-                          <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
-                            <button
-                              type="button"
-                              className="btn-quantity btn-decrease"
-                              onClick={() =>
-                                updateQuantity(item, item.quantity - 1)
-                              }
-                              aria-label={
-                                labels.decreaseQty ?? "Decrease set quantity"
-                              }
-                            >
-                              -
-                            </button>
-                            <input
-                              type="text"
-                              className="quantity-product"
-                              name="number"
-                              value={item.quantity}
-                              onChange={(event) =>
-                                updateQuantity(
-                                  item,
-                                  Number(event.target.value) || 1,
-                                )
-                              }
-                            />
-                            <button
-                              type="button"
-                              className="btn-quantity btn-increase"
-                              onClick={() =>
-                                updateQuantity(item, item.quantity + 1)
-                              }
-                              aria-label={
-                                labels.increaseQty ?? "Increase set quantity"
-                              }
-                            >
-                              +
-                            </button>
-                          </div>
+                          {cartLineSoldOut(
+                            item.product,
+                            item.sizes,
+                            viewerLoggedIn,
+                          ) ? (
+                            <span className="text-caption-1 text-danger">
+                              {labels.outOfStock ?? "Out of stock"}
+                            </span>
+                          ) : (
+                            <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
+                              <button
+                                type="button"
+                                className="btn-quantity btn-decrease"
+                                onClick={() =>
+                                  updateQuantity(item, item.quantity - 1)
+                                }
+                                aria-label={
+                                  labels.decreaseQty ?? "Decrease set quantity"
+                                }
+                              >
+                                -
+                              </button>
+                              <input
+                                type="text"
+                                className="quantity-product"
+                                name="number"
+                                value={item.quantity}
+                                onChange={(event) =>
+                                  updateQuantity(
+                                    item,
+                                    Number(event.target.value) || 1,
+                                  )
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="btn-quantity btn-increase"
+                                onClick={() =>
+                                  updateQuantity(item, item.quantity + 1)
+                                }
+                                disabled={
+                                  item.quantity >=
+                                  productMaxSets(item.product, item.sizes)
+                                }
+                                aria-label={
+                                  labels.increaseQty ?? "Increase set quantity"
+                                }
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td
                           data-cart-title={labels.total ?? "Total"}
@@ -384,17 +414,40 @@ export function CartPageClient({
                         </a>
                       </label>
                     </fieldset>
-                    <div className="sarjan-cart-page-actions">
-                      <Link
-                        href="/checkout"
-                        className={withBtnIcon(
-                          "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
-                        )}
+                    {stockBlocked ? (
+                      <p
+                        className="text-caption-1 text-danger mb_12"
+                        role="alert"
                       >
-                        <TfButtonIcon icon="icon-checkCircle">
-                          {labels.proceedToCheckout ?? "Proceed To Checkout"}
-                        </TfButtonIcon>
-                      </Link>
+                        {labels.stockIssueWarning ??
+                          "Some items are out of stock or exceed available quantity. Update your cart to continue."}
+                      </p>
+                    ) : null}
+                    <div className="sarjan-cart-page-actions">
+                      {stockBlocked ? (
+                        <span
+                          className={withBtnIcon(
+                            "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
+                          )}
+                          style={{ opacity: 0.55, pointerEvents: "none" }}
+                          aria-disabled="true"
+                        >
+                          <TfButtonIcon icon="icon-checkCircle">
+                            {labels.proceedToCheckout ?? "Proceed To Checkout"}
+                          </TfButtonIcon>
+                        </span>
+                      ) : (
+                        <Link
+                          href="/checkout"
+                          className={withBtnIcon(
+                            "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
+                          )}
+                        >
+                          <TfButtonIcon icon="icon-checkCircle">
+                            {labels.proceedToCheckout ?? "Proceed To Checkout"}
+                          </TfButtonIcon>
+                        </Link>
+                      )}
                       {!hasB2BSession ? (
                         <div className="sarjan-cart-page-actions__auth">
                           <Link

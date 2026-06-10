@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { useClientHasB2BToken } from "./PriceGate";
-import { showProductSoldOutToViewer } from "@/lib/product-availability";
+import { cartHasStockIssues, cartLineSoldOut } from "@/lib/cart-stock";
 import {
   type FormEvent,
   useCallback,
@@ -36,7 +36,10 @@ import {
 } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
-import { productImageClassName } from "@/lib/product-placeholder-image";
+import {
+  productImageClassName,
+  productImageThumbWrapClassName,
+} from "@/lib/product-placeholder-image";
 import { findStateForCity } from "@/lib/india-locations";
 import {
   normalizeIndianPincode,
@@ -246,6 +249,7 @@ export function CheckoutPageClient({
     [subtotal, clientGst, client?.id],
   );
   const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
+  const stockBlocked = cartHasStockIssues(lines, viewerLoggedIn);
 
   const handleCheckoutLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -273,6 +277,13 @@ export function CheckoutPageClient({
     if (!isClientApproved()) {
       setMessage(
         "Your wholesale account must be approved before placing orders. You will receive an email when approved.",
+      );
+      return;
+    }
+    if (cartHasStockIssues(lines, viewerLoggedIn)) {
+      setMessage(
+        labels.stockIssueWarning ??
+          "Some items are out of stock or exceed available quantity. Update your cart to continue.",
       );
       return;
     }
@@ -600,11 +611,22 @@ export function CheckoutPageClient({
                         {message}
                       </p>
                     ) : null}
+                    {stockBlocked ? (
+                      <p
+                        className="text-caption-1 text-danger mb_12"
+                        role="alert"
+                      >
+                        {labels.stockIssueWarning ??
+                          "Some items are out of stock or exceed available quantity. Update your cart to continue."}
+                      </p>
+                    ) : null}
                     <div className="sarjan-checkout-submit-wrap">
                       <button
                         className={withBtnIcon("tf-btn btn-reset")}
                         type="button"
                         onClick={submitOrder}
+                        disabled={stockBlocked}
+                        style={stockBlocked ? { opacity: 0.55 } : undefined}
                       >
                         <TfButtonIcon icon="icon-checkCircle">
                           {labels.submitOrder ?? "Submit Order Request"}
@@ -632,10 +654,14 @@ export function CheckoutPageClient({
                       >
                         <Link
                           href={`/products/${item.product.slug}`}
-                          className="img-product position-relative d-inline-block"
+                          className={productImageThumbWrapClassName(
+                            item.product.images[0],
+                            "img-product position-relative d-inline-block",
+                          )}
                         >
-                          {showProductSoldOutToViewer(
+                          {cartLineSoldOut(
                             item.product,
+                            item.sizes,
                             viewerLoggedIn,
                           ) ? (
                             <div

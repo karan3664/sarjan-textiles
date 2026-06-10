@@ -9,8 +9,8 @@ export const siteSettings = {
   domain: "sarjantextiles.com",
   brandName: "Sarjan Textiles",
   legalName: "Sarjan Textiles",
-  logo: asset("sarjan-logo-full.png"),
-  logoIcon: asset("sarjan-logo-icon.png"),
+  logo: asset("sarjan-logo.svg"),
+  logoIcon: asset("sarjan-logo.svg"),
   favicon: asset("sarjan-favicon-192.png"),
   email: "info@sarjantextiles.com",
   salesEmail: "",
@@ -29,6 +29,20 @@ export const siteSettings = {
       "Explore Sarjan Textiles collections, place B2B orders, track dispatches, and manage 90-day credit workflows.",
   },
 };
+
+/** Map legacy icon-only / old PNG logo paths to the current full brand mark. */
+export function normalizeBrandLogo(url?: string | null): string {
+  const value = url?.trim() || siteSettings.logo;
+  const lower = value.toLowerCase();
+  if (
+    lower.includes("sarjan-logo-icon") ||
+    lower.includes("sarjan-logo-full") ||
+    lower.endsWith("/sarjan-logo.svg")
+  ) {
+    return siteSettings.logo;
+  }
+  return value;
+}
 
 export const navigation = [
   { label: "Home", href: "/" },

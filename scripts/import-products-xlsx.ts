@@ -98,7 +98,7 @@ function productFromRow(row: SheetRow, index: number): Product {
     sizes: splitList(stringValue(row, "sizes")),
     images: splitList(imageUrls).length
       ? splitList(imageUrls)
-      : ["/sarjan-assets/sarjan-logo-icon.png"],
+      : ["/sarjan-assets/sarjan-logo.svg"],
     imageAlt: firstStringValue(row, ["image_alt", "alt_text", "alt"]),
     description: stringValue(row, "description"),
     care: stringValue(row, "care"),

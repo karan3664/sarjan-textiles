@@ -12,6 +12,7 @@ import {
   hasMeaningfulDispatchAddress,
 } from "@/lib/dispatch-address";
 import {
+  releaseInventoryForOrder,
   reserveInventoryForOrder,
   syncInventoryForOrderStatusChange,
 } from "@/lib/order-inventory";
@@ -1037,25 +1038,31 @@ export async function createOrder(
       ],
       createdAt,
     };
-    const data = await pgInsertReturning("orders", {
-      id: order.id,
-      client_id: order.clientId,
-      client_email: order.clientEmail,
-      status: order.status,
-      payment_mode: order.paymentMode,
-      payment_status: order.paymentStatus,
-      credit_days: order.creditDays,
-      deposit_status: order.depositStatus,
-      subtotal: order.subtotal,
-      items: order.items,
-      dispatch_address: order.dispatchAddress,
-      dispatch_history: order.dispatchHistory,
-      note: order.note,
-      placed_via: placedVia,
-    });
-    if (!data) throw new Error("Failed to create order");
-    const mapped = mapOrder(data);
-    await reserveInventoryForOrder(mapped);
+    await reserveInventoryForOrder(order);
+    let mapped: LocalOrder;
+    try {
+      const data = await pgInsertReturning("orders", {
+        id: order.id,
+        client_id: order.clientId,
+        client_email: order.clientEmail,
+        status: order.status,
+        payment_mode: order.paymentMode,
+        payment_status: order.paymentStatus,
+        credit_days: order.creditDays,
+        deposit_status: order.depositStatus,
+        subtotal: order.subtotal,
+        items: order.items,
+        dispatch_address: order.dispatchAddress,
+        dispatch_history: order.dispatchHistory,
+        note: order.note,
+        placed_via: placedVia,
+      });
+      if (!data) throw new Error("Failed to create order");
+      mapped = mapOrder(data);
+    } catch (error) {
+      await releaseInventoryForOrder(order).catch(() => undefined);
+      throw error;
+    }
     await maybeBackfillClientAddressFromDispatch(
       input.clientId,
       mapped.dispatchAddress,

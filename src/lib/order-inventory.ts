@@ -63,6 +63,22 @@ async function mutateInventory(
   await saveCmsSnapshot({ products });
 }
 
+/** Read-only check — same rules as reserve, without mutating inventory. */
+export async function assertInventoryAvailableForOrder(order: LocalOrder) {
+  const cms = await getCmsSnapshot();
+  for (const item of order.items) {
+    const pieces = pieceCount(item);
+    if (pieces <= 0) continue;
+    const product = cms.products.find((row) => row.slug === item.slug);
+    const available = (product?.stock ?? 0) - (product?.reserved ?? 0);
+    if (!product || available < pieces) {
+      throw new Error(
+        `Insufficient stock for ${item.name}. Available units: ${Math.max(0, available)}.`,
+      );
+    }
+  }
+}
+
 export async function reserveInventoryForOrder(order: LocalOrder) {
   await mutateInventory(order.items, "reserve");
 }

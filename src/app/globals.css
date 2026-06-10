@@ -306,8 +306,8 @@ body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
 
 .header-style-4 .logo-header .logo {
   width: auto !important;
-  max-width: 68px !important;
-  max-height: 68px !important;
+  max-width: 150px !important;
+  max-height: 58px !important;
   object-fit: contain;
 }
 
@@ -350,8 +350,8 @@ body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
 
 footer .footer-infor .footer-logo img {
   width: auto !important;
-  max-width: 96px !important;
-  max-height: 96px !important;
+  max-width: 120px !important;
+  max-height: 72px !important;
   object-fit: contain;
 }
 
@@ -2312,12 +2312,52 @@ img.sarjan-product-img-placeholder {
 .tf-cart-item .img-box img.sarjan-product-img-placeholder,
 .tf-page-checkout .img-product img.sarjan-product-img-placeholder,
 .tf-mini-cart-image img.sarjan-product-img-placeholder,
-.sarjan-order-item-thumb img.sarjan-product-img-placeholder {
+.sarjan-order-item-thumb img.sarjan-product-img-placeholder,
+.sidebar-checkout-content
+  .item-product
+  .img-product
+  img.sarjan-product-img-placeholder,
+.modal-shopping-cart
+  .tf-mini-cart-item
+  .tf-mini-cart-image
+  img.sarjan-product-img-placeholder {
   object-fit: contain !important;
-  object-position: center;
-  padding: 14%;
+  object-position: center !important;
+  padding: 10% !important;
   background: #f4f1ec;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
+}
+
+.tf-cart-item .tf-cart-item_product .img-box.sarjan-product-thumb--placeholder,
+.sidebar-checkout-content
+  .item-product
+  .img-product.sarjan-product-thumb--placeholder,
+.modal-shopping-cart
+  .tf-mini-cart-item
+  .tf-mini-cart-image.sarjan-product-thumb--placeholder {
+  width: 90px !important;
+  height: 90px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #f4f1ec;
+}
+
+.tf-cart-item
+  .tf-cart-item_product
+  .img-box.sarjan-product-thumb--placeholder
+  img,
+.sidebar-checkout-content
+  .item-product
+  .img-product.sarjan-product-thumb--placeholder
+  img,
+.modal-shopping-cart
+  .tf-mini-cart-item
+  .tf-mini-cart-image.sarjan-product-thumb--placeholder
+  img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
 }
 
 /* Action column: <td> must stay table-cell (admin table reset); flex lives on inner wrapper */

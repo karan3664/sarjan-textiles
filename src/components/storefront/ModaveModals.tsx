@@ -18,8 +18,16 @@ import {
 } from "@/lib/catalog-product-cache";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { productSetPrice } from "@/lib/product-pricing";
-import { showProductSoldOutToViewer } from "@/lib/product-availability";
-import { productImageClassName } from "@/lib/product-placeholder-image";
+import {
+  clampCartSetQuantity,
+  productMaxSets,
+  productWholesaleMinSets,
+  showProductSoldOutToViewer,
+} from "@/lib/product-availability";
+import {
+  productImageClassName,
+  productImageThumbWrapClassName,
+} from "@/lib/product-placeholder-image";
 import {
   readWishlist,
   refreshWishlistFromCatalog,
@@ -283,8 +291,17 @@ export function ModaveModals() {
       const quantityInput = quantityScope?.querySelector<HTMLInputElement>(
         ".quantity-product, input[name='number']",
       );
-      const quantity = Math.max(1, Number(quantityInput?.value ?? 1) || 1);
+      let quantity = Math.max(1, Number(quantityInput?.value ?? 1) || 1);
       const sizes = parseSizeRun(target.dataset.productSizeRun);
+      const cachedProduct = getCachedProducts([slug])[0];
+      if (cachedProduct && hasB2BSession) {
+        const maxSets = productMaxSets(cachedProduct, sizes);
+        if (maxSets <= 0) {
+          return;
+        }
+        const minSets = productWholesaleMinSets(cachedProduct, sizes);
+        quantity = clampCartSetQuantity(quantity, minSets, maxSets);
+      }
       const colors =
         target.dataset.productAllColors === "true"
           ? (target.dataset.productColors
@@ -314,7 +331,7 @@ export function ModaveModals() {
 
     document.addEventListener("click", onAdd);
     return () => document.removeEventListener("click", onAdd);
-  }, []);
+  }, [hasB2BSession]);
 
   useEffect(() => {
     const applyWishlistSlugs = (slugs: string[]) => {
@@ -649,86 +666,82 @@ export function ModaveModals() {
                     <div className="tf-mini-cart-sroll">
                       <div className="tf-mini-cart-items">
                         {hasItems ? (
-                          items.map((item) => (
-                            <div
-                              className="tf-mini-cart-item file-delete"
-                              key={`${item.slug}-${item.sizes.join("-")}-${item.color}`}
-                            >
-                              <div className="tf-mini-cart-image position-relative">
-                                <a href={`/products/${item.product.slug}`}>
-                                  {showProductSoldOutToViewer(
-                                    item.product,
-                                    hasB2BSession,
-                                  ) ? (
-                                    <div
-                                      className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
-                                      role="status"
-                                    >
-                                      Out of stock
+                          items.map((item) => {
+                            const thumbImage = productImageForColorIndex(
+                              item.product,
+                              productColorIndex(item.product, item.color),
+                            );
+                            return (
+                              <div
+                                className="tf-mini-cart-item file-delete"
+                                key={`${item.slug}-${item.sizes.join("-")}-${item.color}`}
+                              >
+                                <div
+                                  className={productImageThumbWrapClassName(
+                                    thumbImage,
+                                    "tf-mini-cart-image position-relative",
+                                  )}
+                                >
+                                  <a href={`/products/${item.product.slug}`}>
+                                    {showProductSoldOutToViewer(
+                                      item.product,
+                                      hasB2BSession,
+                                    ) ? (
+                                      <div
+                                        className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
+                                        role="status"
+                                      >
+                                        Out of stock
+                                      </div>
+                                    ) : null}
+                                    <img
+                                      className={productImageClassName(
+                                        thumbImage,
+                                        "lazyload",
+                                      )}
+                                      data-src={thumbImage}
+                                      src={thumbImage}
+                                      alt={item.product.name}
+                                    />
+                                  </a>
+                                </div>
+                                <div className="tf-mini-cart-info flex-grow-1">
+                                  <div className="mb_12 d-flex align-items-center justify-content-between flex-wrap gap-12">
+                                    <div className="text-title">
+                                      <a
+                                        href={`/products/${item.product.slug}`}
+                                        className="link text-line-clamp-1"
+                                      >
+                                        {item.product.name}
+                                      </a>
                                     </div>
-                                  ) : null}
-                                  <img
-                                    className={productImageClassName(
-                                      productImageForColorIndex(
-                                        item.product,
-                                        productColorIndex(
-                                          item.product,
-                                          item.color,
-                                        ),
-                                      ),
-                                      "lazyload",
-                                    )}
-                                    data-src={productImageForColorIndex(
-                                      item.product,
-                                      productColorIndex(
-                                        item.product,
-                                        item.color,
-                                      ),
-                                    )}
-                                    src={productImageForColorIndex(
-                                      item.product,
-                                      productColorIndex(
-                                        item.product,
-                                        item.color,
-                                      ),
-                                    )}
-                                    alt={item.product.name}
-                                  />
-                                </a>
-                              </div>
-                              <div className="tf-mini-cart-info flex-grow-1">
-                                <div className="mb_12 d-flex align-items-center justify-content-between flex-wrap gap-12">
-                                  <div className="text-title">
-                                    <a
-                                      href={`/products/${item.product.slug}`}
-                                      className="link text-line-clamp-1"
+                                    <button
+                                      type="button"
+                                      className="text-button tf-btn-remove border-0 bg-transparent p-0"
+                                      onClick={() => removeItem(item)}
                                     >
-                                      {item.product.name}
-                                    </a>
+                                      Remove
+                                    </button>
                                   </div>
-                                  <button
-                                    type="button"
-                                    className="text-button tf-btn-remove border-0 bg-transparent p-0"
-                                    onClick={() => removeItem(item)}
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
-                                  <div className="text-secondary-2">
-                                    {item.color} / {item.sizes.join("/")}
+                                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-12">
+                                    <div className="text-secondary-2">
+                                      {item.color} / {item.sizes.join("/")}
+                                    </div>
+                                    <div className="text-button">
+                                      {item.quantity} set X{" "}
+                                      <PriceGate
+                                        amount={item.setPrice}
+                                        compact
+                                      />
+                                    </div>
                                   </div>
-                                  <div className="text-button">
-                                    {item.quantity} set X{" "}
-                                    <PriceGate amount={item.setPrice} compact />
+                                  <div className="text-caption-1 text-secondary-2 mt_4">
+                                    1 set = {item.sizes.length} pcs
                                   </div>
-                                </div>
-                                <div className="text-caption-1 text-secondary-2 mt_4">
-                                  1 set = {item.sizes.length} pcs
                                 </div>
                               </div>
-                            </div>
-                          ))
+                            );
+                          })
                         ) : (
                           <div className="sarjan-mini-cart-empty text-center">
                             <h6>Your cart is empty</h6>
@@ -958,7 +971,12 @@ export function ModaveModals() {
                             className="tf-mini-cart-item file-delete"
                             key={product.slug}
                           >
-                            <div className="tf-mini-cart-image">
+                            <div
+                              className={productImageThumbWrapClassName(
+                                product.images[0],
+                                "tf-mini-cart-image",
+                              )}
+                            >
                               <a href={`/products/${product.slug}`}>
                                 <img
                                   className={productImageClassName(

@@ -64,6 +64,7 @@ export default async function RootLayout({
           <link key={href} rel="stylesheet" href={href} />
         ))}
         <link rel="stylesheet" href="/sarjan-hero.css" />
+        <link rel="stylesheet" href="/sarjan-storefront-overrides.css" />
         {/* After Modave — CTA defaults + hover (must load after template CSS) */}
         <link rel="stylesheet" href="/sarjan-button-overrides.css" />
         <link rel="stylesheet" href="/storefront-buttons.css" />
