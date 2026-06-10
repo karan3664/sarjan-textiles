@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     // Lint in CI/dev (`npm run lint`); skip during `next build` to save VPS RAM.
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    // Docker/Coolify: skip tsc in `next build` — run `npx tsc --noEmit` in CI/dev instead.
+    ignoreBuildErrors: process.env.DOCKER_BUILD === "1",
+  },
   productionBrowserSourceMaps: false,
   devIndicators: false,
   // Keep sharp external so dev server does not emit fragile vendor-chunks after cache churn.

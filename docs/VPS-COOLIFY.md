@@ -130,20 +130,29 @@ Port **8000** (Coolify UI) is **not open** on the public internet — `http://69
 
 Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build.
 
-### Deploy failed during `npm run build` (exit 255, after “Linting and checking…”)
+### Deploy failed during Docker build (exit 255)
 
-Coolify log stops after ESLint warnings — the Node process was usually **killed for memory** on a small VPS.
+Coolify log may stop after `npm ci` or during `next build` — usually **VPS RAM** or **disk full**.
 
-**Fix in repo (already applied):** `build:docker` skips lint; `NODE_OPTIONS=--max-old-space-size=2048` (not 4096).
+**Repo mitigations:** one sequential `npm ci` in Dockerfile (no parallel prod-deps), `build:docker` skips lint, `NODE_OPTIONS=--max-old-space-size=1536`, `DOCKER_BUILD=1` skips in-build TypeScript.
 
-**On VPS if it still fails:**
+**On VPS (SSH):**
 
 ```bash
 free -h
+df -h /
 docker system prune -af
 ```
 
-Add **2GB swap** if RAM &lt; 4GB, then **Redeploy**. Or upgrade VPS to ≥4GB RAM.
+If RAM &lt; 4GB, add swap then redeploy:
+
+```bash
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+free -h
+```
+
+Or upgrade Hostinger VPS to **≥4GB RAM**.
 
 ### Deploy failed at “exporting to image” (build OK, exit 255)
 

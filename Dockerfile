@@ -1,24 +1,21 @@
-# Sarjan Textiles — production image for Coolify / Docker (preferred over Nixpacks).
-FROM node:22.13-bookworm-slim AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-
-FROM node:22.13-bookworm-slim AS prod-deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+# Sarjan Textiles — production image for Coolify / Docker.
+# Single `npm ci` (no parallel prod-deps) — parallel installs OOM 2GB VPS builds.
 
 FROM node:22.13-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-# 4GB heap on a 2–4GB VPS triggers OOM during `next build` typecheck — keep ≤2048.
-ENV NODE_OPTIONS=--max-old-space-size=2048
+ENV DOCKER_BUILD=1
+# Keep heap below VPS RAM; BuildKit runs builder alone after one npm ci.
+ENV NODE_OPTIONS=--max-old-space-size=1536
 ARG SITE_LAUNCH_AT
 ENV SITE_LAUNCH_AT=${SITE_LAUNCH_AT}
-COPY --from=deps /app/node_modules ./node_modules
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
 COPY . .
 RUN npm run build:docker
+RUN npm prune --omit=dev
 
 FROM node:22.13-bookworm-slim AS runner
 WORKDIR /app
@@ -34,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
-COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
 RUN mkdir -p data data/downloads public/downloads public/uploads/cms
