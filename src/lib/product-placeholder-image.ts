@@ -1,5 +1,6 @@
 /** Default image when bulk import / create has no `image_urls`. */
-export const PRODUCT_PLACEHOLDER_IMAGE = "/sarjan-assets/sarjan-logo.svg";
+export const PRODUCT_PLACEHOLDER_IMAGE =
+  "/sarjan-assets/sarjan-logo-placeholder.jpg";
 
 export function isProductPlaceholderImage(url?: string | null): boolean {
   if (!url?.trim()) return true;
@@ -7,6 +8,7 @@ export function isProductPlaceholderImage(url?: string | null): boolean {
   return (
     normalized.includes("sarjan-logo-icon") ||
     normalized.includes("sarjan-logo-full") ||
+    normalized.includes("sarjan-logo-placeholder") ||
     normalized.includes("sarjan-logo.svg")
   );
 }

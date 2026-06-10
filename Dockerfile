@@ -5,8 +5,10 @@ FROM node:22.13-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DOCKER_BUILD=1
-# Keep heap below VPS RAM; BuildKit runs builder alone after one npm ci.
-ENV NODE_OPTIONS=--max-old-space-size=1536
+# Keep heap below VPS RAM; leave headroom for webpack/native alloc on 2GB hosts.
+ENV NODE_OPTIONS=--max-old-space-size=1280
+# Single compile worker — parallel webpack workers OOM small VPS Docker builds.
+ENV NEXT_PRIVATE_BUILD_WORKER=0
 ARG SITE_LAUNCH_AT
 ENV SITE_LAUNCH_AT=${SITE_LAUNCH_AT}
 

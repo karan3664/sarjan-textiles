@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDockerBuild = process.env.DOCKER_BUILD === "1";
+
 const nextConfig: NextConfig = {
   // SITE_LAUNCH_AT must stay a runtime env var (Coolify). Do not add to `env` here —
   // that inlines an empty value at Docker build time and disables the launch gate.
@@ -28,6 +30,8 @@ const nextConfig: NextConfig = {
   compress: true,
   experimental: {
     webpackMemoryOptimizations: true,
+    // Coolify / 2GB VPS: one CPU during `next build` avoids OOM from worker pools.
+    ...(isDockerBuild ? { cpus: 1 } : {}),
     serverActions: {
       bodySizeLimit: "80mb",
     },

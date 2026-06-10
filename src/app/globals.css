@@ -2284,29 +2284,29 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 img.sarjan-product-img-placeholder {
   object-fit: contain !important;
   object-position: center;
-  padding: 18%;
-  background: #f4f1ec;
+  padding: 4%;
+  background: #f8f6f3;
   box-sizing: border-box;
 }
 
 .card-product .product-img img.sarjan-product-img-placeholder {
   object-fit: contain !important;
-  padding: 14%;
-  background: #f4f1ec;
+  padding: 3%;
+  background: #f8f6f3;
 }
 
 .tf-product-media-thumbs .item img.sarjan-product-img-placeholder,
 .tf-product-media-main .item img.sarjan-product-img-placeholder,
 .tf-add-cart-product .image img.sarjan-product-img-placeholder {
   object-fit: contain !important;
-  padding: 16%;
-  background: #f4f1ec;
+  padding: 4%;
+  background: #f8f6f3;
 }
 
 .sarjan-card-img img.sarjan-product-img-placeholder {
   object-fit: contain !important;
-  padding: 12%;
-  background: #f4f1ec;
+  padding: 3%;
+  background: #f8f6f3;
 }
 
 .tf-cart-item .img-box img.sarjan-product-img-placeholder,
@@ -2323,8 +2323,8 @@ img.sarjan-product-img-placeholder {
   img.sarjan-product-img-placeholder {
   object-fit: contain !important;
   object-position: center !important;
-  padding: 10% !important;
-  background: #f4f1ec;
+  padding: 4% !important;
+  background: #f8f6f3;
   box-sizing: border-box !important;
 }
 

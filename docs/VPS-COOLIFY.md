@@ -134,7 +134,9 @@ Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build
 
 Coolify log may stop after `npm ci` or during `next build` — usually **VPS RAM** or **disk full**.
 
-**Repo mitigations:** one sequential `npm ci` in Dockerfile (no parallel prod-deps), `build:docker` skips lint, `NODE_OPTIONS=--max-old-space-size=1536`, `DOCKER_BUILD=1` skips in-build TypeScript.
+**Repo mitigations:** one sequential `npm ci` in Dockerfile (no parallel prod-deps), `build:docker` skips lint, `NODE_OPTIONS=--max-old-space-size=1280`, `NEXT_PRIVATE_BUILD_WORKER=0`, `experimental.cpus: 1` when `DOCKER_BUILD=1`, `.dockerignore` excludes `public/uploads` and APK binaries.
+
+**Typical log:** build stops right after `Creating an optimized production build ...` with exit **255** and no TypeScript/webpack error — almost always **OOM** (not a code bug). Same commit often builds fine on a Mac.
 
 **On VPS (SSH):**
 
