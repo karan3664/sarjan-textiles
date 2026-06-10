@@ -2309,6 +2309,17 @@ img.sarjan-product-img-placeholder {
   background: #f4f1ec;
 }
 
+.tf-cart-item .img-box img.sarjan-product-img-placeholder,
+.tf-page-checkout .img-product img.sarjan-product-img-placeholder,
+.tf-mini-cart-image img.sarjan-product-img-placeholder,
+.sarjan-order-item-thumb img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  object-position: center;
+  padding: 14%;
+  background: #f4f1ec;
+  box-sizing: border-box;
+}
+
 /* Action column: <td> must stay table-cell (admin table reset); flex lives on inner wrapper */
 .sarjan-products-table .sarjan-product-row-actions {
   display: flex;

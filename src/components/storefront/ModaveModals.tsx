@@ -19,6 +19,7 @@ import {
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { productSetPrice } from "@/lib/product-pricing";
 import { showProductSoldOutToViewer } from "@/lib/product-availability";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 import {
   readWishlist,
   refreshWishlistFromCatalog,
@@ -667,7 +668,16 @@ export function ModaveModals() {
                                     </div>
                                   ) : null}
                                   <img
-                                    className="lazyload"
+                                    className={productImageClassName(
+                                      productImageForColorIndex(
+                                        item.product,
+                                        productColorIndex(
+                                          item.product,
+                                          item.color,
+                                        ),
+                                      ),
+                                      "lazyload",
+                                    )}
                                     data-src={productImageForColorIndex(
                                       item.product,
                                       productColorIndex(
@@ -951,7 +961,10 @@ export function ModaveModals() {
                             <div className="tf-mini-cart-image">
                               <a href={`/products/${product.slug}`}>
                                 <img
-                                  className="lazyload"
+                                  className={productImageClassName(
+                                    product.images[0],
+                                    "lazyload",
+                                  )}
                                   data-src={product.images[0]}
                                   src={product.images[0]}
                                   alt={product.name}

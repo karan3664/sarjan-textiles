@@ -1,6 +1,7 @@
 "use client";
 
 import { normalizeAdminImageSrc } from "@/lib/admin-report-export";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 
 export function AdminOrderItemImage({
   src,
@@ -27,7 +28,7 @@ export function AdminOrderItemImage({
       alt={alt}
       width={size}
       height={size}
-      className="sarjan-order-item-thumb"
+      className={productImageClassName(src, "sarjan-order-item-thumb")}
       loading="lazy"
     />
   );

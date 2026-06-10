@@ -3,14 +3,24 @@ import { AdminTemplateChrome } from "@/components/admin/AdminTemplateChrome";
 import { getAdminCustomers } from "@/lib/admin-customers";
 import { getAdminOrders } from "@/lib/admin-orders";
 import { getCmsSnapshot } from "@/lib/cms-store";
+import { flattenProductsForAdmin } from "@/lib/product-localize";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
-  const [orders, customers, cms] = await Promise.all([getAdminOrders(), getAdminCustomers(), getCmsSnapshot()]);
+  const [orders, customers, cms] = await Promise.all([
+    getAdminOrders(),
+    getAdminCustomers(),
+    getCmsSnapshot(),
+  ]);
   return (
     <AdminTemplateChrome active="orders" title="Order Management">
-      <AdminOrderManagementClient initialOrders={orders} clients={customers} products={cms.products} mode="orders" />
+      <AdminOrderManagementClient
+        initialOrders={orders}
+        clients={customers}
+        products={flattenProductsForAdmin(cms.products)}
+        mode="orders"
+      />
     </AdminTemplateChrome>
   );
 }

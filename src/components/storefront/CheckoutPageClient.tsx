@@ -36,6 +36,7 @@ import {
 } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 import { findStateForCity } from "@/lib/india-locations";
 import {
   normalizeIndianPincode,
@@ -647,6 +648,9 @@ export function CheckoutPageClient({
                           <img
                             src={item.product.images[0]}
                             alt={buildProductImageAlt(item.product)}
+                            className={productImageClassName(
+                              item.product.images[0],
+                            )}
                           />
                         </Link>
                         <div className="content-box">

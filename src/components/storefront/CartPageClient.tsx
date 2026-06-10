@@ -21,6 +21,7 @@ import {
   slugsMissingFromCache,
 } from "@/lib/catalog-product-cache";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 import { productSetPrice } from "@/lib/product-pricing";
 import type { StorefrontCommerceLabels } from "@/lib/storefront-ui";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
@@ -230,6 +231,9 @@ export function CartPageClient({
                             <img
                               src={item.product.images[0]}
                               alt={buildProductImageAlt(item.product)}
+                              className={productImageClassName(
+                                item.product.images[0],
+                              )}
                             />
                           </Link>
                           <div className="cart-info">

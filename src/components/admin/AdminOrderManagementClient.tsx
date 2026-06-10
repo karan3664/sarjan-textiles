@@ -67,6 +67,14 @@ function agingBucket(order: AdminOrder) {
   return "Not Due";
 }
 
+function formatSizesList(sizes?: string[] | null) {
+  return (sizes ?? []).join(", ");
+}
+
+function firstColor(colors?: string[] | null) {
+  return colors?.[0] ?? "Default";
+}
+
 function statusClass(value?: string) {
   if (
     value === "Delivered" ||
@@ -168,8 +176,8 @@ export function AdminOrderManagementClient({
     productSlug: products[0]?.slug ?? "",
     setQuantity: "1",
     unitPrice: String(products[0]?.price ?? 0),
-    sizes: products[0]?.sizes.join(", ") ?? "",
-    color: products[0]?.colors[0] ?? "Default",
+    sizes: formatSizesList(products[0]?.sizes),
+    color: firstColor(products[0]?.colors),
     note: "",
     dispatchAddress: "",
     items: [] as OrderItemDraft[],
@@ -280,7 +288,10 @@ export function AdminOrderManagementClient({
 
   const recalcItem = (item: OrderItemDraft): OrderItemDraft => ({
     ...item,
-    piecesPerSet: Math.max(1, item.piecesPerSet || item.sizes.length || 1),
+    piecesPerSet: Math.max(
+      1,
+      item.piecesPerSet || (item.sizes ?? []).length || 1,
+    ),
     setQuantity: Math.max(1, Number(item.setQuantity) || 1),
     unitPrice: Math.max(0, Number(item.unitPrice) || 0),
     lineTotal: Math.max(
@@ -295,16 +306,17 @@ export function AdminOrderManagementClient({
     product: Product,
     patch: Partial<OrderItemDraft> = {},
   ): OrderItemDraft => {
+    const productSizes = product.sizes ?? [];
     const sizes = patch.sizes?.length
       ? patch.sizes
-      : product.sizes.length
-        ? product.sizes
+      : productSizes.length
+        ? productSizes
         : ["M"];
     return recalcItem({
       slug: product.slug,
       name: product.name,
       image: product.images?.[0]?.trim() ?? "",
-      color: patch.color || product.colors[0] || "Default",
+      color: patch.color || firstColor(product.colors),
       sizes,
       setQuantity: patch.setQuantity ?? 1,
       piecesPerSet: patch.piecesPerSet ?? sizes.length,
@@ -327,7 +339,7 @@ export function AdminOrderManagementClient({
       sizes,
       setQuantity: Number(customOrder.setQuantity) || 1,
       unitPrice: Number(customOrder.unitPrice) || product.price,
-      piecesPerSet: sizes.length || product.sizes.length || 1,
+      piecesPerSet: sizes.length || (product.sizes ?? []).length || 1,
     });
     setCustomOrder((current) => ({
       ...current,
@@ -641,8 +653,10 @@ export function AdminOrderManagementClient({
                     ...current,
                     productSlug: event.target.value,
                     unitPrice: String(product?.price ?? current.unitPrice),
-                    sizes: product?.sizes.join(", ") ?? current.sizes,
-                    color: product?.colors[0] ?? current.color,
+                    sizes: product
+                      ? formatSizesList(product.sizes)
+                      : current.sizes,
+                    color: product ? firstColor(product.colors) : current.color,
                   }));
                 }}
               >
@@ -1268,7 +1282,7 @@ export function AdminOrderManagementClient({
                             </td>
                             <td>
                               <input
-                                value={item.sizes.join(", ")}
+                                value={formatSizesList(item.sizes)}
                                 disabled={draft.source === "demo"}
                                 onChange={(event) => {
                                   const sizes = event.target.value
