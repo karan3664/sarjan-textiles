@@ -1,8 +1,15 @@
+/**
+ * Import products from Excel into CMS (local file or Postgres).
+ * Run: npx tsx --env-file=.env.local scripts/import-products-xlsx.ts "/path/to/file.xlsx"
+ */
 import * as XLSX from "xlsx";
-import type { Product } from "@/data/mock";
-
-export const runtime = "nodejs";
-export const maxDuration = 60;
+import type { Product } from "../src/data/mock";
+import {
+  getCmsSnapshotForPatch,
+  upsertCmsProducts,
+} from "../src/lib/cms-store";
+import { asStoredProducts } from "../src/lib/cms-admin-view";
+import { localizeProductsOnSaveFast } from "../src/lib/product-localize";
 
 type SheetRow = Record<string, string | number | boolean | null | undefined>;
 
@@ -111,47 +118,37 @@ function productFromRow(row: SheetRow, index: number): Product {
   };
 }
 
-function validProduct(product: Product) {
-  return Boolean(product.name && product.sku && product.slug);
-}
-
-export async function POST(request: Request) {
-  const formData = await request.formData();
-  const file = formData.get("file");
-
-  if (!(file instanceof File)) {
-    return Response.json({ error: "Excel file required" }, { status: 400 });
-  }
-
-  const extension = file.name.split(".").pop()?.toLowerCase();
-  if (!extension || !["xlsx", "xls", "csv"].includes(extension)) {
-    return Response.json(
-      { error: "Only xlsx, xls, or csv files allowed" },
-      { status: 400 },
+async function main() {
+  const filePath = process.argv[2];
+  if (!filePath) {
+    throw new Error(
+      "Usage: npx tsx scripts/import-products-xlsx.ts <file.xlsx>",
     );
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const workbook = XLSX.read(buffer, { type: "buffer" });
+  const workbook = XLSX.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
+  if (!sheetName) throw new Error("No worksheet found");
 
-  if (!sheetName) {
-    return Response.json({ error: "No worksheet found" }, { status: 400 });
-  }
-
-  const rows = XLSX.utils.sheet_to_json<SheetRow>(workbook.Sheets[sheetName], {
+  const rows = XLSX.utils.sheet_to_json<SheetRow>(workbook.Sheets[sheetName]!, {
     defval: "",
   });
-  const parsedProducts = rows.map(productFromRow);
-  const products = parsedProducts.filter(validProduct);
-  const invalidRows = parsedProducts.length - products.length;
+  const parsed = rows.map(productFromRow);
+  const products = parsed.filter((product) => product.name && product.sku);
+  if (!products.length) throw new Error("No valid rows (name + sku required)");
 
-  if (!products.length) {
-    return Response.json(
-      { error: "No valid products found. Name and SKU are required." },
-      { status: 400 },
-    );
+  console.log(`Importing ${products.length} products from ${sheetName}…`);
+  const cms = await getCmsSnapshotForPatch();
+  const stored = asStoredProducts(localizeProductsOnSaveFast(products));
+  const t0 = Date.now();
+  await upsertCmsProducts(stored, cms);
+  console.log(`Done in ${Date.now() - t0}ms`);
+  for (const product of stored) {
+    console.log(`  • ${product.sku} — ${product.slug}`);
   }
-
-  return Response.json({ products, invalidRows, totalRows: rows.length });
 }
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

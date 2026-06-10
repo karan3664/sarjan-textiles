@@ -184,10 +184,10 @@ On VPS `/etc/cron.d/sarjan`:
 ```cron
 0 2 * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/daily-backup
 0 * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/abandoned-cart-reminders
-*/10 * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/launch-newsletter
+* * * * * root curl -fsS -H "X-Cron-Secret: YOUR_CRON_SECRET" https://sarjantextiles.com/api/cron/launch-newsletter
 ```
 
-The launch-newsletter job sends the **Website launch** template once to all subscribers after `SITE_LAUNCH_AT` (inquiry, register, and launch-page signups are added automatically).
+The launch-newsletter job sends the **Website launch** template once to all active subscribers after `SITE_LAUNCH_AT` (launch page “Notify me”, inquiry, and registration signups). Admin inbox alerts go to **info@sarjantextiles.com** when someone joins the list.
 
 ### DB backup
 

@@ -106,7 +106,7 @@ export async function PUT(request: Request) {
     }
 
     const bodyKeys = Object.keys(body);
-    const next = await saveCmsSnapshot(body, before);
+    const next = await saveCmsSnapshot(body, before, { light: true });
     if (session) {
       void appendAuditLog({
         actor: session.email,

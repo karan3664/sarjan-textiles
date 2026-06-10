@@ -302,16 +302,67 @@ async function readCmsSnapshotFromFile(): Promise<CmsSnapshot | null> {
   }
 }
 
-async function readCmsSnapshotFromPostgres(): Promise<CmsSnapshot | null> {
+async function readCmsSnapshotFromPostgresRaw(): Promise<CmsSnapshot | null> {
   const { rows } = await pgQuery<{ data: CmsSnapshot; updated_at: string }>(
     "select data, updated_at from cms_snapshots where id = 1 limit 1",
   );
   const row = rows[0];
   if (!row?.data) return null;
-  return normalizeSnapshot({
+  return {
+    ...defaultCmsSnapshot,
     ...(row.data as Partial<CmsSnapshot>),
     updatedAt: row.updated_at,
-  });
+  };
+}
+
+async function readCmsSnapshotFromPostgres(): Promise<CmsSnapshot | null> {
+  const raw = await readCmsSnapshotFromPostgresRaw();
+  if (!raw) return null;
+  return normalizeSnapshot(raw);
+}
+
+/** Load CMS for merge writes — skips full-catalog normalize/optimize (fast admin saves). */
+export async function getCmsSnapshotForPatch(): Promise<CmsSnapshot> {
+  if (isPostgresCmsPrimary()) {
+    try {
+      const fromDb = await readCmsSnapshotFromPostgresRaw();
+      if (fromDb) return fromDb;
+    } catch {
+      // fall through to file/default
+    }
+  }
+  const local = await readCmsSnapshotFromFile();
+  if (local) return local;
+  return defaultCmsSnapshot;
+}
+
+export type SaveCmsOptions = {
+  /** Skip full-snapshot normalize (dedupe all products, optimizeMedia tree). */
+  light?: boolean;
+};
+
+function mergeProductsIntoCatalog(
+  existing: Product[],
+  incoming: Product[],
+): Product[] {
+  const nextProducts = [...existing];
+
+  for (const raw of incoming) {
+    const product = withProductImageAlts(raw);
+    const nameKey = normalizeCatalogLabel(readEnglish(product.name ?? ""));
+    const index = nextProducts.findIndex(
+      (item) =>
+        item.slug === product.slug ||
+        item.id === product.id ||
+        item.sku === product.sku ||
+        (nameKey &&
+          normalizeCatalogLabel(readEnglish(item.name ?? "")) === nameKey),
+    );
+    if (index >= 0) nextProducts[index] = product;
+    else nextProducts.unshift(product);
+  }
+
+  return nextProducts;
 }
 
 function filterOptions(values: string[]): CmsProductFilterOption[] {
@@ -980,13 +1031,17 @@ export const getCachedCmsSnapshot = unstable_cache(
 export async function saveCmsSnapshot(
   input: Partial<CmsSnapshot>,
   current?: CmsSnapshot,
+  options?: SaveCmsOptions,
 ): Promise<CmsSnapshot> {
-  const base = current ?? (await getCmsSnapshot());
-  const next = normalizeSnapshot({
-    ...base,
-    ...input,
-    updatedAt: new Date().toISOString(),
-  });
+  const base = current ?? (await getCmsSnapshotForPatch());
+  const updatedAt = new Date().toISOString();
+  const next = options?.light
+    ? ({ ...base, ...input, updatedAt } as CmsSnapshot)
+    : normalizeSnapshot({
+        ...base,
+        ...input,
+        updatedAt,
+      });
   if (isPostgresCmsPrimary()) {
     try {
       const patchKeys = Object.keys(input);
@@ -1016,50 +1071,33 @@ export async function saveCmsSnapshot(
   return next;
 }
 
-export async function upsertCmsProduct(product: Product): Promise<CmsSnapshot> {
-  const cms = await getCmsSnapshot();
-  const nameKey = normalizeCatalogLabel(readEnglish(product.name ?? ""));
-  const index = cms.products.findIndex(
-    (item) =>
-      item.slug === product.slug ||
-      item.id === product.id ||
-      (nameKey &&
-        normalizeCatalogLabel(readEnglish(item.name ?? "")) === nameKey),
-  );
-  const nextProducts = [...cms.products];
-  if (index >= 0) nextProducts[index] = product;
-  else nextProducts.unshift(product);
-  return saveCmsSnapshot({ products: nextProducts });
+export async function upsertCmsProduct(
+  product: Product,
+  current?: CmsSnapshot,
+): Promise<CmsSnapshot> {
+  const cms = current ?? (await getCmsSnapshotForPatch());
+  const nextProducts = mergeProductsIntoCatalog(cms.products, [product]);
+  return saveCmsSnapshot({ products: nextProducts }, cms, { light: true });
 }
 
 export async function upsertCmsProducts(
   products: Product[],
+  current?: CmsSnapshot,
 ): Promise<CmsSnapshot> {
-  const cms = await getCmsSnapshot();
-  const nextProducts = [...cms.products];
-
-  for (const product of products) {
-    const nameKey = normalizeCatalogLabel(readEnglish(product.name ?? ""));
-    const index = nextProducts.findIndex(
-      (item) =>
-        item.slug === product.slug ||
-        item.id === product.id ||
-        item.sku === product.sku ||
-        (nameKey &&
-          normalizeCatalogLabel(readEnglish(item.name ?? "")) === nameKey),
-    );
-    if (index >= 0) nextProducts[index] = product;
-    else nextProducts.unshift(product);
-  }
-
-  return saveCmsSnapshot({ products: nextProducts });
+  const cms = current ?? (await getCmsSnapshotForPatch());
+  const nextProducts = mergeProductsIntoCatalog(cms.products, products);
+  return saveCmsSnapshot({ products: nextProducts }, cms, { light: true });
 }
 
 export async function deleteCmsProduct(slug: string): Promise<CmsSnapshot> {
-  const cms = await getCmsSnapshot();
-  return saveCmsSnapshot({
-    products: cms.products.filter((product) => product.slug !== slug),
-  });
+  const cms = await getCmsSnapshotForPatch();
+  return saveCmsSnapshot(
+    {
+      products: cms.products.filter((product) => product.slug !== slug),
+    },
+    cms,
+    { light: true },
+  );
 }
 
 export async function upsertCmsBlog(blog: CmsBlog): Promise<CmsSnapshot> {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmojiTextarea } from "@/components/shared/EmojiTextarea";
+import { LAUNCH_NEWSLETTER_TEMPLATE_ID } from "@/lib/launch-newsletter-constants";
 import type {
   NewsletterCampaignLog,
   NewsletterSubscriber,
@@ -9,6 +10,12 @@ import type {
 import type { NewsletterTemplateMeta } from "@/lib/newsletter-templates";
 
 type Stats = { total: number; active: number; unsubscribed: number };
+
+type LaunchAutoSend = {
+  atLabel: string;
+  pending: boolean;
+  alreadySent: boolean;
+};
 
 function formatDate(value: string) {
   try {
@@ -37,30 +44,37 @@ export function AdminNewsletterClient({
   initialSubscribers,
   initialCampaigns,
   initialTemplates,
+  launchAutoSend = null,
 }: {
   initialStats: Stats;
   initialSubscribers: NewsletterSubscriber[];
   initialCampaigns: NewsletterCampaignLog[];
   initialTemplates: NewsletterTemplateMeta[];
+  launchAutoSend?: LaunchAutoSend | null;
 }) {
   const [stats, setStats] = useState(initialStats);
   const [subscribers] = useState(initialSubscribers);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [templates] = useState(initialTemplates);
 
-  const [templateId, setTemplateId] = useState(
-    initialTemplates[0]?.id ?? "classic-announcement",
-  );
+  const defaultTemplateId =
+    initialTemplates.find((t) => t.id === LAUNCH_NEWSLETTER_TEMPLATE_ID)?.id ??
+    initialTemplates[0]?.id ??
+    "classic-announcement";
+  const defaultTemplate =
+    initialTemplates.find((t) => t.id === defaultTemplateId) ?? null;
+
+  const [templateId, setTemplateId] = useState(defaultTemplateId);
   const selectedTemplate = useMemo(
     () => templates.find((t) => t.id === templateId) ?? null,
     [templates, templateId],
   );
 
   const [subject, setSubject] = useState(
-    initialTemplates[0]?.defaultSubject ?? "News from Sarjan Textiles",
+    defaultTemplate?.defaultSubject ?? "News from Sarjan Textiles",
   );
   const [fields, setFields] = useState<Record<string, string>>(() =>
-    fieldDefaults(initialTemplates[0] ?? null),
+    fieldDefaults(defaultTemplate),
   );
   const [previewHtml, setPreviewHtml] = useState("");
   const [testEmail, setTestEmail] = useState("");
@@ -243,6 +257,30 @@ export function AdminNewsletterClient({
 
   return (
     <div className="sarjan-admin-newsletter">
+      {launchAutoSend ? (
+        <div className="wg-box mb-4 sarjan-admin-newsletter-launch-banner">
+          <h5 className="mb-2">Automatic launch email</h5>
+          {launchAutoSend.alreadySent ? (
+            <p className="mb-0 text-success">
+              <strong>Website launch</strong> template was sent to all active
+              subscribers. Check campaign history below.
+            </p>
+          ) : launchAutoSend.pending ? (
+            <p className="mb-0">
+              At <strong>{launchAutoSend.atLabel}</strong>, the cron job sends
+              the <strong>Website launch</strong> template to every active
+              subscriber (launch page, inquiry, and registration signups). No
+              manual send needed — you can preview or test that template below.
+            </p>
+          ) : (
+            <p className="mb-0 text-muted">
+              Go-live time has passed. If the automatic send did not run, choose{" "}
+              <strong>Website launch</strong> below and send manually once.
+            </p>
+          )}
+        </div>
+      ) : null}
+
       {notice ? (
         <p
           className={

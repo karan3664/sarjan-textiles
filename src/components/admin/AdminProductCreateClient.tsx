@@ -620,14 +620,26 @@ export function AdminProductCreateClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ products: pendingBulkProducts }),
       });
-      if (!res.ok) throw new Error("Bulk upload failed");
-      setMessage(
-        `${pendingBulkProducts.length} products imported. Now visible in Products List.`,
-      );
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        count?: number;
+      };
+      if (!res.ok) {
+        throw new Error(
+          data.error ||
+            (res.status === 524
+              ? "Import timed out — try fewer rows or retry."
+              : `Bulk import failed (${res.status})`),
+        );
+      }
+      const count = data.count ?? pendingBulkProducts.length;
+      setMessage(`${count} products imported. Now visible in Products List.`);
       setPendingBulkProducts([]);
       setInvalidBulkRows(0);
-    } catch {
-      setMessage("Bulk import failed.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Bulk import failed.",
+      );
     } finally {
       setBulkUploading(false);
     }

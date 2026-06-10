@@ -1,5 +1,9 @@
+import "server-only";
+
 import { emailSiteOrigin } from "@/lib/email-template";
+import { LAUNCH_NEWSLETTER_TEMPLATE_ID } from "@/lib/launch-newsletter-constants";
 import { sendNewsletterCampaign } from "@/lib/newsletter-campaign";
+import { sendNewsletterAdminSignupAlert } from "@/lib/newsletter-admin-notify";
 import {
   listRecentNewsletterCampaigns,
   subscribeNewsletterEmail,
@@ -10,13 +14,10 @@ import {
 } from "@/lib/newsletter-templates";
 import { getSiteLaunchAtMs } from "@/lib/site-launch";
 
-export const LAUNCH_NEWSLETTER_TEMPLATE_ID = "website-launch";
-
-const SILENT_NEWSLETTER_SOURCES = new Set(["launch", "inquiry", "register"]);
-
-export function isSilentNewsletterSource(source: string) {
-  return SILENT_NEWSLETTER_SOURCES.has(source);
-}
+export {
+  LAUNCH_NEWSLETTER_TEMPLATE_ID,
+  isSilentNewsletterSource,
+} from "@/lib/launch-newsletter-constants";
 
 /** Add email to launch list without failing the parent flow. */
 export async function addLaunchNewsletterSubscriber(
@@ -26,7 +27,13 @@ export async function addLaunchNewsletterSubscriber(
   const normalized = email.trim().toLowerCase();
   if (!normalized || !normalized.includes("@")) return null;
   try {
-    return await subscribeNewsletterEmail(normalized, source);
+    const result = await subscribeNewsletterEmail(normalized, source);
+    try {
+      await sendNewsletterAdminSignupAlert(normalized, source);
+    } catch {
+      // Subscriber saved — admin alert is best-effort (SMTP may be unset in dev).
+    }
+    return result;
   } catch {
     return null;
   }

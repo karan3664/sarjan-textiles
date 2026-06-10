@@ -4,11 +4,11 @@ import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import {
   buildSarjanEmailHtml,
   emailSiteOrigin,
-  newsletterAdminNotificationInnerHtml,
   newsletterSubscriberConfirmationInnerHtml,
 } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
-import { isSilentNewsletterSource } from "@/lib/launch-newsletter";
+import { isSilentNewsletterSource } from "@/lib/launch-newsletter-constants";
+import { sendNewsletterAdminSignupAlert } from "@/lib/newsletter-admin-notify";
 import { subscribeNewsletterEmail } from "@/lib/newsletter-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -60,19 +60,29 @@ export async function POST(request: Request) {
 
   const silent = isSilentNewsletterSource(source);
   let created = true;
+  let subscribed;
 
   try {
-    const subscribed = await subscribeNewsletterEmail(email, source);
-    const { subscriber } = subscribed;
+    subscribed = await subscribeNewsletterEmail(email, source);
     created = subscribed.created;
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Could not save subscription.",
+      },
+      { status: 502 },
+    );
+  }
 
-    if (!silent) {
+  const { subscriber } = subscribed;
+
+  if (!silent) {
+    try {
       const cms = await getCachedCmsSnapshot();
       const settings = { ...defaultSiteSettings, ...cms.siteSettings };
-      const notifyTo =
-        settings.ordersEmail?.trim() ||
-        process.env.ADMIN_EMAIL?.trim() ||
-        defaultSiteSettings.ordersEmail;
       const brand = settings.brandName;
       const unsubUrl = `${emailSiteOrigin()}/newsletter/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribeToken)}`;
 
@@ -96,34 +106,23 @@ export async function POST(request: Request) {
           innerHtml: `${newsletterSubscriberConfirmationInnerHtml(email)}<p style="margin:18px 0 0;font-size:13px;color:#6f6a64;line-height:1.5;">You can <a href="${unsubUrl}" style="color:#8b1e2d;">unsubscribe</a> at any time.</p>`,
         }),
       });
-
-      await sendDomainMail({
-        to: notifyTo,
-        subject: `Newsletter signup: ${email}`,
-        text: [
-          `New ${source === "app" ? "mobile app" : source} newsletter signup.`,
-          "",
-          `Subscriber email: ${email}`,
-        ].join("\n"),
-        replyTo: email,
-        html: buildSarjanEmailHtml({
-          preheader: `New subscriber: ${email}`,
-          eyebrow: source === "app" ? "Mobile app" : "Website",
-          heading: "Newsletter signup",
-          innerHtml: newsletterAdminNotificationInnerHtml(email, source),
-        }),
-      });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Could not send confirmation email. Check SMTP settings.",
+        },
+        { status: 502 },
+      );
     }
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Could not send email. Check SMTP settings.",
-      },
-      { status: 502 },
-    );
+  }
+
+  try {
+    await sendNewsletterAdminSignupAlert(email, source);
+  } catch {
+    // Saved to admin panel even if inbox alert fails (e.g. local dev without SMTP).
   }
 
   return NextResponse.json({

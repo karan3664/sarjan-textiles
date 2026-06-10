@@ -233,6 +233,25 @@ export async function localizeProductsOnSave(
   return results;
 }
 
+/** Bulk import: English-only fields, skip machine translation (runs in background later). */
+export function localizeProductsOnSaveFast(inputs: Product[]): ProductRecord[] {
+  return inputs.map((input) => {
+    const normalized = normalizeProductRecord(input);
+    const prefix = normalized.slug || normalized.id;
+    const fields = collectProductFields(normalized, prefix);
+    const deferred: Record<string, LocalizedText> = {};
+    for (const [key, text] of Object.entries(fields)) {
+      deferred[key] = {
+        ...text,
+        hi: text.hi || text.en,
+        gu: text.gu || text.en,
+        mt: true,
+      };
+    }
+    return applyProductFields(normalized, prefix, deferred);
+  });
+}
+
 export async function ensureProductsLocalized(
   products: Array<Product | ProductRecord>,
 ): Promise<ProductRecord[]> {

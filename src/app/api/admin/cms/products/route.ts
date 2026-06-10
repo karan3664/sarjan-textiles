@@ -1,7 +1,7 @@
 import {
   appendAuditLog,
   deleteCmsProduct,
-  getCmsSnapshot,
+  getCmsSnapshotForPatch,
   upsertCmsProduct,
   upsertCmsProducts,
 } from "@/lib/cms-store";
@@ -9,12 +9,14 @@ import { verifyAdminToken } from "@/lib/admin-token";
 import { readEnglish } from "@/lib/cms-localize";
 import {
   flattenProductForAdmin,
-  flattenProductsForAdmin,
   localizeProductOnSave,
-  localizeProductsOnSave,
+  localizeProductsOnSaveFast,
 } from "@/lib/product-localize";
 import { asStoredProducts } from "@/lib/cms-admin-view";
 import { cookies } from "next/headers";
+
+export const maxDuration = 60;
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const session = await verifyAdminToken(
@@ -24,22 +26,24 @@ export async function POST(request: Request) {
     return Response.json({ error: "Admin login required" }, { status: 401 });
 
   try {
-    const cms = await getCmsSnapshot();
+    const cms = await getCmsSnapshotForPatch();
     const product = await request.json();
 
     if (Array.isArray(product.products)) {
-      const localized = await localizeProductsOnSave(product.products);
-      const result = await upsertCmsProducts(asStoredProducts(localized));
-      await appendAuditLog({
+      const localized = localizeProductsOnSaveFast(product.products);
+      const stored = asStoredProducts(localized);
+      await upsertCmsProducts(stored, cms);
+      void appendAuditLog({
         actor: session.email,
         role: session.role,
         action: "bulk_upsert_products",
         entity: "product",
-        note: `${product.products.length} products`,
+        note: `${stored.length} products`,
       }).catch(() => null);
       return Response.json({
-        ...result,
-        products: flattenProductsForAdmin(result.products),
+        ok: true,
+        count: stored.length,
+        slugs: stored.map((item) => item.slug),
       });
     }
 
@@ -50,18 +54,19 @@ export async function POST(request: Request) {
         readEnglish(item.name) === readEnglish(product.name),
     );
     const localized = await localizeProductOnSave(product, previous);
-    const result = await upsertCmsProduct(asStoredProducts([localized])[0]!);
-    await appendAuditLog({
+    const stored = asStoredProducts([localized])[0]!;
+    await upsertCmsProduct(stored, cms);
+    void appendAuditLog({
       actor: session.email,
       role: session.role,
       action: "upsert_product",
       entity: "product",
       entityId: product.slug || product.id,
-      after: flattenProductForAdmin(localized),
+      note: stored.slug,
     }).catch(() => null);
     return Response.json({
-      ...result,
-      products: flattenProductsForAdmin(result.products),
+      ok: true,
+      product: flattenProductForAdmin(localized),
     });
   } catch (error) {
     const message =
@@ -81,16 +86,13 @@ export async function DELETE(request: Request) {
   const slug = searchParams.get("slug");
   if (!slug)
     return Response.json({ error: "Product slug required" }, { status: 400 });
-  const result = await deleteCmsProduct(slug);
-  await appendAuditLog({
+  await deleteCmsProduct(slug);
+  void appendAuditLog({
     actor: session.email,
     role: session.role,
     action: "delete_product",
     entity: "product",
     entityId: slug,
   }).catch(() => null);
-  return Response.json({
-    ...result,
-    products: flattenProductsForAdmin(result.products),
-  });
+  return Response.json({ ok: true, slug });
 }
