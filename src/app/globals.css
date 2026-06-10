@@ -13740,6 +13740,16 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
 
 .sarjan-custom-pages-admin .sarjan-custom-pages-list {
   min-width: 0;
+  overflow: hidden;
+}
+
+.sarjan-custom-pages-admin .sarjan-custom-pages-list .d-grid {
+  min-width: 0;
+}
+
+.sarjan-custom-pages-admin .sarjan-custom-pages-list .d-flex {
+  min-width: 0;
+  width: 100%;
 }
 
 .sarjan-custom-pages-admin .sarjan-custom-pages-editor {
@@ -13759,9 +13769,26 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  /* Override admin .tf-button { width: max-content } — keeps rows inside sidebar */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  width: auto !important;
+}
+
+.sarjan-custom-pages-admin
+  .sarjan-custom-pages-list
+  .d-flex
+  > .tf-button:not(.sarjan-custom-page-list-btn) {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: 36px;
+  padding-inline: 12px;
 }
 
 .sarjan-custom-page-list-title {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
