@@ -12,12 +12,13 @@ RUN npm ci --omit=dev
 FROM node:22.13-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS=--max-old-space-size=4096
+# 4GB heap on a 2–4GB VPS triggers OOM during `next build` typecheck — keep ≤2048.
+ENV NODE_OPTIONS=--max-old-space-size=2048
 ARG SITE_LAUNCH_AT
 ENV SITE_LAUNCH_AT=${SITE_LAUNCH_AT}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npm run build:docker
 
 FROM node:22.13-bookworm-slim AS runner
 WORKDIR /app

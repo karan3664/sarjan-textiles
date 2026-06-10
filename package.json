@@ -6,6 +6,7 @@
     "dev": "next dev -p 3001",
     "dev:clean": "rm -rf .next && next dev -p 3001",
     "build": "next build",
+    "build:docker": "next build --no-lint",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "test:notifications": "tsx --env-file=.env.local scripts/test-client-notifications.ts",

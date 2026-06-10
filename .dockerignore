@@ -17,5 +17,10 @@ public/downloads/*.apk
 # Dev / docs not needed in production image
 docs
 scripts
+e2e
+reference
+playwright-report
+test-results
+**/*.spec.ts
 **/*.md
 !README.md

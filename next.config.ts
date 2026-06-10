@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // SITE_LAUNCH_AT must stay a runtime env var (Coolify). Do not add to `env` here —
   // that inlines an empty value at Docker build time and disables the launch gate.
   // Avoid standalone output — trace collection OOMs on small VPS Docker builds.
+  eslint: {
+    // Lint in CI/dev (`npm run lint`); skip during `next build` to save VPS RAM.
+    ignoreDuringBuilds: true,
+  },
   productionBrowserSourceMaps: false,
   devIndicators: false,
   // Keep sharp external so dev server does not emit fragile vendor-chunks after cache churn.

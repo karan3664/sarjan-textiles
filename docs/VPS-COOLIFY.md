@@ -130,6 +130,21 @@ Port **8000** (Coolify UI) is **not open** on the public internet — `http://69
 
 Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build.
 
+### Deploy failed during `npm run build` (exit 255, after “Linting and checking…”)
+
+Coolify log stops after ESLint warnings — the Node process was usually **killed for memory** on a small VPS.
+
+**Fix in repo (already applied):** `build:docker` skips lint; `NODE_OPTIONS=--max-old-space-size=2048` (not 4096).
+
+**On VPS if it still fails:**
+
+```bash
+free -h
+docker system prune -af
+```
+
+Add **2GB swap** if RAM &lt; 4GB, then **Redeploy**. Or upgrade VPS to ≥4GB RAM.
+
 ### Deploy failed at “exporting to image” (build OK, exit 255)
 
 The Next.js build finished but Docker could not save the image — usually **VPS disk full** or **build context too large** (APK files in git).
