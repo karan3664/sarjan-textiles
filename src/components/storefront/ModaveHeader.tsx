@@ -20,6 +20,7 @@ import {
 } from "@/lib/saved-lists-sync";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import type { AppLocale } from "@/lib/localized-text";
 import type {
@@ -36,6 +37,10 @@ import {
   fetchAccountNavigation,
   type PublicAccountNavItem,
 } from "@/lib/account-nav-client";
+import {
+  isStorefrontCategoriesActive,
+  isStorefrontNavLinkActive,
+} from "@/lib/storefront-nav-active";
 
 type HeaderNavLink = StorefrontHeaderNavLink;
 
@@ -84,10 +89,9 @@ export function ModaveHeader({
     return match?.split("=")[1]?.trim() || initialLocale;
   }
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => isStorefrontNavLinkActive(href, pathname);
 
-  const categoriesMenuActive = pathname.startsWith("/categories");
+  const categoriesMenuActive = isStorefrontCategoriesActive(pathname);
 
   const filteredAccountHeader = filterAccountNavItems(accountHeaderNav, {
     isAuthenticated: Boolean(client),
@@ -222,7 +226,10 @@ export function ModaveHeader({
   }, []);
 
   return (
-    <header id="header" className="header-default header-style-4">
+    <header
+      id="header"
+      className="header-default header-style-4 sarjan-storefront-header"
+    >
       <div className="main-header">
         <div className="container">
           <div className="row wrapper-header align-items-center">
@@ -256,6 +263,9 @@ export function ModaveHeader({
             </div>
             <div className="col-xl-5 col-md-4 col-3">
               <ul className="nav-icon d-flex justify-content-end align-items-center">
+                <li className="nav-theme d-none d-md-block">
+                  <ThemeToggle variant="icon" />
+                </li>
                 <li className="nav-lang d-none d-md-block">
                   <LanguageSwitcher initialLocale={initialLocale} />
                 </li>
@@ -266,20 +276,22 @@ export function ModaveHeader({
                     data-bs-toggle="modal"
                     data-bs-target="#search"
                     className="nav-icon-item"
+                    aria-label="Search products"
                     onClick={(event) => {
                       event.preventDefault();
                       showBootstrapModal("search");
                     }}
                   >
-                    <span className="icon icon-search2" />
+                    <span className="icon icon-search2" aria-hidden />
                   </a>
                 </li>
                 <li className="nav-account sarjan-nav-account-desktop">
                   <a
                     href={client ? "/profile" : "/login"}
                     className="nav-icon-item"
+                    aria-label={client ? "My account" : "Sign in"}
                   >
-                    <span className="icon icon-user" />
+                    <span className="icon icon-user" aria-hidden />
                   </a>
                   <div className="dropdown-account dropdown-login">
                     {client ? (
@@ -387,13 +399,14 @@ export function ModaveHeader({
                     )}
                   </div>
                 </li>
-                <li className="nav-wishlist">
+                <li className="nav-wishlist sarjan-header-icon--mobile-hide">
                   <a
                     href="#wishlist"
                     data-bs-toggle="modal"
                     className="nav-icon-item"
+                    aria-label={`Wishlist${wishlistCount ? `, ${wishlistCount} items` : ""}`}
                   >
-                    <span className="icon icon-heart" />
+                    <span className="icon icon-heart" aria-hidden />
                     <span className="wishlist-count">{wishlistCount}</span>
                   </a>
                 </li>
@@ -402,8 +415,9 @@ export function ModaveHeader({
                     href="#shoppingCart"
                     data-bs-toggle="modal"
                     className="nav-icon-item"
+                    aria-label={`Shopping cart${cartCount ? `, ${cartCount} items` : ""}`}
                   >
-                    <span className="icon icon-ShoppingBagOpen" />
+                    <span className="icon icon-ShoppingBagOpen" aria-hidden />
                     <span className="count-box">{cartCount}</span>
                   </a>
                 </li>
@@ -586,8 +600,15 @@ export function ModaveHeader({
               )}
             </div>
 
-            <div className="sarjan-mobile-menu__lang">
-              <LanguageSwitcher initialLocale={initialLocale} />
+            <div className="sarjan-mobile-menu__prefs">
+              <ThemeToggle
+                variant="select"
+                className="sarjan-mobile-menu__theme"
+              />
+              <LanguageSwitcher
+                initialLocale={initialLocale}
+                className="sarjan-mobile-menu__lang"
+              />
             </div>
 
             <form

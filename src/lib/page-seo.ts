@@ -1,11 +1,11 @@
 import { defaultSeoPages, getCachedCmsSnapshot } from "@/lib/cms-store";
 import { resolveSeoPage } from "@/lib/pages-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { seoPageJsonLd, seoPageMetadata } from "@/lib/seo";
 
 async function seoPage(id: string) {
   const cms = await getCachedCmsSnapshot();
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const raw =
     cms.seoPages.find((item) => item.id === id) ??
     defaultSeoPages.find((item) => item.id === id) ??

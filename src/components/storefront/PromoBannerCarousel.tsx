@@ -7,6 +7,7 @@ import {
   normalizeSectionBanners,
   type CmsHomeBanner,
 } from "@/lib/home-banners";
+import { StorefrontBannerImage } from "./StorefrontBannerImage";
 
 const SLIDE_MS = 5000;
 
@@ -58,9 +59,13 @@ export function PromoBannerCarousel({
         ) : null}
         <div className="sarjan-promo-banner-carousel">
           <Link href={href} className="sarjan-promo-banner-slide hover-img">
-            <img
+            <StorefrontBannerImage
               src={banner.image}
               alt={banner.title?.trim() || "Promotional banner"}
+              variant="promo"
+              className="sarjan-promo-banner-media"
+              priority
+              fill
             />
             {banner.eyebrow?.trim() || banner.title?.trim() ? (
               <div className="sarjan-promo-banner-caption">

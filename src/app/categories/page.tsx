@@ -1,7 +1,7 @@
 import { CategoryHubIndexContent } from "@/components/storefront/CategoryHubPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { translateStorefrontUi } from "@/lib/storefront-ui";
 import { JsonLd, pageMetadata, siteUrl } from "@/lib/seo";
 
@@ -9,7 +9,7 @@ export const revalidate = 300;
 
 export async function generateMetadata() {
   const cms = await getCachedCmsSnapshot();
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const title =
     translateStorefrontUi("categories", locale) || "Shop by category";
   return pageMetadata({

@@ -6,8 +6,10 @@ import {
   hasSpin360,
   immersiveMediaModes,
 } from "@/lib/product-immersive-media";
+import type { Product } from "@/data/mock";
 import { FabricSwatchViewer } from "./FabricSwatchViewer";
 import { ProductSpin360Viewer } from "./ProductSpin360Viewer";
+import { useShowProductSoldOut } from "./PriceGate";
 
 type MediaMode = "gallery" | "spin360" | "fabric";
 
@@ -17,7 +19,7 @@ type Props = {
   fabricSwatchImage?: string;
   altText: string;
   fabricLabel?: string;
-  soldOut?: boolean;
+  product: Pick<Product, "stock" | "reserved">;
   /** Existing gallery markup from the theme (photos swiper). */
   gallerySlot: ReactNode;
 };
@@ -28,9 +30,10 @@ export function ProductDetailImmersiveMedia({
   fabricSwatchImage,
   altText,
   fabricLabel,
-  soldOut,
+  product,
   gallerySlot,
 }: Props) {
+  const soldOut = useShowProductSoldOut(product);
   const modes = useMemo(
     () =>
       immersiveMediaModes({

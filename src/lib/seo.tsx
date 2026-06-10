@@ -252,6 +252,45 @@ export function productBreadcrumbJsonLd(product: Product) {
   ]);
 }
 
+export function productReviewJsonLd(
+  product: Product,
+  reviews: Array<{
+    author: string;
+    rating: number;
+    title: string;
+    body: string;
+    datePublished: string;
+  }>,
+  aggregate?: { ratingValue: number; reviewCount: number },
+) {
+  if (!aggregate?.reviewCount) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: aggregate.ratingValue,
+      reviewCount: aggregate.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    review: reviews.map((review) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: review.author },
+      datePublished: review.datePublished,
+      name: review.title,
+      reviewBody: review.body,
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    })),
+  };
+}
+
 export function productJsonLd(product: Product) {
   const returnPolicyUrl = absoluteUrl("/refund-policy");
   const productUrl = absoluteUrl(`/products/${product.slug}`);
@@ -298,6 +337,17 @@ export function productJsonLd(product: Product) {
         returnPolicyUrl,
       },
     },
+    ...(product.ratingCount && product.rating
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.ratingCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 }
 

@@ -11,18 +11,22 @@ import { ClientSessionBootstrap } from "./ClientSessionBootstrap";
 import { SarjanButtonHoverFix } from "./SarjanButtonHoverFix";
 import { TemplateScripts } from "./TemplateScripts";
 import { normalizeBrandLogo } from "@/data/site";
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { getStorefrontHeaderData } from "@/lib/storefront-header-data";
+import { MobileBottomNav } from "./MobileBottomNav";
+import { StorefrontScrollChrome } from "./StorefrontScrollChrome";
+import { StorefrontThemeProvider } from "./StorefrontThemeProvider";
+import { PwaInstallPrompt } from "./PwaInstallPrompt";
 
 export async function ModaveShell({ children }: { children: React.ReactNode }) {
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const header = await getStorefrontHeaderData(locale);
-  const cms = await getLocalizedCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   const brandLogo = normalizeBrandLogo(cms.siteSettings.logo);
 
   return (
-    <>
+    <StorefrontThemeProvider>
       <button id="scroll-top" aria-label="Scroll to top">
         <svg
           width="24"
@@ -41,7 +45,11 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
         </svg>
       </button>
       <ModavePreload />
+      <a href="#main-content" className="sarjan-skip-link">
+        Skip to main content
+      </a>
       <div id="wrapper">
+        <StorefrontScrollChrome />
         <OffcanvasRouteGuard />
         <ModaveHeader
           key={locale}
@@ -54,14 +62,18 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
         <AbandonedCartResumeBanner />
         <SavedListsSync />
         <ClientSessionBootstrap />
-        {children}
+        <main id="main-content" tabIndex={-1}>
+          {children}
+        </main>
         <ModaveFooter />
+        <MobileBottomNav />
         <CompareDrawer />
         <TemplateScripts />
       </div>
       <ModaveModals />
       <SarjanButtonHoverFix />
       <OrderBotWidget />
-    </>
+      <PwaInstallPrompt />
+    </StorefrontThemeProvider>
   );
 }

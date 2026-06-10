@@ -3,7 +3,7 @@ import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { home as defaultHome, products, siteSettings } from "@/data/mock";
 import type { Product } from "@/data/mock";
 import { getCatalogProducts, type CatalogFilters } from "@/lib/catalog";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { translateStorefrontUi } from "@/lib/storefront-ui";
 import { resolveProductFilters } from "@/lib/pages-localize";
 import {
@@ -15,9 +15,7 @@ import {
 import { normalizeHomeBanners } from "@/lib/home-banners";
 import { PromoBannerCarousel } from "@/components/storefront/PromoBannerCarousel";
 import { resolveProducts } from "@/lib/product-localize";
-import { getServerClientId } from "@/lib/client-session-server";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
@@ -27,10 +25,19 @@ import {
 } from "@/lib/product-placeholder-image";
 import { productSetPrice } from "@/lib/product-pricing";
 import {
+  isProductSoldOut,
   productStockOnHand,
-  showProductSoldOutToViewer,
 } from "@/lib/product-availability";
-import { getServerClientSession } from "@/lib/client-session-server";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { ProductSoldOutRibbon } from "./ProductSoldOutRibbon";
+import {
+  ProductDetailBuyNowBlock,
+  ProductDetailStickyAtcButton,
+  ProductDetailStockLine,
+  ProductFeatureBuyActions,
+  ProductFeatureStockCaption,
+} from "./ProductDetailBuySection";
+import { ProductListCard } from "./ProductListCard";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
 import {
@@ -45,9 +52,13 @@ import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
+import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductDetailImmersiveMedia } from "./ProductDetailImmersiveMedia";
 import { ProductRecentlyViewedTracker } from "./ProductRecentlyViewedTracker";
 import { ProductSortSelect } from "./ProductSortSelect";
+import { StorefrontEmptyState } from "./StorefrontEmptyState";
+import { StorefrontBannerImage } from "./StorefrontBannerImage";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
 import { PriceGate } from "./PriceGate";
 import { WishlistPageClient } from "./WishlistPageClient";
@@ -163,17 +174,10 @@ function MarqueeBand({
   );
 }
 
-function ProductFeature({
-  product,
-  viewerLoggedIn,
-}: {
-  product: Product;
-  viewerLoggedIn: boolean;
-}) {
+function ProductFeature({ product }: { product: Product }) {
   const images = productGalleryImages(product.images);
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = buildProductImageAlt(product);
-  const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
 
   return (
     <section className="flat-spacing bg-surface">
@@ -181,11 +185,7 @@ function ProductFeature({
         <div className="row flat-single-home">
           <div className="col-md-6">
             <div className="tf-product-media-wrap sticky-top position-relative">
-              {soldOut ? (
-                <div className="sarjan-oos-ribbon" role="status">
-                  Out of stock
-                </div>
-              ) : null}
+              <ProductSoldOutRibbon product={product} />
               <div className="thumbs-slider">
                 <div
                   dir="ltr"
@@ -202,11 +202,11 @@ function ProductFeature({
                         key={`thumb-${image}-${index}`}
                       >
                         <div className="item">
-                          <img
-                            className={productImageClassName(image, "lazyload")}
-                            data-src={image}
+                          <StorefrontProductImage
                             src={image}
                             alt={`${altText} thumbnail ${index + 1}`}
+                            variant="swatch"
+                            className={productImageClassName(image)}
                           />
                         </div>
                       </div>
@@ -234,15 +234,15 @@ function ProductFeature({
                           data-pswp-width="800px"
                           data-pswp-height="1000px"
                         >
-                          <img
-                            className={productImageClassName(
-                              image,
-                              "tf-image-zoom lazyload",
-                            )}
-                            data-zoom={image}
-                            data-src={image}
+                          <StorefrontProductImage
                             src={image}
                             alt={`${altText} view ${index + 1}`}
+                            variant="detail"
+                            className={productImageClassName(
+                              image,
+                              "tf-image-zoom",
+                            )}
+                            priority={index === 0}
                           />
                         </a>
                       </div>
@@ -262,16 +262,7 @@ function ProductFeature({
                       {product.category}
                     </div>
                     <h3 className="name">{product.name}</h3>
-                    <div className="text-caption-1 text-secondary">
-                      MOQ {product.moq}.{" "}
-                      <span
-                        className={
-                          soldOut ? "sarjan-stock-unavailable" : undefined
-                        }
-                      >
-                        Stock {product.stock}.
-                      </span>
-                    </div>
+                    <ProductFeatureStockCaption product={product} />
                   </div>
                   <div className="tf-product-info-price">
                     <span
@@ -285,35 +276,7 @@ function ProductFeature({
                   </div>
                 </div>
                 <ProductPurchasePanel product={product} />
-                <div className="mt_12">
-                  {soldOut ? (
-                    <span
-                      className="btn-style-3 text-btn-uppercase d-inline-block w-100 text-center"
-                      style={{ opacity: 0.55, cursor: "not-allowed" }}
-                      aria-disabled="true"
-                    >
-                      Out of stock
-                    </span>
-                  ) : (
-                    <a
-                      href="#shoppingCart"
-                      data-bs-toggle="modal"
-                      className={withBtnIcon(
-                        "w-100 d-block text-center sarjan-buy-now-btn",
-                      )}
-                      data-cart-add
-                      data-product-slug={product.slug}
-                      data-product-size-run={sizeRun.join(",")}
-                    >
-                      <TfButtonIcon
-                        icon="icon-lightning"
-                        textClassName="text text-button"
-                      >
-                        Buy it now
-                      </TfButtonIcon>
-                    </a>
-                  )}
-                </div>
+                <ProductFeatureBuyActions product={product} sizeRun={sizeRun} />
                 <div>
                   <Link href={`/products/${product.slug}`} className="btn-line">
                     View Full details
@@ -486,8 +449,13 @@ function renderCustomBlock(
               className="sarjan-hub-subcard hover-img wg-blog style-1"
             >
               {card.image ? (
-                <div className="image">
-                  <img src={card.image} alt={card.title} />
+                <div className="image sarjan-hub-hero-banner">
+                  <StorefrontBannerImage
+                    src={card.image}
+                    alt={card.title}
+                    variant="category"
+                    fill
+                  />
                 </div>
               ) : null}
               <div className="content">
@@ -587,9 +555,8 @@ function testimonialAvatar(avatar?: string) {
 }
 
 export async function HomeDynamic() {
-  const viewerLoggedIn = Boolean(await getServerClientSession());
-  const locale = await localeFromHeaders();
-  const cms = await getLocalizedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
+  const cms = await getCachedCmsSnapshot();
   const cmsSiteSettings = cms.siteSettings;
   const home = resolveHomeForLocale(cms.home, locale);
   const homeContent = home as typeof home & {
@@ -673,11 +640,12 @@ export async function HomeDynamic() {
                   data-wow-delay={`${index / 10}s`}
                 >
                   <a className="img-style">
-                    <img
-                      className="lazyload"
-                      data-src={category.image}
+                    <StorefrontBannerImage
                       src={category.image}
                       alt={category.name}
+                      variant="category"
+                      className="sarjan-category-strip-img"
+                      fill
                     />
                   </a>
                   <div className="content">
@@ -764,9 +732,7 @@ export async function HomeDynamic() {
         </div>
       </section>
     ),
-    featuredProduct: featured ? (
-      <ProductFeature product={featured} viewerLoggedIn={viewerLoggedIn} />
-    ) : null,
+    featuredProduct: featured ? <ProductFeature product={featured} /> : null,
     trendingProducts: (
       <section className="flat-spacing">
         <div className="container">
@@ -979,9 +945,8 @@ export async function HomeDynamic() {
 }
 
 export async function ProductDetailDynamic({ product }: { product: Product }) {
-  const viewerLoggedIn = Boolean(await getServerClientSession());
-  const locale = await localeFromHeaders();
-  const { products: catalogProductsRaw } = await getLocalizedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
+  const { products: catalogProductsRaw } = await getCachedCmsSnapshot();
   const catalogProducts = resolveProducts(catalogProductsRaw, locale);
   const idx = catalogProducts.findIndex((p) => p.slug === product.slug);
   const prevProduct =
@@ -1001,7 +966,6 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = buildProductImageAlt(product);
-  const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
 
   return (
     <>
@@ -1047,11 +1011,11 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         </div>
         <div className="tf-add-cart-product">
           <div className="image">
-            <img
-              className={productImageClassName(product.images[0], "lazyload")}
-              data-src={product.images[0]}
-              alt={altText}
+            <StorefrontProductImage
               src={product.images[0]}
+              alt={altText}
+              variant="thumb"
+              className={productImageClassName(product.images[0])}
             />
           </div>
           <div className="content">
@@ -1085,7 +1049,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                     fabricSwatchImage={product.fabricSwatchImage}
                     altText={altText}
                     fabricLabel={product.fabric}
-                    soldOut={soldOut}
+                    product={product}
                     gallerySlot={
                       <div className="thumbs-slider">
                         <div
@@ -1103,14 +1067,11 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                 key={`thumb-${image}-${index}`}
                               >
                                 <div className="item">
-                                  <img
-                                    className={productImageClassName(
-                                      image,
-                                      "lazyload",
-                                    )}
-                                    data-src={image}
+                                  <StorefrontProductImage
                                     src={image}
                                     alt={`${altText} thumbnail ${index + 1}`}
+                                    variant="swatch"
+                                    className={productImageClassName(image)}
                                   />
                                 </div>
                               </div>
@@ -1138,15 +1099,15 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                                   data-pswp-width="800px"
                                   data-pswp-height="1000px"
                                 >
-                                  <img
-                                    className={productImageClassName(
-                                      image,
-                                      "tf-image-zoom lazyload",
-                                    )}
-                                    data-zoom={image}
-                                    data-src={image}
+                                  <StorefrontProductImage
                                     src={image}
                                     alt={`${altText} view ${index + 1}`}
+                                    variant="detail"
+                                    className={productImageClassName(
+                                      image,
+                                      "tf-image-zoom",
+                                    )}
+                                    priority={index === 0}
                                   />
                                 </a>
                               </div>
@@ -1192,40 +1153,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                     </div>
                     <ProductPurchasePanel product={product} />
-                    {soldOut ? (
-                      <div className="mb_16">
-                        <p className="text-caption-1 text-secondary mb_0">
-                          This product cannot be added to cart until stock
-                          returns.{" "}
-                          <Link href="/contact" className="link">
-                            Contact sales
-                          </Link>{" "}
-                          or browse{" "}
-                          <Link href="/products" className="link">
-                            the catalog
-                          </Link>
-                          .
-                        </p>
-                      </div>
-                    ) : (
-                      <a
-                        href="#shoppingCart"
-                        data-bs-toggle="modal"
-                        className={withBtnIcon(
-                          "w-100 d-block text-center mt_12 sarjan-buy-now-btn",
-                        )}
-                        data-cart-add
-                        data-product-slug={product.slug}
-                        data-product-size-run={sizeRun.join(",")}
-                      >
-                        <TfButtonIcon
-                          icon="icon-lightning"
-                          textClassName="text text-button"
-                        >
-                          Buy it now
-                        </TfButtonIcon>
-                      </a>
-                    )}
+                    <ProductDetailBuyNowBlock
+                      product={product}
+                      sizeRun={sizeRun}
+                    />
                     <ul className="tf-product-info-sku">
                       <li>
                         <p className="text-caption-1">SKU:</p>
@@ -1233,13 +1164,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       </li>
                       <li>
                         <p className="text-caption-1">Available:</p>
-                        <p
-                          className={`text-caption-1 text-1${soldOut ? " sarjan-stock-unavailable" : ""}`}
-                        >
-                          {soldOut
-                            ? "Out of stock"
-                            : `In stock: ${product.stock}`}
-                        </p>
+                        <ProductDetailStockLine product={product} />
                       </li>
                       <li>
                         <p className="text-caption-1">Categories:</p>
@@ -1267,11 +1192,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                 <form className="form-sticky-atc">
                   <div className="tf-sticky-atc-product">
                     <div className="image">
-                      <img
-                        className="lazyload"
-                        data-src={product.images[0]}
-                        alt={altText}
+                      <StorefrontProductImage
                         src={product.images[0]}
+                        alt={altText}
+                        variant="thumb"
                       />
                     </div>
                     <div className="content">
@@ -1313,36 +1237,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                     </div>
                     <div className="tf-sticky-atc-btns">
-                      {soldOut ? (
-                        <span
-                          className="tf-btn w-100 btn-reset radius-4"
-                          style={{ opacity: 0.7, cursor: "not-allowed" }}
-                          aria-disabled="true"
-                        >
-                          <span className="text text-btn-uppercase">
-                            Out of stock
-                          </span>
-                        </span>
-                      ) : (
-                        <a
-                          href="#shoppingCart"
-                          data-bs-toggle="modal"
-                          className={withBtnIcon(
-                            "w-100 btn-add-to-cart sarjan-sticky-atc-btn text-btn-uppercase",
-                          )}
-                          data-cart-add
-                          data-product-slug={product.slug}
-                          data-product-size-run={sizeRun.join(",")}
-                          data-product-color={product.colors[0]}
-                        >
-                          <TfButtonIcon
-                            icon="icon-ShoppingBagOpen"
-                            textClassName="text text-button text-btn-uppercase"
-                          >
-                            Add To Cart
-                          </TfButtonIcon>
-                        </a>
-                      )}
+                      <ProductDetailStickyAtcButton
+                        product={product}
+                        sizeRun={sizeRun}
+                      />
                     </div>
                   </div>
                 </form>
@@ -1612,6 +1510,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
       </div>
 
       <ProductRecentlyViewedTracker product={product} />
+      <ProductReviewsSection
+        productSlug={product.slug}
+        productName={product.name}
+      />
       <ProductDetailRecommendations currentSlug={product.slug} />
     </>
   );
@@ -1620,8 +1522,8 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
 const BLOG_PER_PAGE = 9;
 
 export async function BlogListDynamic({ page = 1 }: { page?: number }) {
-  const locale = await localeFromHeaders();
-  const { blogs: rawBlogs } = await getLocalizedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
+  const { blogs: rawBlogs } = await getCachedCmsSnapshot();
   const blogs = resolveBlogs(rawBlogs, locale);
   const totalPages = Math.max(1, Math.ceil(blogs.length / BLOG_PER_PAGE));
   const currentPage = Number.isFinite(page)
@@ -1772,155 +1674,6 @@ export function PageTitle({
   );
 }
 
-function ProductListCard({
-  product,
-  viewerLoggedIn,
-}: {
-  product: Product;
-  viewerLoggedIn: boolean;
-}) {
-  const hover = product.images[1] ?? product.images[0];
-  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-  const altText = buildProductImageAlt(product);
-  const soldOut = showProductSoldOutToViewer(product, viewerLoggedIn);
-
-  return (
-    <div
-      className="card-product style-list"
-      data-availability={soldOut ? "Out of stock" : "In stock"}
-      data-brand={siteSettings.brandName}
-    >
-      <div className="card-product-wrapper position-relative">
-        <a href={`/products/${product.slug}`} className="product-img">
-          <img
-            className="lazyload img-product"
-            data-src={product.images[0]}
-            src={product.images[0]}
-            alt={altText}
-          />
-          <img
-            className="lazyload img-hover"
-            data-src={hover}
-            src={hover}
-            alt={`${altText} alternate view`}
-          />
-        </a>
-        {soldOut ? (
-          <div
-            className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
-            role="status"
-          >
-            Out of stock
-          </div>
-        ) : product.isFeatured ? (
-          <div className="on-sale-wrap">
-            <span className="on-sale-item">Hot</span>
-          </div>
-        ) : null}
-        <ProductDealCountdown product={product} variant="card" />
-      </div>
-      <div className="card-product-info">
-        <a href={`/products/${product.slug}`} className="title link">
-          {product.name}
-        </a>
-        <div className="price sarjan-deal-price-row">
-          <PriceGate amount={product.price} suffix=" / piece" />
-          <ProductDealOriginalPrice product={product} />
-        </div>
-        <p className="description text-secondary text-line-clamp-2">
-          {product.description}
-        </p>
-        <div className="variant-wrap-list">
-          <ul className="list-color-product">
-            {product.colors.slice(0, 3).map((color, index) => (
-              <li
-                className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`}
-                key={color}
-              >
-                <span className="d-none text-capitalize color-filter">
-                  {color}
-                </span>
-                <span
-                  className={
-                    index === 0
-                      ? "swatch-value bg-main"
-                      : index === 1
-                        ? "swatch-value bg-light-blue"
-                        : "swatch-value bg-grey"
-                  }
-                />
-                <img
-                  className="lazyload"
-                  data-src={product.images[0]}
-                  src={product.images[0]}
-                  alt={altText}
-                />
-              </li>
-            ))}
-          </ul>
-          <div className="list-product-btn">
-            {soldOut ? (
-              <span
-                className="btn-main-product"
-                style={{ opacity: 0.55, cursor: "not-allowed" }}
-                aria-disabled="true"
-              >
-                Out of stock
-              </span>
-            ) : (
-              <a
-                href="#shoppingCart"
-                data-bs-toggle="modal"
-                className={withBtnIcon("btn-main-product")}
-                data-cart-add
-                data-product-slug={product.slug}
-                data-product-size-run={sizeRun.join(",")}
-                data-product-color={product.colors[0]}
-              >
-                <TfButtonIcon
-                  icon="icon-ShoppingBagOpen"
-                  textClassName="text text-button"
-                >
-                  Add To cart
-                </TfButtonIcon>
-              </a>
-            )}
-            <a
-              href="#"
-              role="button"
-              className="box-icon wishlist btn-icon-action"
-              data-wishlist-toggle
-              data-product-slug={product.slug}
-            >
-              <span className="icon icon-heart" />
-              <span className="tooltip">Wishlist</span>
-            </a>
-            <a
-              href="#compare"
-              data-bs-toggle="offcanvas"
-              aria-controls="compare"
-              className="box-icon compare btn-icon-action"
-              data-compare-add
-              data-product-slug={product.slug}
-            >
-              <span className="icon icon-gitDiff" />
-              <span className="tooltip">Compare</span>
-            </a>
-            <a
-              href="#quickView"
-              data-bs-toggle="modal"
-              className="box-icon quickview tf-btn-loading"
-            >
-              <span className="icon icon-eye" />
-              <span className="tooltip">Quick View</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function filterSlugValue(value: string) {
   return value
     .toLowerCase()
@@ -1973,7 +1726,6 @@ function productValueCount(
   productsList: Product[],
   group: CmsProductFilterGroup,
   value: string,
-  viewerLoggedIn: boolean,
 ) {
   return productsList.filter((product) => {
     if (group.type === "category")
@@ -1995,7 +1747,7 @@ function productValueCount(
       return qty > 0 && qty - product.reserved <= product.moq;
     }
     if (group.type === "stock" && value === "out-of-stock")
-      return showProductSoldOutToViewer(product, viewerLoggedIn);
+      return isProductSoldOut(product);
     return true;
   }).length;
 }
@@ -2007,7 +1759,6 @@ function ProductFilterPanel({
   sortValue,
   q,
   basePath,
-  viewerLoggedIn,
 }: {
   filtersConfig: CmsProductFilterGroup[];
   productsList: Product[];
@@ -2015,7 +1766,6 @@ function ProductFilterPanel({
   sortValue: string;
   q?: string;
   basePath: string;
-  viewerLoggedIn: boolean;
 }) {
   const enabledFilters = filtersConfig.filter((group) => group.enabled);
   const priceFilter = enabledFilters.find((group) => group.type === "price");
@@ -2050,12 +1800,7 @@ function ProductFilterPanel({
                         {option.label}{" "}
                         <span className="count-cate">
                           (
-                          {productValueCount(
-                            productsList,
-                            group,
-                            option.value,
-                            viewerLoggedIn,
-                          )}
+                          {productValueCount(productsList, group, option.value)}
                           )
                         </span>
                       </Link>
@@ -2166,17 +1911,14 @@ export async function ProductsListingDynamic({
     "price-low-high": "Price, low to high",
     "price-high-low": "Price, high to low",
   };
-  const cms = await getLocalizedCmsSnapshot();
-  const clientId = await getServerClientId();
-  const viewerLoggedIn = Boolean(clientId);
-  const locale = await localeFromHeaders();
+  const cms = await getCachedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
   const catalog = await getCatalogProducts({
     page,
     limit: perPage,
     sort: sortValue,
     q,
     filters,
-    clientId,
     locale,
   });
   const totalPages = catalog.totalPages;
@@ -2392,28 +2134,55 @@ export async function ProductsListingDynamic({
                 </Link>
               ) : null}
             </div>
-            <div className="tf-list-layout wrapper-shop" id="listLayout">
-              {visibleProducts.map((product) => (
-                <ProductListCard
-                  product={product}
-                  viewerLoggedIn={viewerLoggedIn}
-                  key={`list-${product.id}`}
-                />
-              ))}
-            </div>
-            <div
-              className="tf-grid-layout wrapper-shop tf-col-4 sarjan-products-grid"
-              id="gridLayout"
-            >
-              {visibleProducts.map((product, index) => (
-                <ModaveProductCard
-                  product={product}
-                  delay={`${index / 10}s`}
-                  className="grid"
-                  key={`grid-${product.id}`}
-                />
-              ))}
-            </div>
+            {visibleProducts.length === 0 ? (
+              <StorefrontEmptyState
+                title="No products found"
+                description={
+                  q
+                    ? `We couldn't find matches for "${q}". Try different keywords or clear your filters.`
+                    : activeFilterCount
+                      ? "No products match the selected filters. Reset filters to see the full catalog."
+                      : "There are no products in this view right now. Browse the full catalog instead."
+                }
+                primaryAction={{
+                  label: "Browse all products",
+                  href: "/products",
+                }}
+                secondaryAction={
+                  activeFilterCount || q
+                    ? {
+                        label: "Reset filters",
+                        href: resetFilterHref(sortValue, basePath, q),
+                        icon: "icon-close",
+                      }
+                    : undefined
+                }
+              />
+            ) : (
+              <>
+                <div className="tf-list-layout wrapper-shop" id="listLayout">
+                  {visibleProducts.map((product) => (
+                    <ProductListCard
+                      product={product}
+                      key={`list-${product.id}`}
+                    />
+                  ))}
+                </div>
+                <div
+                  className="tf-grid-layout wrapper-shop tf-col-4 sarjan-products-grid"
+                  id="gridLayout"
+                >
+                  {visibleProducts.map((product, index) => (
+                    <ModaveProductCard
+                      product={product}
+                      delay={`${index / 10}s`}
+                      className="grid"
+                      key={`grid-${product.id}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
             <StorefrontPagination
               basePath={basePath}
               page={currentPage}
@@ -2455,7 +2224,6 @@ export async function ProductsListingDynamic({
             sortValue={sortValue}
             q={q}
             basePath={basePath}
-            viewerLoggedIn={viewerLoggedIn}
           />
         </div>
       </div>
@@ -2477,12 +2245,12 @@ export function WishlistDynamic({ page = 1 }: { page?: number }) {
 }
 
 export async function BlogDetailDynamic({ slug }: { slug: string }) {
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const {
     blogs: rawBlogs,
     products: rawProducts,
     siteSettings: cmsSiteSettings,
-  } = await getLocalizedCmsSnapshot();
+  } = await getCachedCmsSnapshot();
   const blogs = resolveBlogs(rawBlogs, locale);
   const products = resolveProducts(rawProducts, locale);
   const blog = blogs.find((item) => item.slug === slug) ?? blogs[0];
@@ -2556,7 +2324,10 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                 <img src={blog.image} alt={blog.title} />
               </div>
               <div>
-                <img src={products[0].images[0]} alt={products[0].name} />
+                <StorefrontProductImage
+                  src={products[0].images[0]}
+                  alt={products[0].name}
+                />
               </div>
             </div>
           )}
@@ -2689,8 +2460,8 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
 }
 
 export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
-  const cms = await getLocalizedCmsSnapshot();
-  const locale = await localeFromHeaders();
+  const cms = await getCachedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
   const page = resolveStaticCmsPage(cms.pages[type], locale);
   const settings = cms.siteSettings;
   const directionsHref =
@@ -2885,12 +2656,12 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
               <div className="row">
                 {showAboutHeroImage ? (
                   <div className="col-md-6">
-                    <div className="about-us-features wow fadeInLeft">
-                      <img
-                        className="lazyload"
-                        data-src={page.image}
+                    <div className="about-us-features wow fadeInLeft sarjan-hub-hero-banner">
+                      <StorefrontBannerImage
                         src={page.image}
                         alt={about.imageAlt || page.title}
+                        variant="about"
+                        fill
                       />
                     </div>
                   </div>

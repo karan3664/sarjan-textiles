@@ -11,8 +11,8 @@ import {
 import { sitemapImageUrls } from "@/lib/sitemap-images";
 import { siteUrl } from "@/lib/seo";
 
-/** Fresh sitemap after CMS/product updates (avoid stale cached XML). */
-export const dynamic = "force-dynamic";
+/** ISR sitemap — uses tagged CMS snapshot cache. */
+export const revalidate = 3600;
 
 function absolute(path: string) {
   return new URL(path.startsWith("/") ? path : `/${path}`, siteUrl).toString();

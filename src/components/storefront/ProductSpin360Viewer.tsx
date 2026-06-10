@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 type Props = {
   frames: string[];
@@ -71,10 +72,11 @@ export function ProductSpin360Viewer({ frames, alt }: Props) {
       }}
       onTouchEnd={onPointerUp}
     >
-      <img
+      <StorefrontProductImage
         src={frames[index]}
         alt={`${alt} — frame ${index + 1} of ${frames.length}`}
-        draggable={false}
+        variant="detail"
+        unoptimized
       />
       <div className="sarjan-spin360-hint">
         <i className="icon icon-refresh" aria-hidden />

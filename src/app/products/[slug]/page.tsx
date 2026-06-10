@@ -3,9 +3,8 @@ import { ProductDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCatalogProducts } from "@/lib/catalog";
 import { getCmsProductBySlug } from "@/lib/cms-store";
-import { getServerClientId } from "@/lib/client-session-server";
 import { getProductCategoryRoute } from "@/lib/product-seo-slug";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
   JsonLd,
   listingBreadcrumbJsonLd,
@@ -13,23 +12,23 @@ import {
   productBreadcrumbJsonLd,
   productJsonLd,
   productMetadata,
+  productReviewJsonLd,
   siteUrl,
 } from "@/lib/seo";
+import { listApprovedProductReviews } from "@/lib/reviews-store";
 import { notFound, redirect } from "next/navigation";
 
-/** Keep PDP stock/OOS in sync with CMS (same issue as listing ISR cache). */
-export const dynamic = "force-dynamic";
+/** ISR PDP — public catalog pricing; session pricing via /api/catalog/products. */
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return [];
 }
 
 async function loadProductForSlug(slug: string) {
-  const clientId = await getServerClientId();
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const priced = await getCatalogProducts({
     ids: [slug],
-    clientId,
     limit: 1,
     locale,
   });
@@ -81,10 +80,31 @@ export default async function ProductSlugPage({
     if (product.slug !== slug) {
       redirect(`/products/${product.slug}`);
     }
+    const reviewPayload = await listApprovedProductReviews(product.slug, {
+      sort: "newest",
+      page: 1,
+      limit: 8,
+    });
+    const reviewSchema = productReviewJsonLd(
+      product,
+      reviewPayload.items.map((review) => ({
+        author: review.clientName,
+        rating: review.rating,
+        title: review.title,
+        body: review.body,
+        datePublished: review.createdAt,
+      })),
+      {
+        ratingValue: reviewPayload.stats.averageRating,
+        reviewCount: reviewPayload.stats.totalReviews,
+      },
+    );
+
     return (
       <ModaveShell>
         <JsonLd data={productJsonLd(product)} />
         <JsonLd data={productBreadcrumbJsonLd(product)} />
+        {reviewSchema ? <JsonLd data={reviewSchema} /> : null}
         <ProductDetailDynamic product={product} />
       </ModaveShell>
     );

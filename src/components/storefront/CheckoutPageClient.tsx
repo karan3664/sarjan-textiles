@@ -40,6 +40,7 @@ import {
   productImageClassName,
   productImageThumbWrapClassName,
 } from "@/lib/product-placeholder-image";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 import { findStateForCity } from "@/lib/india-locations";
 import {
   normalizeIndianPincode,
@@ -671,9 +672,10 @@ export function CheckoutPageClient({
                               {labels.outOfStock ?? "Out of stock"}
                             </div>
                           ) : null}
-                          <img
+                          <StorefrontProductImage
                             src={item.product.images[0]}
                             alt={buildProductImageAlt(item.product)}
+                            variant="thumb"
                             className={productImageClassName(
                               item.product.images[0],
                             )}

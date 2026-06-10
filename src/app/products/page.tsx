@@ -7,8 +7,8 @@ import {
 } from "@/lib/products-canonical";
 import { JsonLd } from "@/lib/seo";
 
-/** Stock ribbons must match live CMS; avoid stale ISR HTML for catalog. */
-export const dynamic = "force-dynamic";
+/** ISR catalog listing — inventory refreshes on revalidate + client OOS ribbons. */
+export const revalidate = 60;
 
 export async function generateMetadata({
   searchParams,

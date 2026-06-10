@@ -1,6 +1,7 @@
 import { getCatalogProducts } from "@/lib/catalog";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
+import { catalogApiCacheControl } from "@/lib/storefront-cache";
 
 export async function GET(request: Request) {
   const locale = localeFromRequest(request);
@@ -29,6 +30,12 @@ export async function GET(request: Request) {
       : undefined,
   };
 
+  const headers = new Headers();
+  headers.set(
+    "Cache-Control",
+    catalogApiCacheControl(Boolean(session?.clientId)),
+  );
+
   return jsonLocalized(
     await getCatalogProducts({
       page,
@@ -41,5 +48,6 @@ export async function GET(request: Request) {
       locale,
     }),
     locale,
+    { headers },
   );
 }

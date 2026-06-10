@@ -1,3 +1,5 @@
+import { StorefrontImage } from "@/components/storefront/StorefrontImage";
+import { STOREFRONT_IMAGE_SIZES } from "@/lib/storefront-image";
 import {
   cmsImageBlockClassName,
   cmsImageBlockStyle,
@@ -24,11 +26,13 @@ export function CustomCmsImageBlock({ src, alt, display, className }: Props) {
         className={cmsImageBlockClassName(display)}
         style={cmsImageBlockStyle(display)}
       >
-        <img
+        <StorefrontImage
           src={src}
           alt={alt}
+          width={1200}
+          height={800}
+          sizes={STOREFRONT_IMAGE_SIZES.promoBanner}
           style={cmsImageElementStyle(display)}
-          loading="lazy"
         />
       </div>
     </div>

@@ -5,17 +5,29 @@ import { usePathname } from "next/navigation";
 
 import { OrderedVendorScripts } from "@/components/shared/OrderedVendorScripts";
 
-const baseScripts = [
-  "jquery.min.js",
-  "bootstrap.min.js",
-  "swiper-bundle.min.js",
-  "carousel.js",
-  "lazysize.min.js",
-  "wow.min.js",
-  "main.js",
-];
+const coreScripts = ["jquery.min.js", "bootstrap.min.js", "main.js"];
+
+const carouselScripts = ["swiper-bundle.min.js", "carousel.js"];
+
+const lazyMediaScripts = ["lazysize.min.js"];
 
 const shopScripts = ["nouislider.min.js", "shop.js"];
+
+/** Pages that lazy-load images via lazysize. */
+function usesLazyMedia(pathname: string) {
+  return (
+    pathname === "/" ||
+    pathname === "/products" ||
+    pathname.startsWith("/collections") ||
+    pathname.startsWith("/blog")
+  );
+}
+
+/** Pages with Swiper carousels (hero, product grids, promos). */
+function usesSwiper(pathname: string) {
+  if (usesLazyMedia(pathname)) return true;
+  return pathname.startsWith("/products/");
+}
 
 const productDetailScripts = [
   "drift.min.js",
@@ -29,7 +41,9 @@ const templateVersion = "sarjan-20260509-2";
 export function TemplateScripts() {
   const pathname = usePathname();
   const scripts = [
-    ...baseScripts,
+    ...coreScripts,
+    ...(usesSwiper(pathname) ? carouselScripts : []),
+    ...(usesLazyMedia(pathname) ? lazyMediaScripts : []),
     ...(pathname === "/products" ? shopScripts : []),
     ...(pathname.startsWith("/products/") ? productDetailScripts : []),
   ];

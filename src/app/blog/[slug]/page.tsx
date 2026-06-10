@@ -2,7 +2,7 @@ import { BlogDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCmsBlogBySlug } from "@/lib/cms-store";
 import { resolveBlog } from "@/lib/content-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { blogJsonLd, blogMetadata, JsonLd } from "@/lib/seo";
 import { notFound } from "next/navigation";
 
@@ -20,7 +20,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const blogRaw = await getCmsBlogBySlug(slug);
   if (!blogRaw) return {};
-  const blog = resolveBlog(blogRaw, await localeFromHeaders());
+  const blog = resolveBlog(blogRaw, getCacheableStorefrontLocale());
   return blogMetadata(blog);
 }
 
@@ -32,7 +32,7 @@ export default async function BlogDetailPage({
   const { slug } = await params;
   const blogRaw = await getCmsBlogBySlug(slug);
   if (!blogRaw) notFound();
-  const blog = resolveBlog(blogRaw, await localeFromHeaders());
+  const blog = resolveBlog(blogRaw, getCacheableStorefrontLocale());
 
   return (
     <ModaveShell>

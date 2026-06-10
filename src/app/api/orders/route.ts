@@ -5,6 +5,7 @@ import { createOrder, readLocalDb } from "@/lib/local-db";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
 import { sendOrderPlacedPush } from "@/lib/push-notifications";
 import { after } from "next/server";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -48,6 +49,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const limit = rateLimit(rateLimitKey(request, "orders-create"), 12, 60_000);
+  if (!limit.allowed) {
+    return rateLimitResponse(limit.resetAt);
+  }
+
   try {
     const body = await request.json();
     if (!body.clientId || !body.items?.length) {

@@ -1,6 +1,21 @@
 import type { NextConfig } from "next";
+import { approvedImageHostnames } from "./src/lib/storefront-image";
 
 const isDockerBuild = process.env.DOCKER_BUILD === "1";
+
+function imageRemotePatterns() {
+  const hostnames = approvedImageHostnames();
+  const patterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [];
+
+  for (const hostname of hostnames) {
+    patterns.push(
+      { protocol: "https", hostname, pathname: "/**" },
+      { protocol: "http", hostname, pathname: "/**" },
+    );
+  }
+
+  return patterns;
+}
 
 const nextConfig: NextConfig = {
   // SITE_LAUNCH_AT must stay a runtime env var (Coolify). Do not add to `env` here —
@@ -28,8 +43,18 @@ const nextConfig: NextConfig = {
   // Without this, Next truncates multipart bodies above 10MB in dev.
   poweredByHeader: false,
   compress: true,
+  modularizeImports: {
+    "lucide-react": {
+      transform: "lucide-react/dist/esm/icons/{{kebabCase member}}",
+      skipDefaultConversion: true,
+    },
+    "framer-motion": {
+      transform: "framer-motion/dist/es/{{member}}",
+    },
+  },
   experimental: {
     webpackMemoryOptimizations: true,
+    optimizePackageImports: ["lucide-react", "framer-motion", "recharts"],
     // Coolify / 2GB VPS: one CPU during `next build` avoids OOM from worker pools.
     ...(isDockerBuild ? { cpus: 1 } : {}),
     serverActions: {
@@ -123,15 +148,36 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/sarjan-sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Service-Worker-Allowed",
+            value: "/",
+          },
+        ],
+      },
+      {
+        source: "/offline",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
     ];
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    remotePatterns: imageRemotePatterns(),
   },
 };
 

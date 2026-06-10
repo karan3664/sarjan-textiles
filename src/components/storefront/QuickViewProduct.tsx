@@ -7,6 +7,7 @@ import { useShowProductSoldOut } from "./PriceGate";
 import { productImageForColorIndex } from "@/lib/product-colors";
 import { PriceGate } from "./PriceGate";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 type QuickViewProductProps = {
   product: Product;
@@ -38,12 +39,17 @@ export function QuickViewProduct({
           </div>
         ) : null}
         <div className="main-image">
-          <img src={primaryImage} alt={buildProductImageAlt(product)} />
+          <StorefrontProductImage
+            src={primaryImage}
+            alt={buildProductImageAlt(product)}
+            variant="detail"
+          />
         </div>
         <div className="thumb-image">
-          <img
+          <StorefrontProductImage
             src={hoverImage}
             alt={buildProductImageAlt(product, { variant: "alternate" })}
+            variant="detail"
           />
         </div>
       </div>

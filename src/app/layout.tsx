@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
+import { STOREFRONT_THEME_INIT_SCRIPT } from "@/lib/storefront-theme";
 import { siteSettings } from "@/data/mock";
 import { STOREFRONT_TEMPLATE_STYLESHEETS } from "@/lib/storefront-template-styles";
 import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
 import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner";
 import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
 import { pageMetadata } from "@/lib/seo";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { DEFAULT_STOREFRONT_LOCALE } from "@/lib/server-locale";
+import { StorefrontPwaRegistration } from "@/components/storefront/StorefrontPwaRegistration";
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -50,15 +53,28 @@ export const metadata: Metadata = {
   applicationName: siteSettings.brandName,
   creator: siteSettings.brandName,
   publisher: siteSettings.brandName,
+  appleWebApp: {
+    capable: true,
+    title: siteSettings.brandName,
+    statusBarStyle: "default",
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#121110" },
+  ],
 };
 
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const locale = await localeFromHeaders();
   return (
-    <html lang={locale}>
+    <html lang={DEFAULT_STOREFRONT_LOCALE} suppressHydrationWarning>
       <head>
+        <Script
+          id="sarjan-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: STOREFRONT_THEME_INIT_SCRIPT }}
+        />
         <meta charSet="utf-8" />
         {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
           <link key={href} rel="stylesheet" href={href} />
@@ -74,6 +90,7 @@ export default async function RootLayout({
         <SiteAnalytics />
         <AnalyticsTracker />
         <CookieConsentBanner />
+        <StorefrontPwaRegistration />
         {children}
       </body>
     </html>

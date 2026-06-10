@@ -52,7 +52,8 @@ const statusCopy: Partial<
   },
   Delivered: {
     title: "Order delivered 🎉",
-    body: (o) => `Order ${o.id} has been delivered. Thank you!`,
+    body: (o) =>
+      `Order ${o.id} has been delivered. Please rate your purchase when you have a moment.`,
   },
   Rejected: {
     title: "Order update",

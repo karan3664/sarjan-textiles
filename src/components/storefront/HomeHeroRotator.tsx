@@ -8,6 +8,7 @@ import {
   normalizeHeroVideoUrls,
   type HeroSlide,
 } from "@/lib/hero-video";
+import { StorefrontBannerImage } from "./StorefrontBannerImage";
 import type { CmsHomeBanner } from "@/lib/home-banners";
 import { imageIndexForSlide } from "@/lib/home-banners";
 
@@ -339,12 +340,13 @@ function HeroSlideLayer({
         className={`sarjan-hero-slide sarjan-hero-slide--image${isActive ? " active" : ""}`}
         aria-hidden={!isActive}
       >
-        <img
+        <StorefrontBannerImage
           src={slide.src}
           alt=""
           className="sarjan-hero-slide-img"
-          decoding="async"
-          fetchPriority={isActive ? "high" : "low"}
+          variant="hero"
+          priority={isActive}
+          fill
         />
       </div>
     );

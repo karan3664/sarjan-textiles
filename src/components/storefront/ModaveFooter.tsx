@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { footerInformationLinks, siteSettings } from "@/data/mock";
 import { normalizeBrandLogo } from "@/data/site";
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
   translateStorefrontNav,
   translateStorefrontUi,
@@ -10,8 +10,8 @@ import {
 import { FooterNewsletterForm } from "./FooterNewsletterForm";
 
 export async function ModaveFooter() {
-  const locale = await localeFromHeaders();
-  const cms = await getLocalizedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
+  const cms = await getCachedCmsSnapshot();
   const settings = {
     ...siteSettings,
     ...cms.siteSettings,

@@ -14,7 +14,7 @@ import { ProductPromoTag } from "./ProductPromoTag";
 import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
 import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
-import { productImageClassName } from "@/lib/product-placeholder-image";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 export function ModaveProductCard({
   product,
@@ -53,21 +53,21 @@ export function ModaveProductCard({
     >
       <div className="card-product-wrapper position-relative">
         <a href={`/products/${product.slug}`} className="product-img">
-          <img
-            className={productImageClassName(
-              primaryImage,
-              "lazyload img-product",
-            )}
-            data-src={primaryImage}
-            src={primaryImage}
-            alt={altText}
-          />
-          <img
-            className={productImageClassName(hoverImage, "lazyload img-hover")}
-            data-src={hoverImage}
-            src={hoverImage}
-            alt={buildProductImageAlt(product, { variant: "alternate" })}
-          />
+          <span className="sarjan-product-img-primary">
+            <StorefrontProductImage
+              src={primaryImage}
+              alt={altText}
+              className="img-product"
+            />
+          </span>
+          <span className="sarjan-product-img-hover">
+            <StorefrontProductImage
+              src={hoverImage}
+              alt={buildProductImageAlt(product, { variant: "alternate" })}
+              className="img-hover"
+              fill
+            />
+          </span>
         </a>
         <div
           className={`list-product-btn${soldOut ? " list-product-btn--oos" : ""}`}
@@ -192,11 +192,10 @@ export function ModaveProductCard({
                     }
                   />
                   {swatchImage ? (
-                    <img
-                      className="lazyload"
-                      data-src={swatchImage}
+                    <StorefrontProductImage
                       src={swatchImage}
                       alt=""
+                      variant="swatch"
                     />
                   ) : null}
                 </li>

@@ -5,15 +5,15 @@ import {
   loadCustomSitePage,
   RESERVED_CUSTOM_SITE_SLUGS,
 } from "@/lib/custom-site-page-route";
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { JsonLd, pageMetadata, splitKeywords } from "@/lib/seo";
 import { resolveCustomSitePage } from "@/lib/pages-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 
 export const revalidate = 300;
 
 export async function generateStaticParams() {
-  const cms = await getLocalizedCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   return (cms.customSitePages ?? [])
     .filter((page) => page.enabled !== false && page.slug?.trim())
     .filter((page) => !RESERVED_CUSTOM_SITE_SLUGS.has(page.slug.toLowerCase()))
@@ -29,8 +29,8 @@ export async function generateMetadata({
   if (RESERVED_CUSTOM_SITE_SLUGS.has(slug.toLowerCase())) {
     return {};
   }
-  const locale = await localeFromHeaders();
-  const cms = await getLocalizedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
+  const cms = await getCachedCmsSnapshot();
   const pageRaw =
     cms.customSitePages.find(
       (page) => page.slug === slug && page.enabled !== false,

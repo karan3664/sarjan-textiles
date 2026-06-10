@@ -1,5 +1,7 @@
 "use client";
 
+import { StorefrontErrorState } from "@/components/storefront/StorefrontErrorState";
+
 export default function RootGlobalError({
   reset,
 }: {
@@ -8,12 +10,8 @@ export default function RootGlobalError({
 }) {
   return (
     <html lang="en">
-      <body style={{ fontFamily: "system-ui, sans-serif", padding: 32 }}>
-        <h1>Something went wrong</h1>
-        <p>Please refresh the page or try again.</p>
-        <button type="button" onClick={reset}>
-          Try again
-        </button>
+      <body className="sarjan-storefront" suppressHydrationWarning>
+        <StorefrontErrorState onRetry={reset} />
       </body>
     </html>
   );

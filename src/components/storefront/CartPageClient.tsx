@@ -26,6 +26,7 @@ import {
   slugsMissingFromCache,
 } from "@/lib/catalog-product-cache";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 import {
   productImageClassName,
   productImageThumbWrapClassName,
@@ -244,9 +245,10 @@ export function CartPageClient({
                                 {labels.outOfStock ?? "Out of stock"}
                               </div>
                             ) : null}
-                            <img
+                            <StorefrontProductImage
                               src={item.product.images[0]}
                               alt={buildProductImageAlt(item.product)}
+                              variant="thumb"
                               className={productImageClassName(
                                 item.product.images[0],
                               )}

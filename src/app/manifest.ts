@@ -3,24 +3,34 @@ import { siteSettings } from "@/data/mock";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: siteSettings.brandName,
     short_name: "Sarjan",
     description: siteSettings.seo.description,
     start_url: "/",
+    scope: "/",
     display: "standalone",
-    background_color: "#141414",
-    theme_color: "#141414",
+    orientation: "portrait-primary",
+    background_color: "#fbfaf7",
+    theme_color: "#8b1e2d",
+    categories: ["shopping", "business"],
     icons: [
       {
-        src: siteSettings.logoIcon,
+        src: siteSettings.favicon,
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/sarjan-assets/sarjan-favicon-512.png",
-        sizes: "512x512",
+        src: siteSettings.favicon,
+        sizes: "192x192",
         type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: siteSettings.logo,
+        sizes: "any",
+        type: "image/svg+xml",
         purpose: "any",
       },
     ],

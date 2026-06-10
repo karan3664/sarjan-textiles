@@ -84,6 +84,7 @@ type AdminActiveSection =
   | "customPages"
   | "commerceHub"
   | "blogComments"
+  | "productReviews"
   | "newsletter"
   | "sendNotifications"
   | "mobileApp"
@@ -224,6 +225,12 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-message",
     label: "Testimonials",
     section: "testimonials",
+  },
+  {
+    href: "/admin/product-reviews",
+    icon: "icon-star",
+    label: "Product reviews",
+    section: "productReviews",
   },
   {
     href: "/admin/newsletter",

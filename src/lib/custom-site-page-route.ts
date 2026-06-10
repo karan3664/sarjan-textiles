@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { resolveCustomSitePage } from "@/lib/pages-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 
 /** Static app routes — custom CMS slugs must not collide with these. */
 export const RESERVED_CUSTOM_SITE_SLUGS = new Set([
@@ -68,8 +68,8 @@ export async function loadCustomSitePage(slug: string) {
   if (!slug || RESERVED_CUSTOM_SITE_SLUGS.has(slug.toLowerCase())) {
     notFound();
   }
-  const locale = await localeFromHeaders();
-  const cms = await getLocalizedCmsSnapshot();
+  const locale = getCacheableStorefrontLocale();
+  const cms = await getCachedCmsSnapshot();
   const pageRaw =
     cms.customSitePages.find(
       (page) => page.slug === slug && page.enabled !== false,

@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { StorefrontBannerImage } from "./StorefrontBannerImage";
 import type { CategoryHubPage } from "@/lib/cms-store";
 import { listActiveCategoryHubPages } from "@/lib/cms-store";
 import { resolveCategoryHub } from "@/lib/pages-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 
 export async function CategoryHubIndexContent() {
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const hubs = (await listActiveCategoryHubPages()).map((hub) =>
     resolveCategoryHub(hub, locale),
   );
@@ -39,8 +40,13 @@ export async function CategoryHubIndexContent() {
               className="sarjan-hub-main-card hover-img wg-blog style-1"
             >
               {hub.heroImage ? (
-                <div className="image">
-                  <img src={hub.heroImage} alt={hub.title} />
+                <div className="image sarjan-hub-hero-banner">
+                  <StorefrontBannerImage
+                    src={hub.heroImage}
+                    alt={hub.title}
+                    variant="category"
+                    fill
+                  />
                 </div>
               ) : null}
               <div className="content">
@@ -85,7 +91,13 @@ export async function CategoryHubDetailContent({
           </div>
           {hub.heroImage ? (
             <div className="sarjan-hub-hero-banner hover-img mb_32">
-              <img src={hub.heroImage} alt={hub.title} />
+              <StorefrontBannerImage
+                src={hub.heroImage}
+                alt={hub.title}
+                variant="category"
+                priority
+                fill
+              />
             </div>
           ) : null}
           {hub.intro ? (
@@ -110,8 +122,13 @@ export async function CategoryHubDetailContent({
                   className="sarjan-hub-subcard hover-img wg-blog style-1"
                 >
                   {sub.image ? (
-                    <div className="image">
-                      <img src={sub.image} alt={sub.title} />
+                    <div className="image sarjan-hub-hero-banner">
+                      <StorefrontBannerImage
+                        src={sub.image}
+                        alt={sub.title}
+                        variant="category"
+                        fill
+                      />
                     </div>
                   ) : null}
                   <div className="content">

@@ -4,6 +4,8 @@ import type {
   BotOrderPreview,
   BotProductPreview,
 } from "@/lib/order-bot/types";
+import { StorefrontProductImage } from "./StorefrontProductImage";
+import { STOREFRONT_IMAGE_SIZES } from "@/lib/storefront-image";
 
 function formatInr(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -13,7 +15,13 @@ function BotThumb({ src, alt }: { src?: string; alt: string }) {
   return (
     <div className="sarjan-order-bot-thumb" aria-hidden>
       {src ? (
-        <img src={src} alt={alt} loading="lazy" decoding="async" />
+        <StorefrontProductImage
+          src={src}
+          alt={alt}
+          width={64}
+          height={80}
+          sizes={STOREFRONT_IMAGE_SIZES.botThumb}
+        />
       ) : (
         <span className="sarjan-order-bot-thumb__placeholder">ST</span>
       )}

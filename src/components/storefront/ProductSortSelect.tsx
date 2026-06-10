@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function ProductSortSelectInner({
   value,
@@ -13,6 +13,7 @@ function ProductSortSelectInner({
   basePath: string;
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   return (
     <div className="sarjan-sort-select">
@@ -24,7 +25,7 @@ function ProductSortSelectInner({
           params.set("sort", event.target.value);
           params.set("page", "1");
           const query = params.toString();
-          window.location.assign(query ? `${basePath}?${query}` : basePath);
+          router.push(query ? `${basePath}?${query}` : basePath);
         }}
       >
         {Object.entries(labels).map(([optionValue, label]) => (

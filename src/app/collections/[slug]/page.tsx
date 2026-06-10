@@ -2,7 +2,7 @@ import { ProductSeoListingPage } from "@/components/storefront/ProductSeoListing
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCollectionPageBySlug } from "@/lib/cms-store";
 import { resolveCollection } from "@/lib/pages-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
   JsonLd,
   listingBreadcrumbJsonLd,
@@ -22,7 +22,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const pageRaw = await getCollectionPageBySlug(slug);
   if (!pageRaw) return {};
-  const page = resolveCollection(pageRaw, await localeFromHeaders());
+  const page = resolveCollection(pageRaw, getCacheableStorefrontLocale());
   return pageMetadata({
     title: page.metaTitle || `${page.title} | Sarjan Textiles`,
     description: page.metaDescription || page.description,
@@ -53,7 +53,7 @@ export default async function CollectionDetailPage({
   const { slug } = await params;
   const pageRaw = await getCollectionPageBySlug(slug);
   if (!pageRaw) notFound();
-  const page = resolveCollection(pageRaw, await localeFromHeaders());
+  const page = resolveCollection(pageRaw, getCacheableStorefrontLocale());
   const {
     page: pageNum,
     sort,

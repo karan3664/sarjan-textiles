@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { MobileAppConfig, MobileHomeSection } from "@/lib/mobile-app-cms";
+import type {
+  MobileAppConfig,
+  MobileAppIconCampaign,
+  MobileHomeSection,
+} from "@/lib/mobile-app-cms";
 import {
   flattenMobileAppForAdmin,
+  mobileAppIconOptions,
   mobileHomeSectionOptions,
 } from "@/lib/mobile-app-cms";
 
@@ -17,8 +22,21 @@ const SECTION_NAV = [
   { id: "mobile-onboarding", label: "Onboarding" },
   { id: "mobile-header", label: "Home header" },
   { id: "mobile-sections", label: "Home sections" },
+  { id: "mobile-app-icon", label: "App icon" },
   { id: "mobile-support", label: "Support & footer" },
 ] as const;
+
+function newCampaignIcon(): MobileAppIconCampaign {
+  return {
+    id: `campaign-${Date.now()}`,
+    label: "Campaign",
+    iconId: "mega_sale",
+    startAt: "",
+    endAt: "",
+    enabled: true,
+    priority: 10,
+  };
+}
 
 function newSection(type: MobileHomeSection["type"]): MobileHomeSection {
   const label =
@@ -691,6 +709,323 @@ export function AdminMobileAppClient({ initialConfig }: Props) {
               {mobileHomeSectionOptions.find((o) => o.type === type)?.label ??
                 type}
             </button>
+          ))}
+        </div>
+      </section>
+
+      <section
+        id="mobile-app-icon"
+        className="wg-box sarjan-mobile-app-cms__panel"
+      >
+        <div className="sarjan-mobile-app-cms__panel-head sarjan-mobile-app-cms__panel-head--split">
+          <div>
+            <h5 className="mb-0">Dynamic app icon</h5>
+            <span className="body-text text-secondary">
+              Remote campaign icons override festival and role icons
+              automatically
+            </span>
+          </div>
+          <label className="sarjan-mobile-app-cms__toggle">
+            <input
+              type="checkbox"
+              checked={config.appIcon?.enabled !== false}
+              onChange={(e) =>
+                setConfig((c) => ({
+                  ...c,
+                  appIcon: {
+                    ...c.appIcon,
+                    enabled: e.target.checked,
+                    enablePremiumIcon: c.appIcon?.enablePremiumIcon !== false,
+                    enableDealerIcon: c.appIcon?.enableDealerIcon !== false,
+                    campaigns: c.appIcon?.campaigns ?? [],
+                    festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                  },
+                }))
+              }
+            />
+            Enabled
+          </label>
+        </div>
+
+        <div className="sarjan-mobile-app-cms__grid">
+          <fieldset>
+            <label className="sarjan-mobile-app-cms__toggle">
+              <input
+                type="checkbox"
+                checked={config.appIcon?.enablePremiumIcon !== false}
+                onChange={(e) =>
+                  setConfig((c) => ({
+                    ...c,
+                    appIcon: {
+                      enabled: c.appIcon?.enabled !== false,
+                      enablePremiumIcon: e.target.checked,
+                      enableDealerIcon: c.appIcon?.enableDealerIcon !== false,
+                      campaigns: c.appIcon?.campaigns ?? [],
+                      festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                    },
+                  }))
+                }
+              />
+              Premium user icon
+            </label>
+          </fieldset>
+          <fieldset>
+            <label className="sarjan-mobile-app-cms__toggle">
+              <input
+                type="checkbox"
+                checked={config.appIcon?.enableDealerIcon !== false}
+                onChange={(e) =>
+                  setConfig((c) => ({
+                    ...c,
+                    appIcon: {
+                      enabled: c.appIcon?.enabled !== false,
+                      enablePremiumIcon: c.appIcon?.enablePremiumIcon !== false,
+                      enableDealerIcon: e.target.checked,
+                      campaigns: c.appIcon?.campaigns ?? [],
+                      festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                    },
+                  }))
+                }
+              />
+              Dealer icon
+            </label>
+          </fieldset>
+        </div>
+
+        <div className="sarjan-mobile-app-cms__panel-head sarjan-mobile-app-cms__panel-head--split">
+          <div>
+            <h6 className="mb-0">Marketing campaigns</h6>
+            <span className="body-text text-secondary">
+              Priority: campaign → festival → premium → dealer → default
+            </span>
+          </div>
+          <button
+            type="button"
+            className="tf-button style-2"
+            onClick={() =>
+              setConfig((c) => ({
+                ...c,
+                appIcon: {
+                  enabled: c.appIcon?.enabled !== false,
+                  enablePremiumIcon: c.appIcon?.enablePremiumIcon !== false,
+                  enableDealerIcon: c.appIcon?.enableDealerIcon !== false,
+                  campaigns: [
+                    ...(c.appIcon?.campaigns ?? []),
+                    newCampaignIcon(),
+                  ],
+                  festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                },
+              }))
+            }
+          >
+            + Add campaign
+          </button>
+        </div>
+
+        <div className="sarjan-mobile-app-cms__stack">
+          {(config.appIcon?.campaigns ?? []).map((campaign, index) => (
+            <article
+              key={campaign.id}
+              className="sarjan-mobile-app-cms__item-card"
+            >
+              <div className="sarjan-mobile-app-cms__item-head">
+                <strong>{campaign.label || `Campaign ${index + 1}`}</strong>
+                <div className="sarjan-mobile-app-cms__item-actions">
+                  <button
+                    type="button"
+                    className="sarjan-mobile-app-cms__icon-btn"
+                    aria-label="Remove campaign"
+                    onClick={() =>
+                      setConfig((c) => ({
+                        ...c,
+                        appIcon: {
+                          enabled: c.appIcon?.enabled !== false,
+                          enablePremiumIcon:
+                            c.appIcon?.enablePremiumIcon !== false,
+                          enableDealerIcon:
+                            c.appIcon?.enableDealerIcon !== false,
+                          campaigns: (c.appIcon?.campaigns ?? []).filter(
+                            (item) => item.id !== campaign.id,
+                          ),
+                          festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                        },
+                      }))
+                    }
+                  >
+                    ×
+                  </button>
+                  <label className="sarjan-mobile-app-cms__toggle sarjan-mobile-app-cms__toggle--compact">
+                    <input
+                      type="checkbox"
+                      checked={campaign.enabled !== false}
+                      onChange={(e) =>
+                        setConfig((c) => ({
+                          ...c,
+                          appIcon: {
+                            enabled: c.appIcon?.enabled !== false,
+                            enablePremiumIcon:
+                              c.appIcon?.enablePremiumIcon !== false,
+                            enableDealerIcon:
+                              c.appIcon?.enableDealerIcon !== false,
+                            campaigns: (c.appIcon?.campaigns ?? []).map(
+                              (item) =>
+                                item.id === campaign.id
+                                  ? { ...item, enabled: e.target.checked }
+                                  : item,
+                            ),
+                            festivalOverrides:
+                              c.appIcon?.festivalOverrides ?? [],
+                          },
+                        }))
+                      }
+                    />
+                    Active
+                  </label>
+                </div>
+              </div>
+
+              <div className="sarjan-mobile-app-cms__grid">
+                <fieldset>
+                  <label className="body-title mb-10">Label</label>
+                  <input
+                    className="form-control"
+                    value={campaign.label ?? ""}
+                    onChange={(e) =>
+                      setConfig((c) => ({
+                        ...c,
+                        appIcon: {
+                          enabled: c.appIcon?.enabled !== false,
+                          enablePremiumIcon:
+                            c.appIcon?.enablePremiumIcon !== false,
+                          enableDealerIcon:
+                            c.appIcon?.enableDealerIcon !== false,
+                          campaigns: (c.appIcon?.campaigns ?? []).map((item) =>
+                            item.id === campaign.id
+                              ? { ...item, label: e.target.value }
+                              : item,
+                          ),
+                          festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                        },
+                      }))
+                    }
+                  />
+                </fieldset>
+                <fieldset>
+                  <label className="body-title mb-10">Icon type</label>
+                  <select
+                    className="form-control"
+                    value={campaign.iconId}
+                    onChange={(e) =>
+                      setConfig((c) => ({
+                        ...c,
+                        appIcon: {
+                          enabled: c.appIcon?.enabled !== false,
+                          enablePremiumIcon:
+                            c.appIcon?.enablePremiumIcon !== false,
+                          enableDealerIcon:
+                            c.appIcon?.enableDealerIcon !== false,
+                          campaigns: (c.appIcon?.campaigns ?? []).map((item) =>
+                            item.id === campaign.id
+                              ? { ...item, iconId: e.target.value }
+                              : item,
+                          ),
+                          festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                        },
+                      }))
+                    }
+                  >
+                    {mobileAppIconOptions
+                      .filter((option) => option.id !== "default")
+                      .map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                  </select>
+                </fieldset>
+                <fieldset>
+                  <label className="body-title mb-10">Start date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={campaign.startAt}
+                    onChange={(e) =>
+                      setConfig((c) => ({
+                        ...c,
+                        appIcon: {
+                          enabled: c.appIcon?.enabled !== false,
+                          enablePremiumIcon:
+                            c.appIcon?.enablePremiumIcon !== false,
+                          enableDealerIcon:
+                            c.appIcon?.enableDealerIcon !== false,
+                          campaigns: (c.appIcon?.campaigns ?? []).map((item) =>
+                            item.id === campaign.id
+                              ? { ...item, startAt: e.target.value }
+                              : item,
+                          ),
+                          festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                        },
+                      }))
+                    }
+                  />
+                </fieldset>
+                <fieldset>
+                  <label className="body-title mb-10">End date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={campaign.endAt}
+                    onChange={(e) =>
+                      setConfig((c) => ({
+                        ...c,
+                        appIcon: {
+                          enabled: c.appIcon?.enabled !== false,
+                          enablePremiumIcon:
+                            c.appIcon?.enablePremiumIcon !== false,
+                          enableDealerIcon:
+                            c.appIcon?.enableDealerIcon !== false,
+                          campaigns: (c.appIcon?.campaigns ?? []).map((item) =>
+                            item.id === campaign.id
+                              ? { ...item, endAt: e.target.value }
+                              : item,
+                          ),
+                          festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                        },
+                      }))
+                    }
+                  />
+                </fieldset>
+                <fieldset>
+                  <label className="body-title mb-10">Priority</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={campaign.priority ?? 0}
+                    onChange={(e) =>
+                      setConfig((c) => ({
+                        ...c,
+                        appIcon: {
+                          enabled: c.appIcon?.enabled !== false,
+                          enablePremiumIcon:
+                            c.appIcon?.enablePremiumIcon !== false,
+                          enableDealerIcon:
+                            c.appIcon?.enableDealerIcon !== false,
+                          campaigns: (c.appIcon?.campaigns ?? []).map((item) =>
+                            item.id === campaign.id
+                              ? {
+                                  ...item,
+                                  priority: Number(e.target.value) || 0,
+                                }
+                              : item,
+                          ),
+                          festivalOverrides: c.appIcon?.festivalOverrides ?? [],
+                        },
+                      }))
+                    }
+                  />
+                </fieldset>
+              </div>
+            </article>
           ))}
         </div>
       </section>

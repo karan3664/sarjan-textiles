@@ -1,4 +1,4 @@
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { readEnglish } from "@/lib/cms-localize";
 import { resolveHeaderNavLinks } from "@/lib/header-navigation";
 import { resolveCategoryHub } from "@/lib/pages-localize";
@@ -27,7 +27,7 @@ export type StorefrontCategoryHub = {
 
 /** SSR header chrome — same data as /api/navigation + /api/categories without client fetch flash. */
 export async function getStorefrontHeaderData(locale: AppLocale) {
-  const cms = await getLocalizedCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
 
   const items: StorefrontHeaderNavLink[] = resolveHeaderNavLinks(
     cms.siteSettings,

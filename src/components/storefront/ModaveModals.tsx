@@ -28,6 +28,7 @@ import {
   productImageClassName,
   productImageThumbWrapClassName,
 } from "@/lib/product-placeholder-image";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 import {
   readWishlist,
   refreshWishlistFromCatalog,
@@ -694,14 +695,13 @@ export function ModaveModals() {
                                         Out of stock
                                       </div>
                                     ) : null}
-                                    <img
-                                      className={productImageClassName(
-                                        thumbImage,
-                                        "lazyload",
-                                      )}
-                                      data-src={thumbImage}
+                                    <StorefrontProductImage
                                       src={thumbImage}
                                       alt={item.product.name}
+                                      variant="thumb"
+                                      className={productImageClassName(
+                                        thumbImage,
+                                      )}
                                     />
                                   </a>
                                 </div>
@@ -978,14 +978,13 @@ export function ModaveModals() {
                               )}
                             >
                               <a href={`/products/${product.slug}`}>
-                                <img
-                                  className={productImageClassName(
-                                    product.images[0],
-                                    "lazyload",
-                                  )}
-                                  data-src={product.images[0]}
+                                <StorefrontProductImage
                                   src={product.images[0]}
                                   alt={product.name}
+                                  variant="thumb"
+                                  className={productImageClassName(
+                                    product.images[0],
+                                  )}
                                 />
                               </a>
                             </div>

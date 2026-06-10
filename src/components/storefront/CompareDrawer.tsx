@@ -13,6 +13,7 @@ import {
   writeCompare,
 } from "@/lib/compare-client";
 import { PriceGate } from "./PriceGate";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 function RepeatIcon() {
   return (
@@ -185,11 +186,10 @@ export function CompareDrawer() {
                                 Out of stock
                               </div>
                             ) : null}
-                            <img
-                              className="lazyload"
-                              data-src={product.images[0]}
+                            <StorefrontProductImage
                               src={product.images[0]}
                               alt={product.name}
+                              variant="thumb"
                             />
                           </Link>
                           <div className="content">

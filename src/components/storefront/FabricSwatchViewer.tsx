@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 type Props = {
   imageUrl: string;
@@ -79,7 +80,12 @@ export function FabricSwatchViewer({ imageUrl, alt, fabricLabel }: Props) {
 
       {mode === "zoom" ? (
         <div className="sarjan-fabric-zoom-stage">
-          <img src={imageUrl} alt={alt} />
+          <StorefrontProductImage
+            src={imageUrl}
+            alt={alt}
+            variant="detail"
+            className="sarjan-fabric-zoom-img"
+          />
           <p className="sarjan-fabric-zoom-caption">
             {fabricLabel
               ? `${fabricLabel} — pinch or scroll to inspect weave & print`

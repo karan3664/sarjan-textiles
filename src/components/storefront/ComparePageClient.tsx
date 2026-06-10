@@ -12,6 +12,7 @@ import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
 import { PageTitle } from "./PageTitle";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 function sizeRun(product: Product) {
   return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
@@ -163,9 +164,7 @@ export function ComparePageClient({
                             Out of stock
                           </div>
                         ) : null}
-                        <img
-                          className="lazyload"
-                          data-src={product.images[0]}
+                        <StorefrontProductImage
                           src={product.images[0]}
                           alt={product.name}
                         />

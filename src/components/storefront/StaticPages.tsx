@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { products } from "@/data/mock";
 import { getCatalogProducts } from "@/lib/catalog";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { FeedbackForm } from "./FeedbackForm";
 import { ModaveProductCard } from "./ModaveProductCard";
@@ -9,7 +9,10 @@ import { PageTitle } from "./PageTitle";
 import { PaymentConfirmationClient } from "./PaymentConfirmationClient";
 import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
+import { StorefrontEmptyState } from "./StorefrontEmptyState";
 import { FaqAccordion } from "./FaqAccordion";
+import { StorefrontBannerImage } from "./StorefrontBannerImage";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import {
   faqItemsForLocale,
@@ -38,7 +41,12 @@ export function DynamicInfoPage({
           <div className="row g-4 g-lg-5 align-items-start">
             <div className="col-lg-5">
               <div className="sarjan-policy-media">
-                <img src={image} alt={title} loading="lazy" decoding="async" />
+                <StorefrontBannerImage
+                  src={image}
+                  alt={title}
+                  variant="policy"
+                  fill
+                />
               </div>
             </div>
             <div className="col-lg-7">
@@ -94,7 +102,7 @@ export async function SearchResultPage({
   q?: string;
   page?: number;
 }) {
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const data = await getCatalogProducts({ q, page, limit: 24, locale });
 
   return (
@@ -121,15 +129,39 @@ export async function SearchResultPage({
             <h4>{q ? `${data.total} result for "${q}"` : "All products"}</h4>
             <p className="text-secondary">Admin-managed Sarjan catalog.</p>
           </div>
-          <div className="tf-grid-layout tf-col-2 lg-col-4 mt_32">
-            {data.items.map((product, index) => (
-              <ModaveProductCard
-                product={product}
-                delay={`${index * 0.03}s`}
-                key={product.slug}
-              />
-            ))}
-          </div>
+          {data.items.length === 0 ? (
+            <StorefrontEmptyState
+              title={q ? "No search results" : "No products found"}
+              description={
+                q
+                  ? `We couldn't find products matching "${q}". Try another SKU, fabric, or category term.`
+                  : "The catalog is empty for this search. Browse all products instead."
+              }
+              primaryAction={{
+                label: "Browse all products",
+                href: "/products",
+              }}
+              secondaryAction={
+                q
+                  ? {
+                      label: "Clear search",
+                      href: "/search-result",
+                      icon: "icon-close",
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <div className="tf-grid-layout tf-col-2 lg-col-4 mt_32">
+              {data.items.map((product, index) => (
+                <ModaveProductCard
+                  product={product}
+                  delay={`${index * 0.03}s`}
+                  key={product.slug}
+                />
+              ))}
+            </div>
+          )}
           <StorefrontPagination
             basePath="/search-result"
             page={data.page}
@@ -233,7 +265,7 @@ export function TermsPage() {
 }
 
 export async function FaqPage() {
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const items = faqItemsForLocale(locale);
   const faqTitle = translateStorefrontNav("FAQs", locale);
   const homeLabel = translateStorefrontUi("home", locale);
@@ -322,10 +354,11 @@ export function ProductSoldOutPage() {
               <div className="sarjan-oos-ribbon" role="status">
                 Out of stock
               </div>
-              <img
-                className="radius-16 w-100"
+              <StorefrontProductImage
                 src={product.images[0]}
                 alt={product.name}
+                className="radius-16 w-100"
+                variant="detail"
               />
             </div>
             <div className="col-md-6">

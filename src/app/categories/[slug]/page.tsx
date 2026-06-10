@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { CategoryHubDetailContent } from "@/components/storefront/CategoryHubPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { resolveCategoryHub } from "@/lib/pages-localize";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { JsonLd, pageMetadata, splitKeywords } from "@/lib/seo";
 
 export const revalidate = 300;
@@ -14,13 +14,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const cms = await getLocalizedCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   const hubRaw =
     cms.categoryHubPages.find(
       (page) => page.slug === slug && page.enabled !== false,
     ) ?? null;
   if (!hubRaw) return {};
-  const hub = resolveCategoryHub(hubRaw, await localeFromHeaders());
+  const hub = resolveCategoryHub(hubRaw, getCacheableStorefrontLocale());
   return pageMetadata({
     title: hub.metaTitle || `${hub.title} | ${cms.siteSettings.brandName}`,
     description:
@@ -41,13 +41,13 @@ export default async function CategoryHubPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const cms = await getLocalizedCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   const hubRaw =
     cms.categoryHubPages.find(
       (page) => page.slug === slug && page.enabled !== false,
     ) ?? null;
   if (!hubRaw) notFound();
-  const hub = resolveCategoryHub(hubRaw, await localeFromHeaders());
+  const hub = resolveCategoryHub(hubRaw, getCacheableStorefrontLocale());
 
   const jsonLd = {
     "@context": "https://schema.org",

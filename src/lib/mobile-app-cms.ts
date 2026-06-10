@@ -88,6 +88,49 @@ export type MobileHomeSection = {
   banners?: CmsHomeBanner[];
 };
 
+export type MobileAppIconCampaign = {
+  id: string;
+  iconId: string;
+  startAt: string;
+  endAt: string;
+  enabled?: boolean;
+  priority?: number;
+  label?: string;
+};
+
+export type MobileAppIconFestivalOverride = {
+  iconId: string;
+  startAt: string;
+  endAt: string;
+};
+
+export type MobileAppIconConfig = {
+  enabled?: boolean;
+  enablePremiumIcon?: boolean;
+  enableDealerIcon?: boolean;
+  campaigns?: MobileAppIconCampaign[];
+  festivalOverrides?: MobileAppIconFestivalOverride[];
+};
+
+export const mobileAppIconOptions: Array<{ id: string; label: string }> = [
+  { id: "default", label: "Default (luxury navy)" },
+  { id: "premium", label: "Premium user" },
+  { id: "dealer", label: "Dealer" },
+  { id: "raksha_bandhan", label: "Raksha Bandhan" },
+  { id: "navratri", label: "Navratri" },
+  { id: "diwali", label: "Diwali" },
+  { id: "uttarayan", label: "Uttarayan" },
+  { id: "holi", label: "Holi" },
+  { id: "christmas", label: "Christmas" },
+  { id: "new_year", label: "New Year" },
+  { id: "prime_day", label: "Prime Day" },
+  { id: "mega_sale", label: "Mega Sale" },
+  { id: "dealer_expo", label: "Dealer Expo" },
+  { id: "anniversary_sale", label: "Anniversary Sale" },
+  { id: "launch_event", label: "Launch Event" },
+  { id: "special_collection", label: "Special Collection" },
+];
+
 export type MobileAppConfig = {
   splash: MobileSplashConfig;
   onboarding: {
@@ -103,6 +146,7 @@ export type MobileAppConfig = {
     email: string;
     whatsapp: string;
   };
+  appIcon?: MobileAppIconConfig;
 };
 
 type StoredSlide = Omit<MobileOnboardingSlide, "title" | "subtitle"> & {
@@ -148,6 +192,7 @@ export type MobileAppConfigStored = {
   profileMenus: MobileProfileMenusStored;
   footerCredit: LocalizedText;
   support: MobileAppConfig["support"];
+  appIcon?: MobileAppIconConfig;
   localizedExtras?: MobileLocalizedExtras;
 };
 
@@ -159,6 +204,7 @@ export type MobileAppPublicConfig = MobileAppConfig & {
   services: Array<{ icon?: string; title: string; body: string }>;
   updatedAt: string;
   locale: AppLocale;
+  appIcon?: MobileAppIconConfig;
 };
 
 const MOBILE_ICON_OPTIONS = [
@@ -347,6 +393,74 @@ export function defaultMobileAppConfig(
       email: site.email ?? "",
       whatsapp: site.phone?.replace(/\s/g, "") ?? "",
     },
+    appIcon: {
+      enabled: true,
+      enablePremiumIcon: true,
+      enableDealerIcon: true,
+      campaigns: [],
+      festivalOverrides: [],
+    },
+  };
+}
+
+const MOBILE_APP_ICON_IDS = new Set(
+  mobileAppIconOptions.map((option) => option.id),
+);
+
+function normalizeAppIconConfig(
+  input: Partial<MobileAppIconConfig> | undefined,
+  defaults: MobileAppIconConfig,
+): MobileAppIconConfig {
+  const base = input ?? defaults;
+  const campaigns: MobileAppIconCampaign[] = Array.isArray(base.campaigns)
+    ? base.campaigns.flatMap((campaign, index) => {
+        const iconId = campaign.iconId?.trim() ?? "";
+        if (!MOBILE_APP_ICON_IDS.has(iconId) || iconId === "default") {
+          return [];
+        }
+        const startAt = campaign.startAt?.trim() ?? "";
+        const endAt = campaign.endAt?.trim() ?? "";
+        if (!startAt || !endAt) {
+          return [];
+        }
+        const normalized: MobileAppIconCampaign = {
+          id: campaign.id?.trim() || `campaign-${index + 1}`,
+          iconId,
+          startAt,
+          endAt,
+          enabled: campaign.enabled !== false,
+          priority: Number.isFinite(campaign.priority)
+            ? Number(campaign.priority)
+            : 0,
+          label: campaign.label?.trim() || undefined,
+        };
+        return [normalized];
+      })
+    : (defaults.campaigns ?? []);
+
+  const festivalOverrides = Array.isArray(base.festivalOverrides)
+    ? base.festivalOverrides
+        .map((override) => {
+          const iconId = override.iconId?.trim() ?? "";
+          const startAt = override.startAt?.trim() ?? "";
+          const endAt = override.endAt?.trim() ?? "";
+          if (!MOBILE_APP_ICON_IDS.has(iconId) || !startAt || !endAt) {
+            return null;
+          }
+          return { iconId, startAt, endAt };
+        })
+        .filter(
+          (override): override is MobileAppIconFestivalOverride =>
+            override != null,
+        )
+    : (defaults.festivalOverrides ?? []);
+
+  return {
+    enabled: base.enabled !== false,
+    enablePremiumIcon: base.enablePremiumIcon !== false,
+    enableDealerIcon: base.enableDealerIcon !== false,
+    campaigns,
+    festivalOverrides,
   };
 }
 
@@ -647,6 +761,11 @@ export function normalizeMobileAppConfig(
       home,
       (input as MobileAppConfigStored | undefined)?.localizedExtras,
     ),
+    appIcon: normalizeAppIconConfig(
+      (base as MobileAppConfig).appIcon ??
+        (input as MobileAppConfigStored | undefined)?.appIcon,
+      defaults.appIcon!,
+    ),
   };
 }
 
@@ -894,6 +1013,7 @@ export function resolveMobileAppConfig(
     profileMenus: resolveMobileProfileMenus(stored.profileMenus, locale),
     footerCredit: pick(stored.footerCredit) ?? "",
     support: { ...stored.support },
+    appIcon: stored.appIcon,
   };
 }
 
@@ -925,6 +1045,7 @@ export function buildMobileConfigResponse(
     })),
     updatedAt: new Date().toISOString(),
     locale,
+    appIcon: mobileApp.appIcon,
   };
 }
 

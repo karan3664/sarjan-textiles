@@ -1,8 +1,7 @@
 "use client";
 
-import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
-
 import Link from "next/link";
+import { SarjanButton } from "./SarjanButton";
 import { useCallback, useEffect, useState } from "react";
 import { cookieConsentRequired } from "@/lib/cookie-consent-client";
 
@@ -55,19 +54,16 @@ export function CookieConsentBanner() {
           .
         </p>
         <div className="d-flex gap-12 flex-wrap">
-          <button
-            type="button"
-            className={withBtnIcon("tf-btn btn-fill radius-4")}
-            onClick={accept}
-          >
-            <TfButtonIcon icon="icon-check">Accept</TfButtonIcon>
-          </button>
-          <Link
+          <SarjanButton type="button" icon="icon-check" onClick={accept}>
+            Accept
+          </SarjanButton>
+          <SarjanButton
             href="/privacy-policy"
-            className={withBtnIcon("tf-btn btn-white has-border radius-4")}
+            icon="icon-question"
+            className="has-border"
           >
-            <TfButtonIcon icon="icon-question">Learn more</TfButtonIcon>
-          </Link>
+            Learn more
+          </SarjanButton>
         </div>
       </div>
     </div>

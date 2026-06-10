@@ -52,7 +52,7 @@ export function useClientHasB2BToken(): boolean {
 
 /** Out-of-stock UI is shown only when a client session token exists. */
 export function useShowProductSoldOut(
-  product: Pick<Product, "stock">,
+  product: Pick<Product, "stock" | "reserved">,
 ): boolean {
   const loggedIn = useClientHasB2BToken();
   return showProductSoldOutToViewer(product, loggedIn);

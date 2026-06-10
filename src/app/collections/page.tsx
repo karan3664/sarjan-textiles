@@ -4,16 +4,18 @@ import { PageTitle } from "@/components/storefront/PageTitle";
 import { listActiveCollectionPages } from "@/lib/cms-store";
 import { resolveCollection } from "@/lib/pages-localize";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
-import { sarjanButtonClass } from "@/lib/sarjan-button";
-import { localeFromHeaders } from "@/lib/server-locale";
+import { SarjanButton } from "@/components/storefront/SarjanButton";
+import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { JsonLd } from "@/lib/seo";
+
+export const revalidate = 300;
 
 export async function generateMetadata() {
   return cmsSeoMetadata("collections");
 }
 
 export default async function CollectionsPage() {
-  const locale = await localeFromHeaders();
+  const locale = getCacheableStorefrontLocale();
   const collections = (await listActiveCollectionPages()).map((page) =>
     resolveCollection(page, locale),
   );
@@ -42,12 +44,12 @@ export default async function CollectionsPage() {
                     <p className="text-muted flex-grow-1">
                       {collection.description}
                     </p>
-                    <Link
+                    <SarjanButton
                       href={`/collections/${collection.slug}`}
-                      className={sarjanButtonClass("mt-2 align-self-start")}
+                      className="mt-2 align-self-start"
                     >
-                      <span className="text">View collection</span>
-                    </Link>
+                      View collection
+                    </SarjanButton>
                   </div>
                 </div>
               </div>
