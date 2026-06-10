@@ -13695,20 +13695,65 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   padding: 28px 0 12px;
 }
 
-.sarjan-custom-site-page .sarjan-breadcrumb {
+.sarjan-custom-site-page .sarjan-custom-site-hero .sarjan-breadcrumb {
   margin-bottom: 12px;
 }
 
 .sarjan-custom-site-page .sarjan-custom-site-heading {
   margin-bottom: 0;
+  max-width: min(800px, 100%);
+  margin-inline: auto;
 }
 
 .sarjan-custom-site-page .sarjan-custom-site-heading.has-subtitle {
   margin-bottom: 12px;
 }
 
+.sarjan-custom-site-page .sarjan-breadcrumb {
+  max-width: min(720px, 100%);
+  margin-inline: auto;
+  width: 100%;
+}
+
 .sarjan-custom-site-page .sarjan-custom-site-hero-image {
   margin-top: 16px;
+}
+
+.sarjan-custom-site-page .sarjan-custom-text-block {
+  max-width: min(720px, 100%);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.sarjan-custom-site-page .sarjan-custom-text-heading {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.sarjan-custom-site-page .sarjan-custom-text-body {
+  line-height: 1.75;
+}
+
+.sarjan-custom-site-page .sarjan-custom-text-body p {
+  margin: 0 0 1em;
+}
+
+.sarjan-custom-site-page .sarjan-custom-text-body p:last-child {
+  margin-bottom: 0;
+}
+
+.sarjan-custom-site-page .sarjan-custom-section-banner,
+.sarjan-custom-site-page
+  .sarjan-custom-section-grid:has(> .sarjan-custom-text-block:only-child) {
+  grid-template-columns: 1fr;
+  max-width: min(720px, 100%);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.sarjan-custom-site-page .sarjan-custom-button-block {
+  justify-content: center;
+  width: 100%;
 }
 
 .sarjan-custom-site-page .sarjan-custom-storefront-section {
@@ -13856,8 +13901,9 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
     gap: 18px;
   }
 
-  .sarjan-custom-site-page .sarjan-custom-text-block {
-    max-width: none;
+  .sarjan-custom-site-page .sarjan-custom-text-block,
+  .sarjan-custom-site-page .sarjan-custom-section-banner {
+    max-width: 100%;
   }
 
   .sarjan-custom-site-page .sarjan-breadcrumb {

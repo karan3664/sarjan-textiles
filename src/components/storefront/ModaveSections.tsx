@@ -427,14 +427,16 @@ function renderCustomBlock(
     return (
       <div className="sarjan-custom-text-block" key={block.id}>
         {hasHeading ? (
-          <h4>
+          <h4 className="sarjan-custom-text-heading">
             <CmsHtml html={block.heading!} />
           </h4>
         ) : null}
         {hasBody ? (
-          <p className="text-secondary">
-            <CmsHtml html={block.body!} />
-          </p>
+          <CmsHtml
+            html={block.body!}
+            as="div"
+            className="sarjan-custom-text-body text-secondary"
+          />
         ) : null}
       </div>
     );
