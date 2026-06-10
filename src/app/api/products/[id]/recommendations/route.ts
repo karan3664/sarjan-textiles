@@ -24,7 +24,9 @@ export async function GET(
 
   return jsonLocalized(recommendations, locale, {
     headers: {
-      "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+      "Cache-Control": session
+        ? "private, no-store"
+        : "public, s-maxage=120, stale-while-revalidate=300",
     },
   });
 }

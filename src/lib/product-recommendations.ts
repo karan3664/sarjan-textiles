@@ -3,6 +3,7 @@ import { applyClientPricing, sortProductList } from "@/lib/catalog";
 import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { readEnglish } from "@/lib/cms-localize";
 import type { AppLocale } from "@/lib/localized-text";
+import { clientHasOrderHistory } from "@/lib/client-order-history";
 import { readLocalDb } from "@/lib/local-db";
 import { applyProductDeals } from "@/lib/product-deal";
 import { productStockOnHand } from "@/lib/product-availability";
@@ -183,13 +184,13 @@ export async function getProductRecommendations({
 
   const localized = applyProductDeals(resolveProducts(rawProducts, locale));
   const similar = buildSimilarProducts(current, localized, limit);
-  const counts = await coOccurrenceCounts(current);
-  const boughtTogether = buildBoughtTogetherProducts(
-    current,
-    localized,
-    counts,
-    limit,
-  );
+  const hasOrderHistory = await clientHasOrderHistory(clientId);
+  const counts = hasOrderHistory
+    ? await coOccurrenceCounts(current)
+    : new Map();
+  const boughtTogether = hasOrderHistory
+    ? buildBoughtTogetherProducts(current, localized, counts, limit)
+    : [];
 
   const [pricedSimilar, pricedBoughtTogether] = await Promise.all([
     applyClientPricing(similar, clientId),
@@ -199,6 +200,7 @@ export async function getProductRecommendations({
   return {
     similar: pricedSimilar,
     boughtTogether: pricedBoughtTogether,
+    hasOrderHistory,
     source: {
       boughtTogetherFromOrders: counts.size > 0,
     },

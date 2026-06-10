@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
+import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { readRecentlyViewed } from "@/lib/product-recently-viewed";
 import { ModaveProductCard } from "./ModaveProductCard";
 
@@ -19,6 +20,7 @@ function readLocaleFromCookie(): string {
 type RecommendationPayload = {
   similar?: Product[];
   boughtTogether?: Product[];
+  hasOrderHistory?: boolean;
 };
 
 function useRecommendationSwiper(items: Product[], selector: string) {
@@ -120,21 +122,27 @@ export function ProductDetailRecommendations({
 }) {
   const [similar, setSimilar] = useState<Product[]>([]);
   const [boughtTogether, setBoughtTogether] = useState<Product[]>([]);
+  const [hasOrderHistory, setHasOrderHistory] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
 
   useEffect(() => {
     const lang = readLocaleFromCookie();
     fetch(
       `/api/products/${encodeURIComponent(currentSlug)}/recommendations?limit=12&lang=${encodeURIComponent(lang)}`,
+      catalogFetchInit(),
     )
       .then((res) => (res.ok ? res.json() : null))
       .then((data: RecommendationPayload | null) => {
         setSimilar(data?.similar ?? []);
-        setBoughtTogether(data?.boughtTogether ?? []);
+        setHasOrderHistory(Boolean(data?.hasOrderHistory));
+        setBoughtTogether(
+          data?.hasOrderHistory ? (data?.boughtTogether ?? []) : [],
+        );
       })
       .catch(() => {
         setSimilar([]);
         setBoughtTogether([]);
+        setHasOrderHistory(false);
       });
   }, [currentSlug]);
 
@@ -159,8 +167,9 @@ export function ProductDetailRecommendations({
     () => recentlyViewed.length > 0,
     [recentlyViewed.length],
   );
+  const showBoughtTogether = hasOrderHistory && boughtTogether.length > 0;
 
-  if (!similar.length && !boughtTogether.length && !showRecentlyViewed) {
+  if (!similar.length && !showBoughtTogether && !showRecentlyViewed) {
     return null;
   }
 
@@ -177,11 +186,13 @@ export function ProductDetailRecommendations({
               Similar Products
             </a>
           </li>
-          <li className="nav-tab-item" role="presentation">
-            <a href="#boughtTogether" data-bs-toggle="tab">
-              Frequently Bought Together
-            </a>
-          </li>
+          {showBoughtTogether ? (
+            <li className="nav-tab-item" role="presentation">
+              <a href="#boughtTogether" data-bs-toggle="tab">
+                Frequently Bought Together
+              </a>
+            </li>
+          ) : null}
           {showRecentlyViewed ? (
             <li className="nav-tab-item" role="presentation">
               <a href="#recentlyViewed" data-bs-toggle="tab">
@@ -202,13 +213,15 @@ export function ProductDetailRecommendations({
               keyPrefix="similar"
             />
           </div>
-          <div className="tab-pane" id="boughtTogether" role="tabpanel">
-            <RecommendationCarousel
-              items={boughtTogether}
-              swiperClass="tf-sw-bought-together"
-              keyPrefix="bought"
-            />
-          </div>
+          {showBoughtTogether ? (
+            <div className="tab-pane" id="boughtTogether" role="tabpanel">
+              <RecommendationCarousel
+                items={boughtTogether}
+                swiperClass="tf-sw-bought-together"
+                keyPrefix="bought"
+              />
+            </div>
+          ) : null}
           {showRecentlyViewed ? (
             <div className="tab-pane" id="recentlyViewed" role="tabpanel">
               <RecommendationCarousel
