@@ -71,10 +71,20 @@ type StudioState = {
   records: StudioImageRecord[];
 };
 
+export type AiImageProvider = "vertex" | "openai" | "local";
+
+export type AiImageProviderInfo = {
+  active: AiImageProvider;
+  requested: string;
+  ready: boolean;
+  note?: string;
+};
+
 export type StudioSnapshot = {
   root: string;
   promptTemplate: string;
   records: StudioImageRecord[];
+  imageProvider: AiImageProviderInfo;
   summary: {
     total: number;
     queued: number;
@@ -422,6 +432,7 @@ export async function getStudioSnapshot(): Promise<StudioSnapshot> {
   return {
     root: resolveAiStudioProductsRoot(),
     promptTemplate: state.promptTemplate,
+    imageProvider: getAiImageProviderInfo(),
     records: records.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     summary: {
       total: records.length,
@@ -907,12 +918,101 @@ async function generateVertexImagenCatalogShoot(
   );
 }
 
-async function generateAiCatalogShoot(inputPath: string, prompt: string) {
-  const provider = (process.env.AI_IMAGE_PROVIDER || "vertex")
-    .trim()
-    .toLowerCase();
+function openAiConfigured() {
+  return Boolean(
+    process.env.OPENAI_API_KEY?.trim() || process.env.OPENAPI_API_KEY?.trim(),
+  );
+}
 
-  if (provider === "vertex" || provider === "google" || provider === "imagen") {
+function vertexConfigured() {
+  return Boolean(
+    (
+      process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT
+    )?.trim(),
+  );
+}
+
+function requestedAiImageProvider(): AiImageProvider {
+  const raw = (process.env.AI_IMAGE_PROVIDER || "vertex").trim().toLowerCase();
+  if (raw === "vertex" || raw === "google" || raw === "imagen") {
+    return "vertex";
+  }
+  if (raw === "openai") {
+    return "openai";
+  }
+  if (raw === "local") {
+    return "local";
+  }
+  throw new Error("AI_IMAGE_PROVIDER must be vertex, openai, or local");
+}
+
+/** Pick a working image provider when env is incomplete (e.g. Vertex id missing but OpenAI key set). */
+export function resolveAiImageProvider(): AiImageProviderInfo {
+  const requested = requestedAiImageProvider();
+
+  if (requested === "vertex") {
+    if (vertexConfigured()) {
+      return { active: "vertex", requested, ready: true };
+    }
+    if (openAiConfigured()) {
+      return {
+        active: "openai",
+        requested,
+        ready: true,
+        note: "GOOGLE_CLOUD_PROJECT_ID is not set — using OpenAI for catalog processing.",
+      };
+    }
+    return {
+      active: "local",
+      requested,
+      ready: true,
+      note: "Vertex and OpenAI are not configured — using local background cleanup only.",
+    };
+  }
+
+  if (requested === "openai") {
+    if (openAiConfigured()) {
+      return { active: "openai", requested, ready: true };
+    }
+    if (vertexConfigured()) {
+      return {
+        active: "vertex",
+        requested,
+        ready: true,
+        note: "OPENAI_API_KEY is not set — using Vertex Imagen instead.",
+      };
+    }
+    return {
+      active: "local",
+      requested,
+      ready: true,
+      note: "OpenAI is not configured — using local background cleanup only.",
+    };
+  }
+
+  return { active: "local", requested, ready: true };
+}
+
+export function getAiImageProviderInfo() {
+  try {
+    return resolveAiImageProvider();
+  } catch (error) {
+    return {
+      active: "local" as const,
+      requested: process.env.AI_IMAGE_PROVIDER?.trim() || "vertex",
+      ready: false,
+      note:
+        error instanceof Error
+          ? error.message
+          : "AI_IMAGE_PROVIDER must be vertex, openai, or local",
+    };
+  }
+}
+
+async function generateAiCatalogShoot(inputPath: string, prompt: string) {
+  const { active: provider } = resolveAiImageProvider();
+
+  if (provider === "vertex") {
     return generateVertexImagenCatalogShoot(inputPath, prompt);
   }
 
@@ -920,11 +1020,7 @@ async function generateAiCatalogShoot(inputPath: string, prompt: string) {
     return generateOpenAiCatalogShoot(inputPath, prompt);
   }
 
-  if (provider === "local") {
-    return generateLocalCatalogShoot(inputPath);
-  }
-
-  throw new Error("AI_IMAGE_PROVIDER must be vertex, openai, or local");
+  return generateLocalCatalogShoot(inputPath);
 }
 
 function pixelOffset(index: number) {

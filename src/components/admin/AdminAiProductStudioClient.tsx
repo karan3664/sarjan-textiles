@@ -48,10 +48,18 @@ type StudioRecord = {
   updatedAt: string;
 };
 
+type AiImageProviderInfo = {
+  active: "vertex" | "openai" | "local";
+  requested: string;
+  ready: boolean;
+  note?: string;
+};
+
 type StudioSnapshot = {
   root: string;
   promptTemplate: string;
   records: StudioRecord[];
+  imageProvider?: AiImageProviderInfo;
   summary: {
     total: number;
     queued: number;
@@ -529,8 +537,35 @@ export function AdminAiProductStudioClient() {
     },
   ];
 
+  const providerLabel =
+    snapshot?.imageProvider?.active === "openai"
+      ? "OpenAI"
+      : snapshot?.imageProvider?.active === "local"
+        ? "Local cleanup"
+        : "Vertex Imagen";
+
   return (
     <div className="sarjan-ai-studio">
+      {snapshot?.imageProvider ? (
+        <div
+          className={`sarjan-ai-provider-banner${
+            snapshot.imageProvider.ready
+              ? ""
+              : " sarjan-ai-provider-banner--warn"
+          }`}
+        >
+          <div>
+            <div className="text-title">Image provider: {providerLabel}</div>
+            <div className="body-text text-secondary">
+              Configured as <strong>{snapshot.imageProvider.requested}</strong>
+              {snapshot.imageProvider.note
+                ? ` — ${snapshot.imageProvider.note}`
+                : ""}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="sarjan-ai-studio-kpis">
         {summaryCards.map((card) => (
           <div className="wg-card" key={card.label}>
@@ -921,77 +956,81 @@ export function AdminAiProductStudioClient() {
                 )}
 
                 <div className="sarjan-ai-qa">
-                  <input
-                    placeholder="SKU for final naming"
-                    value={skuById[record.id] ?? ""}
-                    onChange={(event) =>
-                      setSkuById((current) => ({
-                        ...current,
-                        [record.id]: event.target.value,
-                      }))
-                    }
-                  />
-                  <input
-                    placeholder="QA note"
-                    value={noteById[record.id] ?? ""}
-                    onChange={(event) =>
-                      setNoteById((current) => ({
-                        ...current,
-                        [record.id]: event.target.value,
-                      }))
-                    }
-                  />
-                  <button
-                    className="tf-button style-1"
-                    type="button"
-                    onClick={() => runProcess([record.id])}
-                    disabled={busy || processing}
-                  >
-                    Reprocess
-                  </button>
-                  <button
-                    className="tf-button style-1"
-                    type="button"
-                    onClick={() => recordAction(record, "catalog_shoot")}
-                    disabled={busy}
-                  >
-                    Set Catalog
-                  </button>
-                  <button
-                    className="tf-button style-1"
-                    type="button"
-                    onClick={() => recordAction(record, "reject")}
-                    disabled={busy}
-                  >
-                    Reject
-                  </button>
-                  <button
-                    className="tf-button"
-                    type="button"
-                    onClick={() => recordAction(record, "approve")}
-                    disabled={busy || !record.outputs}
-                  >
-                    Approve
-                  </button>
-                  <label className="tf-button style-1 sarjan-ai-replace">
-                    Replace
+                  <div className="sarjan-ai-qa-fields">
                     <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      hidden
+                      placeholder="SKU for final naming"
+                      value={skuById[record.id] ?? ""}
                       onChange={(event) =>
-                        replaceRaw(record, event.target.files?.[0])
+                        setSkuById((current) => ({
+                          ...current,
+                          [record.id]: event.target.value,
+                        }))
                       }
                     />
-                  </label>
-                  <button
-                    className="tf-button style-1"
-                    type="button"
-                    onClick={() => recordAction(record, "delete")}
-                    disabled={busy}
-                  >
-                    Delete
-                  </button>
+                    <input
+                      placeholder="QA note"
+                      value={noteById[record.id] ?? ""}
+                      onChange={(event) =>
+                        setNoteById((current) => ({
+                          ...current,
+                          [record.id]: event.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="sarjan-ai-qa-actions">
+                    <button
+                      className="tf-button style-1"
+                      type="button"
+                      onClick={() => runProcess([record.id])}
+                      disabled={busy || processing}
+                    >
+                      Reprocess
+                    </button>
+                    <button
+                      className="tf-button style-1"
+                      type="button"
+                      onClick={() => recordAction(record, "catalog_shoot")}
+                      disabled={busy}
+                    >
+                      Set Catalog
+                    </button>
+                    <button
+                      className="tf-button style-1"
+                      type="button"
+                      onClick={() => recordAction(record, "reject")}
+                      disabled={busy}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      className="tf-button"
+                      type="button"
+                      onClick={() => recordAction(record, "approve")}
+                      disabled={busy || !record.outputs}
+                    >
+                      Approve
+                    </button>
+                    <label className="tf-button style-1 sarjan-ai-replace">
+                      Replace
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        hidden
+                        onChange={(event) =>
+                          replaceRaw(record, event.target.files?.[0])
+                        }
+                      />
+                    </label>
+                    <button
+                      className="tf-button style-1 sarjan-ai-danger-btn"
+                      type="button"
+                      onClick={() => recordAction(record, "delete")}
+                      disabled={busy}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             </article>

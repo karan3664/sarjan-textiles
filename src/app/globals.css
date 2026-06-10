@@ -12910,6 +12910,22 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   margin-top: 24px;
 }
 
+.sarjan-ai-provider-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 1px solid rgba(21, 101, 192, 0.22);
+  border-radius: 8px;
+  background: #eaf3ff;
+}
+
+.sarjan-ai-provider-banner--warn {
+  border-color: rgba(139, 30, 45, 0.22);
+  background: #fff8f4;
+}
+
 .sarjan-ai-studio-kpis {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -13175,21 +13191,53 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
 
 .sarjan-ai-qa {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) repeat(5, auto);
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
 }
 
-.sarjan-ai-qa input {
+.sarjan-ai-qa-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sarjan-ai-qa-fields input {
+  width: 100%;
   min-height: 42px;
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 0 12px;
 }
 
+.sarjan-ai-qa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.sarjan-ai-qa-actions .tf-button,
+.sarjan-ai-qa-actions .sarjan-ai-replace {
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+  white-space: nowrap;
+  padding: 11px 16px;
+}
+
 .sarjan-ai-replace {
   margin: 0;
   cursor: pointer;
+}
+
+.sarjan-ai-danger-btn {
+  border-color: rgba(139, 30, 45, 0.28) !important;
+  background: #fff5f5 !important;
+  color: var(--primary) !important;
+}
+
+.sarjan-ai-danger-btn:hover:not(:disabled) {
+  background: var(--primary) !important;
+  color: #fff !important;
 }
 
 .sarjan-ai-model-btn {
@@ -13214,8 +13262,8 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
     grid-template-columns: 1fr;
   }
 
-  .sarjan-ai-qa {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .sarjan-ai-qa-fields {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -13224,7 +13272,7 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   .sarjan-ai-form-grid,
   .sarjan-ai-compare,
   .sarjan-ai-meta-grid,
-  .sarjan-ai-qa {
+  .sarjan-ai-qa-fields {
     grid-template-columns: 1fr;
   }
 
