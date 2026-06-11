@@ -1,6 +1,6 @@
 /* Sarjan Textiles storefront service worker — Sprint 7 */
 
-const SW_VERSION = "sarjan-storefront-1";
+const SW_VERSION = "sarjan-storefront-20260611a";
 const STATIC_CACHE = `sarjan-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `sarjan-runtime-${SW_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -9,10 +9,6 @@ const PRECACHE_URLS = [
   OFFLINE_URL,
   "/favicon.ico",
   "/sarjan-assets/sarjan-logo.svg",
-  "/sarjan-hero.css",
-  "/sarjan-storefront-overrides.css",
-  "/sarjan-button-overrides.css",
-  "/storefront-buttons.css",
 ];
 
 const STATIC_PREFIXES = [
@@ -51,6 +47,10 @@ function isStaticAsset(pathname) {
   }
   const lower = pathname.toLowerCase();
   return STATIC_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function isStylesheet(pathname) {
+  return pathname.toLowerCase().includes(".css");
 }
 
 async function cacheFirst(request, cacheName) {
@@ -112,6 +112,22 @@ async function networkFirstNavigation(request) {
   }
 }
 
+/** Prefer network for CSS so deploys never pair fresh HTML with stale styles. */
+async function networkFirstAsset(request, cacheName) {
+  const cache = await caches.open(cacheName);
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    return cached || Response.error();
+  }
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -159,6 +175,10 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isStaticAsset(url.pathname)) {
+    if (isStylesheet(url.pathname)) {
+      event.respondWith(networkFirstAsset(request, RUNTIME_CACHE));
+      return;
+    }
     event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
     return;
   }

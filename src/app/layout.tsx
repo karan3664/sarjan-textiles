@@ -11,6 +11,7 @@ import { siteSettings } from "@/data/mock";
 import { SARJAN_ADMIN_ROUTE_HEADER } from "@/lib/admin-route";
 import { ADMIN_TEMPLATE_STYLESHEETS } from "@/lib/admin-template-styles";
 import { STOREFRONT_TEMPLATE_STYLESHEETS } from "@/lib/storefront-template-styles";
+import { storefrontStaticCss } from "@/lib/storefront-static-css-version";
 import { pageMetadata } from "@/lib/seo";
 import { DEFAULT_STOREFRONT_LOCALE } from "@/lib/server-locale";
 import { ChunkLoadRecovery } from "@/components/shared/ChunkLoadRecovery";
@@ -112,14 +113,36 @@ export default async function RootLayout({
         ) : (
           <>
             {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
-              <link key={href} rel="stylesheet" href={href} />
+              <link
+                key={href}
+                rel="stylesheet"
+                href={storefrontStaticCss(href)}
+              />
             ))}
-            <link rel="stylesheet" href="/sarjan-home.css" />
-            <link rel="stylesheet" href="/sarjan-storefront-overrides.css" />
-            <link rel="stylesheet" href="/sarjan-button-overrides.css" />
-            <link rel="stylesheet" href="/storefront-buttons.css" />
-            <link rel="stylesheet" href="/sarjan-hero.css" />
-            <link rel="stylesheet" href="/sarjan-pdp-cta.css?v=20260526d" />
+            <link
+              rel="stylesheet"
+              href={storefrontStaticCss("/sarjan-home.css")}
+            />
+            <link
+              rel="stylesheet"
+              href={storefrontStaticCss("/sarjan-storefront-overrides.css")}
+            />
+            <link
+              rel="stylesheet"
+              href={storefrontStaticCss("/sarjan-button-overrides.css")}
+            />
+            <link
+              rel="stylesheet"
+              href={storefrontStaticCss("/storefront-buttons.css")}
+            />
+            <link
+              rel="stylesheet"
+              href={storefrontStaticCss("/sarjan-hero.css")}
+            />
+            <link
+              rel="stylesheet"
+              href={storefrontStaticCss("/sarjan-pdp-cta.css")}
+            />
           </>
         )}
       </head>
