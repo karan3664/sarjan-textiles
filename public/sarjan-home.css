@@ -1,0 +1,523 @@
+/**
+ * Sarjan homepage — unified full-width B2B ecommerce rhythm.
+ */
+
+.sarjan-home {
+  --sarjan-home-cream: #faf8f5;
+  --sarjan-home-ink: #181818;
+  --sarjan-home-muted: #64666c;
+  --sarjan-home-gold: #c89b3c;
+  --sarjan-home-wine: #7a1f1f;
+  --sarjan-home-banner-h: clamp(380px, 44vw, min(76svh, 620px));
+  --sarjan-home-pad-y: clamp(40px, 5vw, 64px);
+  --sarjan-home-edge: clamp(16px, 4vw, 48px);
+  background: #fff;
+}
+
+/* Shared section rhythm — full bleed backgrounds */
+.sarjan-home .sarjan-home-section {
+  width: 100%;
+  max-width: none;
+  padding-top: var(--sarjan-home-pad-y);
+  padding-bottom: var(--sarjan-home-pad-y);
+  background: #fff;
+  border-bottom: 1px solid rgba(24, 24, 24, 0.06);
+}
+
+.sarjan-home .sarjan-home-section:last-child {
+  border-bottom: 0;
+}
+
+.sarjan-home .sarjan-home-section--alt {
+  background: var(--sarjan-home-cream);
+}
+
+.sarjan-home .sarjan-home-section-head {
+  margin-bottom: clamp(24px, 4vw, 36px);
+}
+
+.sarjan-home .sarjan-home-section-head .heading {
+  margin-bottom: 10px;
+  font-size: clamp(22px, 3.2vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--sarjan-home-ink);
+}
+
+.sarjan-home .sarjan-home-section-head .heading::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin: 12px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sarjan-home-gold),
+    transparent
+  );
+}
+
+.sarjan-home .sarjan-home-section-head .subheading {
+  max-width: 52ch;
+  margin-inline: auto;
+  font-size: clamp(14px, 1.8vw, 16px);
+  line-height: 1.6;
+  color: var(--sarjan-home-muted);
+}
+
+/* Category strip — edge-to-edge */
+.sarjan-home-categories {
+  padding-top: var(--sarjan-home-pad-y);
+  padding-bottom: var(--sarjan-home-pad-y);
+  background: var(--sarjan-home-cream);
+}
+
+.sarjan-home-categories .sarjan-home-category-swiper {
+  overflow: hidden;
+  padding-inline: var(--sarjan-home-edge);
+}
+
+.sarjan-home-categories .collection-position-2 {
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sarjan-home-categories .collection-position-2:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(122, 31, 31, 0.35);
+  }
+}
+
+.sarjan-home-categories .collection-position-2 .img-style {
+  position: relative;
+}
+
+.sarjan-home-categories .collection-position-2 .img-style::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 42%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+.sarjan-home-categories .collection-position-2 .content {
+  left: 50%;
+  right: auto;
+  bottom: clamp(14px, 2.5vw, 20px);
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 220px;
+  text-align: center;
+}
+
+.sarjan-home-categories .collection-position-2 .cls-btn {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--sarjan-home-ink);
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  justify-content: center;
+}
+
+.sarjan-home-categories .collection-position-2 .cls-btn .icon {
+  display: none;
+}
+
+.sarjan-home-categories .sw-pagination-collection {
+  margin-top: 18px;
+}
+
+/* Marquee — full-width ribbon */
+.sarjan-home-marquee {
+  padding-top: 0;
+  padding-bottom: 0;
+  background: var(--sarjan-home-cream);
+  border-bottom: 1px solid rgba(24, 24, 24, 0.06);
+}
+
+.sarjan-home-marquee-inner {
+  width: 100%;
+  border-block: 0;
+  background: var(--sarjan-home-cream);
+}
+
+.sarjan-home-marquee .sarjan-home-marquee-band {
+  padding: 10px 0;
+  border: 0;
+}
+
+.sarjan-home-marquee .sarjan-home-marquee-band + .sarjan-home-marquee-band {
+  border-top: 1px dashed rgba(24, 24, 24, 0.1);
+}
+
+.sarjan-home-marquee .marquee-child-item h3 {
+  margin: 0;
+  font-size: clamp(11px, 1.4vw, 13px) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sarjan-home-ink);
+  white-space: nowrap;
+}
+
+.sarjan-home-marquee .marquee-child-item .icon,
+.sarjan-home-marquee .sarjan-marquee-separator-img {
+  font-size: 14px !important;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  color: var(--sarjan-home-wine);
+  opacity: 0.85;
+}
+
+.sarjan-home-marquee .marquee-child-item {
+  padding-left: clamp(12px, 2vw, 22px);
+  padding-right: clamp(12px, 2vw, 22px);
+}
+
+/* Product rails — Myntra-style B2B cards */
+.sarjan-home-products {
+  background: #fff;
+}
+
+.sarjan-home-products .container {
+  max-width: 100%;
+  padding-inline: var(--sarjan-home-edge);
+}
+
+.sarjan-home-products .swiper-slide {
+  height: auto;
+  display: flex;
+}
+
+.sarjan-home-products .swiper-slide > .card-product {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sarjan-home-products .card-product {
+  border-radius: 0;
+  overflow: visible;
+  background: #fff;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  box-shadow: 0 1px 4px rgba(24, 24, 24, 0.05);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.sarjan-home-products .card-product .card-product-wrapper {
+  border-radius: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sarjan-home-products .card-product .product-img {
+  background: #fafafa;
+}
+
+.sarjan-home-products
+  .card-product
+  .product-img
+  img.sarjan-product-img-placeholder {
+  padding: 14%;
+  background: #fafafa !important;
+}
+
+.sarjan-home-products .card-product .card-product-info {
+  padding: 14px 14px 16px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sarjan-home-products .card-product .card-product-info .title {
+  font-size: clamp(13px, 1.6vw, 15px);
+  line-height: 1.4;
+  font-weight: 500;
+  margin-bottom: 4px;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.4em * 2);
+  word-break: break-word;
+}
+
+.sarjan-home-products .card-product .sarjan-deal-price-row {
+  margin-bottom: 2px;
+}
+
+.sarjan-home-products .card-product .card-product-info .price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sarjan-home-ink);
+}
+
+.sarjan-home-products .card-product .card-product-info .text-secondary.small {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--sarjan-home-muted);
+  margin-top: auto;
+}
+
+.sarjan-home-products .card-product .sarjan-product-card-rating {
+  top: 10px;
+  right: 10px;
+  border-radius: 4px;
+}
+
+.sarjan-home-products .card-product .list-product-btn .box-icon {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sarjan-home-products .card-product .btn-main-product {
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--sarjan-home-ink);
+  min-height: 42px;
+  font-weight: 600;
+  justify-content: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sarjan-home-products .card-product:hover {
+    border-color: rgba(200, 155, 60, 0.5);
+    box-shadow: 0 10px 28px rgba(24, 24, 24, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .sarjan-home-products .card-product:hover .btn-main-product {
+    background: var(--sarjan-home-ink);
+    color: #fff;
+    border-color: var(--sarjan-home-ink);
+  }
+}
+
+.sarjan-home-products .sw-pagination-latest,
+.sarjan-home-products .sw-pagination-recent {
+  margin-top: 20px;
+}
+
+@media (max-width: 767.98px) {
+  .sarjan-home-products .card-product .card-product-info {
+    padding: 12px 12px 14px;
+  }
+
+  .sarjan-home-products .card-product .card-product-info .title {
+    min-height: 0;
+    font-size: 14px;
+  }
+
+  .sarjan-home-products .card-product .btn-main-product {
+    min-height: 40px;
+    font-size: 12px;
+  }
+}
+
+/* Featured product — full width, flat */
+.sarjan-home-featured {
+  padding-top: 0;
+  padding-bottom: 0;
+  background: var(--sarjan-home-cream);
+  border-bottom: 1px solid rgba(24, 24, 24, 0.06);
+}
+
+.sarjan-home-featured-product {
+  padding-top: var(--sarjan-home-pad-y) !important;
+  padding-bottom: var(--sarjan-home-pad-y) !important;
+  background: transparent !important;
+}
+
+.sarjan-home-featured-product .container {
+  max-width: 100%;
+  padding-inline: var(--sarjan-home-edge);
+}
+
+.sarjan-home-featured-product .flat-single-home {
+  background: #fff;
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  overflow: hidden;
+  margin: 0;
+  padding: clamp(16px, 3vw, 28px);
+}
+
+/* Services — full width */
+.sarjan-home-services {
+  padding-top: 0;
+  padding-bottom: 0;
+  background: var(--sarjan-home-cream);
+}
+
+.sarjan-home-services-strip {
+  padding-top: var(--sarjan-home-pad-y) !important;
+  padding-bottom: var(--sarjan-home-pad-y) !important;
+  background: var(--sarjan-home-cream);
+  border-top: 0;
+}
+
+.sarjan-home-services-strip .container {
+  max-width: 100%;
+  padding-inline: var(--sarjan-home-edge);
+}
+
+.sarjan-home-services .tf-icon-box {
+  padding: 20px 16px;
+  border-radius: 0;
+  background: #fff;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  height: 100%;
+}
+
+.sarjan-home-services .tf-icon-box .icon-box .icon {
+  color: var(--sarjan-home-wine);
+}
+
+/* Partner CTA — full-width banner height */
+.sarjan-home .sarjan-partner-cta-band {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  min-height: var(--sarjan-home-banner-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    #6b1818 0%,
+    var(--sarjan-home-wine) 48%,
+    #5c1414 100%
+  );
+  border-bottom: 0;
+}
+
+.sarjan-home .sarjan-partner-cta-band .container {
+  width: 100%;
+  max-width: min(100%, 920px);
+  padding: clamp(32px, 6vw, 56px) var(--sarjan-home-edge);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.sarjan-home .sarjan-partner-cta-band .heading-section {
+  margin-bottom: 0;
+}
+
+.sarjan-home .sarjan-partner-cta-band .heading {
+  font-size: clamp(24px, 4.5vw, 42px);
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #fff !important;
+  margin-bottom: 12px;
+}
+
+.sarjan-home .sarjan-partner-cta-band .subheading {
+  font-size: clamp(15px, 2.2vw, 18px);
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.92) !important;
+  max-width: 56ch;
+  margin-inline: auto;
+}
+
+.sarjan-home .sarjan-partner-cta-band .heading::after {
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+}
+
+.sarjan-home .sarjan-partner-cta-band .sarjan-custom-section-banner {
+  justify-items: center;
+  margin-top: 8px;
+}
+
+.sarjan-home .sarjan-partner-cta-band .tf-btn {
+  min-height: 46px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  margin-top: 0;
+}
+
+/* Testimonials + gallery + brands */
+.sarjan-home-testimonials {
+  background: var(--sarjan-home-cream);
+}
+
+.sarjan-home-testimonials .container,
+.sarjan-home-gallery .container {
+  max-width: 100%;
+  padding-inline: var(--sarjan-home-edge);
+}
+
+.sarjan-home-gallery {
+  background: #fff;
+}
+
+.sarjan-home-brands {
+  padding-top: var(--sarjan-home-pad-y) !important;
+  padding-bottom: var(--sarjan-home-pad-y) !important;
+  background: var(--sarjan-home-cream);
+}
+
+.sarjan-home-brands .swiper {
+  padding-inline: var(--sarjan-home-edge);
+}
+
+.sarjan-home-brands .brand-item img {
+  opacity: 0.72;
+  filter: grayscale(0.35);
+  transition:
+    opacity 0.25s ease,
+    filter 0.25s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sarjan-home-brands .brand-item:hover img {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .sarjan-home {
+    --sarjan-home-banner-h: auto;
+    --sarjan-home-pad-y: 32px;
+    --sarjan-home-edge: 16px;
+  }
+
+  .sarjan-home .sarjan-partner-cta-band {
+    min-height: 0;
+  }
+
+  .sarjan-home .sarjan-partner-cta-band .container {
+    padding-block: clamp(40px, 10vw, 56px);
+  }
+
+  .sarjan-home-categories .collection-position-2 .content {
+    max-width: 100%;
+  }
+}

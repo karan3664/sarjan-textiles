@@ -35,7 +35,7 @@ export function AdminLoaderMarkup() {
       <div className="sarjan-admin-loader-card">
         <div className="sarjan-admin-loader-logo">
           <img
-            src="/sarjan-assets/sarjan-logo-icon.png"
+            src="/sarjan-assets/sarjan-logo-full.png"
             alt="Sarjan Textiles"
           />
         </div>

@@ -47,8 +47,10 @@ import {
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { CmsHtml } from "@/components/shared/CmsHtml";
+import { isCmsHtmlContent, splitCmsTextParagraphs } from "@/lib/cms-html";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
+import { HomeBannerStack } from "./HomeBannerStack";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
@@ -180,7 +182,7 @@ function ProductFeature({ product }: { product: Product }) {
   const altText = buildProductImageAlt(product);
 
   return (
-    <section className="flat-spacing bg-surface">
+    <section className="flat-spacing bg-surface sarjan-home-featured-product">
       <div className="container">
         <div className="row flat-single-home">
           <div className="col-md-6">
@@ -329,7 +331,7 @@ function ServiceIconBox({
   services?: typeof defaultHome.services;
 }) {
   return (
-    <section className="flat-spacing pt-0 line-bottom-container">
+    <section className="flat-spacing pt-0 line-bottom-container sarjan-home-services-strip">
       <div className="container">
         <div
           dir="ltr"
@@ -395,11 +397,23 @@ function renderCustomBlock(
           </h4>
         ) : null}
         {hasBody ? (
-          <CmsHtml
-            html={block.body!}
-            as="div"
-            className="sarjan-custom-text-body text-secondary"
-          />
+          isCmsHtmlContent(block.body!) ? (
+            <CmsHtml
+              html={block.body!}
+              as="div"
+              className="sarjan-custom-text-body text-secondary"
+            />
+          ) : (
+            <div className="sarjan-custom-text-body text-secondary">
+              {splitCmsTextParagraphs(block.body!).map((paragraph, index) => (
+                <CmsHtml
+                  key={`${block.id}-p-${index}`}
+                  html={paragraph}
+                  as="p"
+                />
+              ))}
+            </div>
+          )
         ) : null}
       </div>
     );
@@ -503,14 +517,14 @@ function CustomHomeSection({
 
   const sectionClass =
     section.id === "partner-cta"
-      ? "sarjan-custom-storefront-section sarjan-partner-cta-band"
-      : "sarjan-custom-storefront-section";
+      ? "sarjan-home-section sarjan-custom-storefront-section sarjan-partner-cta-band"
+      : "sarjan-home-section sarjan-custom-storefront-section";
 
   return (
     <section className={sectionClass}>
       <div className="container">
         {hasTitle || hasSubtitle ? (
-          <div className="heading-section text-center sarjan-custom-site-heading">
+          <div className="heading-section sarjan-home-section-head text-center sarjan-custom-site-heading">
             {hasTitle ? (
               <h3 className="heading">
                 <CmsHtml html={section.title!} />
@@ -577,16 +591,14 @@ export async function HomeDynamic() {
       videoUrl?: string;
     };
   };
-  const heroImages = (
-    Array.isArray(homeContent.hero.images) && homeContent.hero.images.length
-      ? homeContent.hero.images
-      : [home.hero.image]
-  ).filter(Boolean);
   const bannerSlides = normalizeHomeBanners(
     homeContent as typeof homeContent & {
       banners?: import("@/lib/home-banners").CmsHomeBanner[];
     },
   );
+  const heroUsesVideo =
+    Boolean(homeContent.hero.videoEnabled) &&
+    (homeContent.hero.videoUrls?.length || homeContent.hero.videoUrl?.trim());
   const products = applyProductDeals(resolveProducts(cms.products, locale));
   const approvedTestimonials = resolveTestimonials(
     cms.testimonials.filter((testimonial) => testimonial.status === "approved"),
@@ -607,30 +619,38 @@ export async function HomeDynamic() {
 
   const renderers: Record<HomeSectionType, ReactNode> = {
     hero: (
-      <HomeHeroRotator
-        images={heroImages}
-        bannerSlides={bannerSlides}
-        title={home.hero.title}
-        description={home.hero.description}
-        cta={home.hero.primaryCta}
-        secondaryCta={
-          homeContent.hero.secondaryCta
-            ? {
-                label: homeContent.hero.secondaryCta.label ?? "",
-                href: homeContent.hero.secondaryCta.href ?? "",
-              }
-            : undefined
-        }
-        videoEnabled={Boolean(homeContent.hero.videoEnabled)}
-        videoUrls={homeContent.hero.videoUrls}
-        videoUrl={homeContent.hero.videoUrl ?? ""}
-      />
+      <>
+        <HomeBannerStack
+          banners={bannerSlides}
+          home={{ hero: homeContent.hero }}
+          secondaryCta={
+            homeContent.hero.secondaryCta
+              ? {
+                  label: homeContent.hero.secondaryCta.label ?? "",
+                  href: homeContent.hero.secondaryCta.href ?? "",
+                }
+              : undefined
+          }
+        />
+        {heroUsesVideo ? (
+          <HomeHeroRotator
+            images={[]}
+            bannerSlides={[]}
+            title={home.hero.title}
+            description={home.hero.description}
+            cta={home.hero.primaryCta}
+            videoEnabled
+            videoUrls={homeContent.hero.videoUrls}
+            videoUrl={homeContent.hero.videoUrl ?? ""}
+          />
+        ) : null}
+      </>
     ),
     categories: (
-      <section className="space-30 sarjan-category-strip">
+      <section className="sarjan-home-section sarjan-home-categories sarjan-category-strip">
         <div
           dir="ltr"
-          className="swiper tf-sw-collection"
+          className="swiper tf-sw-collection sarjan-home-category-swiper"
           data-preview="3"
           data-tablet="2"
           data-mobile="1"
@@ -680,9 +700,12 @@ export async function HomeDynamic() {
       </section>
     ),
     topPicks: (
-      <section className="flat-spacing" id="catalog">
+      <section
+        className="sarjan-home-section sarjan-home-products"
+        id="catalog"
+      >
         <div className="container">
-          <div className="heading-section text-center wow fadeInUp">
+          <div className="heading-section sarjan-home-section-head text-center wow fadeInUp">
             <h3 className="heading">
               <CmsHtml
                 html={homeContent.topPicksTitle ?? "Today's Top Picks"}
@@ -728,28 +751,34 @@ export async function HomeDynamic() {
       </section>
     ),
     marquee: (
-      <section className="flat-spacing pt-0">
-        <div className="tf-marquee marquee-style2">
-          <MarqueeBand
-            items={home.marqueeTop}
-            iconClass={home.marqueeIcon}
-            iconImage={home.marqueeIconImage}
-          />
-        </div>
-        <div className="tf-marquee marquee-style2 marquee-animation-right">
-          <MarqueeBand
-            items={home.marqueeBottom}
-            iconClass={home.marqueeIcon}
-            iconImage={home.marqueeIconImage}
-          />
+      <section className="sarjan-home-section sarjan-home-marquee">
+        <div className="sarjan-home-marquee-inner">
+          <div className="tf-marquee marquee-style2 sarjan-home-marquee-band">
+            <MarqueeBand
+              items={home.marqueeTop}
+              iconClass={home.marqueeIcon}
+              iconImage={home.marqueeIconImage}
+            />
+          </div>
+          <div className="tf-marquee marquee-style2 marquee-animation-right sarjan-home-marquee-band">
+            <MarqueeBand
+              items={home.marqueeBottom}
+              iconClass={home.marqueeIcon}
+              iconImage={home.marqueeIconImage}
+            />
+          </div>
         </div>
       </section>
     ),
-    featuredProduct: featured ? <ProductFeature product={featured} /> : null,
+    featuredProduct: featured ? (
+      <div className="sarjan-home-section sarjan-home-featured">
+        <ProductFeature product={featured} />
+      </div>
+    ) : null,
     trendingProducts: (
-      <section className="flat-spacing">
+      <section className="sarjan-home-section sarjan-home-products sarjan-home-section--alt">
         <div className="container">
-          <div className="heading-section text-center wow fadeInUp">
+          <div className="heading-section sarjan-home-section-head text-center wow fadeInUp">
             <h3 className="heading">
               <CmsHtml html={home.trendingTitle} />
             </h3>
@@ -788,12 +817,16 @@ export async function HomeDynamic() {
         </div>
       </section>
     ),
-    services: <ServiceIconBox services={home.services} />,
+    services: (
+      <div className="sarjan-home-section sarjan-home-services">
+        <ServiceIconBox services={home.services} />
+      </div>
+    ),
     testimonials:
       approvedTestimonials.length > 0 ? (
-        <section className="flat-spacing">
+        <section className="sarjan-home-section sarjan-home-testimonials">
           <div className="container">
-            <div className="heading-section text-center wow fadeInUp">
+            <div className="heading-section sarjan-home-section-head text-center wow fadeInUp">
               <h3 className="heading">
                 <CmsHtml
                   html={homeContent.testimonialsTitle ?? "Customer Say!"}
@@ -876,9 +909,9 @@ export async function HomeDynamic() {
         </section>
       ) : null,
     gallery: (
-      <section className="flat-spacing pt-0 sarjan-instagram-gallery-section">
+      <section className="sarjan-home-section sarjan-home-gallery sarjan-instagram-gallery-section">
         <div className="container">
-          <div className="heading-section text-center wow fadeInUp">
+          <div className="heading-section sarjan-home-section-head text-center wow fadeInUp">
             <h3 className="heading">
               <CmsHtml html={home.galleryTitle} />
             </h3>
@@ -905,7 +938,7 @@ export async function HomeDynamic() {
       </section>
     ),
     brands: (
-      <section className="flat-spacing-5 line-top">
+      <section className="sarjan-home-section sarjan-home-brands flat-spacing-5 line-top">
         <div
           dir="ltr"
           className="swiper tf-sw-partner sw-auto"
@@ -937,7 +970,7 @@ export async function HomeDynamic() {
   };
 
   return (
-    <>
+    <div className="sarjan-home">
       {sections.map((section, index) => (
         <Fragment key={`${section.id}-${index}`}>
           {section.type === "custom" ? (
@@ -953,7 +986,7 @@ export async function HomeDynamic() {
           )}
         </Fragment>
       ))}
-    </>
+    </div>
   );
 }
 

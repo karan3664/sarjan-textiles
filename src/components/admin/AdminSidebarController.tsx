@@ -3,22 +3,26 @@
 import { useEffect } from "react";
 
 function isMobileAdmin() {
-  return window.matchMedia("(max-width: 1199px)").matches;
+  return window.matchMedia("(max-width: 1200px)").matches;
 }
 
 export function AdminSidebarController() {
   useEffect(() => {
     const layout = () => document.querySelector<HTMLElement>(".layout-wrap");
     const cleanupDuplicateMenuItems = () => {
-      document.querySelectorAll<HTMLElement>(".section-menu-left").forEach((sidebar) => {
-        const seen = new Set<string>();
-        sidebar.querySelectorAll<HTMLLIElement>(".menu-item").forEach((item) => {
-          const link = item.querySelector<HTMLAnchorElement>("a");
-          const key = `${link?.getAttribute("href") ?? ""}|${item.textContent?.trim() ?? ""}`;
-          if (seen.has(key)) item.remove();
-          else seen.add(key);
+      document
+        .querySelectorAll<HTMLElement>(".section-menu-left")
+        .forEach((sidebar) => {
+          const seen = new Set<string>();
+          sidebar
+            .querySelectorAll<HTMLLIElement>(".menu-item")
+            .forEach((item) => {
+              const link = item.querySelector<HTMLAnchorElement>("a");
+              const key = `${link?.getAttribute("href") ?? ""}|${item.textContent?.trim() ?? ""}`;
+              if (seen.has(key)) item.remove();
+              else seen.add(key);
+            });
         });
-      });
     };
 
     const closeMobileMenu = () => {
@@ -29,7 +33,9 @@ export function AdminSidebarController() {
       const target = event.target as HTMLElement;
       const toggle = target.closest<HTMLElement>("[data-admin-menu-toggle]");
       const close = target.closest<HTMLElement>("[data-admin-menu-close]");
-      const backdrop = target.closest<HTMLElement>(".section-menu-left .menu-backdrop");
+      const backdrop = target.closest<HTMLElement>(
+        ".section-menu-left .menu-backdrop",
+      );
 
       if (toggle) {
         event.preventDefault();
@@ -62,7 +68,11 @@ export function AdminSidebarController() {
 
     cleanupDuplicateMenuItems();
     const observer = new MutationObserver(cleanupDuplicateMenuItems);
-    document.querySelectorAll(".section-menu-left").forEach((node) => observer.observe(node, { childList: true, subtree: true }));
+    document
+      .querySelectorAll(".section-menu-left")
+      .forEach((node) =>
+        observer.observe(node, { childList: true, subtree: true }),
+      );
 
     document.addEventListener("click", onClick, true);
     window.addEventListener("resize", onResize);

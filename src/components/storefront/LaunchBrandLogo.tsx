@@ -1,6 +1,6 @@
 import { siteSettings } from "@/data/mock";
 
-/** Original Sarjan logo; black matte in PNG is removed via CSS blend on the dark launch page. */
+/** Original Sarjan logo on white background. */
 export function LaunchBrandLogo() {
   return (
     <img

@@ -122,12 +122,6 @@ export default async function AdminLoginPage({
           </span>
         </div>
 
-        <p className="sarjan-admin-login-hint text-caption-1 text-secondary">
-          Local: use <code className="text-1">ADMIN_PASSWORD</code> in{" "}
-          <code className="text-1">.env.local</code> (default{" "}
-          <code className="text-1">admin123</code>).
-        </p>
-
         {message ? (
           <div
             className="sarjan-admin-login-error"

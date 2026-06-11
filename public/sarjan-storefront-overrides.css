@@ -1,6 +1,29 @@
 /**
  * Loaded after Modave template CSS — cart/checkout thumb fixes + brand logo sizing.
  */
+
+/* Modave fades .img-product on every card hover even without a second image */
+.card-product
+  .card-product-wrapper:not(:has(.sarjan-product-img-hover)):hover
+  .product-img
+  .img-product,
+.card-product
+  .card-product-wrapper.sarjan-product-card--no-hover-swap:hover
+  .product-img
+  .img-product {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.card-product
+  .card-product-wrapper:has(.sarjan-product-img-hover):hover
+  .product-img
+  .img-hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
 .sidebar-checkout-content .item-product .img-product img,
 .tf-cart-item .tf-cart-item_product .img-box img,
 .modal-shopping-cart .tf-mini-cart-item .tf-mini-cart-image img {
@@ -19,7 +42,7 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  background: #f4f1ec;
+  background: #ffffff;
 }
 
 .sidebar-checkout-content

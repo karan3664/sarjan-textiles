@@ -1348,7 +1348,7 @@ export function AdminHomePageClient({
                     <div className="text-caption-1 text-secondary">
                       {section.type}
                       {section.type === "hero"
-                        ? ` · ${bannerSlides.length} slide${bannerSlides.length === 1 ? "" : "s"}`
+                        ? ` · ${bannerSlides.length} banner${bannerSlides.length === 1 ? "" : "s"}`
                         : section.type === "bannerCarousel"
                           ? ` · ${sectionBannerSlides(index).length} slide${sectionBannerSlides(index).length === 1 ? "" : "s"}`
                           : ""}
@@ -1415,9 +1415,10 @@ export function AdminHomePageClient({
                 expandedSectionIds.has(section.id) && (
                   <div className="sarjan-section-banner-editor">
                     <div className="body-text text-secondary mb-16">
-                      Main hero carousel — add multiple slides with image, text,
-                      fonts, and button. Use Up/Down above to move this block
-                      anywhere on the page. Optional video slides below.
+                      Homepage banners — har banner alag full-width section ke
+                      roop mein dikhega (carousel nahi). Image, heading,
+                      description aur button yahan se edit karein. Optional
+                      video section neeche add kar sakte hain.
                     </div>
                     <AdminHomeBannerSlides
                       banners={bannerSlides}

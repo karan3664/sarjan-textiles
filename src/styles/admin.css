@@ -16,6 +16,141 @@
   animation: sarjanAdminLoaderFallback 0.24s ease 3s forwards;
 }
 
+/* Critical admin shell layout — keeps sidebar/header stable if vendor CSS is delayed */
+body.sarjan-admin .sarjan-admin-shell .section-menu-left {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
+  height: 100%;
+  z-index: 20;
+}
+
+body.sarjan-admin .sarjan-admin-shell .section-menu-left > .box-logo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  width: 260px;
+  height: 52px;
+  min-height: 52px;
+  padding: 7px 12px 7px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #181818;
+}
+
+body.sarjan-admin
+  .sarjan-admin-shell
+  .section-menu-left
+  .sarjan-admin-sidebar-logo
+  img,
+body.sarjan-admin .sarjan-admin-shell .section-menu-left .box-logo img {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  object-fit: contain;
+}
+
+body.sarjan-admin .sarjan-admin-shell .section-content-right .main-content {
+  min-height: 100vh;
+  padding-top: 68px;
+  padding-left: 260px;
+}
+
+body.sarjan-admin .sarjan-admin-shell .section-content-right .header-dashboard {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 260px;
+  z-index: 10;
+}
+
+/* Sidebar collapse — must override critical shell rules above (higher specificity) */
+body.sarjan-admin
+  .layout-wrap.full-width.sarjan-admin-shell
+  .section-menu-left {
+  left: -260px;
+}
+
+body.sarjan-admin
+  .layout-wrap.full-width.sarjan-admin-shell
+  .section-menu-left
+  > .box-logo {
+  left: -260px;
+}
+
+body.sarjan-admin
+  .layout-wrap.full-width.sarjan-admin-shell
+  .section-content-right
+  .main-content {
+  padding-left: 0;
+}
+
+body.sarjan-admin
+  .layout-wrap.full-width.sarjan-admin-shell
+  .section-content-right
+  .header-dashboard {
+  left: 0;
+}
+
+@media (max-width: 1200px) {
+  body.sarjan-admin .sarjan-admin-shell .section-menu-left {
+    left: -100%;
+  }
+
+  body.sarjan-admin .sarjan-admin-shell .section-menu-left > .box-logo {
+    left: -100%;
+  }
+
+  body.sarjan-admin .sarjan-admin-shell .section-menu-left .menu-backdrop {
+    display: block;
+  }
+
+  body.sarjan-admin .sarjan-admin-shell .section-content-right .main-content {
+    padding-left: 0;
+  }
+
+  body.sarjan-admin
+    .sarjan-admin-shell
+    .section-content-right
+    .header-dashboard {
+    left: 0;
+    width: 100%;
+  }
+
+  body.sarjan-admin
+    .layout-wrap.full-width.sarjan-admin-shell
+    .section-menu-left {
+    left: 0;
+  }
+
+  body.sarjan-admin
+    .layout-wrap.full-width.sarjan-admin-shell
+    .section-menu-left
+    > .box-logo {
+    left: 0;
+  }
+
+  body.sarjan-admin
+    .layout-wrap.full-width.sarjan-admin-shell
+    .section-menu-left
+    .menu-backdrop {
+    opacity: 0.5;
+    visibility: visible;
+  }
+}
+
+body.sarjan-admin img {
+  max-width: 100%;
+  height: auto;
+}
+
 .sarjan-admin-loader-card {
   position: relative;
   display: grid;
@@ -1085,6 +1220,10 @@ body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
   background: #f4f1ec;
 }
 
+.sarjan-product-table-image.sarjan-product-table-image--placeholder {
+  background: #ffffff;
+}
+
 .sarjan-product-table-image img {
   width: 100%;
   height: 100%;
@@ -1096,14 +1235,14 @@ img.sarjan-product-img-placeholder {
   object-fit: contain !important;
   object-position: center;
   padding: 4%;
-  background: #f8f6f3;
+  background: #ffffff;
   box-sizing: border-box;
 }
 
 .card-product .product-img img.sarjan-product-img-placeholder {
   object-fit: contain !important;
-  padding: 3%;
-  background: #f8f6f3;
+  padding: 8%;
+  background: #ffffff;
 }
 
 .tf-product-media-thumbs .item img.sarjan-product-img-placeholder,
@@ -1111,13 +1250,13 @@ img.sarjan-product-img-placeholder {
 .tf-add-cart-product .image img.sarjan-product-img-placeholder {
   object-fit: contain !important;
   padding: 4%;
-  background: #f8f6f3;
+  background: #ffffff;
 }
 
 .sarjan-card-img img.sarjan-product-img-placeholder {
   object-fit: contain !important;
   padding: 3%;
-  background: #f8f6f3;
+  background: #ffffff;
 }
 
 .tf-cart-item .img-box img.sarjan-product-img-placeholder,
@@ -1135,7 +1274,7 @@ img.sarjan-product-img-placeholder {
   object-fit: contain !important;
   object-position: center !important;
   padding: 4% !important;
-  background: #f8f6f3;
+  background: #ffffff;
   box-sizing: border-box !important;
 }
 
@@ -1151,7 +1290,7 @@ img.sarjan-product-img-placeholder {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  background: #f4f1ec;
+  background: #ffffff;
 }
 
 .tf-cart-item
@@ -4388,8 +4527,6 @@ img.sarjan-product-img-placeholder {
   }
 }
 
-/* Emoji field + picker styles live in emoji-picker.css (via globals.css). */
-
 @media (max-width: 1199px) {
   .sarjan-admin-section-grid,
   .sarjan-admin-chart-grid {
@@ -5193,11 +5330,11 @@ img.sarjan-product-img-placeholder {
 }
 .sarjan-admin-login-card {
   display: grid;
-  gap: 7px;
+  gap: 12px;
   width: min(100%, 420px);
-  padding: 17px;
+  padding: 28px 24px 24px;
   border: 1px solid rgba(24, 24, 24, 0.08);
-  border-radius: 8px;
+  border-radius: 16px;
   background: #fff;
   box-shadow: 0 24px 70px rgba(24, 24, 24, 0.12);
 }
@@ -5205,12 +5342,16 @@ img.sarjan-product-img-placeholder {
 .sarjan-admin-login-card .sarjan-admin-login-logo {
   display: block;
   width: auto;
-  max-width: min(100%, 200px);
+  max-width: min(100%, 240px);
   height: auto;
-  max-height: 48px;
-  margin: 0 auto 2px;
+  max-height: 88px;
+  margin: 0 auto 10px;
+  padding: 12px 16px;
   object-fit: contain;
   justify-self: center;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(24, 24, 24, 0.06);
 }
 .sarjan-admin-login-card h3 {
   margin: 0;
@@ -5277,11 +5418,17 @@ img.sarjan-product-img-placeholder {
 }
 .sarjan-admin-login-card button[type="submit"] {
   height: 48px;
+  margin-top: 4px;
   border: 0;
   border-radius: 8px;
   color: #fff;
-  background: #181818;
+  background: #8b1e2d;
   font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.sarjan-admin-login-card button[type="submit"]:hover {
+  background: #6f1824;
 }
 .sarjan-admin-login-error {
   padding: 10px 12px;
@@ -5390,8 +5537,6 @@ img.sarjan-product-img-placeholder {
   gap: 10px;
 }
 .sarjan-admin-shell {
-  display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
   min-height: 100vh;
   background: #f7f7f5;
 }
@@ -5413,29 +5558,6 @@ img.sarjan-product-img-placeholder {
     flex: 1 1 auto;
     min-width: 0;
     max-width: none;
-  }
-
-  .sarjan-hero,
-  .sarjan-detail-grid,
-  .sarjan-admin-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sarjan-hero {
-    min-height: auto;
-  }
-
-  .sarjan-hero-media {
-    min-height: 360px;
-  }
-
-  .form-search-result,
-  .form-order-tracking {
-    flex-direction: column;
-  }
-
-  .account-details .form-account-details .cols {
-    grid-template-columns: 1fr;
   }
 
   .sarjan-section-builder-row {
@@ -5468,30 +5590,11 @@ img.sarjan-product-img-placeholder {
     grid-template-columns: 1fr;
   }
 
-  .sarjan-gst-row {
-    grid-template-columns: 1fr;
-  }
-
-  .sarjan-otp-row {
-    grid-template-columns: 1fr;
-  }
-
-  .sarjan-otp-row .sarjan-otp-input {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .sarjan-otp-actions {
-    grid-column: 1;
-    grid-row: 2;
-    width: 100%;
-  }
-
-  .sarjan-otp-actions .sarjan-auth-btn {
-    flex: 1 1 0;
-  }
-
   .sarjan-seo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-admin-testimonial-card {
     grid-template-columns: 1fr;
   }
 }

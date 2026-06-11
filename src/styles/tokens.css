@@ -46,7 +46,7 @@ html[data-theme="dark"] {
   }
 }
 
-body {
+body.sarjan-storefront {
   color: var(--sarjan-text);
   background: var(--sarjan-bg);
 }

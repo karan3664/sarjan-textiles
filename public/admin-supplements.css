@@ -1,0 +1,222 @@
+body.sarjan-admin {
+  --white: #ffffff;
+  --line: #ececec;
+  --main: #181818;
+}
+
+body.sarjan-admin .sarjan-report-tabs button {
+  color: #181818;
+  background: #fff;
+}
+
+body.sarjan-admin .sarjan-report-tabs button.active,
+body.sarjan-admin .sarjan-report-tabs button:hover {
+  background: #181818;
+  color: #fff;
+  border-color: #181818;
+}
+
+body.sarjan-admin {
+  --white: #ffffff;
+  --line: #ececec;
+  --main: #181818;
+}
+
+body.sarjan-admin .sarjan-report-tabs button {
+  color: #181818;
+  background: #fff;
+}
+
+body.sarjan-admin .sarjan-report-tabs button.active,
+body.sarjan-admin .sarjan-report-tabs button:hover {
+  background: #181818;
+  color: #fff;
+  border-color: #181818;
+}
+
+/**
+ * Admin-only fixes — load AFTER Modave vendor + icomoon in root layout.
+ * - Storefront icon glyphs (icon-return, icon-sealCheck, …) via icomoon-sf
+ * - Aliases for icon class names used in React but missing from both fonts
+ * - Form field styling when inputs omit type="text" or Modave rules lose cascade
+ */
+
+@font-face {
+  font-family: "icomoon-sf";
+  src:
+    url("/template/storefront/fonts/icomoon.woff?tey8qv") format("woff"),
+    url("/template/storefront/fonts/icomoon.ttf?tey8qv") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+body.sarjan-admin .sarjan-admin-shell [class*="icon-"] {
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.sarjan-admin .sarjan-admin-shell [class*="icon-"]::before,
+body.sarjan-admin .sarjan-admin-shell [class*="icon-"]::after {
+  font-family: "icomoon" !important;
+}
+
+body.sarjan-admin .sarjan-admin-shell .sarjan-home-kpi-icon > [class*="icon-"],
+body.sarjan-admin .sarjan-admin-shell .wg-card .icon > [class*="icon-"] {
+  display: inline-block;
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* Storefront icomoon glyphs (second font pack) */
+body.sarjan-admin .sarjan-admin-shell .icon-return::before,
+body.sarjan-admin .sarjan-admin-shell .icon-shipping::before,
+body.sarjan-admin .sarjan-admin-shell .icon-headset::before,
+body.sarjan-admin .sarjan-admin-shell .icon-sealCheck::before,
+body.sarjan-admin .sarjan-admin-shell .icon-user::before,
+body.sarjan-admin .sarjan-admin-shell .icon-smartphone::before,
+body.sarjan-admin .sarjan-admin-shell .icon-camera::before,
+body.sarjan-admin .sarjan-admin-shell .icon-tshirt::before,
+body.sarjan-admin .sarjan-admin-shell .icon-timer::before,
+body.sarjan-admin .sarjan-admin-shell .icon-mail::before,
+body.sarjan-admin .sarjan-admin-shell .icon-eye-hide-line::before,
+body.sarjan-admin .sarjan-admin-shell .icon-arrowClockwise::before {
+  font-family: "icomoon-sf" !important;
+}
+
+body.sarjan-admin .sarjan-admin-shell .icon-return::before {
+  content: "\e929";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-shipping::before {
+  content: "\e928";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-headset::before {
+  content: "\e927";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-sealCheck::before {
+  content: "\e926";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-user::before {
+  content: "\e903";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-smartphone::before {
+  content: "\e91a";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-camera::before {
+  content: "\e91b";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-tshirt::before {
+  content: "\e922";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-timer::before {
+  content: "\e907";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-mail::before {
+  content: "\e92b";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-eye-hide-line::before {
+  content: "\e900";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-arrowClockwise::before {
+  content: "\e906";
+}
+
+/* Aliases → admin icomoon */
+body.sarjan-admin .sarjan-admin-shell .icon-settings::before,
+body.sarjan-admin .sarjan-admin-shell .icon-edit-3::before {
+  font-family: "icomoon" !important;
+  content: "\e90e";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-trash-2::before {
+  font-family: "icomoon" !important;
+  content: "\e915";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-clock::before {
+  font-family: "icomoon" !important;
+  content: "\e90b";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-alert-circle::before {
+  font-family: "icomoon" !important;
+  content: "\e908";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-upload::before {
+  font-family: "icomoon" !important;
+  content: "\e910";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-refresh::before {
+  font-family: "icomoon-sf" !important;
+  content: "\e906";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-truck::before {
+  font-family: "icomoon" !important;
+  content: "\e90f";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-image::before {
+  font-family: "icomoon-sf" !important;
+  content: "\e914";
+}
+
+/* Modave form fields — inputs without explicit type="text" skipped by theme CSS */
+body.sarjan-admin .layout-wrap fieldset {
+  margin: 0 0 16px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+body.sarjan-admin
+  .layout-wrap
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+    [type="hidden"]
+  ):not([type="submit"]):not([type="button"]):not([type="reset"]),
+body.sarjan-admin .layout-wrap select,
+body.sarjan-admin .layout-wrap textarea {
+  outline: 0;
+  box-shadow: none;
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 400;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+  min-height: 46px;
+  padding: 10px 15px;
+  color: var(--main, #181818);
+  background: var(--White, #fff);
+  border: 1px solid var(--line, #ececec);
+  transition: border-color 0.2s ease;
+}
+
+body.sarjan-admin .layout-wrap textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+body.sarjan-admin
+  .layout-wrap
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+body.sarjan-admin .layout-wrap select:hover,
+body.sarjan-admin .layout-wrap textarea:hover,
+body.sarjan-admin
+  .layout-wrap
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+body.sarjan-admin .layout-wrap select:focus,
+body.sarjan-admin .layout-wrap textarea:focus {
+  border-color: var(--main, #181818);
+}
+
+body.sarjan-admin .layout-wrap input[type="checkbox"],
+body.sarjan-admin .layout-wrap input[type="radio"] {
+  width: auto;
+  min-height: 0;
+}
+
+body.sarjan-admin .layout-wrap .body-title {
+  margin-bottom: 8px;
+}

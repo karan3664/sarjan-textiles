@@ -6,8 +6,25 @@ function isUnreachableHost(host: string) {
   return UNREACHABLE_HOSTS.has(host.toLowerCase());
 }
 
+function localDevHostname(hostname: string) {
+  const host = hostname.toLowerCase();
+  return (
+    host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")
+  );
+}
+
 /** Origin for redirects — browsers cannot open http://0.0.0.0. */
 export function requestRedirectOrigin(request: NextRequest | Request): string {
+  const incoming = new URL(request.url);
+  if (isUnreachableHost(incoming.hostname)) {
+    incoming.hostname = "localhost";
+  }
+
+  // `next start` on localhost must not redirect to NEXT_PUBLIC_SITE_URL.
+  if (localDevHostname(incoming.hostname)) {
+    return incoming.origin;
+  }
+
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(
     /\/$/,
     "",
@@ -20,10 +37,6 @@ export function requestRedirectOrigin(request: NextRequest | Request): string {
     }
   }
 
-  const incoming = new URL(request.url);
-  if (isUnreachableHost(incoming.hostname)) {
-    incoming.hostname = "localhost";
-  }
   return incoming.origin;
 }
 

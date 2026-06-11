@@ -9,6 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import type { Editor } from "@tiptap/core";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AdminEditorToolbarMenu } from "@/components/admin/AdminEditorToolbarMenu";
+import { plainTextToEditorHtml } from "@/lib/cms-html";
 import {
   buildGoogleFontsUrl,
   CMS_FONT_FAMILIES,
@@ -38,7 +39,9 @@ function normalizeEditorOutput(html: string) {
 }
 
 function normalizeEditorInput(value: string) {
-  const normalized = normalizeLegacyFontHtml(value || "");
+  const normalized = plainTextToEditorHtml(
+    normalizeLegacyFontHtml(value || ""),
+  );
   return emptyEditorHtml(normalized) ? "" : normalized;
 }
 

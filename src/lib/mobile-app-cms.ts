@@ -1,5 +1,15 @@
 import type { CmsHome, CmsSiteSettings } from "@/lib/cms-store";
 import {
+  brandingCampaignsForAppIconSync,
+  flattenMobileBrandingForAdmin,
+  normalizeMobileBrandingConfig,
+  resolveMobileBrandingCampaign,
+  type MobileBrandingCampaign,
+  type MobileBrandingConfig,
+  type MobileBrandingConfigStored,
+  defaultMobileBrandingConfig,
+} from "@/lib/mobile-branding-cms";
+import {
   normalizeSectionBanners,
   type CmsHomeBanner,
 } from "@/lib/home-banners";
@@ -147,6 +157,7 @@ export type MobileAppConfig = {
     whatsapp: string;
   };
   appIcon?: MobileAppIconConfig;
+  branding?: MobileBrandingConfig;
 };
 
 type StoredSlide = Omit<MobileOnboardingSlide, "title" | "subtitle"> & {
@@ -193,6 +204,7 @@ export type MobileAppConfigStored = {
   footerCredit: LocalizedText;
   support: MobileAppConfig["support"];
   appIcon?: MobileAppIconConfig;
+  branding?: MobileBrandingConfigStored;
   localizedExtras?: MobileLocalizedExtras;
 };
 
@@ -204,7 +216,7 @@ export type MobileAppPublicConfig = MobileAppConfig & {
   services: Array<{ icon?: string; title: string; body: string }>;
   updatedAt: string;
   locale: AppLocale;
-  appIcon?: MobileAppIconConfig;
+  activeBranding?: MobileBrandingCampaign | null;
 };
 
 const MOBILE_ICON_OPTIONS = [
@@ -400,6 +412,7 @@ export function defaultMobileAppConfig(
       campaigns: [],
       festivalOverrides: [],
     },
+    branding: flattenMobileBrandingForAdmin(defaultMobileBrandingConfig()),
   };
 }
 
@@ -766,6 +779,10 @@ export function normalizeMobileAppConfig(
         (input as MobileAppConfigStored | undefined)?.appIcon,
       defaults.appIcon!,
     ),
+    branding: normalizeMobileBrandingConfig(
+      (base as MobileAppConfig).branding ??
+        (input as MobileAppConfigStored | undefined)?.branding,
+    ),
   };
 }
 
@@ -960,6 +977,9 @@ export function flattenMobileAppForAdmin(
   return {
     ...resolved,
     profileMenus: flattenMobileProfileMenusForAdmin(stored.profileMenus),
+    branding: flattenMobileBrandingForAdmin(
+      stored.branding ?? defaultMobileBrandingConfig(),
+    ),
   };
 }
 
@@ -1014,6 +1034,9 @@ export function resolveMobileAppConfig(
     footerCredit: pick(stored.footerCredit) ?? "",
     support: { ...stored.support },
     appIcon: stored.appIcon,
+    branding: flattenMobileBrandingForAdmin(
+      stored.branding ?? defaultMobileBrandingConfig(),
+    ),
   };
 }
 
@@ -1027,8 +1050,24 @@ export function buildMobileConfigResponse(
   const extras =
     mobileApp.localizedExtras ?? buildLocalizedExtrasFromHome(site, home);
 
+  const brandingStored = mobileApp.branding ?? defaultMobileBrandingConfig();
+  const brandingCampaigns = brandingCampaignsForAppIconSync(brandingStored);
+  const mergedAppIcon: MobileAppIconConfig = {
+    ...(mobileApp.appIcon ?? {
+      enabled: true,
+      enablePremiumIcon: true,
+      enableDealerIcon: true,
+      campaigns: [],
+      festivalOverrides: [],
+    }),
+    campaigns: [...brandingCampaigns, ...(mobileApp.appIcon?.campaigns ?? [])],
+  };
+
   return {
     ...resolved,
+    branding: flattenMobileBrandingForAdmin(brandingStored),
+    appIcon: mergedAppIcon,
+    activeBranding: resolveMobileBrandingCampaign(brandingStored, locale),
     brandName: pickLocalized(extras.brandName, locale) || site.brandName,
     logoUrl: mobileApp.splash.logoUrl || site.logoIcon || site.logo,
     marqueeLines: extras.marqueeLines.map((line) =>
@@ -1045,7 +1084,6 @@ export function buildMobileConfigResponse(
     })),
     updatedAt: new Date().toISOString(),
     locale,
-    appIcon: mobileApp.appIcon,
   };
 }
 

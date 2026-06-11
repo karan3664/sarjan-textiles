@@ -86,8 +86,8 @@ export function AdminHomeBannerSlides({
           {bulkState === "uploading" ? "Uploading..." : "Add banner images"}
         </label>
         <p className="text-caption-1 text-secondary mb-0">
-          Har slide alag image + text. Ek time par ek slide kholo — page clean
-          rahega.
+          Har banner homepage par alag section ki tarah dikhega — image,
+          heading, description aur button alag se edit karein.
         </p>
       </div>
       {bulkState && bulkState !== "uploading" && (
@@ -280,7 +280,7 @@ export function AdminHomeBannerSlides({
       </div>
 
       <button type="button" className="tf-button style-1 mt-16" onClick={onAdd}>
-        Add empty banner slide
+        Add homepage banner
       </button>
     </div>
   );

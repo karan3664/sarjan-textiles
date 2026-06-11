@@ -4,6 +4,10 @@ import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import {
+  isProductPlaceholderImage,
+  productHasRealImages,
+} from "@/lib/product-placeholder-image";
 import { useShowProductSoldOut } from "./PriceGate";
 import {
   ProductDealCountdown,
@@ -15,7 +19,13 @@ import { StorefrontProductImage } from "./StorefrontProductImage";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 export function ProductListCard({ product }: { product: Product }) {
+  const primary = product.images[0];
   const hover = product.images[1] ?? product.images[0];
+  const showHoverSwap =
+    productHasRealImages(product.images) &&
+    Boolean(hover && hover !== primary) &&
+    !isProductPlaceholderImage(primary) &&
+    !isProductPlaceholderImage(hover);
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = buildProductImageAlt(product);
   const soldOut = useShowProductSoldOut(product);
@@ -26,23 +36,28 @@ export function ProductListCard({ product }: { product: Product }) {
       data-availability={soldOut ? "Out of stock" : "In stock"}
       data-brand={siteSettings.brandName}
     >
-      <div className="card-product-wrapper position-relative">
+      <div
+        className={`card-product-wrapper position-relative${showHoverSwap ? "" : " sarjan-product-card--no-hover-swap"}`}
+      >
         <a href={`/products/${product.slug}`} className="product-img">
           <span className="sarjan-product-img-primary">
             <StorefrontProductImage
-              src={product.images[0]}
+              src={primary}
               alt={altText}
               className="img-product"
-            />
-          </span>
-          <span className="sarjan-product-img-hover">
-            <StorefrontProductImage
-              src={hover}
-              alt={`${altText} alternate view`}
-              className="img-hover"
               fill
             />
           </span>
+          {showHoverSwap ? (
+            <span className="sarjan-product-img-hover">
+              <StorefrontProductImage
+                src={hover}
+                alt={`${altText} alternate view`}
+                className="img-hover"
+                fill
+              />
+            </span>
+          ) : null}
         </a>
         <ProductSoldOutRibbon product={product} variant="card" />
         {!soldOut && product.isFeatured ? (
@@ -57,7 +72,7 @@ export function ProductListCard({ product }: { product: Product }) {
           {product.name}
         </a>
         <div className="price sarjan-deal-price-row">
-          <PriceGate amount={product.price} suffix=" / piece" />
+          <PriceGate amount={product.price} suffix=" / piece" compact />
           <ProductDealOriginalPrice product={product} />
         </div>
         <p className="description text-secondary text-line-clamp-2">

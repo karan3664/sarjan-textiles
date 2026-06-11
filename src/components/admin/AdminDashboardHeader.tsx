@@ -312,7 +312,7 @@ export function AdminDashboardHeader() {
                   <span className="header-user wg-user">
                     <span className="image sarjan-admin-header-avatar-wrap">
                       <img
-                        src="/sarjan-assets/sarjan-logo-icon.png"
+                        src="/sarjan-assets/sarjan-logo-full.png"
                         alt="Sarjan Textiles"
                         width={38}
                         height={38}

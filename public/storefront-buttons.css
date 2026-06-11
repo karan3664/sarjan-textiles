@@ -157,6 +157,8 @@ body.sarjan-storefront
     .sarjan-sitemap-toggle
   ):not(.bg-transparent):not(.btn.p-1):not(.btn-sold-out):not(
     .sarjan-pdp-cta-btn
+  ):not(.sarjan-home-banner-section__btn--primary):not(
+    .sarjan-hero-cta-primary
   ):not(:disabled):not([aria-disabled="true"]):not(:hover):not(
     :focus-visible
   ):not(.is-hovered) {
@@ -298,7 +300,9 @@ body.sarjan-storefront
     .tf-btn.btn-white,
     .tf-btn.btn-reset,
     a.tf-btn.btn-fill
-  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]) {
+  ):not(.btn-line):not(.sarjan-home-banner-section__btn--primary):not(
+    .sarjan-hero-cta-primary
+  ):not(:disabled):not([aria-disabled="true"]) {
   background-color: var(--sarjan-btn-bg) !important;
   color: var(--sarjan-btn-color) !important;
   border: 1px solid var(--sarjan-btn-border) !important;
@@ -310,7 +314,9 @@ body.sarjan-storefront
     .tf-btn.btn-white,
     .tf-btn.btn-reset,
     a.tf-btn.btn-fill
-  ):not(.btn-line):not(:disabled):not([aria-disabled="true"]):hover {
+  ):not(.btn-line):not(.sarjan-home-banner-section__btn--primary):not(
+    .sarjan-hero-cta-primary
+  ):not(:disabled):not([aria-disabled="true"]):hover {
   background-color: var(--sarjan-btn-hover-bg) !important;
   color: var(--sarjan-btn-hover-color) !important;
   border-color: var(--sarjan-btn-hover-border) !important;

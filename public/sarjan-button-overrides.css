@@ -51,9 +51,11 @@ body.sarjan-storefront
     .btn-decrease
   ):not(.btn-increase):not(.tf-btn-remove):not(.tf-btn-filter):not(
     .subscribe-button
-  ):not(.sarjan-emoji-trigger):not(:disabled):not([aria-disabled="true"]):not(
-    :hover
-  ):not(:focus-visible):not(.is-hovered) {
+  ):not(.sarjan-emoji-trigger):not(
+    .sarjan-home-banner-section__btn--primary
+  ):not(.sarjan-hero-cta-primary):not(:disabled):not(
+    [aria-disabled="true"]
+  ):not(:hover):not(:focus-visible):not(.is-hovered) {
   background-color: #ffffff !important;
   background-image: none !important;
   color: #181818 !important;
@@ -163,4 +165,48 @@ body.sarjan-storefront
   :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
   color: var(--sarjan-btn-hover-color) !important;
   -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+/* Hero / banner primary CTA — brand fill by default (matches former hover look) */
+body.sarjan-storefront
+  #wrapper
+  :is(
+    a.sarjan-home-banner-section__btn--primary,
+    a.sarjan-hero-cta-primary
+  ).tf-btn.btn-fill.btn-white:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--sarjan-accent, #8b1e2d) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border: 1px solid var(--sarjan-accent, #8b1e2d) !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+body.sarjan-storefront
+  #wrapper
+  :is(
+    a.sarjan-home-banner-section__btn--primary,
+    a.sarjan-hero-cta-primary
+  ).tf-btn.btn-fill.btn-white:not(:disabled):not([aria-disabled="true"])
+  :is(.text, .icon, span, i) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.sarjan-storefront
+  #wrapper
+  :is(
+    a.sarjan-home-banner-section__btn--primary,
+    a.sarjan-hero-cta-primary
+  ).tf-btn.btn-fill.btn-white:not(:disabled):not([aria-disabled="true"]):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ) {
+  background-color: #a52435 !important;
+  border-color: #a52435 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
 }

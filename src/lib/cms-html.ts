@@ -24,13 +24,55 @@ function looksLikeHtml(value: string) {
   return /<[a-z][\s\S]*>/i.test(value);
 }
 
+function escapeHtmlText(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export function isCmsHtmlContent(value: string): boolean {
+  return looksLikeHtml(value?.trim() ?? "");
+}
+
 /** Plain CMS text → safe HTML (preserves line breaks from legacy content). */
 export function plainTextToCmsHtml(value: string): string {
-  return value
+  const paragraphs = splitCmsTextParagraphs(value);
+  if (paragraphs.length <= 1) {
+    return paragraphs[0] ?? "";
+  }
+  return paragraphs.map((part) => `<p>${escapeHtmlText(part)}</p>`).join("");
+}
+
+/** Plain text → TipTap / CMS editor HTML with one `<p>` per paragraph. */
+export function plainTextToEditorHtml(value: string): string {
+  const raw = value?.trim() ?? "";
+  if (!raw) return "";
+  if (looksLikeHtml(raw)) return raw;
+
+  const paragraphs = splitCmsTextParagraphs(raw);
+  if (!paragraphs.length) return "";
+  return paragraphs.map((part) => `<p>${escapeHtmlText(part)}</p>`).join("");
+}
+
+/** Split plain CMS copy into separate paragraphs (blank lines or single newlines). */
+export function splitCmsTextParagraphs(value: string): string[] {
+  const normalized = value?.trim() ?? "";
+  if (!normalized) return [];
+  if (looksLikeHtml(normalized)) return [normalized];
+
+  const byBlankLine = normalized
+    .split(/\n\s*\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (byBlankLine.length > 1) return byBlankLine;
+
+  return normalized
     .split("\n")
     .map((line) => line.trim())
-    .filter(Boolean)
-    .join("<br />");
+    .filter(Boolean);
 }
 
 export function sanitizeCmsHtml(value: string): string {

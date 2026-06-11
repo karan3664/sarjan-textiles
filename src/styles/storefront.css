@@ -661,9 +661,11 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
   .sarjan-hero-rotator .sarjan-hero-subheading,
   .sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {
-    max-width: 52ch;
+    max-width: min(100%, 64ch);
     margin-inline: auto;
-    line-height: 1.55;
+    font-size: clamp(17px, 1.5vw, 22px);
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.95);
     overflow: visible;
   }
 }
@@ -676,10 +678,11 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   z-index: 2;
   pointer-events: none;
   background: linear-gradient(
-    105deg,
-    rgba(0, 0, 0, 0.42) 0%,
-    rgba(0, 0, 0, 0.14) 45%,
-    rgba(0, 0, 0, 0.32) 100%
+    180deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.04) 38%,
+    rgba(0, 0, 0, 0.38) 72%,
+    rgba(0, 0, 0, 0.68) 100%
   );
 }
 
@@ -855,10 +858,14 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   }
 
   .sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {
-    font-size: 13px;
-    line-height: 1.5;
-    max-width: 34ch;
+    font-size: clamp(15px, 3.8vw, 17px);
+    line-height: 1.6;
+    max-width: min(100%, 42ch);
     margin-inline: auto;
+  }
+
+  .sarjan-hero-rotator .sarjan-hero-cta {
+    justify-content: center;
   }
 
   .sarjan-hero-dots {
@@ -910,24 +917,20 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .card-product .product-img {
   aspect-ratio: 3 / 4;
   overflow: hidden;
-}
-
-.sarjan-product-img-primary {
-  display: block;
   position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 4;
+  display: block;
 }
 
+.sarjan-product-img-primary,
 .sarjan-product-img-hover {
   position: absolute;
   inset: 0;
-  opacity: 0;
-  transition: opacity 0.7s ease;
-  pointer-events: none;
-  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
 }
 
+.sarjan-product-img-primary > span,
 .sarjan-product-img-hover > span {
   position: absolute !important;
   inset: 0 !important;
@@ -935,17 +938,77 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   height: 100% !important;
 }
 
+.sarjan-product-img-hover {
+  opacity: 0;
+  transition: opacity 0.7s ease;
+  pointer-events: none;
+}
+
 .card-product .card-product-wrapper:hover .sarjan-product-img-hover {
   opacity: 1;
 }
 
-.card-product .card-product-wrapper:hover .sarjan-product-img-primary {
+.card-product
+  .card-product-wrapper:has(.sarjan-product-img-hover):hover
+  .sarjan-product-img-primary {
   opacity: 0;
 }
 
-.sarjan-product-img-primary,
-.sarjan-product-img-hover {
-  line-height: 0;
+/* Modave always fades .img-product on hover — keep it when there is no alternate */
+.card-product
+  .card-product-wrapper.sarjan-product-card--no-hover-swap:hover
+  .sarjan-product-img-primary,
+.card-product
+  .card-product-wrapper:not(:has(.sarjan-product-img-hover)):hover
+  .sarjan-product-img-primary,
+.card-product
+  .card-product-wrapper.sarjan-product-card--no-hover-swap:hover
+  .product-img
+  .img-product,
+.card-product
+  .card-product-wrapper:not(:has(.sarjan-product-img-hover)):hover
+  .product-img
+  .img-product {
+  opacity: 1 !important;
+}
+
+.card-product
+  .card-product-wrapper:has(.sarjan-product-img-hover):hover
+  .product-img
+  .img-hover,
+.card-product
+  .card-product-wrapper:has(.sarjan-product-img-hover):hover
+  .sarjan-product-img-hover
+  img {
+  opacity: 1 !important;
+}
+
+.card-product
+  .card-product-wrapper:has(.sarjan-product-img-hover):hover
+  .product-img
+  .img-product {
+  opacity: 0 !important;
+}
+
+.card-product
+  .card-product-wrapper.sarjan-product-card--no-hover-swap:hover
+  .sarjan-product-img-primary {
+  opacity: 1;
+}
+
+/* Modave zoom breaks next/image placeholders — keep image flush on hover */
+.card-product .card-product-wrapper:hover .product-img .img-hover,
+.card-product .card-product-wrapper:hover .product-img .img-product,
+.card-product .card-product-wrapper:hover .sarjan-product-img-hover img,
+.card-product .card-product-wrapper:hover .sarjan-product-img-primary img {
+  transform: none !important;
+}
+
+.card-product .product-img img.sarjan-product-img-placeholder {
+  object-fit: contain !important;
+  object-position: center;
+  padding: 8%;
+  background: #ffffff !important;
 }
 
 .sarjan-policy-media {
@@ -1339,11 +1402,16 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .sarjan-tiptap-editor .sarjan-tiptap-surface p {
-  margin: 0 0 0.35em;
+  margin: 0 0 1em;
+  min-height: 1.55em;
 }
 
 .sarjan-tiptap-editor .sarjan-tiptap-surface p:last-child {
   margin-bottom: 0;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface p + p {
+  margin-top: 0.15em;
 }
 
 .sarjan-tiptap-editor .sarjan-tiptap-surface:focus {
@@ -4853,6 +4921,15 @@ button.accordion-button:not(.collapsed),
 }
 
 /* ── Mobile side menu (separate from desktop nav + account dropdown) ── */
+#mobileMenu.sarjan-mobile-menu.offcanvas {
+  position: fixed !important;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3000;
+  background-color: var(--white, #fff);
+}
+
 .sarjan-mobile-menu.canvas-mb {
   width: min(100vw, 380px);
   max-width: 100%;
@@ -6413,8 +6490,8 @@ button.accordion-button:not(.collapsed),
 .sarjan-partner-cta-band {
   background: #7a1f1f;
   color: #fff;
-  border-radius: 16px;
-  margin: 24px 0;
+  border-radius: 0;
+  margin: 0;
   padding: 28px 0 32px;
 }
 
@@ -6431,8 +6508,10 @@ button.accordion-button:not(.collapsed),
 .sarjan-hero-cta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 12px 16px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .sarjan-hero-cta-secondary.tf-btn.btn-outline.btn-white {
@@ -7845,6 +7924,30 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   margin-bottom: 4px;
 }
 
+.sarjan-price-locked {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid #ead7d1;
+  border-radius: 999px;
+  background: #fff6f3;
+  color: #9b1c31;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.card-product-info .sarjan-price-locked {
+  margin-top: 2px;
+  font-size: 11px;
+  padding: 4px 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .card-product .card-product-wrapper > .sarjan-deal-countdown--card {
   z-index: 26;
 }
@@ -8153,11 +8256,14 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   line-height: 1.75;
 }
 
-.sarjan-custom-site-page .sarjan-custom-text-body p {
-  margin: 0 0 1em;
+.sarjan-custom-site-page .sarjan-custom-text-body p,
+.sarjan-custom-site-page .sarjan-custom-text-body .cms-html-content {
+  margin: 0 0 1.25em;
+  font-size: clamp(16px, 1.05vw, 18px);
 }
 
-.sarjan-custom-site-page .sarjan-custom-text-body p:last-child {
+.sarjan-custom-site-page .sarjan-custom-text-body p:last-child,
+.sarjan-custom-site-page .sarjan-custom-text-body .cms-html-content:last-child {
   margin-bottom: 0;
 }
 
@@ -8320,19 +8426,25 @@ footer.bg-main
   width: 100%;
 }
 
-/* Sarjan AI chat + scroll-to-top: keep template #scroll-top above launcher (no overlap) */
+/* Sarjan AI chat + scroll-to-top: stack scroll button above launcher (shared inset) */
+body.sarjan-storefront:has(.sarjan-order-bot) {
+  --sarjan-fab-inset: clamp(12px, 3vw, 24px);
+  --sarjan-ai-launcher-h: 3.25rem;
+  --sarjan-fab-gap: 0.75rem;
+}
+
 body.sarjan-storefront:has(.sarjan-order-bot) #scroll-top {
-  right: clamp(12px, 3vw, 24px);
-  bottom: calc(clamp(12px, 3vw, 24px) + 4.75rem);
+  right: var(--sarjan-fab-inset) !important;
+  bottom: calc(
+    var(--sarjan-fab-inset) + var(--sarjan-ai-launcher-h) +
+      var(--sarjan-fab-gap) + env(safe-area-inset-bottom, 0px) +
+      var(--sarjan-bot-lift, 0px) + var(--sarjan-bot-toolbar, 0px)
+  ) !important;
   z-index: 100090;
 }
 
 body.sarjan-storefront:has(.sarjan-cookie-consent) .sarjan-order-bot {
   --sarjan-bot-lift: 5.5rem;
-}
-
-body.sarjan-storefront:has(.sarjan-cookie-consent) #scroll-top {
-  bottom: calc(clamp(12px, 3vw, 24px) + 4.75rem + var(--sarjan-bot-lift, 0px));
 }
 
 body.sarjan-storefront:has(.sarjan-order-bot .sarjan-order-bot-panel)
@@ -8904,12 +9016,8 @@ a.sarjan-order-bot-card:focus-visible {
 
 /* Sarjan AI — phone / large phone / tablet portrait: bottom sheet + pinned launcher */
 @media (max-width: 991px) {
-  body.sarjan-storefront:has(.sarjan-order-bot) #scroll-top {
-    right: 12px;
-    bottom: calc(
-      12px + env(safe-area-inset-bottom, 0px) + 3.25rem +
-        var(--sarjan-bot-lift, 0px)
-    );
+  body.sarjan-storefront:has(.sarjan-order-bot) {
+    --sarjan-fab-inset: 12px;
   }
 
   .sarjan-order-bot {
@@ -10034,8 +10142,8 @@ body.sarjan-storefront
   .sarjan-mobile-menu.canvas-mb,
   .sarjan-mobile-menu .sarjan-mobile-menu__canvas,
   .sarjan-mobile-menu .mb-canvas-content {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: min(92vw, 360px) !important;
+    max-width: min(92vw, 360px) !important;
     min-width: 0 !important;
   }
 }
@@ -10967,8 +11075,10 @@ body.sarjan-storefront
   display: block;
   width: min(168px, 44vw);
   height: auto;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.35));
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
 .sarjan-launch-page__eyebrow {
@@ -11403,8 +11513,10 @@ body.sarjan-scroll-chrome:has(.sarjan-mobile-bottom-nav) .sarjan-order-bot {
 
 body.sarjan-scroll-chrome:has(.sarjan-mobile-bottom-nav) #scroll-top {
   bottom: calc(
-    clamp(12px, 3vw, 24px) + 4.5rem + env(safe-area-inset-bottom, 0px)
-  );
+    var(--sarjan-fab-inset, clamp(12px, 3vw, 24px)) +
+      var(--sarjan-ai-launcher-h, 3.25rem) + var(--sarjan-fab-gap, 0.75rem) +
+      env(safe-area-inset-bottom, 0px) + var(--sarjan-bot-toolbar, 0px)
+  ) !important;
 }
 
 @media (max-width: 1199.98px) {
@@ -11425,7 +11537,11 @@ body.sarjan-scroll-chrome.sarjan-chrome-hidden:has(.sarjan-mobile-bottom-nav)
 
 body.sarjan-scroll-chrome.sarjan-chrome-hidden:has(.sarjan-mobile-bottom-nav)
   #scroll-top {
-  bottom: clamp(12px, 3vw, 24px);
+  bottom: calc(
+    var(--sarjan-fab-inset, clamp(12px, 3vw, 24px)) +
+      var(--sarjan-ai-launcher-h, 3.25rem) + var(--sarjan-fab-gap, 0.75rem) +
+      env(safe-area-inset-bottom, 0px)
+  ) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

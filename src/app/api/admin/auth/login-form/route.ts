@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/admin-auth";
 import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
+import {
+  getAdminLoginPath,
+  isAdminLoginReturnPath,
+} from "@/lib/admin-login-path";
 import { createAdminToken } from "@/lib/admin-token";
 import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
 
@@ -14,12 +18,13 @@ function safeAdminNextPath(raw: string | null | undefined) {
   ) {
     return "/admin";
   }
-  if ((next.split("?")[0] ?? next) === "/admin/login") return "/admin";
+  const pathOnly = next.split("?")[0] ?? next;
+  if (isAdminLoginReturnPath(pathOnly)) return "/admin";
   return next;
 }
 
 function loginRedirect(request: Request, query: Record<string, string>) {
-  const url = redirectAbsoluteUrl(request, "/admin/login");
+  const url = redirectAbsoluteUrl(request, getAdminLoginPath());
   for (const [key, value] of Object.entries(query)) {
     if (value) url.searchParams.set(key, value);
   }

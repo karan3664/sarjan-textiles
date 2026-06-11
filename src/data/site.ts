@@ -9,8 +9,8 @@ export const siteSettings = {
   domain: "sarjantextiles.com",
   brandName: "Sarjan Textiles",
   legalName: "Sarjan Textiles",
-  logo: asset("sarjan-logo.svg"),
-  logoIcon: asset("sarjan-logo.svg"),
+  logo: asset("sarjan-logo-full.png"),
+  logoIcon: asset("sarjan-logo-full.png"),
   favicon: asset("sarjan-favicon-192.png"),
   email: "info@sarjantextiles.com",
   salesEmail: "",
@@ -37,7 +37,9 @@ export function normalizeBrandLogo(url?: string | null): string {
   if (
     lower.includes("sarjan-logo-icon") ||
     lower.includes("sarjan-logo-full") ||
-    lower.endsWith("/sarjan-logo.svg")
+    lower.includes("sarjan-logo-placeholder") ||
+    lower.endsWith("/sarjan-logo.svg") ||
+    lower.includes("logo final")
   ) {
     return siteSettings.logo;
   }

@@ -19,6 +19,131 @@
     0 0 18px rgba(255, 255, 255, 0.05);
 }
 
+/* Myntra-style: centered stack, readable copy, pill CTAs */
+.sarjan-hero-rotator .sarjan-hero-copy-layer .content-slider,
+.sarjan-hero-rotator .sarjan-hero-copy-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  gap: clamp(18px, 2.8vh, 32px);
+}
+
+.sarjan-hero-rotator .sarjan-hero-copy-titles,
+.sarjan-hero-rotator .sarjan-hero-copy-layer .box-title-slider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: clamp(12px, 1.8vh, 20px);
+}
+
+.sarjan-hero-rotator .sarjan-hero-copy-layer .box-btn-slider,
+.sarjan-hero-rotator .sarjan-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 12px 16px;
+  margin: 0;
+}
+
+.sarjan-hero-rotator .sarjan-hero-cta .tf-btn {
+  min-width: clamp(158px, 16vw, 196px);
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+}
+
+body.sarjan-storefront
+  #wrapper
+  .sarjan-hero-rotator
+  .sarjan-hero-cta
+  a.tf-btn.btn-fill.btn-white,
+body.sarjan-storefront
+  #wrapper
+  .sarjan-hero-rotator
+  .sarjan-hero-cta
+  .tf-btn.btn-fill.btn-white {
+  background-color: var(--sarjan-accent, #8b1e2d) !important;
+  color: #fff !important;
+  border: 1px solid var(--sarjan-accent, #8b1e2d) !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+body.sarjan-storefront
+  #wrapper
+  .sarjan-hero-rotator
+  .sarjan-hero-cta
+  a.tf-btn.btn-fill.btn-white
+  :is(.text, .icon),
+body.sarjan-storefront
+  #wrapper
+  .sarjan-hero-rotator
+  .sarjan-hero-cta
+  .tf-btn.btn-fill.btn-white
+  :is(.text, .icon) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.sarjan-storefront
+  #wrapper
+  .sarjan-hero-rotator
+  .sarjan-hero-cta
+  a.tf-btn.btn-fill.btn-white:hover,
+body.sarjan-storefront
+  #wrapper
+  .sarjan-hero-rotator
+  .sarjan-hero-cta
+  .tf-btn.btn-fill.btn-white:hover {
+  background-color: #a52435 !important;
+  border-color: #a52435 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.sarjan-hero-rotator .sarjan-hero-cta-secondary.tf-btn.btn-outline.btn-white {
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.sarjan-hero-rotator
+  .sarjan-hero-cta-secondary.tf-btn.btn-outline.btn-white:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: #fff;
+}
+
+@media (min-width: 992px) {
+  .sarjan-hero-rotator .sarjan-hero-subheading,
+  .sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {
+    font-size: clamp(17px, 1.5vw, 22px) !important;
+    line-height: 1.65 !important;
+    max-width: min(100%, 64ch) !important;
+    margin-inline: auto !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-weight: 400;
+    letter-spacing: 0.012em;
+  }
+
+  .sarjan-hero-rotator .sarjan-hero-heading,
+  .sarjan-hero-rotator .sarjan-hero-copy-layer .heading {
+    font-weight: 600 !important;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+}
+
 /* Modave .tf-slideshow { overflow: hidden } would crop vertically centered copy */
 .tf-slideshow.sarjan-hero-rotator {
   overflow: visible !important;
@@ -97,10 +222,15 @@
 
   .tf-slideshow.sarjan-hero-rotator .sarjan-hero-subheading,
   .tf-slideshow.sarjan-hero-rotator .sarjan-hero-copy-layer .subheading {
-    font-size: 13px !important;
-    line-height: 1.45 !important;
-    max-width: 36ch;
+    font-size: clamp(15px, 3.8vw, 17px) !important;
+    line-height: 1.6 !important;
+    max-width: min(100%, 42ch);
     margin: 0 auto !important;
+    color: rgba(255, 255, 255, 0.94) !important;
+  }
+
+  .tf-slideshow.sarjan-hero-rotator .sarjan-hero-cta {
+    justify-content: center;
   }
 
   .tf-slideshow.sarjan-hero-rotator .content-slider {
@@ -117,5 +247,323 @@
 
   .tf-slideshow.sarjan-hero-rotator .wrap-slider.sarjan-hero-copy-layer {
     height: 100% !important;
+  }
+}
+
+/* Stacked homepage banners — full-bleed, seamless (Myntra-style) */
+.sarjan-home-banner-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  background: #fff;
+}
+
+.sarjan-home-banner-section {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  min-height: var(
+    --sarjan-home-banner-h,
+    clamp(300px, 52vw, min(72svh, 520px))
+  );
+  overflow: hidden;
+  background: #141414;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sarjan-home-banner-section:last-child {
+  border-bottom: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sarjan-home-banner-section:hover .sarjan-home-banner-section__img,
+  .sarjan-home-banner-section:hover
+    .sarjan-home-banner-section__media
+    > span
+    img {
+    transform: scale(1.03);
+  }
+}
+
+.sarjan-home-banner-section__media {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.sarjan-home-banner-section__img,
+.sarjan-home-banner-section__media > span {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  object-position: center center;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sarjan-home-banner-section__media > span img {
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sarjan-home-banner-section__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.02) 38%,
+    rgba(0, 0, 0, 0.42) 72%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+}
+
+.sarjan-home-banner-section__copy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 48px) clamp(28px, 6vw, 56px);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.sarjan-home-banner-section__copy-inner {
+  width: min(100%, 920px);
+  text-align: center;
+  pointer-events: auto;
+  padding: clamp(16px, 3vw, 28px) clamp(14px, 3vw, 24px);
+  border-radius: clamp(12px, 2vw, 18px);
+  background: linear-gradient(
+    180deg,
+    rgba(12, 12, 12, 0.08) 0%,
+    rgba(12, 12, 12, 0.42) 100%
+  );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.sarjan-home-banner-section__copy-inner::before {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #c89b3c, transparent);
+}
+
+.sarjan-home-banner-section__eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.sarjan-home-banner-section__title {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 5.8vw, 48px);
+  line-height: 1.32;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #fff;
+  max-width: min(100%, 52ch);
+  margin-inline: auto;
+  text-wrap: pretty;
+}
+
+.sarjan-home-banner-section__description {
+  margin: 0 auto 18px;
+  max-width: min(100%, 64ch);
+  font-size: clamp(15px, 3.6vw, 20px);
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.sarjan-home-banner-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.sarjan-home-banner-section__btn.tf-btn {
+  min-height: 46px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.sarjan-home-banner-section__btn.tf-btn .text {
+  white-space: nowrap;
+}
+
+.sarjan-home-banner-section__btn--secondary.tf-btn.btn-outline.btn-white {
+  border-color: rgba(255, 255, 255, 0.72);
+  color: #fff;
+}
+
+/* Never clip CMS copy inside stacked banners */
+.sarjan-home-banner-section .sarjan-cms-banner-text,
+.sarjan-home-banner-section .cms-html-content,
+.sarjan-home-banner-section .cms-html-content p {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  -webkit-line-clamp: unset;
+  max-height: none;
+}
+
+.sarjan-home-banner-section .cms-html-content p {
+  margin: 0 0 0.55em;
+}
+
+.sarjan-home-banner-section .cms-html-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile / tablet: image + copy stack (no overlay clip) */
+@media (max-width: 991.98px) {
+  .sarjan-home-banner-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .sarjan-home-banner-section__media {
+    position: relative;
+    inset: auto;
+    flex: 0 0 auto;
+    width: 100%;
+    aspect-ratio: 5 / 4;
+    min-height: 200px;
+    max-height: min(56vw, 300px);
+  }
+
+  .sarjan-home-banner-section__shade {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.04) 0%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+  }
+
+  .sarjan-home-banner-section__copy {
+    position: relative;
+    inset: auto;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: clamp(14px, 3.5vw, 18px) clamp(14px, 3.5vw, 18px)
+      clamp(16px, 4vw, 20px);
+    background: linear-gradient(180deg, #1c1c1c 0%, #121212 100%);
+  }
+
+  .sarjan-home-banner-section__copy-inner {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .sarjan-home-banner-section__copy-inner::before {
+    width: 40px;
+    margin-bottom: 10px;
+  }
+
+  .sarjan-home-banner-section__eyebrow {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .sarjan-home-banner-section__title {
+    font-size: clamp(18px, 4.8vw, 24px);
+    line-height: 1.38;
+    margin-bottom: 10px;
+    max-width: 100%;
+  }
+
+  .sarjan-home-banner-section__description {
+    font-size: clamp(13px, 3.4vw, 15px);
+    line-height: 1.58;
+    margin-bottom: 14px;
+    max-width: 100%;
+  }
+
+  .sarjan-home-banner-section__actions {
+    gap: 10px;
+    width: 100%;
+  }
+
+  .sarjan-home-banner-section__btn.tf-btn {
+    min-height: 42px;
+    padding: 10px 16px;
+    font-size: 13px;
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+  }
+
+  .sarjan-home-banner-section__actions:has(> :only-child)
+    .sarjan-home-banner-section__btn {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  body.sarjan-storefront:has(.sarjan-mobile-bottom-nav)
+    .sarjan-home-banner-stack {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 992px) {
+  .sarjan-home-banner-section {
+    min-height: var(
+      --sarjan-home-banner-h,
+      clamp(380px, 44vw, min(76svh, 620px))
+    );
+  }
+
+  .sarjan-home-banner-section__copy {
+    justify-content: center;
+    padding-top: clamp(48px, 8vh, 96px);
+    padding-bottom: clamp(48px, 8vh, 96px);
+  }
+
+  .sarjan-home-banner-section__description {
+    margin-bottom: 24px;
+  }
+
+  .sarjan-home-banner-section__copy-inner {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .sarjan-home-banner-section__actions {
+    justify-content: center;
   }
 }

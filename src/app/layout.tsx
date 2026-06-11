@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import {
@@ -7,15 +7,14 @@ import {
   SARJAN_THEME_COOKIE,
   STOREFRONT_THEME_INIT_SCRIPT,
 } from "@/lib/storefront-theme";
-import { StorefrontThemeProvider } from "@/components/storefront/StorefrontThemeProvider";
 import { siteSettings } from "@/data/mock";
+import { SARJAN_ADMIN_ROUTE_HEADER } from "@/lib/admin-route";
+import { ADMIN_TEMPLATE_STYLESHEETS } from "@/lib/admin-template-styles";
 import { STOREFRONT_TEMPLATE_STYLESHEETS } from "@/lib/storefront-template-styles";
-import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
-import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner";
-import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
 import { pageMetadata } from "@/lib/seo";
 import { DEFAULT_STOREFRONT_LOCALE } from "@/lib/server-locale";
-import { StorefrontPwaRegistration } from "@/components/storefront/StorefrontPwaRegistration";
+import { ChunkLoadRecovery } from "@/components/shared/ChunkLoadRecovery";
+import { StorefrontRootProviders } from "@/components/storefront/StorefrontRootProviders";
 
 export const metadata: Metadata = {
   ...pageMetadata({
@@ -74,6 +73,8 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const cookieStore = await cookies();
+  const headerStore = await headers();
+  const isAdminRoute = headerStore.get(SARJAN_ADMIN_ROUTE_HEADER) === "1";
   const themePreference = readThemePreferenceValue(
     cookieStore.get(SARJAN_THEME_COOKIE)?.value,
   );
@@ -88,34 +89,50 @@ export default async function RootLayout({
     <html
       lang={DEFAULT_STOREFRONT_LOCALE}
       data-theme-pref={themePreference}
-      {...(serverResolvedTheme ? { "data-theme": serverResolvedTheme } : {})}
+      {...(serverResolvedTheme && !isAdminRoute
+        ? { "data-theme": serverResolvedTheme }
+        : {})}
       suppressHydrationWarning
     >
       <head>
-        <Script
-          id="sarjan-theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: STOREFRONT_THEME_INIT_SCRIPT }}
-        />
+        {!isAdminRoute ? (
+          <Script
+            id="sarjan-theme-init"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{ __html: STOREFRONT_THEME_INIT_SCRIPT }}
+          />
+        ) : null}
         <meta charSet="utf-8" />
-        {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
-          <link key={href} rel="stylesheet" href={href} />
-        ))}
-        <link rel="stylesheet" href="/sarjan-hero.css" />
-        <link rel="stylesheet" href="/sarjan-storefront-overrides.css" />
-        {/* After Modave — CTA defaults + hover (must load after template CSS) */}
-        <link rel="stylesheet" href="/sarjan-button-overrides.css" />
-        <link rel="stylesheet" href="/storefront-buttons.css" />
-        <link rel="stylesheet" href="/sarjan-pdp-cta.css?v=20260526d" />
+        {isAdminRoute ? (
+          <>
+            {ADMIN_TEMPLATE_STYLESHEETS.map((href) => (
+              <link key={href} rel="stylesheet" href={href} />
+            ))}
+          </>
+        ) : (
+          <>
+            {STOREFRONT_TEMPLATE_STYLESHEETS.map((href) => (
+              <link key={href} rel="stylesheet" href={href} />
+            ))}
+            <link rel="stylesheet" href="/sarjan-home.css" />
+            <link rel="stylesheet" href="/sarjan-storefront-overrides.css" />
+            <link rel="stylesheet" href="/sarjan-button-overrides.css" />
+            <link rel="stylesheet" href="/storefront-buttons.css" />
+            <link rel="stylesheet" href="/sarjan-hero.css" />
+            <link rel="stylesheet" href="/sarjan-pdp-cta.css?v=20260526d" />
+          </>
+        )}
       </head>
-      <body className="sarjan-storefront" suppressHydrationWarning>
-        <StorefrontThemeProvider>
-          <SiteAnalytics />
-          <AnalyticsTracker />
-          <CookieConsentBanner />
-          <StorefrontPwaRegistration />
-          {children}
-        </StorefrontThemeProvider>
+      <body
+        className={isAdminRoute ? "sarjan-admin" : "sarjan-storefront"}
+        suppressHydrationWarning
+      >
+        <ChunkLoadRecovery />
+        {isAdminRoute ? (
+          children
+        ) : (
+          <StorefrontRootProviders>{children}</StorefrontRootProviders>
+        )}
       </body>
     </html>
   );

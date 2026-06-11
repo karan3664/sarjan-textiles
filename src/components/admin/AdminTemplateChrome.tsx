@@ -6,17 +6,6 @@ import { AdminDashboardHeader } from "./AdminDashboardHeader";
 import { AdminSidebarController } from "./AdminSidebarController";
 import { AdminGlobalLoader } from "./AdminGlobalLoader";
 
-const adminStyles = [
-  "css/animate.min.css",
-  "css/animation.css",
-  "css/bootstrap.css",
-  "css/bootstrap-select.min.css",
-  "css/swiper-bundle.min.css",
-  "css/styles.css",
-  "font/fonts.css",
-  "icon/icomoon/style.css",
-];
-
 const adminScripts = [
   "jquery.min.js",
   "countto.js",
@@ -89,6 +78,7 @@ type AdminActiveSection =
   | "newsletter"
   | "sendNotifications"
   | "mobileApp"
+  | "mobileBranding"
   | "bulkImages"
   | "accountMenu"
   | "account";
@@ -252,6 +242,12 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     section: "mobileApp",
   },
   {
+    href: "/admin/mobile-branding",
+    icon: "icon-star",
+    label: "Mobile branding",
+    section: "mobileBranding",
+  },
+  {
     href: "/admin/bulk-images",
     icon: "icon-image",
     label: "Bulk image upload",
@@ -361,9 +357,9 @@ function Sidebar({ active }: { active: AdminActiveSection }) {
           <img
             id="logo_header"
             alt="Sarjan Textiles"
-            src="/sarjan-assets/sarjan-logo-icon.png"
-            data-light="/sarjan-assets/sarjan-logo-icon.png"
-            data-dark="/sarjan-assets/sarjan-logo-icon.png"
+            src="/sarjan-assets/sarjan-logo-full.png"
+            data-light="/sarjan-assets/sarjan-logo-full.png"
+            data-dark="/sarjan-assets/sarjan-logo-full.png"
           />
           <span>Sarjan Textiles</span>
         </Link>
@@ -417,10 +413,6 @@ export function AdminTemplateChrome({
 }) {
   return (
     <>
-      {adminStyles.map((style) => (
-        <link key={style} rel="stylesheet" href={`/template/admin/${style}`} />
-      ))}
-      <link rel="stylesheet" href="/admin-charts.css" />
       <AdminGlobalLoader />
       <div id="wrapper">
         <div id="page">

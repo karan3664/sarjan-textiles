@@ -1,4 +1,7 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { getAdminLoginPath } from "../src/lib/admin-login-path";
+
+export const adminLoginPath = getAdminLoginPath();
 
 export const adminEmail =
   process.env.PLAYWRIGHT_ADMIN_EMAIL ??
@@ -38,7 +41,7 @@ export async function loginAdmin(page: Page) {
 
 /** Optional: exercise the HTML login form (UI path). */
 export async function loginAdminViaForm(page: Page) {
-  await page.goto("/admin/login");
+  await page.goto(adminLoginPath);
   await dismissCookieBanner(page);
   await page.getByPlaceholder("Admin email").fill(adminEmail);
   await page.getByPlaceholder("Password").fill(adminPassword);

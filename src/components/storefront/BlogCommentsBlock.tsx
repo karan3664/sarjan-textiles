@@ -4,7 +4,7 @@ import {
 } from "@/lib/blog-comments-store";
 import { BlogCommentForm } from "./BlogCommentForm";
 
-const SARJAN_LOGO = "/sarjan-assets/sarjan-logo.svg";
+const SARJAN_LOGO = "/sarjan-assets/sarjan-logo-full.png";
 
 function formatCommentDate(iso: string) {
   try {

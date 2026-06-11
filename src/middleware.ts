@@ -15,6 +15,13 @@ import {
   redirectAbsoluteUrl,
   redirectFromNextUrl,
 } from "@/lib/request-redirect-origin";
+import { isAdminRoutePath, SARJAN_ADMIN_ROUTE_HEADER } from "@/lib/admin-route";
+import {
+  getAdminLoginPath,
+  isAdminLoginPath,
+  isLegacyAdminLoginPath,
+  LEGACY_ADMIN_LOGIN_PATH,
+} from "@/lib/admin-login-path";
 import {
   getSiteLaunchAtMs,
   isLaunchBypassPath,
@@ -44,7 +51,8 @@ function adminPostLoginPath(next: string | null): string {
     next.startsWith("//") ||
     next.includes("://") ||
     next.includes("\\") ||
-    pathOnly === "/admin/login"
+    pathOnly === LEGACY_ADMIN_LOGIN_PATH ||
+    isAdminLoginPath(pathOnly)
   ) {
     return "/admin";
   }
@@ -94,6 +102,35 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  if (isLegacyAdminLoginPath(pathname)) {
+    return NextResponse.redirect(redirectAbsoluteUrl(request, "/"), 307);
+  }
+
+  if (isAdminLoginPath(pathname)) {
+    if (
+      request.nextUrl.searchParams.has("password") ||
+      request.nextUrl.searchParams.has("pass")
+    ) {
+      const url = redirectFromNextUrl(request);
+      url.searchParams.delete("password");
+      url.searchParams.delete("pass");
+      return NextResponse.redirect(url);
+    }
+
+    const session = await verifyAdminFromRequest(
+      request,
+      request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+    );
+    if (session) {
+      const dest = adminPostLoginPath(request.nextUrl.searchParams.get("next"));
+      return NextResponse.redirect(redirectAbsoluteUrl(request, dest));
+    }
+
+    const url = request.nextUrl.clone();
+    url.pathname = LEGACY_ADMIN_LOGIN_PATH;
+    return NextResponse.rewrite(url);
+  }
+
   if (isSiteLaunchPending()) {
     const launchBlocked = !isLaunchBypassPath(pathname);
     const adminStorefrontPreview =
@@ -130,28 +167,7 @@ export async function middleware(request: NextRequest) {
   const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isAdminApi = pathname.startsWith("/api/admin/");
   const isAdminAuth =
-    pathname.startsWith("/api/admin/auth/") || pathname === "/admin/login";
-
-  if (pathname === "/admin/login") {
-    if (
-      request.nextUrl.searchParams.has("password") ||
-      request.nextUrl.searchParams.has("pass")
-    ) {
-      const url = redirectFromNextUrl(request);
-      url.searchParams.delete("password");
-      url.searchParams.delete("pass");
-      return NextResponse.redirect(url);
-    }
-
-    const session = await verifyAdminFromRequest(
-      request,
-      request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-    );
-    if (session) {
-      const dest = adminPostLoginPath(request.nextUrl.searchParams.get("next"));
-      return NextResponse.redirect(redirectAbsoluteUrl(request, dest));
-    }
-  }
+    pathname.startsWith("/api/admin/auth/") || isAdminLoginPath(pathname);
 
   if ((isAdminPage || isAdminApi) && !isAdminAuth) {
     const session = await verifyAdminFromRequest(
@@ -165,7 +181,7 @@ export async function middleware(request: NextRequest) {
           { status: 401 },
         );
       }
-      const url = redirectAbsoluteUrl(request, "/admin/login");
+      const url = redirectAbsoluteUrl(request, getAdminLoginPath());
       url.searchParams.set("next", returnPath);
       return NextResponse.redirect(url);
     }
@@ -213,7 +229,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(
+    SARJAN_ADMIN_ROUTE_HEADER,
+    isAdminRoutePath(pathname) ? "1" : "0",
+  );
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
   const queryLang = request.nextUrl.searchParams
     .get("lang")
     ?.trim()

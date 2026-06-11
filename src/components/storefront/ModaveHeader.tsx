@@ -226,298 +226,306 @@ export function ModaveHeader({
   }, []);
 
   return (
-    <header
-      id="header"
-      className="header-default header-style-4 sarjan-storefront-header"
-    >
-      <div className="main-header">
-        <div className="container">
-          <div className="row wrapper-header align-items-center">
-            <div className="col-xl-5 d-none d-xl-block">
-              <div className="wrapper-header-left d-flex align-items-center gap-20" />
-            </div>
-            <div className="col-md-4 col-3 d-xl-none">
-              <button
-                type="button"
-                className="mobile-menu sarjan-mobile-menu-trigger"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#mobileMenu"
-                aria-controls="mobileMenu"
-                aria-label="Open menu"
-              >
-                <span className="sarjan-mobile-menu-trigger__icon" aria-hidden>
-                  <span />
-                  <span />
-                  <span />
-                </span>
-              </button>
-            </div>
-            <div className="col-xl-2 col-md-4 col-6 text-center">
-              <Link href="/" className="logo-header">
-                <img
-                  src={initialLogo ?? siteSettings.logo}
-                  alt={siteSettings.brandName}
-                  className="logo sarjan-brand-logo"
-                />
-              </Link>
-            </div>
-            <div className="col-xl-5 col-md-4 col-3">
-              <ul className="nav-icon d-flex justify-content-end align-items-center">
-                <li className="nav-theme d-none d-md-block">
-                  <ThemeToggle variant="icon" />
-                </li>
-                <li className="nav-lang d-none d-md-block">
-                  <LanguageSwitcher initialLocale={initialLocale} />
-                </li>
-                <li className="nav-search">
-                  <a
-                    href="#"
-                    role="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#search"
-                    className="nav-icon-item"
-                    aria-label="Search products"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      showBootstrapModal("search");
-                    }}
+    <>
+      <header
+        id="header"
+        className="header-default header-style-4 sarjan-storefront-header"
+      >
+        <div className="main-header">
+          <div className="container">
+            <div className="row wrapper-header align-items-center">
+              <div className="col-xl-5 d-none d-xl-block">
+                <div className="wrapper-header-left d-flex align-items-center gap-20" />
+              </div>
+              <div className="col-md-4 col-3 d-xl-none">
+                <button
+                  type="button"
+                  className="mobile-menu sarjan-mobile-menu-trigger"
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#mobileMenu"
+                  aria-controls="mobileMenu"
+                  aria-label="Open menu"
+                >
+                  <span
+                    className="sarjan-mobile-menu-trigger__icon"
+                    aria-hidden
                   >
-                    <span className="icon icon-search2" aria-hidden />
-                  </a>
-                </li>
-                <li className="nav-account sarjan-nav-account-desktop">
-                  <a
-                    href={client ? "/profile" : "/login"}
-                    className="nav-icon-item"
-                    aria-label={client ? "My account" : "Sign in"}
-                  >
-                    <span className="icon icon-user" aria-hidden />
-                  </a>
-                  <div className="dropdown-account dropdown-login">
-                    {client ? (
-                      <>
-                        <div className="sub-top">
-                          {primaryAuthLink ? (
-                            <a
-                              href={primaryAuthLink.href}
-                              className={withBtnIcon("tf-btn btn-reset")}
-                            >
-                              <TfButtonIcon
-                                icon={primaryAuthLink.icon ?? "icon-user"}
-                                textClassName="text text-button"
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                </button>
+              </div>
+              <div className="col-xl-2 col-md-4 col-6 text-center">
+                <Link href="/" className="logo-header">
+                  <img
+                    src={initialLogo ?? siteSettings.logo}
+                    alt={siteSettings.brandName}
+                    className="logo sarjan-brand-logo"
+                  />
+                </Link>
+              </div>
+              <div className="col-xl-5 col-md-4 col-3">
+                <ul className="nav-icon d-flex justify-content-end align-items-center">
+                  <li className="nav-theme d-none d-md-block">
+                    <ThemeToggle variant="icon" />
+                  </li>
+                  <li className="nav-lang d-none d-md-block">
+                    <LanguageSwitcher initialLocale={initialLocale} />
+                  </li>
+                  <li className="nav-search">
+                    <a
+                      href="#"
+                      role="button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#search"
+                      className="nav-icon-item"
+                      aria-label="Search products"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        showBootstrapModal("search");
+                      }}
+                    >
+                      <span className="icon icon-search2" aria-hidden />
+                    </a>
+                  </li>
+                  <li className="nav-account sarjan-nav-account-desktop">
+                    <a
+                      href={client ? "/profile" : "/login"}
+                      className="nav-icon-item"
+                      aria-label={client ? "My account" : "Sign in"}
+                    >
+                      <span className="icon icon-user" aria-hidden />
+                    </a>
+                    <div className="dropdown-account dropdown-login">
+                      {client ? (
+                        <>
+                          <div className="sub-top">
+                            {primaryAuthLink ? (
+                              <a
+                                href={primaryAuthLink.href}
+                                className={withBtnIcon("tf-btn btn-reset")}
                               >
-                                {primaryAuthLink.label}
-                              </TfButtonIcon>
-                            </a>
-                          ) : (
+                                <TfButtonIcon
+                                  icon={primaryAuthLink.icon ?? "icon-user"}
+                                  textClassName="text text-button"
+                                >
+                                  {primaryAuthLink.label}
+                                </TfButtonIcon>
+                              </a>
+                            ) : (
+                              <a
+                                href="/profile"
+                                className={withBtnIcon("tf-btn btn-reset")}
+                              >
+                                <TfButtonIcon
+                                  icon="icon-user"
+                                  textClassName="text text-button"
+                                >
+                                  My Account
+                                </TfButtonIcon>
+                              </a>
+                            )}
+                            <p className="text-center text-secondary-2">
+                              {client.companyName ?? client.email}
+                            </p>
+                          </div>
+                          <div className="sub-bot">
+                            {secondaryAuthLinks.map((item) => (
+                              <a
+                                key={item.id}
+                                href={item.href}
+                                className="body-text-1 link d-block mb_8"
+                              >
+                                {item.label}
+                              </a>
+                            ))}
+                            <button
+                              type="button"
+                              className="body-text-1 link sarjan-logout-btn"
+                              onClick={() => logoutClientSession()}
+                            >
+                              Logout
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="sub-top">
                             <a
-                              href="/profile"
+                              href={
+                                guestAccountLinks.find((item) =>
+                                  item.href.includes("login"),
+                                )?.href ?? "/login"
+                              }
                               className={withBtnIcon("tf-btn btn-reset")}
                             >
                               <TfButtonIcon
                                 icon="icon-user"
                                 textClassName="text text-button"
                               >
-                                My Account
+                                {guestAccountLinks.find((item) =>
+                                  item.href.includes("login"),
+                                )?.label ?? "Login"}
                               </TfButtonIcon>
                             </a>
-                          )}
-                          <p className="text-center text-secondary-2">
-                            {client.companyName ?? client.email}
-                          </p>
-                        </div>
-                        <div className="sub-bot">
-                          {secondaryAuthLinks.map((item) => (
-                            <a
-                              key={item.id}
-                              href={item.href}
-                              className="body-text-1 link d-block mb_8"
-                            >
-                              {item.label}
-                            </a>
-                          ))}
-                          <button
-                            type="button"
-                            className="body-text-1 link sarjan-logout-btn"
-                            onClick={() => logoutClientSession()}
-                          >
-                            Logout
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="sub-top">
-                          <a
-                            href={
-                              guestAccountLinks.find((item) =>
-                                item.href.includes("login"),
-                              )?.href ?? "/login"
-                            }
-                            className={withBtnIcon("tf-btn btn-reset")}
-                          >
-                            <TfButtonIcon
-                              icon="icon-user"
-                              textClassName="text text-button"
-                            >
-                              {guestAccountLinks.find((item) =>
-                                item.href.includes("login"),
-                              )?.label ?? "Login"}
-                            </TfButtonIcon>
-                          </a>
-                          <p className="text-center text-secondary-2">
-                            Don&apos;t have an account?{" "}
-                            <a href="/register">Register</a>
-                          </p>
-                        </div>
-                        <div className="sub-bot">
-                          {guestAccountLinks
-                            .filter((item) => !item.href.includes("login"))
-                            .map((item) =>
-                              item.href.startsWith("http") ? (
-                                <a
-                                  key={item.id}
-                                  href={item.href}
-                                  className="body-text-1 link d-block"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {item.label}
-                                </a>
-                              ) : (
-                                <Link
-                                  key={item.id}
-                                  href={item.href}
-                                  className="body-text-1 link d-block"
-                                >
-                                  {item.label}
-                                </Link>
-                              ),
-                            )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </li>
-                <li className="nav-wishlist sarjan-header-icon--mobile-hide">
-                  <a
-                    href="#wishlist"
-                    data-bs-toggle="modal"
-                    className="nav-icon-item"
-                    aria-label={`Wishlist${wishlistCount ? `, ${wishlistCount} items` : ""}`}
-                  >
-                    <span className="icon icon-heart" aria-hidden />
-                    <span className="wishlist-count">{wishlistCount}</span>
-                  </a>
-                </li>
-                <li className="nav-cart">
-                  <a
-                    href="#shoppingCart"
-                    data-bs-toggle="modal"
-                    className="nav-icon-item"
-                    aria-label={`Shopping cart${cartCount ? `, ${cartCount} items` : ""}`}
-                  >
-                    <span className="icon icon-ShoppingBagOpen" aria-hidden />
-                    <span className="count-box">{cartCount}</span>
-                  </a>
-                </li>
-              </ul>
+                            <p className="text-center text-secondary-2">
+                              Don&apos;t have an account?{" "}
+                              <a href="/register">Register</a>
+                            </p>
+                          </div>
+                          <div className="sub-bot">
+                            {guestAccountLinks
+                              .filter((item) => !item.href.includes("login"))
+                              .map((item) =>
+                                item.href.startsWith("http") ? (
+                                  <a
+                                    key={item.id}
+                                    href={item.href}
+                                    className="body-text-1 link d-block"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {item.label}
+                                  </a>
+                                ) : (
+                                  <Link
+                                    key={item.id}
+                                    href={item.href}
+                                    className="body-text-1 link d-block"
+                                  >
+                                    {item.label}
+                                  </Link>
+                                ),
+                              )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                  <li className="nav-wishlist sarjan-header-icon--mobile-hide">
+                    <a
+                      href="#wishlist"
+                      data-bs-toggle="modal"
+                      className="nav-icon-item"
+                      aria-label={`Wishlist${wishlistCount ? `, ${wishlistCount} items` : ""}`}
+                    >
+                      <span className="icon icon-heart" aria-hidden />
+                      <span className="wishlist-count">{wishlistCount}</span>
+                    </a>
+                  </li>
+                  <li className="nav-cart">
+                    <a
+                      href="#shoppingCart"
+                      data-bs-toggle="modal"
+                      className="nav-icon-item"
+                      aria-label={`Shopping cart${cartCount ? `, ${cartCount} items` : ""}`}
+                    >
+                      <span className="icon icon-ShoppingBagOpen" aria-hidden />
+                      <span className="count-box">{cartCount}</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="header-bottom d-none d-xl-block header-dark">
-        <div className="container">
-          <div className="wrapper-header d-flex justify-content-center align-items-center">
-            <nav className="box-navigation text-center">
-              <ul className="box-nav-ul d-flex align-items-center justify-content-center d-none d-xl-flex">
-                {navItems.map((item) => (
-                  <Fragment key={`${item.href}-${item.label}`}>
-                    <li
-                      className={`menu-item${isActive(item.href) ? " active" : ""}`}
-                    >
-                      <a href={item.href} className="item-link">
-                        {item.label}
-                      </a>
-                    </li>
-                    {item.showCategoriesDropdown ? (
+        <div className="header-bottom d-none d-xl-block header-dark">
+          <div className="container">
+            <div className="wrapper-header d-flex justify-content-center align-items-center">
+              <nav className="box-navigation text-center">
+                <ul className="box-nav-ul d-flex align-items-center justify-content-center d-none d-xl-flex">
+                  {navItems.map((item) => (
+                    <Fragment key={`${item.href}-${item.label}`}>
                       <li
-                        className={`menu-item position-relative${categoriesMenuActive ? " active" : ""}`}
-                        key="nav-categories"
+                        className={`menu-item${isActive(item.href) ? " active" : ""}`}
                       >
-                        <Link href="/categories" className="item-link">
-                          Categories
-                        </Link>
-                        <div className="sub-menu sarjan-nav-categories-dropdown">
-                          <div className="menu-heading">Browse</div>
-                          <ul className="menu-list mb_8">
-                            <li>
-                              <Link
-                                href="/categories"
-                                className="menu-link-text"
-                              >
-                                All category hubs
-                              </Link>
-                            </li>
-                            <li>
-                              <Link href="/products" className="menu-link-text">
-                                Full catalog
-                              </Link>
-                            </li>
-                          </ul>
-                          {hubs.length ? (
-                            <>
-                              <div className="menu-heading">
-                                Collection hubs
-                              </div>
-                              <ul className="menu-list mb_8">
-                                {hubs.map((hub) => (
-                                  <li key={hub.slug}>
-                                    <a
-                                      href={`/categories/${hub.slug}`}
-                                      className="menu-link-text"
-                                    >
-                                      {hub.title}
-                                    </a>
-                                  </li>
-                                ))}
-                              </ul>
-                            </>
-                          ) : null}
-                          {catalogCategories.length ? (
-                            <>
-                              <div className="menu-heading">
-                                Catalog filters
-                              </div>
-                              <ul className="menu-list">
-                                {catalogCategories.map((cat) => (
-                                  <li key={cat.slug}>
-                                    <a
-                                      href={catalogCategoryHref(cat.slug)}
-                                      className="menu-link-text"
-                                      title={`${cat.name} (${cat.productCount})`}
-                                    >
-                                      {cat.name}
-                                      <span className="text-caption-2 text-secondary">
-                                        {" "}
-                                        ({cat.productCount})
-                                      </span>
-                                    </a>
-                                  </li>
-                                ))}
-                              </ul>
-                            </>
-                          ) : null}
-                        </div>
+                        <a href={item.href} className="item-link">
+                          {item.label}
+                        </a>
                       </li>
-                    ) : null}
-                  </Fragment>
-                ))}
-              </ul>
-            </nav>
+                      {item.showCategoriesDropdown ? (
+                        <li
+                          className={`menu-item position-relative${categoriesMenuActive ? " active" : ""}`}
+                          key="nav-categories"
+                        >
+                          <Link href="/categories" className="item-link">
+                            Categories
+                          </Link>
+                          <div className="sub-menu sarjan-nav-categories-dropdown">
+                            <div className="menu-heading">Browse</div>
+                            <ul className="menu-list mb_8">
+                              <li>
+                                <Link
+                                  href="/categories"
+                                  className="menu-link-text"
+                                >
+                                  All category hubs
+                                </Link>
+                              </li>
+                              <li>
+                                <Link
+                                  href="/products"
+                                  className="menu-link-text"
+                                >
+                                  Full catalog
+                                </Link>
+                              </li>
+                            </ul>
+                            {hubs.length ? (
+                              <>
+                                <div className="menu-heading">
+                                  Collection hubs
+                                </div>
+                                <ul className="menu-list mb_8">
+                                  {hubs.map((hub) => (
+                                    <li key={hub.slug}>
+                                      <a
+                                        href={`/categories/${hub.slug}`}
+                                        className="menu-link-text"
+                                      >
+                                        {hub.title}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : null}
+                            {catalogCategories.length ? (
+                              <>
+                                <div className="menu-heading">
+                                  Catalog filters
+                                </div>
+                                <ul className="menu-list">
+                                  {catalogCategories.map((cat) => (
+                                    <li key={cat.slug}>
+                                      <a
+                                        href={catalogCategoryHref(cat.slug)}
+                                        className="menu-link-text"
+                                        title={`${cat.name} (${cat.productCount})`}
+                                      >
+                                        {cat.name}
+                                        <span className="text-caption-2 text-secondary">
+                                          {" "}
+                                          ({cat.productCount})
+                                        </span>
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : null}
+                          </div>
+                        </li>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
       <div
         className="offcanvas offcanvas-start canvas-mb sarjan-mobile-menu"
         id="mobileMenu"
@@ -735,6 +743,6 @@ export function ModaveHeader({
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }

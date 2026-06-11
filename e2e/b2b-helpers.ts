@@ -1,5 +1,10 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
-import { adminEmail, adminPassword, dismissCookieBanner } from "./helpers";
+import {
+  adminEmail,
+  adminPassword,
+  adminLoginPath,
+  dismissCookieBanner,
+} from "./helpers";
 
 export const DEMO_PAUSE_MS = 2800;
 
@@ -86,7 +91,7 @@ export async function loginCustomerUI(
 }
 
 export async function loginAdminUI(page: Page) {
-  await page.goto("/admin/login");
+  await page.goto(adminLoginPath);
   await page.getByPlaceholder("Admin email").fill(adminEmail);
   await page.getByPlaceholder("Password").fill(adminPassword);
   await page.getByRole("button", { name: /^login$/i }).click();

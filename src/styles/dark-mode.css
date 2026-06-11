@@ -422,7 +422,7 @@ html[data-theme="dark"]
   background-color: var(--sarjan-surface) !important;
 }
 
-/* Product image placeholders */
+/* Product image placeholders — always white behind brand mark */
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
@@ -433,6 +433,21 @@ html[data-theme="dark"]
     :has(.sarjan-admin-shell)
   )
   .img-product.sarjan-product-img-placeholder,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-img-hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .product-img
+  img.sarjan-product-img-placeholder {
+  background: #ffffff !important;
+}
+
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)

@@ -213,7 +213,7 @@ export function HomeHeroRotator({
               <div className="box-btn-slider sarjan-hero-cta">
                 <Link
                   href={slideCta.href}
-                  className="tf-btn btn-fill btn-white"
+                  className="tf-btn btn-fill btn-white sarjan-hero-cta-primary"
                 >
                   <span className="text">
                     <CmsHtml html={slideCta.label} />

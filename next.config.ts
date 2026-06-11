@@ -48,9 +48,6 @@ const nextConfig: NextConfig = {
       transform: "lucide-react/dist/esm/icons/{{kebabCase member}}",
       skipDefaultConversion: true,
     },
-    "framer-motion": {
-      transform: "framer-motion/dist/es/{{member}}",
-    },
   },
   experimental: {
     webpackMemoryOptimizations: true,

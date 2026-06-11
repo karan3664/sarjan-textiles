@@ -14,6 +14,10 @@ import { ProductPromoTag } from "./ProductPromoTag";
 import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
 import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
+import {
+  isProductPlaceholderImage,
+  productHasRealImages,
+} from "@/lib/product-placeholder-image";
 import { StorefrontProductImage } from "./StorefrontProductImage";
 
 export function ModaveProductCard({
@@ -21,7 +25,7 @@ export function ModaveProductCard({
   delay = "0s",
   className = "",
   showColorSwatches = false,
-  priceCompact = false,
+  priceCompact = true,
 }: {
   product: Product;
   delay?: string;
@@ -45,29 +49,39 @@ export function ModaveProductCard({
           : 0
       : 0;
   const hoverImage = product.images[hoverIndex] ?? primaryImage;
+  const showHoverSwap =
+    productHasRealImages(product.images) &&
+    Boolean(hoverImage && hoverImage !== primaryImage) &&
+    !isProductPlaceholderImage(primaryImage) &&
+    !isProductPlaceholderImage(hoverImage);
 
   return (
     <div
       className={`card-product wow fadeInUp${className ? ` ${className}` : ""}`}
       data-wow-delay={delay}
     >
-      <div className="card-product-wrapper position-relative">
+      <div
+        className={`card-product-wrapper position-relative${showHoverSwap ? "" : " sarjan-product-card--no-hover-swap"}`}
+      >
         <a href={`/products/${product.slug}`} className="product-img">
           <span className="sarjan-product-img-primary">
             <StorefrontProductImage
               src={primaryImage}
               alt={altText}
               className="img-product"
-            />
-          </span>
-          <span className="sarjan-product-img-hover">
-            <StorefrontProductImage
-              src={hoverImage}
-              alt={buildProductImageAlt(product, { variant: "alternate" })}
-              className="img-hover"
               fill
             />
           </span>
+          {showHoverSwap ? (
+            <span className="sarjan-product-img-hover">
+              <StorefrontProductImage
+                src={hoverImage}
+                alt={buildProductImageAlt(product, { variant: "alternate" })}
+                className="img-hover"
+                fill
+              />
+            </span>
+          ) : null}
         </a>
         <div
           className={`list-product-btn${soldOut ? " list-product-btn--oos" : ""}`}

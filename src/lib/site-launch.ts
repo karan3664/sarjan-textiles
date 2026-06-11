@@ -1,3 +1,5 @@
+import { isAdminLoginPath } from "@/lib/admin-login-path";
+
 /** ISO-8601 with offset, e.g. 2026-06-17T12:39:00+05:30 (IST). Unset = gate off. */
 function readSiteLaunchAtRaw(): string | undefined {
   // Bracket access keeps middleware reading runtime env on Docker/Coolify (not build-time "").
@@ -26,6 +28,7 @@ export function isSiteLaunchPending(now = Date.now()): boolean {
 /** Routes that stay reachable while the public site is gated. */
 export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname === "/launch") return true;
+  if (isAdminLoginPath(pathname)) return true;
   if (pathname.startsWith("/admin")) return true;
   if (pathname.startsWith("/api/admin")) return true;
   if (pathname.startsWith("/api/cron")) return true;
