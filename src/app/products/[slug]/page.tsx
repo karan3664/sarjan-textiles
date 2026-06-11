@@ -3,6 +3,7 @@ import { ProductDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCatalogProducts } from "@/lib/catalog";
 import { getCmsProductBySlug } from "@/lib/cms-store";
+import { resolveProduct } from "@/lib/product-localize";
 import { getProductCategoryRoute } from "@/lib/product-seo-slug";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
@@ -33,7 +34,8 @@ async function loadProductForSlug(slug: string) {
     locale,
   });
   if (priced.items[0]) return priced.items[0];
-  return getCmsProductBySlug(slug);
+  const raw = await getCmsProductBySlug(slug);
+  return raw ? resolveProduct(raw, locale) : null;
 }
 
 export async function generateMetadata({

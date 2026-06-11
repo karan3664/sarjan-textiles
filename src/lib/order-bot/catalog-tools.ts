@@ -1,4 +1,6 @@
 import { getCatalogProducts } from "@/lib/catalog";
+import { readEnglish } from "@/lib/cms-localize";
+import type { LocalizedText } from "@/lib/localized-text";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import {
   isProductSoldOut,
@@ -18,6 +20,13 @@ function slugValue(value: string) {
   return slugifyCmsSegment(value);
 }
 
+function productCategoryName(
+  category: Product["category"] | string | undefined,
+): string {
+  if (typeof category === "string") return category.trim();
+  return readEnglish(category).trim();
+}
+
 export type BotCategoryEntry = {
   name: string;
   slug: string;
@@ -30,7 +39,7 @@ export async function listBotCategories(): Promise<BotCategoryEntry[]> {
   const { products } = await getCachedCmsSnapshot();
   const counts = new Map<string, number>();
   for (const product of products) {
-    const name = product.category?.trim();
+    const name = productCategoryName(product.category);
     if (!name) continue;
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
@@ -62,7 +71,7 @@ export async function listBotCategoryPreviews(): Promise<BotCategoryPreview[]> {
   const { products } = await getCachedCmsSnapshot();
   const imageByCategory = new Map<string, string>();
   for (const product of products) {
-    const name = product.category?.trim();
+    const name = productCategoryName(product.category);
     if (!name || imageByCategory.has(name)) continue;
     const image = firstProductImage(product);
     if (image) imageByCategory.set(name, image);
@@ -85,34 +94,46 @@ export async function listBotCategoryPreviews(): Promise<BotCategoryPreview[]> {
   });
 }
 
-function matchesCategoryName(name: string, query: string) {
-  const productSlug = slugValue(name);
+function matchesCategoryName(
+  name: string | Product["category"] | undefined,
+  query: string,
+) {
+  const label = productCategoryName(name);
+  if (!label) return false;
+  const productSlug = slugValue(label);
   const querySlug = slugValue(query);
   return (
     productSlug === querySlug ||
     productSlug.includes(querySlug) ||
     querySlug.includes(productSlug) ||
-    name.toLowerCase().includes(query.toLowerCase())
+    label.toLowerCase().includes(query.toLowerCase())
   );
 }
 
 function matchesCategory(product: Product, query: string) {
-  return matchesCategoryName(product.category, query);
+  return matchesCategoryName(productCategoryName(product.category), query);
+}
+
+function localizedField(value: string | LocalizedText | undefined) {
+  if (typeof value === "string") return value.trim();
+  return readEnglish(value).trim();
 }
 
 function productSearchHaystack(product: Product) {
   return [
-    product.name,
+    localizedField(product.name as string),
     product.slug,
     product.sku,
-    product.category,
-    product.fabric,
-    product.description,
-    ...(product.categoryPath ?? []),
-    product.categoryLevel1,
-    product.categoryLevel2,
-    product.categoryLevel3,
-    ...product.colors,
+    productCategoryName(product.category),
+    localizedField(product.fabric as string),
+    localizedField(product.description as string),
+    ...(product.categoryPath ?? []).map((part) =>
+      localizedField(part as string),
+    ),
+    localizedField(product.categoryLevel1 as string),
+    localizedField(product.categoryLevel2 as string),
+    localizedField(product.categoryLevel3 as string),
+    ...product.colors.map((color) => localizedField(color as string)),
     ...product.sizes,
   ]
     .filter(Boolean)
@@ -176,7 +197,7 @@ function toPreviews(
       index: index + 1,
       slug: product.slug,
       name: product.name,
-      category: product.category,
+      category: productCategoryName(product.category),
       color,
       sizes,
       setPrice: productSetPrice(product, color, sizes),

@@ -1,4 +1,5 @@
 import { getCatalogProducts } from "@/lib/catalog";
+import { getCart, saveCart } from "@/lib/local-db";
 import { productSetPrice } from "@/lib/product-pricing";
 import { clearProductPickPending } from "@/lib/order-bot/conversation";
 import { validateSetQuantity } from "@/lib/order-bot/quantity";
@@ -11,6 +12,46 @@ import type { BotCartLine, BotProductPreview } from "@/lib/order-bot/types";
 
 function money(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
+}
+
+function botCartToStoreLines(cart: BotCartLine[]) {
+  return cart.map((line) => ({
+    slug: line.slug,
+    quantity: line.setQuantity,
+    color: line.color,
+    sizes: line.sizes.length ? line.sizes : ["Free"],
+  }));
+}
+
+function storeLinesToBotCart(
+  items: Awaited<ReturnType<typeof getCart>>,
+): BotCartLine[] {
+  return items.map((item) => ({
+    slug: item.slug,
+    name: item.slug,
+    color: item.color || "Default",
+    sizes: item.sizes?.length ? item.sizes : ["Free"],
+    setQuantity: Math.max(1, Number(item.quantity) || 1),
+  }));
+}
+
+export async function persistBotCartToStore(session: BotSession) {
+  await saveCart(session.clientId, botCartToStoreLines(session.cart));
+}
+
+/** Load the signed-in client's storefront cart into the bot session. */
+export async function hydrateBotCartFromStore(session: BotSession) {
+  const stored = await getCart(session.clientId);
+  if (!stored.length) {
+    return { cart: session.cart, total: 0 };
+  }
+  const { cart, total } = await enrichCartLines(
+    session.clientId,
+    storeLinesToBotCart(stored),
+  );
+  session.cart = cart;
+  touchBotSession(session);
+  return { cart, total };
 }
 
 export function formatStockLabel(product: BotProductPreview) {
@@ -112,6 +153,7 @@ export async function applyProductSetsToCart(
 
   const { cart, total } = await enrichCartLines(session.clientId, session.cart);
   session.cart = cart;
+  await persistBotCartToStore(session);
   touchBotSession(session);
 
   const prefix =
@@ -186,6 +228,7 @@ export async function applyCartLineQuantity(
   line.setQuantity = validated.quantity;
   const { cart, total } = await enrichCartLines(session.clientId, session.cart);
   session.cart = cart;
+  await persistBotCartToStore(session);
   touchBotSession(session);
 
   const noteBlock = validated.notes.length

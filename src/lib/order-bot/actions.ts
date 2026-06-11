@@ -16,6 +16,8 @@ import {
   applyProductSetsToCart,
   enrichCartLines,
   formatStockLabel,
+  hydrateBotCartFromStore,
+  persistBotCartToStore,
 } from "@/lib/order-bot/cart-ops";
 import { buildOrderPreviews } from "@/lib/order-bot/order-previews";
 import { markProductPickPending } from "@/lib/order-bot/conversation";
@@ -86,6 +88,7 @@ async function placeBotOrder(session: BotSession, note?: string) {
   session.cart = [];
   session.lastProducts = [];
   session.pendingProductPick = false;
+  await persistBotCartToStore(session);
   void sendOrderPlacedEmail(order).catch((error) =>
     console.error("Bot order email failed", error),
   );
@@ -188,11 +191,7 @@ export async function executeBotTool(
     }
 
     case "view_cart": {
-      const { cart, total } = await enrichCartLines(
-        session.clientId,
-        session.cart,
-      );
-      session.cart = cart;
+      const { cart, total } = await hydrateBotCartFromStore(session);
       session.attachCartCards = true;
       return cart.length
         ? `Cart has ${cart.length} line(s), total ${money(total)}. UI shows cart cards — keep reply to one short sentence.`
@@ -201,6 +200,7 @@ export async function executeBotTool(
 
     case "clear_cart": {
       session.cart = [];
+      await persistBotCartToStore(session);
       return "Cart cleared.";
     }
 

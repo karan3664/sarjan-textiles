@@ -351,6 +351,8 @@ export function OrderBotWidget() {
 
       if (access !== "approved") {
         setVisible(true);
+        setNavActions(GUEST_NAV);
+        setQuickReplies([]);
         setMessages((prev) => [
           ...prev,
           { id: nextId(), role: "user", text: message },
@@ -595,7 +597,7 @@ export function OrderBotWidget() {
                   key={chip}
                   type="button"
                   className="sarjan-order-bot-chip"
-                  disabled={sending || !canChat}
+                  disabled={sending || !canChat || access !== "approved"}
                   onClick={() => void sendMessage(chip)}
                 >
                   {chip}

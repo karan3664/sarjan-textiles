@@ -40,6 +40,8 @@ import {
   applyCartLineQuantity,
   applyProductSetsToCart,
   enrichCartLines,
+  hydrateBotCartFromStore,
+  persistBotCartToStore,
 } from "@/lib/order-bot/cart-ops";
 import { buildOrderPreview } from "@/lib/order-bot/order-previews";
 import { executeBotTool } from "@/lib/order-bot/actions";
@@ -183,6 +185,7 @@ async function placeBotOrder(session: BotSession, note?: string) {
   session.lastPlacedOrderId = order.id;
   session.cart = [];
   session.lastProducts = [];
+  await persistBotCartToStore(session);
   void sendOrderPlacedEmail(order).catch((error) =>
     console.error("Bot order email failed", error),
   );
@@ -336,6 +339,9 @@ export async function handleOrderBotMessage(input: {
     input.clientId,
     input.clientEmail,
   );
+  if (!session.cart.length) {
+    await hydrateBotCartFromStore(session);
+  }
   const text = input.message.trim();
 
   const preLlm = await tryPreLlmOrderBotHandlers(session, text);
@@ -467,11 +473,7 @@ export async function handleOrderBotMessage(input: {
   }
 
   if (/^cart$|^my cart$|^show cart$/i.test(lower)) {
-    const { cart, total } = await enrichCartLines(
-      session.clientId,
-      session.cart,
-    );
-    session.cart = cart;
+    const { cart, total } = await hydrateBotCartFromStore(session);
     touchBotSession(session);
     return {
       sessionId: session.id,
@@ -486,6 +488,7 @@ export async function handleOrderBotMessage(input: {
 
   if (/^clear cart$/i.test(lower)) {
     session.cart = [];
+    await persistBotCartToStore(session);
     touchBotSession(session);
     return {
       sessionId: session.id,
