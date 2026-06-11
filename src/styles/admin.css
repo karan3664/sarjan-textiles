@@ -25,6 +25,8 @@ body.sarjan-admin .sarjan-admin-shell .section-menu-left {
   min-width: 260px;
   max-width: 260px;
   height: 100%;
+  padding-top: 52px;
+  box-sizing: border-box;
   z-index: 20;
 }
 
@@ -68,7 +70,7 @@ body.sarjan-admin .sarjan-admin-shell .section-content-right .header-dashboard {
   top: 0;
   right: 0;
   left: 260px;
-  z-index: 10;
+  z-index: 50;
 }
 
 /* Sidebar collapse — must override critical shell rules above (higher specificity) */
@@ -305,6 +307,11 @@ body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
   border-bottom: 1px solid rgba(24, 24, 24, 0.08);
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(18px);
+  z-index: 50;
+}
+
+body.sarjan-admin .header-dashboard .dropdown-menu {
+  z-index: 60;
 }
 
 .header-dashboard .wrap {
@@ -889,8 +896,11 @@ body:has(.sarjan-admin-login) .sarjan-admin-page-loader {
 
 .section-menu-left .section-menu-left-wrap {
   padding-top: 0 !important;
-  height: calc(100vh - 70px) !important;
+  height: calc(100vh - 52px) !important;
+  max-height: calc(100vh - 52px) !important;
   overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .section-menu-left .menu-item .menu-item-button {
@@ -4146,15 +4156,15 @@ img.sarjan-product-img-placeholder {
 
 .sarjan-mobile-app-cms__toolbar {
   position: sticky;
-  top: 8px;
-  z-index: 30;
+  top: 76px;
+  z-index: 5;
   margin-bottom: 16px;
 }
 
 .sarjan-mobile-app-cms__footer-bar {
   position: sticky;
   bottom: 12px;
-  z-index: 25;
+  z-index: 4;
   margin-top: 8px;
 }
 
@@ -5604,6 +5614,224 @@ body[data-theme-background="theme-background-252E3A"],
 body[data-theme-background="theme-background-1E1D2A"],
 body[data-theme-background="theme-background-1B2627"] {
   color: #e8e6e3;
+}
+
+/* Dark page background — keep top header bar in sync (was staying white) */
+body.sarjan-admin[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-shell
+  .header-dashboard,
+body.sarjan-admin[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-shell
+  .header-dashboard,
+body.sarjan-admin[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-shell
+  .header-dashboard {
+  background: rgba(30, 41, 59, 0.96) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(18px);
+}
+
+body.sarjan-admin[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  :is(h6, .name, .icon, .body-text, .body-title, .text-tiny, i),
+body.sarjan-admin[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  :is(h6, .name, .icon, .body-text, .body-title, .text-tiny, i),
+body.sarjan-admin[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-shell
+  .header-dashboard
+  :is(h6, .name, .icon, .body-text, .body-title, .text-tiny, i) {
+  color: #f2efe9 !important;
+  -webkit-text-fill-color: #f2efe9 !important;
+}
+
+body.sarjan-admin[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  svg
+  path,
+body.sarjan-admin[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  svg
+  path,
+body.sarjan-admin[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-shell
+  .header-dashboard
+  svg
+  path {
+  fill: #f2efe9 !important;
+}
+
+body.sarjan-admin[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  .form-search
+  input,
+body.sarjan-admin[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  .form-search
+  input,
+body.sarjan-admin[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-shell
+  .header-dashboard
+  .form-search
+  input {
+  color: #f2efe9 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.sarjan-admin[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  .header-item,
+body.sarjan-admin[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-shell
+  .header-dashboard
+  .header-item,
+body.sarjan-admin[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-shell
+  .header-dashboard
+  .header-item {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.sarjan-admin[data-theme-background="theme-background-252E3A"]
+  .sarjan-admin-shell
+  .main-content-inner
+  .text-secondary,
+body.sarjan-admin[data-theme-background="theme-background-1E1D2A"]
+  .sarjan-admin-shell
+  .main-content-inner
+  .text-secondary,
+body.sarjan-admin[data-theme-background="theme-background-1B2627"]
+  .sarjan-admin-shell
+  .main-content-inner
+  .text-secondary {
+  color: rgba(242, 239, 233, 0.72) !important;
+  -webkit-text-fill-color: rgba(242, 239, 233, 0.72) !important;
+}
+
+.sarjan-admin-theme-save {
+  font-weight: 600;
+}
+
+.sarjan-admin-theme-save-hint {
+  min-height: 1.25rem;
+}
+
+.sarjan-theme-option-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sarjan-theme-layout-note {
+  line-height: 1.45;
+}
+
+/* Sarjan admin — never let Modave theme customizer break the fixed top bar */
+body.sarjan-admin .sarjan-admin-shell.layout-width-boxed {
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+body.sarjan-admin .sarjan-admin-shell .header-dashboard {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: 260px !important;
+  width: auto !important;
+  max-width: none !important;
+  padding-left: 0 !important;
+  transform: none !important;
+  z-index: 50 !important;
+}
+
+body.sarjan-admin
+  .layout-wrap.full-width.sarjan-admin-shell
+  .section-content-right
+  .header-dashboard {
+  left: 0 !important;
+}
+
+body.sarjan-admin .sarjan-admin-shell.header-position-scrollable .main-content {
+  padding-top: 68px !important;
+}
+
+body.sarjan-admin .sarjan-admin-shell .header-dashboard .wrap {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 50px;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+body.sarjan-admin .sarjan-admin-shell .header-dashboard .wrap .header-grid {
+  display: flex !important;
+  align-items: center !important;
+  margin-left: auto !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body.sarjan-admin
+  .sarjan-admin-shell
+  .header-dashboard
+  .wrap
+  .header-grid
+  > .setting {
+  display: inline-flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Light header — keep profile + icons readable */
+body.sarjan-admin
+  .sarjan-admin-shell:not([data-colors-header])
+  .header-dashboard
+  :is(.name, .email, .body-title, .text-tiny, h6),
+body.sarjan-admin
+  .sarjan-admin-shell[data-colors-header="colors-header-fff"]
+  .header-dashboard
+  :is(.name, .email, .body-title, .text-tiny, h6) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+body.sarjan-admin
+  .sarjan-admin-shell:not([data-colors-header])
+  .header-dashboard
+  .icon,
+body.sarjan-admin
+  .sarjan-admin-shell[data-colors-header="colors-header-fff"]
+  .header-dashboard
+  .icon,
+body.sarjan-admin
+  .sarjan-admin-shell:not([data-colors-header])
+  .header-dashboard
+  svg
+  path,
+body.sarjan-admin
+  .sarjan-admin-shell[data-colors-header="colors-header-fff"]
+  .header-dashboard
+  svg
+  path {
+  color: #181818 !important;
+  fill: #181818 !important;
+}
+
+@media (max-width: 1200px) {
+  body.sarjan-admin .sarjan-admin-shell .header-dashboard {
+    left: 0 !important;
+    width: 100% !important;
+  }
 }
 
 body[data-theme-background="theme-background-252E3A"] .main-content,

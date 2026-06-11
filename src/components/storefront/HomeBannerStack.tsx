@@ -8,11 +8,11 @@ import { StorefrontBannerImage } from "./StorefrontBannerImage";
 
 function HomeBannerBlock({
   banner,
-  secondaryCta,
+  fallbackSecondaryCta,
   priority = false,
 }: {
   banner: CmsHomeBanner;
-  secondaryCta?: { label: string; href: string };
+  fallbackSecondaryCta?: { label: string; href: string };
   priority?: boolean;
 }) {
   const slideTitle = banner.title?.trim() ?? "";
@@ -22,8 +22,18 @@ function HomeBannerBlock({
     label: banner.ctaLabel?.trim() || "Learn more",
     href: banner.ctaHref?.trim() || "/about",
   };
+  const secondaryCta = {
+    label:
+      banner.secondaryCtaLabel?.trim() ||
+      fallbackSecondaryCta?.label?.trim() ||
+      "",
+    href:
+      banner.secondaryCtaHref?.trim() ||
+      fallbackSecondaryCta?.href?.trim() ||
+      "",
+  };
   const showSecondary =
-    Boolean(secondaryCta?.label?.trim()) && Boolean(secondaryCta?.href?.trim());
+    Boolean(secondaryCta.label) && Boolean(secondaryCta.href);
 
   return (
     <section
@@ -96,6 +106,7 @@ type HomeBannerSource = {
     title?: string;
     description?: string;
     primaryCta?: { label?: string; href?: string };
+    secondaryCta?: { label?: string; href?: string };
   };
 };
 
@@ -121,7 +132,7 @@ export function HomeBannerStack({
         <HomeBannerBlock
           key={banner.id}
           banner={banner}
-          secondaryCta={index === 0 ? secondaryCta : undefined}
+          fallbackSecondaryCta={index === 0 ? secondaryCta : undefined}
           priority={index === 0}
         />
       ))}

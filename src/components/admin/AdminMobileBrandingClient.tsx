@@ -7,7 +7,10 @@ import {
   mobileAppIconOptions,
 } from "@/lib/mobile-app-cms";
 import {
+  clampSkipAfterMs,
+  clampSplashDuration,
   computeCampaignStatus,
+  maxSplashMsForTemplate,
   mobileBrandingAnimationOptions,
   mobileBrandingCampaignTypeOptions,
   type MobileBrandingAnalyticsRow,
@@ -459,20 +462,22 @@ export function AdminMobileBrandingClient({ initialMobileApp }: Props) {
                             type="number"
                             className="form-control"
                             min={800}
-                            max={3000}
+                            max={maxSplashMsForTemplate(
+                              campaign.animationTemplate,
+                            )}
                             value={campaign.durationMs ?? 2000}
                             onChange={(event) =>
                               updateCampaign(index, {
-                                durationMs: Math.min(
-                                  3000,
-                                  Math.max(
-                                    800,
-                                    Number(event.target.value) || 2000,
-                                  ),
+                                durationMs: clampSplashDuration(
+                                  campaign.animationTemplate,
+                                  Number(event.target.value) || 2000,
                                 ),
                               })
                             }
                           />
+                          <span className="text-muted small">
+                            Launch: up to 10s · Other campaigns: up to 3s
+                          </span>
                         </div>
                         <div className="sarjan-banner-field">
                           <span className="sarjan-banner-field-label">
@@ -482,17 +487,50 @@ export function AdminMobileBrandingClient({ initialMobileApp }: Props) {
                             type="number"
                             className="form-control"
                             min={500}
-                            max={3000}
+                            max={maxSplashMsForTemplate(
+                              campaign.animationTemplate,
+                            )}
                             value={campaign.skipAfterMs ?? 1000}
                             onChange={(event) =>
                               updateCampaign(index, {
-                                skipAfterMs: Math.min(
-                                  3000,
-                                  Math.max(
-                                    500,
-                                    Number(event.target.value) || 1000,
-                                  ),
+                                skipAfterMs: clampSkipAfterMs(
+                                  campaign.animationTemplate,
+                                  campaign.durationMs ?? 2000,
+                                  Number(event.target.value) || 1000,
                                 ),
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div className="sarjan-banner-field-grid">
+                        <div className="sarjan-banner-field">
+                          <span className="sarjan-banner-field-label">
+                            Splash logo URL
+                          </span>
+                          <input
+                            className="form-control"
+                            placeholder="/sarjan-assets/sarjan-logo-icon.png"
+                            value={campaign.splashLogoUrl ?? ""}
+                            onChange={(event) =>
+                              updateCampaign(index, {
+                                splashLogoUrl: event.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sarjan-banner-field">
+                          <span className="sarjan-banner-field-label">
+                            Home preview image URL
+                          </span>
+                          <input
+                            className="form-control"
+                            placeholder="/uploads/cms/home-mobile-preview.webp"
+                            value={campaign.splashHomeImageUrl ?? ""}
+                            onChange={(event) =>
+                              updateCampaign(index, {
+                                splashHomeImageUrl: event.target.value,
                               })
                             }
                           />

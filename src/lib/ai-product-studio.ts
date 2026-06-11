@@ -57,6 +57,7 @@ export type StudioImageRecord = {
   finalPublicPath?: string;
   finalPublicUrl?: string;
   prompt: string;
+  useCustomPrompt?: boolean;
   shootStyle: StudioShootStyle;
   metadata: StudioMetadata;
   status: StudioStatus;
@@ -73,12 +74,33 @@ type StudioState = {
 
 export type AiImageProvider = "vertex" | "openai" | "local";
 
+export type CatalogProcessingMode = "preserve" | "generative";
+
 export type AiImageProviderInfo = {
   active: AiImageProvider;
   requested: string;
   ready: boolean;
+  catalogMode: CatalogProcessingMode;
   note?: string;
 };
+
+const CATALOG_BG = "#f4f4f4";
+const CATALOG_BG_CENTER = "#f7f7f7";
+
+export function getCatalogProcessingMode(): CatalogProcessingMode {
+  const raw = (process.env.AI_IMAGE_CATALOG_MODE || "preserve")
+    .trim()
+    .toLowerCase();
+  if (
+    raw === "generative" ||
+    raw === "ai" ||
+    raw === "openai" ||
+    raw === "vertex"
+  ) {
+    return "generative";
+  }
+  return "preserve";
+}
 
 export type StudioSnapshot = {
   root: string;
@@ -193,7 +215,9 @@ Output:
 - Photorealistic.
 - Ultra realistic.
 - No text.
-- No watermark.`;
+- No watermark.
+
+Make 100% accurate — no change in style, color, pattern, logo, or any product detail.`;
 
 function resolveAiStudioPromptFile() {
   return path.join(resolveAiStudioStateDir(), "prompt-template.txt");
@@ -232,7 +256,12 @@ async function writeStudioPromptTemplate(promptTemplate: string) {
     records: state.records.map((record) =>
       record.status === "approved"
         ? record
-        : { ...record, prompt: nextPrompt, updatedAt: now() },
+        : {
+            ...record,
+            prompt: nextPrompt,
+            useCustomPrompt: false,
+            updatedAt: now(),
+          },
     ),
   });
   return nextPrompt;
@@ -500,6 +529,28 @@ export async function updateStudioPrompt(promptTemplate: string) {
   return writeStudioPromptTemplate(promptTemplate);
 }
 
+export async function resetStudioPromptToDefault() {
+  return writeStudioPromptTemplate(productStudioPrompt);
+}
+
+export async function updateStudioRecordPrompt(id: string, prompt: string) {
+  const trimmed = prompt.trim();
+  if (!trimmed) throw new Error("Prompt cannot be empty");
+
+  const records = await readRecords();
+  const index = records.findIndex((item) => item.id === id);
+  if (index === -1) throw new Error("Studio image not found");
+
+  records[index] = {
+    ...records[index],
+    prompt: trimmed,
+    useCustomPrompt: true,
+    updatedAt: now(),
+  };
+  await writeRecords(records);
+  return withUrls(records[index]);
+}
+
 export async function saveRawUploads(
   files: File[],
   input: {
@@ -764,7 +815,14 @@ async function generateOpenAiCatalogShoot(inputPath: string, prompt: string) {
     "shirt-reference.png",
   );
   formData.append("size", process.env.OPENAI_IMAGE_SIZE || "1024x1536");
-  formData.append("quality", process.env.OPENAI_IMAGE_QUALITY || "medium");
+  formData.append(
+    "quality",
+    process.env.OPENAI_IMAGE_QUALITY?.trim() || "high",
+  );
+  formData.append(
+    "input_fidelity",
+    process.env.OPENAI_IMAGE_INPUT_FIDELITY?.trim() || "high",
+  );
   formData.append("output_format", "png");
 
   const response = await fetch("https://api.openai.com/v1/images/edits", {
@@ -982,58 +1040,80 @@ function requestedAiImageProvider(): AiImageProvider {
   throw new Error("AI_IMAGE_PROVIDER must be vertex, openai, or local");
 }
 
+function withCatalogMode(info: Omit<AiImageProviderInfo, "catalogMode">) {
+  const catalogMode = getCatalogProcessingMode();
+  if (catalogMode === "preserve") {
+    return {
+      ...info,
+      active: "local" as const,
+      catalogMode,
+      note: info.note
+        ? `${info.note} Catalog mode: preserve (exact product pixels).`
+        : "Catalog mode: preserve — keeps original print, color, logo, and buttons.",
+    };
+  }
+
+  return {
+    ...info,
+    catalogMode,
+    note: info.note
+      ? `${info.note} Catalog mode: generative (AI may alter details).`
+      : "Catalog mode: generative — AI may change print, color, or logo.",
+  };
+}
+
 /** Pick a working image provider when env is incomplete (e.g. Vertex id missing but OpenAI key set). */
 export function resolveAiImageProvider(): AiImageProviderInfo {
   const requested = requestedAiImageProvider();
 
   if (requested === "vertex") {
     if (vertexConfigured()) {
-      return { active: "vertex", requested, ready: true };
+      return withCatalogMode({ active: "vertex", requested, ready: true });
     }
     if (openAiConfigured()) {
-      return {
+      return withCatalogMode({
         active: "openai",
         requested,
         ready: true,
         note: "GOOGLE_CLOUD_PROJECT_ID is not set — using OpenAI for catalog processing.",
-      };
+      });
     }
-    return {
+    return withCatalogMode({
       active: "local",
       requested,
       ready: true,
       note: "Vertex and OpenAI are not configured — using local background cleanup only.",
-    };
+    });
   }
 
   if (requested === "openai") {
     if (openAiConfigured()) {
-      return { active: "openai", requested, ready: true };
+      return withCatalogMode({ active: "openai", requested, ready: true });
     }
     if (vertexConfigured()) {
-      return {
+      return withCatalogMode({
         active: "vertex",
         requested,
         ready: true,
         note: "OPENAI_API_KEY is not set — using Vertex Imagen instead.",
-      };
+      });
     }
-    return {
+    return withCatalogMode({
       active: "local",
       requested,
       ready: true,
       note: "OpenAI is not configured — using local background cleanup only.",
-    };
+    });
   }
 
-  return { active: "local", requested, ready: true };
+  return withCatalogMode({ active: "local", requested, ready: true });
 }
 
 export function getAiImageProviderInfo() {
   try {
     return resolveAiImageProvider();
   } catch (error) {
-    return {
+    return withCatalogMode({
       active: "local" as const,
       requested: process.env.AI_IMAGE_PROVIDER?.trim() || "vertex",
       ready: false,
@@ -1041,19 +1121,31 @@ export function getAiImageProviderInfo() {
         error instanceof Error
           ? error.message
           : "AI_IMAGE_PROVIDER must be vertex, openai, or local",
-    };
+    });
   }
 }
 
 async function generateAiCatalogShoot(inputPath: string, prompt: string) {
-  const { active: provider } = resolveAiImageProvider();
+  if (getCatalogProcessingMode() === "preserve") {
+    return generateLocalCatalogShoot(inputPath);
+  }
 
-  if (provider === "vertex") {
+  const requested = requestedAiImageProvider();
+
+  if (requested === "vertex" && vertexConfigured()) {
     return generateVertexImagenCatalogShoot(inputPath, prompt);
   }
 
-  if (provider === "openai") {
+  if (requested === "openai" && openAiConfigured()) {
     return generateOpenAiCatalogShoot(inputPath, prompt);
+  }
+
+  if (requested === "vertex" && openAiConfigured()) {
+    return generateOpenAiCatalogShoot(inputPath, prompt);
+  }
+
+  if (requested === "openai" && vertexConfigured()) {
+    return generateVertexImagenCatalogShoot(inputPath, prompt);
   }
 
   return generateLocalCatalogShoot(inputPath);
@@ -1120,24 +1212,281 @@ function averageEdgeColor(buffer: Buffer, width: number, height: number) {
   };
 }
 
+function pixelRgb(buffer: Buffer, index: number) {
+  const offset = pixelOffset(index);
+  return {
+    r: buffer[offset] ?? 0,
+    g: buffer[offset + 1] ?? 0,
+    b: buffer[offset + 2] ?? 0,
+    a: buffer[offset + 3] ?? 255,
+  };
+}
+
+function isLightStudioPixel(r: number, g: number, b: number, strict = false) {
+  const maxChannel = Math.max(r, g, b);
+  const minChannel = Math.min(r, g, b);
+  const chroma = maxChannel - minChannel;
+  if (strict) {
+    return minChannel > 210 && chroma < 22;
+  }
+  return minChannel > 188 && chroma < 38;
+}
+
 function isFloodBackground(
   buffer: Buffer,
   index: number,
   background: { r: number; g: number; b: number },
 ) {
-  const offset = pixelOffset(index);
-  const r = buffer[offset] ?? 0;
-  const g = buffer[offset + 1] ?? 0;
-  const b = buffer[offset + 2] ?? 0;
-  const alpha = buffer[offset + 3] ?? 255;
+  const { r, g, b, a } = pixelRgb(buffer, index);
+  return (
+    a < 32 ||
+    colorDistance(buffer, index, background) < 62 ||
+    isLightStudioPixel(r, g, b)
+  );
+}
+
+function floodTransparentMask(
+  buffer: Buffer,
+  width: number,
+  height: number,
+  seeds: number[],
+  matcher: (index: number) => boolean,
+) {
+  const totalPixels = width * height;
+  const visited = new Uint8Array(totalPixels);
+  const stack = new Int32Array(totalPixels);
+  let stackLength = 0;
+
+  const push = (index: number) => {
+    if (index < 0 || index >= totalPixels || visited[index]) return;
+    if (!matcher(index)) return;
+    visited[index] = 1;
+    stack[stackLength] = index;
+    stackLength += 1;
+  };
+
+  for (const seed of seeds) push(seed);
+
+  while (stackLength > 0) {
+    stackLength -= 1;
+    const index = stack[stackLength];
+    const x = index % width;
+
+    if (x > 0) push(index - 1);
+    if (x < width - 1) push(index + 1);
+    if (index >= width) push(index - width);
+    if (index < totalPixels - width) push(index + width);
+  }
+
+  for (let index = 0; index < totalPixels; index += 1) {
+    if (!visited[index]) continue;
+    const offset = pixelOffset(index);
+    buffer[offset + 3] = 0;
+  }
+}
+
+function removeInteriorStudioFill(
+  buffer: Buffer,
+  width: number,
+  height: number,
+) {
+  const seeds: number[] = [];
+  const topBand = Math.max(1, Math.floor(height * 0.22));
+  const sideBand = Math.max(1, Math.floor(width * 0.18));
+  const bottomBand = Math.max(1, Math.floor(height * 0.12));
+
+  for (let x = 0; x < width; x += 4) {
+    seeds.push(x);
+    seeds.push((height - 1) * width + x);
+  }
+
+  for (let y = 0; y < topBand; y += 3) {
+    for (let x = 0; x < width; x += 4) {
+      seeds.push(y * width + x);
+    }
+  }
+
+  for (let y = height - bottomBand; y < height; y += 2) {
+    for (let x = Math.floor(width * 0.3); x < Math.floor(width * 0.7); x += 3) {
+      seeds.push(y * width + x);
+    }
+  }
+
+  for (let y = 0; y < height; y += 4) {
+    for (let x = 0; x < sideBand; x += 4) {
+      seeds.push(y * width + x);
+      seeds.push(y * width + (width - 1 - x));
+    }
+  }
+
+  const centerStart = Math.floor(width * 0.38);
+  const centerEnd = Math.floor(width * 0.62);
+  for (let x = centerStart; x < centerEnd; x += 2) {
+    for (let y = 0; y < Math.floor(height * 0.1); y += 1) {
+      seeds.push(y * width + x);
+    }
+  }
+
+  floodTransparentMask(buffer, width, height, seeds, (index) => {
+    const { r, g, b, a } = pixelRgb(buffer, index);
+    if (a < 24) return false;
+    return isMannequinPixel(r, g, b) || isLightStudioPixel(r, g, b, true);
+  });
+}
+
+function trimMannequinSideBulges(
+  buffer: Buffer,
+  width: number,
+  height: number,
+) {
+  for (let y = 0; y < height; y += 1) {
+    let left = width;
+    let right = -1;
+
+    for (let x = 0; x < width; x += 1) {
+      const { r, g, b, a } = pixelRgb(buffer, y * width + x);
+      if (a < 24) continue;
+      if (isMannequinPixel(r, g, b)) continue;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+    }
+
+    if (right < left) continue;
+
+    for (let x = 0; x < width; x += 1) {
+      if (x >= left && x <= right) continue;
+      const offset = pixelOffset(y * width + x);
+      const { r, g, b, a } = pixelRgb(buffer, y * width + x);
+      if (a < 24) continue;
+      if (!isMannequinPixel(r, g, b)) continue;
+      buffer[offset + 3] = 0;
+    }
+  }
+}
+
+function trimBottomMannequinPedestal(
+  buffer: Buffer,
+  width: number,
+  height: number,
+) {
+  let cutFrom = height;
+
+  for (let y = height - 1; y >= Math.floor(height * 0.5); y -= 1) {
+    let mannequin = 0;
+    let opaque = 0;
+
+    for (let x = 0; x < width; x += 1) {
+      const { r, g, b, a } = pixelRgb(buffer, y * width + x);
+      if (a < 24) continue;
+      opaque += 1;
+      if (isMannequinPixel(r, g, b)) mannequin += 1;
+    }
+
+    if (opaque > width * 0.06 && mannequin / opaque > 0.5) {
+      cutFrom = y;
+      continue;
+    }
+
+    if (cutFrom < height) break;
+  }
+
+  for (let y = cutFrom; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      buffer[pixelOffset(y * width + x) + 3] = 0;
+    }
+  }
+}
+
+function removeNeckMannequinFill(
+  buffer: Buffer,
+  width: number,
+  height: number,
+) {
+  const seeds: number[] = [];
+  const topBand = Math.max(1, Math.floor(height * 0.08));
+  const centerStart = Math.floor(width * 0.42);
+  const centerEnd = Math.floor(width * 0.58);
+
+  for (let x = centerStart; x < centerEnd; x += 1) {
+    for (let y = 0; y < topBand; y += 1) {
+      seeds.push(y * width + x);
+    }
+  }
+
+  floodTransparentMask(buffer, width, height, seeds, (index) => {
+    const { r, g, b, a } = pixelRgb(buffer, index);
+    if (a < 24) return false;
+    return isMannequinPixel(r, g, b, true);
+  });
+}
+
+function isMannequinPixel(r: number, g: number, b: number, strict = false) {
   const maxChannel = Math.max(r, g, b);
   const minChannel = Math.min(r, g, b);
-  const lightNeutral =
-    r > 218 && g > 218 && b > 218 && maxChannel - minChannel < 34;
+  const chroma = maxChannel - minChannel;
+  if (strict) {
+    return minChannel > 225 && chroma < 18;
+  }
+  return minChannel > 198 && chroma < 28;
+}
 
-  return (
-    alpha < 32 || colorDistance(buffer, index, background) < 46 || lightNeutral
-  );
+function defringeWhiteHalos(buffer: Buffer, width: number, height: number) {
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      const index = y * width + x;
+      const offset = pixelOffset(index);
+      const alpha = buffer[offset + 3] ?? 0;
+      if (alpha < 16 || alpha > 250) continue;
+
+      const r = buffer[offset] ?? 0;
+      const g = buffer[offset + 1] ?? 0;
+      const b = buffer[offset + 2] ?? 0;
+      if (r + g + b < 720) continue;
+
+      const neighbors = [index - 1, index + 1, index - width, index + width];
+      const transparentNeighbor = neighbors.some((neighbor) => {
+        const neighborAlpha = buffer[pixelOffset(neighbor) + 3] ?? 0;
+        return neighborAlpha < 24;
+      });
+      if (!transparentNeighbor) continue;
+
+      buffer[offset] = Math.round(r * 0.9);
+      buffer[offset + 1] = Math.round(g * 0.9);
+      buffer[offset + 2] = Math.round(b * 0.9);
+      buffer[offset + 3] = Math.min(alpha, 220);
+    }
+  }
+}
+
+function opaqueBounds(buffer: Buffer, width: number, height: number) {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = y * width + x;
+      const alpha = buffer[pixelOffset(index) + 3] ?? 0;
+      if (alpha < 24) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return { left: 0, top: 0, width, height };
+  }
+
+  const pad = Math.max(10, Math.round(Math.min(width, height) * 0.014));
+  return {
+    left: Math.max(0, minX - pad),
+    top: Math.max(0, minY - pad),
+    width: Math.min(width, maxX + pad + 1) - Math.max(0, minX - pad),
+    height: Math.min(height, maxY + pad + 1) - Math.max(0, minY - pad),
+  };
 }
 
 function transparentEdgeBackground(
@@ -1180,65 +1529,69 @@ function transparentEdgeBackground(
     if (index < totalPixels - width) push(index + width);
   }
 
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-
   for (let index = 0; index < totalPixels; index += 1) {
+    if (!visited[index]) continue;
     const offset = pixelOffset(index);
-    if (visited[index]) {
-      buffer[offset + 3] = 0;
-      continue;
-    }
-
-    if ((buffer[offset + 3] ?? 255) < 24) continue;
-    const x = index % width;
-    const y = Math.floor(index / width);
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x);
-    maxY = Math.max(maxY, y);
+    buffer[offset + 3] = 0;
   }
 
-  if (maxX < minX || maxY < minY) {
-    return {
-      buffer,
-      trim: { left: 0, top: 0, width, height },
-    };
-  }
+  removeInteriorStudioFill(buffer, width, height);
+  trimMannequinSideBulges(buffer, width, height);
+  trimBottomMannequinPedestal(buffer, width, height);
+  removeNeckMannequinFill(buffer, width, height);
+  defringeWhiteHalos(buffer, width, height);
 
-  const pad = Math.max(8, Math.round(Math.min(width, height) * 0.012));
   return {
     buffer,
-    trim: {
-      left: Math.max(0, minX - pad),
-      top: Math.max(0, minY - pad),
-      width: Math.min(width, maxX + pad + 1) - Math.max(0, minX - pad),
-      height: Math.min(height, maxY + pad + 1) - Math.max(0, minY - pad),
-    },
+    trim: opaqueBounds(buffer, width, height),
   };
 }
 
-async function makeShadow(productLayer: Buffer, opacity: number, blur: number) {
-  const metadata = await sharp(productLayer).metadata();
+async function makeMyntraBackdrop(width: number, height: number) {
+  const svg = Buffer.from(
+    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="40%" r="78%">
+          <stop offset="0%" stop-color="${CATALOG_BG_CENTER}" />
+          <stop offset="100%" stop-color="${CATALOG_BG}" />
+        </radialGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#bg)" />
+    </svg>`,
+  );
+  return sharp(svg).png().toBuffer();
+}
+
+async function makeMyntraFloorShadow(productWidth: number) {
+  const shadowWidth = Math.max(80, Math.round(productWidth * 0.62));
+  const shadowHeight = Math.max(18, Math.round(productWidth * 0.07));
+  const svg = Buffer.from(
+    `<svg width="${shadowWidth}" height="${shadowHeight}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="floorShadow" cx="50%" cy="50%" rx="50%" ry="50%">
+          <stop offset="0%" stop-color="#000000" stop-opacity="0.14" />
+          <stop offset="55%" stop-color="#000000" stop-opacity="0.06" />
+          <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="50%" cy="50%" rx="46%" ry="40%" fill="url(#floorShadow)" />
+    </svg>`,
+  );
+  return sharp(svg).png().toBuffer();
+}
+
+async function polishProductLayer(product: Buffer) {
+  const metadata = await sharp(product).metadata();
   const width = metadata.width ?? 1;
   const height = metadata.height ?? 1;
-  const alpha = await sharp(productLayer)
+  const rgb = await sharp(product).removeAlpha().raw().toBuffer();
+  const alpha = await sharp(product)
     .extractChannel("alpha")
-    .blur(blur)
-    .linear(opacity, 0)
+    .blur(0.7)
     .raw()
     .toBuffer();
 
-  return sharp({
-    create: {
-      width,
-      height,
-      channels: 3,
-      background: "#000000",
-    },
-  })
+  return sharp(rgb, { raw: { width, height, channels: 3 } })
     .joinChannel(alpha, { raw: { width, height, channels: 1 } })
     .png()
     .toBuffer();
@@ -1252,46 +1605,50 @@ async function generateLocalCatalogShoot(inputPath: string) {
     .toBuffer({ resolveWithObject: true });
   const width = raw.info.width;
   const height = raw.info.height;
-  const { buffer, trim } = transparentEdgeBackground(
-    Buffer.from(raw.data),
-    width,
-    height,
-  );
-  const product = await sharp(buffer, { raw: { width, height, channels: 4 } })
+  const working = Buffer.from(raw.data);
+  const { buffer, trim } = transparentEdgeBackground(working, width, height);
+  const cutout = await sharp(buffer, { raw: { width, height, channels: 4 } })
     .extract(trim)
+    .modulate({
+      brightness: 1.02,
+      saturation: 1.02,
+    })
+    .linear(1.02, -3)
     .png()
     .toBuffer();
 
-  const canvasWidth = 2000;
-  const canvasHeight = 2500;
-  const productLayer = await sharp(product)
-    .resize({
-      width: canvasWidth - 430,
-      height: canvasHeight - 430,
-      fit: "inside",
-      withoutEnlargement: false,
-    })
-    .png()
-    .toBuffer();
+  const canvasWidth = 1600;
+  const canvasHeight = 2000;
+  const maxProductWidth = Math.round(canvasWidth * 0.78);
+  const maxProductHeight = Math.round(canvasHeight * 0.8);
+  const productLayer = await polishProductLayer(
+    await sharp(cutout)
+      .resize({
+        width: maxProductWidth,
+        height: maxProductHeight,
+        fit: "inside",
+        withoutEnlargement: false,
+      })
+      .sharpen({ sigma: 0.25, m1: 0.35, m2: 0.65 })
+      .png()
+      .toBuffer(),
+  );
   const productMeta = await sharp(productLayer).metadata();
   const productWidth = productMeta.width ?? canvasWidth;
   const productHeight = productMeta.height ?? canvasHeight;
   const left = Math.round((canvasWidth - productWidth) / 2);
   const top = Math.round((canvasHeight - productHeight) / 2);
-  const directionalShadow = await makeShadow(productLayer, 0.12, 46);
-  const contactShadow = await makeShadow(productLayer, 0.11, 18);
+  const floorShadow = await makeMyntraFloorShadow(productWidth);
+  const shadowMeta = await sharp(floorShadow).metadata();
+  const shadowWidth = shadowMeta.width ?? productWidth;
+  const shadowHeight = shadowMeta.height ?? 24;
+  const shadowLeft = left + Math.round((productWidth - shadowWidth) / 2);
+  const shadowTop = top + productHeight - Math.round(shadowHeight * 0.55);
+  const backdrop = await makeMyntraBackdrop(canvasWidth, canvasHeight);
 
-  return sharp({
-    create: {
-      width: canvasWidth,
-      height: canvasHeight,
-      channels: 4,
-      background: "#f5f5f5",
-    },
-  })
+  return sharp(backdrop)
     .composite([
-      { input: directionalShadow, left: left + 18, top: top + 26 },
-      { input: contactShadow, left, top: top + 10 },
+      { input: floorShadow, left: shadowLeft, top: shadowTop },
       { input: productLayer, left, top },
     ])
     .png()
@@ -1307,11 +1664,15 @@ async function processRecord(
   try {
     await stat(inputPath);
 
-    const prompt = record.prompt?.trim() || (await readStudioPromptTemplate());
+    const globalPrompt = await readStudioPromptTemplate();
+    const prompt =
+      record.useCustomPrompt && record.prompt?.trim()
+        ? record.prompt.trim()
+        : globalPrompt;
     const generated = await generateAiCatalogShoot(inputPath, prompt);
     const source = sharp(generated)
       .rotate()
-      .flatten({ background: "#f5f5f5" })
+      .flatten({ background: CATALOG_BG })
       .removeAlpha();
 
     const outputs = await writeProcessedOutputs(source, record);
@@ -1405,9 +1766,16 @@ async function removeRecordFiles(record: StudioImageRecord) {
 
 export async function updateStudioRecord(input: {
   id: string;
-  action: "approve" | "reject" | "reprocess" | "delete" | "catalog_shoot";
+  action:
+    | "approve"
+    | "reject"
+    | "reprocess"
+    | "delete"
+    | "catalog_shoot"
+    | "update_prompt";
   sku?: string;
   note?: string;
+  prompt?: string;
 }) {
   const records = await readRecords();
   const record = records.find((item) => item.id === input.id);
@@ -1445,9 +1813,29 @@ export async function updateStudioRecord(input: {
     };
   }
 
+  if (input.action === "update_prompt") {
+    if (typeof input.prompt !== "string" || !input.prompt.trim()) {
+      throw new Error("Prompt required");
+    }
+    const globalPrompt = await readStudioPromptTemplate();
+    const trimmed = input.prompt.trim();
+    nextRecord = {
+      ...record,
+      prompt: trimmed,
+      useCustomPrompt: trimmed !== globalPrompt.trim(),
+      updatedAt: now(),
+    };
+  }
+
   if (input.action === "reprocess") {
+    const globalPrompt = await readStudioPromptTemplate();
+    const prompt =
+      record.useCustomPrompt && record.prompt?.trim()
+        ? record.prompt.trim()
+        : globalPrompt;
     nextRecord = await processRecord({
       ...record,
+      prompt,
       status: "processing",
       updatedAt: now(),
     });

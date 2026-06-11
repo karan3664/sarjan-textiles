@@ -26,6 +26,7 @@ type StudioRecord = {
   finalUrl?: string;
   finalPublicUrl?: string;
   prompt: string;
+  useCustomPrompt?: boolean;
   shootStyle: StudioShootStyle;
   metadata: {
     category: string;
@@ -52,6 +53,7 @@ type AiImageProviderInfo = {
   active: "vertex" | "openai" | "local";
   requested: string;
   ready: boolean;
+  catalogMode?: "preserve" | "generative";
   note?: string;
 };
 
@@ -207,12 +209,21 @@ export function AdminAiProductStudioClient() {
   const [busy, setBusy] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [promptDraft, setPromptDraft] = useState("");
+  const [promptDirty, setPromptDirty] = useState(false);
+  const promptDirtyRef = useRef(false);
+  const [recordPromptById, setRecordPromptById] = useState<
+    Record<string, string>
+  >({});
   const [skuById, setSkuById] = useState<Record<string, string>>({});
   const [noteById, setNoteById] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
 
-  const refresh = async () => {
+  useEffect(() => {
+    promptDirtyRef.current = promptDirty;
+  }, [promptDirty]);
+
+  const refresh = async (options?: { forcePromptSync?: boolean }) => {
     const response = await fetch("/api/admin/ai-studio", { cache: "no-store" });
     const data = await readApiJson<StudioSnapshot | { error?: string }>(
       response,
@@ -226,7 +237,20 @@ export function AdminAiProductStudioClient() {
     }
     const snapshotData = data as StudioSnapshot;
     setSnapshot(snapshotData);
-    setPromptDraft(snapshotData.promptTemplate);
+    if (options?.forcePromptSync || !promptDirtyRef.current) {
+      setPromptDraft(snapshotData.promptTemplate);
+      setPromptDirty(false);
+      promptDirtyRef.current = false;
+    }
+    setRecordPromptById((current) => {
+      const next = { ...current };
+      snapshotData.records.forEach((record) => {
+        if (!(record.id in next)) {
+          next[record.id] = record.prompt;
+        }
+      });
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -395,13 +419,90 @@ export function AdminAiProductStudioClient() {
       }>(response);
       if (!response.ok) throw new Error(data.error || "Prompt save failed");
       setPromptDraft(data.promptTemplate);
+      setPromptDirty(false);
       setSnapshot((current) =>
         current ? { ...current, promptTemplate: data.promptTemplate } : current,
       );
-      setMessage("Prompt saved. New queued images inherit this prompt.");
+      setMessage(
+        "Global prompt saved. All non-approved images use it on next Reprocess.",
+      );
+      await refresh({ forcePromptSync: true });
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Prompt save failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resetPromptToDefault = async () => {
+    if (
+      !window.confirm(
+        "Reset global prompt to built-in default? This replaces your saved template.",
+      )
+    ) {
+      return;
+    }
+
+    setBusy(true);
+    setMessage("Resetting prompt to default...");
+
+    try {
+      const response = await fetch("/api/admin/ai-studio/prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resetToDefault: true }),
+      });
+      const data = await readApiJson<{
+        promptTemplate: string;
+        error?: string;
+      }>(response);
+      if (!response.ok) throw new Error(data.error || "Prompt reset failed");
+      setPromptDraft(data.promptTemplate);
+      setPromptDirty(false);
+      setMessage("Prompt reset to default. Reprocess images to apply.");
+      await refresh({ forcePromptSync: true });
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Prompt reset failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveRecordPrompt = async (record: StudioRecord) => {
+    const prompt = recordPromptById[record.id]?.trim();
+    if (!prompt) {
+      setMessage("Image prompt cannot be empty.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage(`Saving custom prompt for ${record.originalName}...`);
+
+    try {
+      const response = await fetch("/api/admin/ai-studio/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: record.id,
+          action: "update_prompt",
+          prompt,
+        }),
+      });
+      const data = await readApiJson<{ record: StudioRecord; error?: string }>(
+        response,
+      );
+      if (!response.ok) throw new Error(data.error || "Prompt save failed");
+      setMessage(
+        `${record.originalName} uses a custom prompt. Click Reprocess to regenerate.`,
+      );
+      await refresh();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Image prompt save failed.",
       );
     } finally {
       setBusy(false);
@@ -540,11 +641,13 @@ export function AdminAiProductStudioClient() {
   ];
 
   const providerLabel =
-    snapshot?.imageProvider?.active === "openai"
-      ? "OpenAI"
-      : snapshot?.imageProvider?.active === "local"
-        ? "Local cleanup"
-        : "Vertex Imagen";
+    snapshot?.imageProvider?.catalogMode === "preserve"
+      ? "Pixel preserve (exact product)"
+      : snapshot?.imageProvider?.active === "openai"
+        ? "OpenAI generative"
+        : snapshot?.imageProvider?.active === "local"
+          ? "Local cleanup"
+          : "Vertex Imagen";
 
   return (
     <div className="sarjan-ai-studio">
@@ -734,24 +837,41 @@ export function AdminAiProductStudioClient() {
         </div>
 
         <div className="wg-box">
-          <div className="box-top">
-            <h5 className="box-title">AI Processing Rules</h5>
-            <button
-              className="tf-button style-1"
-              type="button"
-              onClick={savePrompt}
-              disabled={busy}
-            >
-              Save Prompt
-            </button>
+          <div className="box-top sarjan-ai-prompt-top">
+            <div>
+              <h5 className="box-title">Global AI Prompt</h5>
+              <div className="text-caption-1 text-secondary">
+                Edit freely — replaces the saved template. Reprocess images
+                after saving.
+                {promptDirty ? " Unsaved changes." : ""}
+              </div>
+            </div>
+            <div className="sarjan-ai-prompt-actions">
+              <button
+                className="tf-button style-1"
+                type="button"
+                onClick={resetPromptToDefault}
+                disabled={busy}
+              >
+                Reset Default
+              </button>
+              <button
+                className="tf-button"
+                type="button"
+                onClick={savePrompt}
+                disabled={busy || !promptDirty}
+              >
+                Save Prompt
+              </button>
+            </div>
           </div>
           <div className="sarjan-ai-rules">
             {[
-              "Preserve print, color, pattern, fabric, and texture",
-              "Keep buttons, collar, stitching, label, and proportions exact",
-              "Flat lay with soft contact + directional shadows on #fafafa",
-              "Subtle exposure/contrast/saturation; reduce extra wrinkles",
-              "4K web-ready outputs (web, thumbnail, zoom, compressed)",
+              "Myntra-style: soft floor shadow on light grey studio backdrop",
+              "Exact print, color, logo, and buttons — no AI redraw",
+              "Auto-removes floor, tiles, and white mannequin background",
+              "Clean edges with subtle polish — product pixels preserved",
+              "Reprocess after save; use generative mode only if needed",
             ].map((rule) => (
               <div key={rule}>
                 <i className="icon-check" />
@@ -762,7 +882,10 @@ export function AdminAiProductStudioClient() {
           <textarea
             className="sarjan-ai-prompt"
             value={promptDraft}
-            onChange={(event) => setPromptDraft(event.target.value)}
+            onChange={(event) => {
+              setPromptDraft(event.target.value);
+              setPromptDirty(true);
+            }}
           />
         </div>
       </div>
@@ -956,6 +1079,83 @@ export function AdminAiProductStudioClient() {
                     {record.qaNote}
                   </div>
                 )}
+
+                <details className="sarjan-ai-record-prompt">
+                  <summary>
+                    Image prompt
+                    {record.useCustomPrompt ? " (custom)" : " (global)"}
+                  </summary>
+                  <textarea
+                    className="sarjan-ai-prompt sarjan-ai-prompt--compact"
+                    value={recordPromptById[record.id] ?? record.prompt}
+                    onChange={(event) =>
+                      setRecordPromptById((current) => ({
+                        ...current,
+                        [record.id]: event.target.value,
+                      }))
+                    }
+                  />
+                  <div className="sarjan-ai-record-prompt-actions">
+                    <button
+                      className="tf-button style-1"
+                      type="button"
+                      onClick={() => saveRecordPrompt(record)}
+                      disabled={busy}
+                    >
+                      Save Image Prompt
+                    </button>
+                    <button
+                      className="tf-button style-1"
+                      type="button"
+                      onClick={async () => {
+                        const globalPrompt = snapshot?.promptTemplate ?? "";
+                        setRecordPromptById((current) => ({
+                          ...current,
+                          [record.id]: globalPrompt,
+                        }));
+                        setBusy(true);
+                        try {
+                          const response = await fetch(
+                            "/api/admin/ai-studio/action",
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                id: record.id,
+                                action: "update_prompt",
+                                prompt: globalPrompt,
+                              }),
+                            },
+                          );
+                          const data = await readApiJson<{
+                            record: StudioRecord;
+                            error?: string;
+                          }>(response);
+                          if (!response.ok) {
+                            throw new Error(
+                              data.error || "Failed to use global prompt",
+                            );
+                          }
+                          setMessage(
+                            `${record.originalName} now uses the global prompt.`,
+                          );
+                          await refresh();
+                        } catch (error) {
+                          setMessage(
+                            error instanceof Error
+                              ? error.message
+                              : "Failed to use global prompt.",
+                          );
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                      disabled={busy}
+                    >
+                      Use Global
+                    </button>
+                  </div>
+                </details>
 
                 <div className="sarjan-ai-qa">
                   <div className="sarjan-ai-qa-fields">

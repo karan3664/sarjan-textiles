@@ -13,6 +13,7 @@ import {
   writeCompare,
 } from "@/lib/compare-client";
 import { PriceGate } from "./PriceGate";
+import { hideBootstrapOffcanvas } from "@/lib/bootstrap-modal";
 import { StorefrontProductImage } from "./StorefrontProductImage";
 
 function RepeatIcon() {
@@ -142,6 +143,7 @@ export function CompareDrawer() {
             className="icon-close icon-close-popup sarjan-compare-drawer-close"
             data-bs-dismiss="offcanvas"
             aria-label="Close compare"
+            onClick={() => hideBootstrapOffcanvas("compare")}
           />
         </div>
         <div className="wrap">

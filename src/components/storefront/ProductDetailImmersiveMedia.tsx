@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   hasFabricSwatch,
   hasSpin360,
   immersiveMediaModes,
 } from "@/lib/product-immersive-media";
 import type { Product } from "@/data/mock";
+import { productImageClassName } from "@/lib/product-placeholder-image";
 import { FabricSwatchViewer } from "./FabricSwatchViewer";
 import { ProductSpin360Viewer } from "./ProductSpin360Viewer";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 import { useShowProductSoldOut } from "./PriceGate";
 
 type MediaMode = "gallery" | "spin360" | "fabric";
@@ -19,10 +21,90 @@ type Props = {
   fabricSwatchImage?: string;
   altText: string;
   fabricLabel?: string;
-  product: Pick<Product, "stock" | "reserved">;
-  /** Existing gallery markup from the theme (photos swiper). */
-  gallerySlot: ReactNode;
+  product: Pick<Product, "stock" | "reserved" | "colors" | "id" | "slug">;
 };
+
+function colorDataAttr(
+  colors: Product["colors"],
+  index: number,
+): string | undefined {
+  const color = colors[index % Math.max(colors.length, 1)];
+  if (color == null) return undefined;
+  const text = typeof color === "string" ? color : String(color);
+  return text.toLowerCase();
+}
+
+function ProductDetailGallery({
+  galleryImages,
+  altText,
+  product,
+}: {
+  galleryImages: string[];
+  altText: string;
+  product: Pick<Product, "colors" | "id" | "slug">;
+}) {
+  return (
+    <div className="thumbs-slider" key="product-gallery">
+      <div
+        dir="ltr"
+        className="swiper tf-product-media-thumbs other-image-zoom"
+        data-direction="vertical"
+        key="product-gallery-thumbs"
+      >
+        <div className="swiper-wrapper stagger-wrap">
+          {galleryImages.map((image, index) => (
+            <div
+              className="swiper-slide stagger-item"
+              data-color={colorDataAttr(product.colors, index)}
+              key={`${product.slug || product.id}-thumb-${index}-${image}`}
+            >
+              <div className="item">
+                <StorefrontProductImage
+                  src={image}
+                  alt={`${altText} thumbnail ${index + 1}`}
+                  variant="swatch"
+                  className={productImageClassName(image)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div
+        dir="ltr"
+        className="swiper tf-product-media-main"
+        id="gallery-swiper-started"
+        key="product-gallery-main"
+      >
+        <div className="swiper-wrapper">
+          {galleryImages.map((image, index) => (
+            <div
+              className="swiper-slide"
+              data-color={colorDataAttr(product.colors, index)}
+              key={`${product.slug || product.id}-main-${index}-${image}`}
+            >
+              <a
+                href={image}
+                target="_blank"
+                className="item"
+                data-pswp-width="800px"
+                data-pswp-height="1000px"
+              >
+                <StorefrontProductImage
+                  src={image}
+                  alt={`${altText} view ${index + 1}`}
+                  variant="detail"
+                  className={productImageClassName(image, "tf-image-zoom")}
+                  priority={index === 0}
+                />
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ProductDetailImmersiveMedia({
   galleryImages,
@@ -31,7 +113,6 @@ export function ProductDetailImmersiveMedia({
   altText,
   fabricLabel,
   product,
-  gallerySlot,
 }: Props) {
   const soldOut = useShowProductSoldOut(product);
   const modes = useMemo(
@@ -96,14 +177,25 @@ export function ProductDetailImmersiveMedia({
         </div>
       ) : null}
 
-      {mode === "gallery" ? gallerySlot : null}
+      {mode === "gallery" ? (
+        <ProductDetailGallery
+          galleryImages={galleryImages}
+          altText={altText}
+          product={product}
+        />
+      ) : null}
 
       {mode === "spin360" && spinReady && spin360Images ? (
-        <ProductSpin360Viewer frames={spin360Images} alt={altText} />
+        <ProductSpin360Viewer
+          key="product-spin360"
+          frames={spin360Images}
+          alt={altText}
+        />
       ) : null}
 
       {mode === "fabric" && swatchReady && fabricSwatchImage ? (
         <FabricSwatchViewer
+          key="product-fabric-swatch"
           imageUrl={fabricSwatchImage}
           alt={`${altText} fabric swatch`}
           fabricLabel={fabricLabel}

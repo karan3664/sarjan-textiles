@@ -86,8 +86,9 @@ export function AdminHomeBannerSlides({
           {bulkState === "uploading" ? "Uploading..." : "Add banner images"}
         </label>
         <p className="text-caption-1 text-secondary mb-0">
-          Har banner homepage par alag section ki tarah dikhega — image,
-          heading, description aur button alag se edit karein.
+          Har banner homepage par alag full-width section ki tarah dikhega —
+          image, heading, description, primary aur secondary button yahan se
+          edit karein. Save dabane ke baad website par update dikhega.
         </p>
       </div>
       {bulkState && bulkState !== "uploading" && (
@@ -240,7 +241,7 @@ export function AdminHomeBannerSlides({
                       <div className="sarjan-banner-field-grid">
                         <div className="sarjan-banner-field">
                           <span className="sarjan-banner-field-label">
-                            Button label
+                            Primary button label
                           </span>
                           <AdminHtmlEditor
                             key={`${banner.id}-cta`}
@@ -250,12 +251,12 @@ export function AdminHomeBannerSlides({
                               onUpdate(index, { ctaLabel: value })
                             }
                             rows={2}
-                            placeholder="Shop now"
+                            placeholder="Explore More"
                           />
                         </div>
                         <div className="sarjan-banner-field">
                           <span className="sarjan-banner-field-label">
-                            Button link
+                            Primary button link
                           </span>
                           <TextInput
                             value={banner.ctaHref ?? ""}
@@ -266,6 +267,33 @@ export function AdminHomeBannerSlides({
                                 actionType: "url",
                                 actionValue: value,
                               })
+                            }
+                          />
+                        </div>
+                        <div className="sarjan-banner-field">
+                          <span className="sarjan-banner-field-label">
+                            Secondary button label (optional)
+                          </span>
+                          <AdminHtmlEditor
+                            key={`${banner.id}-secondary-cta`}
+                            compact
+                            value={banner.secondaryCtaLabel ?? ""}
+                            onChange={(value) =>
+                              onUpdate(index, { secondaryCtaLabel: value })
+                            }
+                            rows={2}
+                            placeholder="Partner With Us"
+                          />
+                        </div>
+                        <div className="sarjan-banner-field">
+                          <span className="sarjan-banner-field-label">
+                            Secondary button link
+                          </span>
+                          <TextInput
+                            value={banner.secondaryCtaHref ?? ""}
+                            placeholder="/register"
+                            onChange={(value) =>
+                              onUpdate(index, { secondaryCtaHref: value })
                             }
                           />
                         </div>

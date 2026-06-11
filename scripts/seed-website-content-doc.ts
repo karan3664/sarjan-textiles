@@ -83,6 +83,8 @@ function buildBanners(): CmsHomeBanner[] {
         "Sarjan Textiles is a wholesale supplier and manufacturer of craft-based apparel, specializing in menswear, contemporary womenswear, and fusion wear. From ready wholesale collections to custom and private label production, we offer complete apparel solutions under one roof.",
       ctaLabel: "Explore More",
       ctaHref: "/craft-heritage-manufacturing",
+      secondaryCtaLabel: "Partner With Us",
+      secondaryCtaHref: "/contact",
       actionType: "url",
       actionValue: "/craft-heritage-manufacturing",
       enabled: true,

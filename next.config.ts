@@ -31,13 +31,16 @@ const nextConfig: NextConfig = {
   },
   productionBrowserSourceMaps: false,
   devIndicators: false,
-  // Keep sharp external so dev server does not emit fragile vendor-chunks after cache churn.
+  // Keep native/server deps external so dev HMR does not emit fragile vendor-chunks.
   serverExternalPackages: [
     "sharp",
     "pg",
     "@tensorflow/tfjs",
     "@tensorflow/tfjs-backend-cpu",
     "nsfwjs",
+    "framer-motion",
+    "motion-dom",
+    "motion-utils",
   ],
   // Allow bulk phone-photo uploads through App Router route handlers.
   // Without this, Next truncates multipart bodies above 10MB in dev.
@@ -51,7 +54,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     webpackMemoryOptimizations: true,
-    optimizePackageImports: ["lucide-react", "framer-motion", "recharts"],
+    optimizePackageImports: ["lucide-react", "recharts"],
     // Coolify / 2GB VPS: one CPU during `next build` avoids OOM from worker pools.
     ...(isDockerBuild ? { cpus: 1 } : {}),
     serverActions: {

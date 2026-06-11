@@ -6,6 +6,8 @@ export type CmsHomeBanner = {
   description?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
   actionType?: "product" | "category" | "url" | "none";
   actionValue?: string;
   enabled?: boolean;
@@ -20,6 +22,7 @@ type HomeBannerSource = {
     title?: string;
     description?: string;
     primaryCta?: { label?: string; href?: string };
+    secondaryCta?: { label?: string; href?: string };
   };
 };
 
@@ -36,6 +39,8 @@ export function defaultHomeBannerSlide(id?: string): CmsHomeBanner {
     description: "",
     ctaLabel: "",
     ctaHref: "",
+    secondaryCtaLabel: "",
+    secondaryCtaHref: "",
     actionType: "url",
     actionValue: "",
     enabled: true,
@@ -111,6 +116,10 @@ export function syncHomeHeroFromBanners<T extends HomeBannerSource>(
       primaryCta: {
         label: first?.ctaLabel ?? home.hero?.primaryCta?.label ?? "Explore",
         href: first?.ctaHref ?? home.hero?.primaryCta?.href ?? "#catalog",
+      },
+      secondaryCta: {
+        label: first?.secondaryCtaLabel ?? home.hero?.secondaryCta?.label ?? "",
+        href: first?.secondaryCtaHref ?? home.hero?.secondaryCta?.href ?? "",
       },
     },
   };

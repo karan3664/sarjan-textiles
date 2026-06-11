@@ -23,6 +23,8 @@ type AnalyticsStore = {
     campaignName?: string;
     at: string;
     platform?: string;
+    durationMs?: number;
+    skipped?: boolean;
   }>;
 };
 
@@ -54,14 +56,19 @@ async function writeStore(store: AnalyticsStore) {
 
 function bumpMetric(metrics: CampaignMetrics, type: MobileBrandingEventType) {
   switch (type) {
+    case "launch_animation_viewed":
     case "splash_viewed":
       metrics.views += 1;
       break;
+    case "launch_animation_skipped":
     case "splash_skipped":
       metrics.skipped += 1;
       break;
+    case "launch_animation_completed":
     case "splash_completed":
       metrics.completed += 1;
+      break;
+    case "launch_animation_duration":
       break;
     case "campaign_conversion":
       metrics.conversions += 1;
@@ -82,6 +89,8 @@ export async function recordMobileBrandingEvent(input: {
   campaignId: string;
   campaignName?: string;
   platform?: string;
+  durationMs?: number;
+  skipped?: boolean;
 }) {
   const store = await readStore();
   const at = new Date().toISOString();
@@ -108,6 +117,8 @@ export async function recordMobileBrandingEvent(input: {
     campaignName: input.campaignName,
     at,
     platform: input.platform,
+    durationMs: input.durationMs,
+    skipped: input.skipped,
   });
   store.recentEvents = store.recentEvents.slice(0, 500);
 

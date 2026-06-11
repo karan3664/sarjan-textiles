@@ -383,14 +383,56 @@
   padding-inline: var(--sarjan-home-edge);
 }
 
+.sarjan-home-services-strip .swiper-wrapper,
+.sarjan-home-services .swiper-wrapper {
+  align-items: stretch;
+}
+
+.sarjan-home-services-strip .swiper-slide,
+.sarjan-home-services .swiper-slide {
+  height: auto !important;
+  display: flex;
+  align-self: stretch;
+}
+
+.sarjan-home-services-strip .tf-icon-box,
 .sarjan-home-services .tf-icon-box {
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
   padding: 20px 16px;
   border-radius: 0;
   background: #fff;
   border: 1px solid rgba(24, 24, 24, 0.08);
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
+.sarjan-home-services-strip .tf-icon-box .content,
+.sarjan-home-services .tf-icon-box .content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sarjan-home-services-strip .tf-icon-box .content h6,
+.sarjan-home-services .tf-icon-box .content h6 {
+  margin: 0;
+  min-height: 1.35em;
+}
+
+.sarjan-home-services-strip .tf-icon-box .content p,
+.sarjan-home-services .tf-icon-box .content p {
+  margin: 0;
+  flex: 1;
+  line-height: 1.55;
+}
+
+.sarjan-home-services-strip .tf-icon-box .icon-box .icon,
 .sarjan-home-services .tf-icon-box .icon-box .icon {
   color: var(--sarjan-home-wine);
 }

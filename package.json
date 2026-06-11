@@ -18,7 +18,10 @@
     "test:e2e:b2b": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=b2b-lifecycle && node scripts/generate-e2e-audit-report.mjs",
     "test:e2e:local": "PLAYWRIGHT_SKIP_WEBSERVER=1 node --env-file=.env.local node_modules/@playwright/test/cli.js test",
     "test:e2e:report": "npx playwright show-report playwright-report",
-    "test:e2e:ui": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --ui"
+    "test:e2e:ui": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --ui",
+    "cms:push": "node scripts/sync-cms.mjs push",
+    "cms:pull": "node scripts/sync-cms.mjs pull",
+    "cms:sync-uploads": "bash scripts/vps/sync-uploads.sh"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",

@@ -89,25 +89,6 @@ export default function DownloadAdminAppPage() {
           </div>
         </div>
       </section>
-      <style>{`
-        .sarjan-download-app { padding-top: 48px; padding-bottom: 64px; }
-        .sarjan-download-card {
-          background: #fff;
-          border: 1px solid #ece7df;
-          border-radius: 20px;
-          padding: 36px 28px 32px;
-          box-shadow: 0 12px 40px rgba(20, 20, 20, 0.06);
-        }
-        .sarjan-download-qr-wrap {
-          width: fit-content;
-          padding: 12px;
-          border-radius: 16px;
-          background: #faf7f2;
-          border: 1px solid #ece7df;
-        }
-        .sarjan-download-qr { display: block; border-radius: 8px; }
-        .sarjan-download-steps ol { line-height: 1.55; }
-      `}</style>
     </ModaveShell>
   );
 }

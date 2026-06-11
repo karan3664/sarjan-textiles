@@ -218,6 +218,16 @@ On VPS `/etc/cron.d/sarjan`:
 
 The launch-newsletter job sends the **Website launch** template once to all active subscribers after `SITE_LAUNCH_AT` (launch page “Notify me”, inquiry, and registration signups). Admin inbox alerts go to **info@sarjantextiles.com** when someone joins the list.
 
+### Local ↔ live CMS sync
+
+Local dev uses `data/cms-db.json`; production uses Postgres. See **`docs/CMS-SYNC.md`**:
+
+```bash
+npm run cms:push          # local content → live
+npm run cms:pull          # live → local
+npm run cms:sync-uploads  # images to VPS volume
+```
+
 ### DB backup
 
 ```cron

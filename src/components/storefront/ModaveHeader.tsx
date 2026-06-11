@@ -18,7 +18,11 @@ import {
   pullSavedListsFromServer,
   resetSavedListsSession,
 } from "@/lib/saved-lists-sync";
-import { showBootstrapModal } from "@/lib/bootstrap-modal";
+import {
+  hideBootstrapOffcanvas,
+  showBootstrapModal,
+  showBootstrapOffcanvas,
+} from "@/lib/bootstrap-modal";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
@@ -245,6 +249,7 @@ export function ModaveHeader({
                   data-bs-target="#mobileMenu"
                   aria-controls="mobileMenu"
                   aria-label="Open menu"
+                  onClick={() => showBootstrapOffcanvas("mobileMenu")}
                 >
                   <span
                     className="sarjan-mobile-menu-trigger__icon"
@@ -409,6 +414,7 @@ export function ModaveHeader({
                       data-bs-toggle="modal"
                       className="nav-icon-item"
                       aria-label={`Wishlist${wishlistCount ? `, ${wishlistCount} items` : ""}`}
+                      onClick={() => showBootstrapModal("wishlist")}
                     >
                       <span className="icon icon-heart" aria-hidden />
                       <span className="wishlist-count">{wishlistCount}</span>
@@ -420,6 +426,7 @@ export function ModaveHeader({
                       data-bs-toggle="modal"
                       className="nav-icon-item"
                       aria-label={`Shopping cart${cartCount ? `, ${cartCount} items` : ""}`}
+                      onClick={() => showBootstrapModal("shoppingCart")}
                     >
                       <span className="icon icon-ShoppingBagOpen" aria-hidden />
                       <span className="count-box">{cartCount}</span>
@@ -535,9 +542,10 @@ export function ModaveHeader({
         <div className="mb-canvas-content sarjan-mobile-menu__canvas">
           <button
             type="button"
-            className="icon-close-popup"
+            className="icon-close-popup sarjan-mobile-menu__close"
             data-bs-dismiss="offcanvas"
             aria-label="Close menu"
+            onClick={() => hideBootstrapOffcanvas("mobileMenu")}
           >
             <i className="icon icon-close" />
           </button>

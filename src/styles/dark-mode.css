@@ -100,8 +100,95 @@ html[data-theme="dark"]
   )
   #header
   .box-nav-ul
-  .item-link {
-  color: var(--sarjan-text);
+  .item-link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .box-nav-ul
+  .menu-link-text,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .nav-icon-item,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .nav-icon-item
+  .icon,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .header-item,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .count-box,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .wishlist-count,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .sarjan-lang-select,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .sarjan-theme-select {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+/* header-dark uses var(--main)/var(--white) — inverted in dark tokens */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .header-dark {
+  background-color: var(--sarjan-bg-elevated) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .header-dark
+  .item-link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .header-dark
+  .menu-link-text,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #header
+  .header-dark
+  .categories-item
+  a {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
 }
 
 html[data-theme="dark"]
@@ -231,10 +318,103 @@ html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
   )
-  select {
-  background-color: var(--sarjan-input-bg);
-  border-color: var(--sarjan-input-border);
-  color: var(--sarjan-input-text);
+  select,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  fieldset
+  input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  fieldset
+  textarea,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  input[type="tel"],
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  input[type="number"],
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .form-search
+  input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .login-wrap
+  input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-form
+  input[type="text"],
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-form
+  input[type="email"],
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-form
+  input[type="password"],
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-footer-newsletter-form
+  input {
+  background-color: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+  color: var(--sarjan-input-text) !important;
+  -webkit-text-fill-color: var(--sarjan-input-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  input::placeholder,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  textarea::placeholder {
+  color: var(--sarjan-muted) !important;
+  opacity: 1;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  input:-webkit-autofill,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  input:-webkit-autofill:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--sarjan-input-bg) inset !important;
+  -webkit-text-fill-color: var(--sarjan-input-text) !important;
+  caret-color: var(--sarjan-input-text);
 }
 
 html[data-theme="dark"]
@@ -264,6 +444,272 @@ html[data-theme="dark"]
   )
   footer {
   background-color: #0e0d0c !important;
+}
+
+/* Modave footer.bg-main uses --white for headings; token inverts in dark mode */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .footer-heading {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-info
+  li
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-newsletter
+  p
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-cart-checkbox
+  a {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  p,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-menu
+  .footer-menu_item {
+  color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-menu
+  .footer-menu_item:hover {
+  color: var(--primary, #c45a6a) !important;
+}
+
+/* Modave desktop bar icons (not mobile +/− text) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-heading-mobile::after,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-heading-mobile::before {
+  background-color: var(--sarjan-text) !important;
+}
+
+/* Mobile footer accordion — keep +/− glyphs, not filled pseudo blocks */
+@media (max-width: 767px) {
+  html[data-theme="dark"]
+    body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+      :has(.sarjan-admin-shell)
+    )
+    footer.sarjan-footer
+    .footer-heading-mobile::before {
+    display: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: none !important;
+    background-color: transparent !important;
+  }
+
+  html[data-theme="dark"]
+    body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+      :has(.sarjan-admin-shell)
+    )
+    footer.sarjan-footer
+    .footer-heading-mobile::after {
+    content: "+" !important;
+    background: none !important;
+    background-color: transparent !important;
+    color: var(--sarjan-text) !important;
+    -webkit-text-fill-color: var(--sarjan-text) !important;
+    font-size: 26px !important;
+    font-weight: 300 !important;
+    line-height: 1 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  html[data-theme="dark"]
+    body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+      :has(.sarjan-admin-shell)
+    )
+    footer.sarjan-footer
+    .footer-col-block.open
+    .footer-heading-mobile::after {
+    content: "−" !important;
+    transform: translateY(-50%) !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Get direction + social icons use inverted --white token */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-btn-default.style-white,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .tf-btn-default.style-white {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-btn-default.style-white
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .tf-btn-default.style-white
+  i {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-btn-default.style-white:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .tf-btn-default.style-white:hover {
+  color: var(--primary, #c45a6a) !important;
+  -webkit-text-fill-color: var(--primary, #c45a6a) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-btn-default.style-white:hover
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .tf-btn-default.style-white:hover
+  i {
+  color: var(--primary, #c45a6a) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-social-icon.style-white
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .tf-social-icon.style-white
+  a {
+  color: var(--sarjan-text) !important;
+  border-color: rgba(255, 255, 255, 0.42) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .tf-social-icon.style-white
+  a
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.sarjan-footer
+  .tf-social-icon.style-white
+  a
+  i {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-info
+  .sarjan-footer-phone,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-info
+  .sarjan-footer-phone:hover {
+  color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer.bg-main
+  .footer-address
+  p {
+  color: var(--sarjan-muted) !important;
 }
 
 /* Cookie consent */
@@ -339,15 +785,37 @@ html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
   )
-  .sarjan-order-bot-panel,
+  .sarjan-order-bot-panel {
+  background: var(--sarjan-bg-elevated);
+  color: var(--sarjan-text);
+  border-color: var(--sarjan-border);
+}
+
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
   )
-  .sarjan-order-bot-launcher {
-  background: var(--sarjan-bg-elevated);
-  color: var(--sarjan-text);
-  border-color: var(--sarjan-border);
+  button.sarjan-order-bot-launcher {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  button.sarjan-order-bot-launcher:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  button.sarjan-order-bot-launcher:focus-visible {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
 }
 
 html[data-theme="dark"]
@@ -593,6 +1061,2485 @@ html[data-theme="dark"]
   .account-details
   .text-secondary {
   color: var(--sarjan-text) !important;
+}
+
+/* Homepage sections */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home {
+  --sarjan-home-cream: #1a1917;
+  --sarjan-home-ink: #f2efe9;
+  --sarjan-home-muted: #a8a39a;
+  background: var(--sarjan-bg) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-home-section,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-categories,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-services,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-services-strip,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-marquee,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-instagram,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-logos {
+  background: var(--sarjan-bg) !important;
+  border-color: var(--sarjan-border);
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-home-section--alt,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-categories,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-services,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-services-strip {
+  background: var(--sarjan-bg-elevated) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-home-section-head
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-home-section-head
+  .heading
+  h3,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-instagram-gallery-section
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .tf-icon-box
+  .content
+  h6 {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-home-section-head
+  .subheading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-instagram-gallery-section
+  .subheading {
+  color: var(--sarjan-muted) !important;
+}
+
+/* White pills on category cards — dark ink only on the pill label */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-categories
+  .cls-btn {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+/* Partner CTA — keep maroon banner + white type in dark mode */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-partner-cta-band {
+  background: linear-gradient(
+    135deg,
+    #6b1818 0%,
+    #7a1f1f 48%,
+    #5c1414 100%
+  ) !important;
+  border-color: transparent;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-partner-cta-band
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-partner-cta-band
+  .subheading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-partner-cta-band
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-partner-cta-band
+  .subheading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-partner-cta-band
+  .sarjan-cms-banner-text {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home
+  .sarjan-home-gallery {
+  background: var(--sarjan-bg) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-services-strip
+  .tf-icon-box,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-services
+  .tf-icon-box,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-featured-product
+  .flat-single-home,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-about-card {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text);
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .flat-single-home
+  .wg-quantity,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .wg-quantity
+  input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .variant-picker-values,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .variant-picker-item
+  .variant-picker-values
+  label {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+}
+
+/* Modals + drawers */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-shopping-cart
+  .modal-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-wishlist
+  .modal-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-search-modal
+  .modal-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .modal-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-size-guide
+  .modal-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal.fullRight
+  .modal-dialog
+  .modal-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .tf-product-modal
+  .modal-content {
+  background: var(--sarjan-bg-elevated) !important;
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-shopping-cart
+  .header
+  .title,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-wishlist
+  .header
+  .title,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-search-modal
+  h5,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal
+  .demo-title,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .tf-mini-cart-item
+  .text-title
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .tf-product-info-list
+  .name,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .tf-product-info-list
+  .price {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions__auth
+  .sarjan-mobile-menu__btn,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-wishlist
+  .tf-btn,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal
+  .icon-close-popup,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-mobile-menu
+  .icon-close-popup {
+  background: var(--sarjan-bg-muted) !important;
+  color: var(--sarjan-text) !important;
+  border-color: var(--sarjan-border);
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal
+  .icon-close-popup.icon-close::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-mobile-menu
+  .icon-close-popup.icon-close::before {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-form-panel
+  .heading
+  h4,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-intro,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .login-wrap
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .title,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  h1,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  h2,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  h3,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  h4,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  h5,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  h6 {
+  color: var(--sarjan-text);
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .dropdown-account,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .dropdown-menu {
+  background: var(--sarjan-bg-elevated) !important;
+  color: var(--sarjan-text) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .dropdown-account
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .dropdown-menu
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .dropdown-menu
+  .user-item {
+  color: var(--sarjan-text) !important;
+}
+
+/* Partner / brand logos on dark backgrounds */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-home-brands
+  .brand-item
+  img,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .tf-sw-partner
+  .brand-item
+  img {
+  filter: brightness(0) invert(1);
+  opacity: 0.78;
+}
+
+/* Contact intro — cream panel must not inherit light-on-light text */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-contact-intro {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-contact-intro
+  h3,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-contact-intro
+  p {
+  color: var(--sarjan-text) !important;
+}
+
+/* About page section pills — maroon-on-dark was unreadable */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-about-section-btn {
+  background: rgba(139, 30, 45, 0.2) !important;
+  border-color: rgba(196, 90, 106, 0.45) !important;
+  color: #f2efe9 !important;
+  -webkit-text-fill-color: #f2efe9 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-about-section-btn:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-about-section-btn--active {
+  background: var(--sarjan-accent, #8b1e2d) !important;
+  border-color: var(--sarjan-accent, #8b1e2d) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Modave .tf-btn uses inverted --white token — force readable CTAs */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(a.sarjan-btn, button.sarjan-btn, .sarjan-btn):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-cart-page
+  .sarjan-cart-page-actions
+  :is(a.sarjan-btn, button.sarjan-btn, .sarjan-btn):not(:hover):not(
+    :focus-visible
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-cart-page
+  .sarjan-cart-page-actions__auth
+  :is(a.sarjan-btn, button.sarjan-btn, .sarjan-btn):not(:hover):not(
+    :focus-visible
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  :is(a.sarjan-btn, button.sarjan-btn, .sarjan-btn):not(:hover):not(
+    :focus-visible
+  ) {
+  background-color: var(--sarjan-btn-bg) !important;
+  border-color: var(--sarjan-btn-border) !important;
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(a.sarjan-btn, button.sarjan-btn, .sarjan-btn):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-cart-page
+  .sarjan-cart-page-actions
+  :is(a.sarjan-btn, button.sarjan-btn)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-shopping-cart
+  .sarjan-mini-cart-actions
+  :is(a.sarjan-btn, button.sarjan-btn)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+/* Auth mobile prefix row */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-mobile-prefix-field {
+  background: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-mobile-prefix {
+  background: var(--sarjan-bg-muted) !important;
+  color: var(--sarjan-muted) !important;
+  border-right-color: var(--sarjan-input-border) !important;
+}
+
+/* Price gate pills in cart + modals */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-price-locked {
+  background: rgba(155, 28, 49, 0.16) !important;
+  border-color: rgba(196, 90, 106, 0.42) !important;
+  color: #f0b4be !important;
+  -webkit-text-fill-color: #f0b4be !important;
+}
+
+/* Footer newsletter input padding (dark theme inherits same field) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  input.subscribe-email {
+  padding-left: 16px !important;
+}
+
+/* Newsletter submit — white pill needs dark arrow (inverted --main is light) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .subscribe-button,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .form-newsletter.style-black
+  .subscribe-button {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .subscribe-button
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .form-newsletter.style-black
+  .subscribe-button
+  i {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .subscribe-button:hover:not(:disabled),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .form-newsletter.style-black
+  .subscribe-button:hover:not(:disabled) {
+  background-color: var(--primary, #c45a6a) !important;
+  border-color: var(--primary, #c45a6a) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .subscribe-button:hover:not(:disabled)
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  footer
+  .footer-newsletter
+  .form-newsletter.style-black
+  .subscribe-button:hover:not(:disabled)
+  i {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Blog detail — card, prev/next, share icons, comments */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner {
+  background-color: var(--sarjan-bg-elevated) !important;
+  color: var(--sarjan-text);
+  border: 1px solid var(--sarjan-border);
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .heading
+  h3,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .content
+  h3,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .body-text-1,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  h6,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .meta
+  .body-text-1,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .meta
+  .icon {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  h6
+  .link {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  ul.tags
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .list-tags
+  a {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .related-post {
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .related-post::after {
+  background-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .related-post
+  .text-btn-uppercase
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .related-post
+  .text-btn-uppercase
+  a.link {
+  color: var(--primary, #e87986) !important;
+  -webkit-text-fill-color: var(--primary, #e87986) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  > .inner
+  .related-post
+  .text-btn-uppercase
+  a:hover {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .sarjan-blog-share-icons
+  a,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .tf-social-icon.style-1
+  a {
+  color: var(--sarjan-text) !important;
+  background-color: var(--sarjan-bg-muted) !important;
+  border: 1px solid var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .sarjan-blog-share-icons
+  a
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .tf-social-icon.style-1
+  a
+  i {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .reply-comment
+  .reply-comment-item
+  .content
+  .link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .reply-comment
+  .reply-comment-item
+  h6
+  .link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .reply-comment
+  .reply-comment-item
+  .content
+  .text-button {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .sarjan-blog-comment-avatar-guest {
+  background: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .sarjan-blog-comment-initials {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .reply-comment
+  .reply-comment-item:not(:last-child)
+  .content {
+  border-bottom-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .group-image
+  img.sarjan-product-img-placeholder {
+  background: #ffffff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-blog-grid
+  .wg-blog
+  .title
+  .link,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .flat-spacing
+  .heading-section
+  .heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .flat-spacing
+  .heading-section
+  .subheading {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .sarjan-blog-comment-notice.is-ok {
+  color: #81c784 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .blog-detail-wrap
+  .sarjan-blog-comment-notice.is-err {
+  color: #ef9a9a !important;
+}
+
+/* PDP — white CTA pills need dark ink (storefront-buttons resets bg after dark tokens) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn).sarjan-pdp-cta-btn:not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ):not(:hover):not(:focus-visible):not(.is-hovered),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn).sarjan-pdp-cta-btn:not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn
+  ):not(:hover):not(:focus-visible):not(.is-hovered) {
+  background-color: #ffffff !important;
+  border-color: #181818 !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  :is(
+    .sarjan-add-set-label,
+    .sarjan-add-set-price,
+    .sarjan-all-colors-label,
+    .sarjan-all-colors-label--long,
+    .sarjan-all-colors-label--short,
+    .text,
+    .text-button,
+    span
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  :is(
+    .sarjan-add-set-label,
+    .sarjan-add-set-price,
+    .sarjan-all-colors-label,
+    .sarjan-all-colors-label--long,
+    .sarjan-all-colors-label--short,
+    .text,
+    .text-button,
+    span
+  ) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  .sarjan-pdp-cta-btn__icon,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  .sarjan-pdp-cta-btn__icon {
+  border-color: #c9c4bc !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  :is(.sarjan-tf-btn-icon, i.icon, .icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  #wrapper
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  :is(.sarjan-tf-btn-icon, i.icon, .icon)::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  :is(.sarjan-tf-btn-icon, i.icon, .icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-buttons
+  :is(.sarjan-add-set-btn, .sarjan-all-colors-btn, .sarjan-pdp-cta-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered)
+  :is(.sarjan-tf-btn-icon, i.icon, .icon)::before {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle {
+  color: #181818 !important;
+  background: #ffffff !important;
+  border-color: #c9c4bc !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle
+  :is(.icon, i.icon)::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle
+  :is(.icon, i.icon)::before {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-icon-label {
+  color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-color-swatch-btn,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .variant-picker-item
+  .sarjan-color-swatch-btn.color-btn {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .variant-picker-item
+  .sarjan-color-swatch-btn.active,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view
+  .sarjan-color-swatch-btn.active {
+  border-color: var(--sarjan-text) !important;
+}
+
+/* Quick view — white PDP pills + icon glyphs (modal sits outside #wrapper) */
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-action-buttons
+  > a.sarjan-btn.sarjan-pdp-cta-btn:not(:hover):not(:focus-visible):not(
+    .is-hovered
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-action-buttons
+  > a.sarjan-btn:is(.sarjan-add-set-btn, .sarjan-all-colors-btn):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered) {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #181818 !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  a.sarjan-pdp-cta-btn:not(:hover):not(:focus-visible):not(.is-hovered)
+  :is(
+    .sarjan-add-set-label,
+    .sarjan-add-set-price,
+    .sarjan-all-colors-label,
+    .sarjan-all-colors-label--long,
+    .sarjan-all-colors-label--short,
+    .text,
+    .text-button,
+    span
+  ) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  a.sarjan-pdp-cta-btn:not(:hover):not(:focus-visible):not(.is-hovered)
+  .sarjan-pdp-cta-btn__icon {
+  border-color: #c9c4bc !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  a.sarjan-pdp-cta-btn:not(:hover):not(:focus-visible):not(.is-hovered)
+  .sarjan-pdp-cta-btn__icon
+  :is(.sarjan-tf-btn-icon, i.icon, .icon),
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  a.sarjan-pdp-cta-btn:not(:hover):not(:focus-visible):not(.is-hovered)
+  .sarjan-pdp-cta-btn__icon
+  :is(.sarjan-tf-btn-icon, i.icon, .icon)::before {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle:not(:hover),
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle:not(.active):not(.added):not(:hover) {
+  background-color: #ffffff !important;
+  border-color: #c9c4bc !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle:not(.active):not(.added)
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-action-icons
+  .sarjan-product-icon-circle:not(.active):not(.added)
+  :is(.icon, i.icon)::before {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .sarjan-product-icon-label {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .icon-close-popup.icon-close,
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  button.icon-close-popup.icon-close {
+  background-color: var(--sarjan-bg-muted) !important;
+  border: 1px solid var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  .icon-close-popup.icon-close::before,
+html[data-theme="dark"]
+  body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .modal-quick-view.sarjan-quick-view-modal
+  button.icon-close-popup.icon-close::before {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* My Account — location pickers, orders table, password modal, order details */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__trigger {
+  background-color: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+  color: var(--sarjan-input-text) !important;
+  -webkit-text-fill-color: var(--sarjan-input-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__placeholder {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__chevron {
+  border-right-color: var(--sarjan-muted) !important;
+  border-bottom-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__panel {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__search-wrap {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-bottom-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__search {
+  background-color: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+  color: var(--sarjan-input-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__option {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__option:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(.sarjan-account-page, .sarjan-auth-page)
+  .sarjan-location-select__option.is-active {
+  background-color: rgba(196, 90, 106, 0.14) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-orders
+  .wrap-account-order.sarjan-account-orders-table-wrap,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page--orders
+  .account-orders
+  .wrap-account-order {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders-table
+  thead
+  tr {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders-table
+  :is(th, td) {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders-table
+  tbody {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders-message
+  td {
+  background-color: var(--sarjan-bg-muted) !important;
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders-row {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders-row
+  td::before {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-order-status-pill {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders__actions
+  .tf-btn.btn-fill {
+  background-color: #ffffff !important;
+  border-color: #181818 !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .sarjan-account-orders__actions
+  .tf-btn.btn-fill
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-order-placed-banner {
+  color: var(--sarjan-text) !important;
+  background: rgba(45, 143, 95, 0.16) !important;
+  border-color: rgba(72, 187, 120, 0.35) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-quick-actions
+  .tf-btn.btn-white.has-border,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-submit-actions
+  :is(.tf-btn.btn-white.has-border, .tf-btn.btn-fill) {
+  background-color: #ffffff !important;
+  border-color: #181818 !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-quick-actions
+  .tf-btn.btn-white.has-border
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-submit-actions
+  :is(.tf-btn.btn-white.has-border, .tf-btn.btn-fill)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-mobile-nav__item {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-mobile-nav__item.is-active {
+  background-color: rgba(196, 90, 106, 0.14) !important;
+  border-color: var(--primary, #c45a6a) !important;
+  color: var(--primary, #c45a6a) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-mobile-nav__item--logout {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal-card {
+  background-color: var(--sarjan-bg-elevated) !important;
+  color: var(--sarjan-text) !important;
+  border: 1px solid var(--sarjan-border);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal-card
+  :is(.title, h5) {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal-card
+  .text-secondary {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .password-item
+  input {
+  background-color: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+  color: var(--sarjan-input-text) !important;
+  -webkit-text-fill-color: var(--sarjan-input-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .toggle-password
+  i,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .toggle-password
+  i::before {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .sarjan-password-modal-close.icon-close {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .sarjan-password-modal-close.icon-close::before {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .button-submit
+  .tf-btn.btn-white.has-border {
+  background-color: #ffffff !important;
+  border-color: #181818 !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .button-submit
+  .tf-btn.btn-white.has-border
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .button-submit
+  .tf-btn.btn-fill {
+  background-color: #ffffff !important;
+  border-color: #181818 !important;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-password-modal
+  .button-submit
+  .tf-btn.btn-fill
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .wd-form-order,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .account-order-details
+  .wd-form-order {
+  border-color: var(--sarjan-border) !important;
+  background-color: var(--sarjan-bg-elevated) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-order-details-id {
+  background-color: var(--sarjan-bg-muted) !important;
+  color: var(--sarjan-text) !important;
+  border: 1px solid var(--sarjan-border);
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .order-timeline
+  .timeline-step {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .order-timeline
+  .timeline-step.active {
+  background-color: rgba(196, 90, 106, 0.12) !important;
+  border-color: var(--primary, #c45a6a) !important;
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-order-totals-card {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-order-totals-row {
+  color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-order-totals-row--total {
+  color: var(--sarjan-text) !important;
+  border-top-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .account-order-item
+  .item-order {
+  border-bottom-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .tf-cart-checkbox
+  label {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  :is(.account-details, .wd-form-address, .widget-inner-address)
+  .title {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-orders
+  .wrap-account-order.sarjan-account-orders-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* ── Policy / terms / FAQs static pages ── */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-page
+  .page-title {
+  background-color: var(--sarjan-bg-elevated) !important;
+  background-image: none !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-page
+  .page-title
+  :is(
+    .heading,
+    .heading h1,
+    .heading h3,
+    .breadcrumbs,
+    .breadcrumbs li,
+    .breadcrumbs .link,
+    .breadcrumbs i
+  ) {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-page
+  .page-title
+  .breadcrumbs
+  .link:hover {
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-terms-intro,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-heading,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-item-body
+  h3 {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-subtitle,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-item-body
+  p {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-terms-card {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-terms-card
+  h5 {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-terms-card
+  :is(p, .text-secondary) {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-policy-item-icon {
+  background: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-faqs-accordion
+  .faqs-title {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-faqs-accordion
+  .accordion-faqs-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-faqs-accordion
+  .accordion-faqs-content.text-secondary {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-faqs-accordion
+  .accordion-product-item:not(:last-child) {
+  border-bottom-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-faq-support {
+  border-top-color: var(--sarjan-border) !important;
+}
+
+/* ── Visual sitemap (/site-map) ── */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-page {
+  --sitemap-line: #4a4640;
+  background: var(--sarjan-bg) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-header,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-canvas {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-title {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-eyebrow,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-lead,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-stats {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-legend__item {
+  background: var(--sarjan-bg-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node--compact,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node--group {
+  background: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node__title {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node__url,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node__path-hint {
+  color: var(--sarjan-chrome-text-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-chrome-text-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-pill {
+  background: var(--sarjan-bg-elevated) !important;
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-pill--priority {
+  background: rgba(202, 138, 4, 0.18) !important;
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-page
+  .sarjan-sitemap-toggle {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-page
+  .sarjan-sitemap-toggle:hover {
+  background: var(--sarjan-bg-muted) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-toggle__icon {
+  background: var(--sarjan-bg-elevated) !important;
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node--collapsed
+  .sarjan-sitemap-toggle__icon {
+  background: rgba(202, 138, 4, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-xml-btn,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-sitemap-node__open {
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+}
+
+/* ── Download / product deep-link pages ── */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-card,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-open-card {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-qr-wrap {
+  background: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-app
+  :is(.heading, h1),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-open
+  :is(.heading, h1) {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-app
+  :is(
+    .text-secondary,
+    .text-secondary-2,
+    .text-caption-1,
+    .text-caption-2,
+    .text-button,
+    ol,
+    li
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-open
+  :is(.text-secondary, .text-secondary-2, .text-caption-1, .text-caption-2, p) {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-app
+  strong,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-open
+  strong {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-app
+  :is(.link, a.link),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-product-open
+  :is(.link, a.link) {
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-download-app
+  hr {
+  border-color: var(--sarjan-border) !important;
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {

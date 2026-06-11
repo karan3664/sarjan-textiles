@@ -47,6 +47,7 @@ import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
 import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
 import {
+  hideBootstrapModal,
   openModalFromLocationHash,
   showBootstrapModal,
 } from "@/lib/bootstrap-modal";
@@ -459,30 +460,7 @@ export function ModaveModals() {
   };
 
   const closeModalById = (id: string) => {
-    const modal = document.getElementById(id);
-    const bootstrapModal = modal
-      ? (
-          window as unknown as {
-            bootstrap?: {
-              Modal?: {
-                getInstance?: (element: Element) => { hide: () => void } | null;
-              };
-            };
-          }
-        ).bootstrap?.Modal?.getInstance?.(modal)
-      : null;
-
-    bootstrapModal?.hide();
-    modal?.classList.remove("show");
-    modal?.setAttribute("aria-hidden", "true");
-    modal?.removeAttribute("aria-modal");
-    modal?.removeAttribute("role");
-    document.body.classList.remove("modal-open");
-    document.body.style.removeProperty("overflow");
-    document.body.style.removeProperty("padding-right");
-    document
-      .querySelectorAll(".modal-backdrop")
-      .forEach((backdrop) => backdrop.remove());
+    hideBootstrapModal(id);
   };
 
   const goFromModal = (modalId: string, href: string) => {
@@ -543,9 +521,12 @@ export function ModaveModals() {
           <div className="modal-content">
             <div className="d-flex justify-content-between align-items-center">
               <h5>Search</h5>
-              <span
+              <button
+                type="button"
                 className="icon-close icon-close-popup"
                 data-bs-dismiss="modal"
+                aria-label="Close search"
+                onClick={() => closeModalById("search")}
               />
             </div>
             <div className="sarjan-search-modal-body">
@@ -656,9 +637,12 @@ export function ModaveModals() {
             <div className="d-flex flex-column flex-grow-1 h-100">
               <div className="header">
                 <h5 className="title">Shopping Cart</h5>
-                <span
+                <button
+                  type="button"
                   className="icon-close icon-close-popup"
                   data-bs-dismiss="modal"
+                  aria-label="Close cart"
+                  onClick={() => closeModalById("shoppingCart")}
                 />
               </div>
               <div className="wrap">
@@ -955,9 +939,12 @@ export function ModaveModals() {
           <div className="modal-content">
             <div className="header">
               <h5 className="title">Wish List</h5>
-              <span
+              <button
+                type="button"
                 className="icon-close icon-close-popup"
                 data-bs-dismiss="modal"
+                aria-label="Close wishlist"
+                onClick={() => closeModalById("wishlist")}
               />
             </div>
             <div className="wrap">
@@ -1071,9 +1058,12 @@ export function ModaveModals() {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <span
+            <button
+              type="button"
               className="icon-close icon-close-popup"
               data-bs-dismiss="modal"
+              aria-label="Close quick view"
+              onClick={() => closeModalById("quickView")}
             />
             {quickLoading ? (
               <div className="p-5 text-center">Loading product...</div>
@@ -1106,9 +1096,12 @@ export function ModaveModals() {
                   <span className="inner text-button">Size Guide</span>
                 </li>
               </ul>
-              <span
+              <button
+                type="button"
                 className="icon-close icon-close-popup"
                 data-bs-dismiss="modal"
+                aria-label="Close size guide"
+                onClick={() => closeModalById("size-guide")}
               />
             </div>
             <div className="wrap">

@@ -98,16 +98,6 @@ export function ProductOpenClient({
           </div>
         </div>
       </div>
-      <style>{`
-        .sarjan-product-open { padding-top: 56px; padding-bottom: 64px; min-height: 60vh; }
-        .sarjan-product-open-card {
-          background: #fff;
-          border: 1px solid #ece7df;
-          border-radius: 20px;
-          padding: 36px 28px 32px;
-          box-shadow: 0 12px 40px rgba(20, 20, 20, 0.06);
-        }
-      `}</style>
     </section>
   );
 }

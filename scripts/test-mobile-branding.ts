@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import {
+  clampSplashDuration,
   computeCampaignStatus,
   defaultMobileBrandingConfig,
+  maxSplashMsForTemplate,
   resolveActiveBrandingCampaign,
 } from "../src/lib/mobile-branding-cms";
 
@@ -32,6 +34,9 @@ const active = resolveActiveBrandingCampaign(
 );
 
 assert.equal(active?.animationTemplate, "launch");
+assert.equal(maxSplashMsForTemplate("launch"), 10000);
+assert.equal(clampSplashDuration("launch", 12000), 10000);
+assert.equal(active?.durationMs, 10000);
 assert.equal(
   computeCampaignStatus(
     { ...launch!, status: "active", enabled: true },

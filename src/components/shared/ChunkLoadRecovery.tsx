@@ -9,7 +9,9 @@ function isStaleChunkError(message: string) {
     message.includes("reading 'call'") ||
     message.includes("Loading chunk") ||
     message.includes("ChunkLoadError") ||
-    message.includes("Failed to load chunk")
+    message.includes("Failed to load chunk") ||
+    message.includes("vendor-chunks/") ||
+    message.includes("Cannot find module './vendor-chunks/")
   );
 }
 

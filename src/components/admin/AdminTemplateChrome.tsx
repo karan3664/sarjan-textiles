@@ -16,6 +16,7 @@ const adminScripts = [
   "carousel.js",
   "switcher.js",
   "theme-settings.js",
+  "sarjan-theme-persist.js",
   "main.js",
 ];
 

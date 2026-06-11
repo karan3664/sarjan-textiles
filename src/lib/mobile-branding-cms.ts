@@ -61,6 +61,8 @@ export type MobileBrandingCampaign = {
   ctaHref?: string;
   themePrimary?: string;
   themeAccent?: string;
+  splashLogoUrl?: string;
+  splashHomeImageUrl?: string;
 };
 
 export type MobileBrandingCampaignStored = Omit<
@@ -84,6 +86,10 @@ export type MobileBrandingConfigStored = {
 };
 
 export type MobileBrandingEventType =
+  | "launch_animation_viewed"
+  | "launch_animation_completed"
+  | "launch_animation_skipped"
+  | "launch_animation_duration"
   | "splash_viewed"
   | "splash_skipped"
   | "splash_completed"
@@ -150,8 +156,32 @@ export const mobileBrandingAnimationOptions: Array<{
   { id: "default", label: "Default Sarjan", defaultIconId: "default" },
 ];
 
-const MAX_SPLASH_MS = 3000;
+const MAX_SPLASH_MS_DEFAULT = 3000;
+const MAX_SPLASH_MS_LAUNCH = 10000;
 const DEFAULT_SKIP_MS = 1000;
+
+export function maxSplashMsForTemplate(
+  template?: MobileBrandingAnimationTemplate,
+): number {
+  return template === "launch" ? MAX_SPLASH_MS_LAUNCH : MAX_SPLASH_MS_DEFAULT;
+}
+
+export function clampSplashDuration(
+  template: MobileBrandingAnimationTemplate | undefined,
+  durationMs?: number,
+): number {
+  const max = maxSplashMsForTemplate(template);
+  const fallback = template === "launch" ? MAX_SPLASH_MS_LAUNCH : 2000;
+  return Math.min(max, Math.max(800, durationMs ?? fallback));
+}
+
+export function clampSkipAfterMs(
+  template: MobileBrandingAnimationTemplate | undefined,
+  durationMs: number,
+  skipAfterMs?: number,
+): number {
+  return Math.min(durationMs, Math.max(500, skipAfterMs ?? DEFAULT_SKIP_MS));
+}
 
 function parseDate(value?: string) {
   if (!value?.trim()) return null;
@@ -237,15 +267,17 @@ export function resolveActiveBrandingCampaign(
     return null;
   }
 
+  const durationMs = clampSplashDuration(
+    winner.animationTemplate,
+    winner.durationMs,
+  );
   return {
     ...winner,
-    durationMs: Math.min(
-      MAX_SPLASH_MS,
-      Math.max(800, winner.durationMs ?? MAX_SPLASH_MS),
-    ),
-    skipAfterMs: Math.min(
-      winner.durationMs ?? MAX_SPLASH_MS,
-      Math.max(500, winner.skipAfterMs ?? DEFAULT_SKIP_MS),
+    durationMs,
+    skipAfterMs: clampSkipAfterMs(
+      winner.animationTemplate,
+      durationMs,
+      winner.skipAfterMs,
     ),
   };
 }
@@ -288,16 +320,17 @@ function toStoredCampaign(
     ctaEnabled: campaign.ctaEnabled !== false,
     status: campaign.status ?? "draft",
     iconId: campaign.iconId?.trim() || preset?.defaultIconId || "default",
-    durationMs: Math.min(
-      MAX_SPLASH_MS,
-      Math.max(800, Number(campaign.durationMs ?? 2000) || 2000),
+    durationMs: clampSplashDuration(
+      animationTemplate,
+      Number(campaign.durationMs ?? 2000) || 2000,
     ),
-    skipAfterMs: Math.min(
-      MAX_SPLASH_MS,
-      Math.max(
-        500,
-        Number(campaign.skipAfterMs ?? DEFAULT_SKIP_MS) || DEFAULT_SKIP_MS,
+    skipAfterMs: clampSkipAfterMs(
+      animationTemplate,
+      clampSplashDuration(
+        animationTemplate,
+        Number(campaign.durationMs ?? 2000) || 2000,
       ),
+      Number(campaign.skipAfterMs ?? DEFAULT_SKIP_MS) || DEFAULT_SKIP_MS,
     ),
     headline: campaign.headline
       ? coerceLocalized(campaign.headline as string | LocalizedText)
@@ -314,6 +347,8 @@ function toStoredCampaign(
     ctaHref: campaign.ctaHref?.trim() || undefined,
     themePrimary: campaign.themePrimary?.trim() || "#0A0A0A",
     themeAccent: campaign.themeAccent?.trim() || "#C89B3C",
+    splashLogoUrl: campaign.splashLogoUrl?.trim() || undefined,
+    splashHomeImageUrl: campaign.splashHomeImageUrl?.trim() || undefined,
   };
 }
 
@@ -336,13 +371,16 @@ export function defaultMobileBrandingConfig(): MobileBrandingConfigStored {
       themeEnabled: true,
       ctaEnabled: false,
       iconId: "launch_event",
-      durationMs: 3000,
+      durationMs: 10000,
       skipAfterMs: 1000,
       headline: "SARJAN TEXTILES",
       subheadline: "Premium Fabrics.",
       line3: "Timeless Elegance.",
+      ctaLabel: "ENTERING SARJAN EXPERIENCE",
       themePrimary: "#0A0A0A",
       themeAccent: "#C89B3C",
+      splashLogoUrl: "/sarjan-assets/sarjan-logo-icon.png",
+      splashHomeImageUrl: "/sarjan-assets/banner-textiles-studio.webp",
     },
     {
       id: "mega-textile-sale",

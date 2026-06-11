@@ -50,6 +50,7 @@ import { CmsHtml } from "@/components/shared/CmsHtml";
 import { isCmsHtmlContent, splitCmsTextParagraphs } from "@/lib/cms-html";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
+import { AboutMainContent } from "./AboutPages";
 import { HomeBannerStack } from "./HomeBannerStack";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
@@ -971,9 +972,9 @@ export async function HomeDynamic() {
 
   return (
     <div className="sarjan-home">
-      {sections.map((section, index) => (
-        <Fragment key={`${section.id}-${index}`}>
-          {section.type === "custom" ? (
+      {sections.map((section, index) => {
+        const content =
+          section.type === "custom" ? (
             <CustomHomeSection section={section} products={products} />
           ) : section.type === "bannerCarousel" ? (
             <PromoBannerCarousel
@@ -983,9 +984,12 @@ export async function HomeDynamic() {
             />
           ) : (
             renderers[section.type]
-          )}
-        </Fragment>
-      ))}
+          );
+
+        if (!content) return null;
+
+        return <div key={`${section.id}-${index}`}>{content}</div>;
+      })}
     </div>
   );
 }
@@ -1096,72 +1100,6 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                     altText={altText}
                     fabricLabel={product.fabric}
                     product={product}
-                    gallerySlot={
-                      <div className="thumbs-slider">
-                        <div
-                          dir="ltr"
-                          className="swiper tf-product-media-thumbs other-image-zoom"
-                          data-direction="vertical"
-                        >
-                          <div className="swiper-wrapper stagger-wrap">
-                            {galleryImages.map((image, index) => (
-                              <div
-                                className="swiper-slide stagger-item"
-                                data-color={product.colors[
-                                  index % product.colors.length
-                                ]?.toLowerCase()}
-                                key={`thumb-${image}-${index}`}
-                              >
-                                <div className="item">
-                                  <StorefrontProductImage
-                                    src={image}
-                                    alt={`${altText} thumbnail ${index + 1}`}
-                                    variant="swatch"
-                                    className={productImageClassName(image)}
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div
-                          dir="ltr"
-                          className="swiper tf-product-media-main"
-                          id="gallery-swiper-started"
-                        >
-                          <div className="swiper-wrapper">
-                            {galleryImages.map((image, index) => (
-                              <div
-                                className="swiper-slide"
-                                data-color={product.colors[
-                                  index % product.colors.length
-                                ]?.toLowerCase()}
-                                key={`main-${image}-${index}`}
-                              >
-                                <a
-                                  href={image}
-                                  target="_blank"
-                                  className="item"
-                                  data-pswp-width="800px"
-                                  data-pswp-height="1000px"
-                                >
-                                  <StorefrontProductImage
-                                    src={image}
-                                    alt={`${altText} view ${index + 1}`}
-                                    variant="detail"
-                                    className={productImageClassName(
-                                      image,
-                                      "tf-image-zoom",
-                                    )}
-                                    priority={index === 0}
-                                  />
-                                </a>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    }
                   />
                 </div>
               </div>
@@ -1720,8 +1658,10 @@ export function PageTitle({
   );
 }
 
-function filterSlugValue(value: string) {
-  return value
+function filterSlugValue(value: unknown) {
+  if (value == null) return "";
+  const text = typeof value === "string" ? value : String(value);
+  return text
     .toLowerCase()
     .trim()
     .replace(/['’]/g, "")
@@ -1974,6 +1914,9 @@ export async function ProductsListingDynamic({
   const productFilters = resolveProductFilters(
     cms.productFilters ?? [],
     locale,
+  );
+  const allProductsForFilters = applyProductDeals(
+    resolveProducts(cms.products, locale),
   );
   const activeFilterCount = Object.values(filters).filter(
     (value) => value !== undefined && value !== "",
@@ -2265,7 +2208,7 @@ export async function ProductsListingDynamic({
           </div>
           <ProductFilterPanel
             filtersConfig={productFilters}
-            productsList={cms.products}
+            productsList={allProductsForFilters}
             filters={filters}
             sortValue={sortValue}
             q={q}
@@ -2459,7 +2402,7 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
         </div>
       </div>
       <CustomContentSections sections={blogSections} products={products} />
-      <section className="flat-spacing">
+      <section className="flat-spacing sarjan-blog-related-section">
         <div className="container">
           <div className="heading-section text-center">
             <h3 className="heading">Related Posts</h3>
@@ -2524,23 +2467,12 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
     imageAlt?: string;
     sections?: CmsCustomSection[];
   };
-  const showAboutHeroImage = Boolean(String(page.image ?? "").trim());
-  const contactBannerImage =
-    String(page.image ?? "").trim() ||
-    "/sarjan-assets/banner-textiles-studio.webp";
   const homeLabel = translateStorefrontUi("home", locale);
   const pageTitle =
     page.title?.trim() ||
     (isContact
       ? translateStorefrontUi("contactUs", locale)
       : translateStorefrontUi("aboutOurStore", locale));
-  const aboutTabs = [
-    translateStorefrontUi("introduction", locale),
-    translateStorefrontUi("history", locale),
-    translateStorefrontUi("mission", locale),
-    translateStorefrontUi("infrastructure", locale),
-  ];
-
   return (
     <>
       <PageTitle title={pageTitle} crumbs={[homeLabel, pageTitle]} />
@@ -2550,18 +2482,9 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
             <div className="container">
               <div className="contact-us-map sarjan-contact-us-map">
                 <div className="wrap-map">
-                  <div
-                    className="map-contact sarjan-contact-map"
-                    style={
-                      {
-                        "--sarjan-contact-bg": `url("${contactBannerImage}")`,
-                      } as CSSProperties
-                    }
-                  >
-                    <div>
-                      <h3 className="mb_12">Sarjan Textiles</h3>
-                      <p className="text-secondary">{page.body}</p>
-                    </div>
+                  <div className="sarjan-contact-intro">
+                    <h3 className="mb_12">Sarjan Textiles</h3>
+                    <p className="text-secondary mb_0">{page.body}</p>
                   </div>
                 </div>
                 <div className="right">
@@ -2697,73 +2620,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
         </>
       ) : (
         <>
-          <section className="flat-spacing about-us-main pb_0">
-            <div className="container">
-              <div className="row">
-                {showAboutHeroImage ? (
-                  <div className="col-md-6">
-                    <div className="about-us-features wow fadeInLeft sarjan-hub-hero-banner">
-                      <StorefrontBannerImage
-                        src={page.image}
-                        alt={about.imageAlt || page.title}
-                        variant="about"
-                        fill
-                      />
-                    </div>
-                  </div>
-                ) : null}
-                <div className={showAboutHeroImage ? "col-md-6" : "col-md-12"}>
-                  <div className="about-us-content">
-                    <h3 className="title wow fadeInUp">{page.title}</h3>
-                    <div className="widget-tabs style-3">
-                      <ul className="widget-menu-tab wow fadeInUp">
-                        {aboutTabs.map((tab, index) => (
-                          <li
-                            className={`item-title${index === 0 ? " active" : ""}`}
-                            key={tab}
-                          >
-                            <span className="inner text-button">{tab}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="widget-content-tab wow fadeInUp">
-                        <div className="widget-content-inner active">
-                          <p>{page.body}</p>
-                        </div>
-                        <div className="widget-content-inner">
-                          <p>
-                            {about.history ||
-                              "Sarjan Textiles history is managed from admin CMS."}
-                          </p>
-                        </div>
-                        <div className="widget-content-inner">
-                          <p>
-                            {about.mission ||
-                              "Build a clean B2B ordering system for wholesale buyers with reliable catalog, dispatch, inventory, and credit visibility."}
-                          </p>
-                        </div>
-                        <div className="widget-content-inner">
-                          <p>
-                            {about.infrastructure ||
-                              about.vision ||
-                              "ERP-ready and AI-ready architecture keeps the system prepared for future integrations."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <Link
-                      href="/contact"
-                      className="tf-btn btn-fill wow fadeInUp"
-                    >
-                      <span className="text text-button">
-                        {translateStorefrontUi("contactTeam", locale)}
-                      </span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <AboutMainContent />
           <CustomContentSections
             sections={pageSections}
             products={cms.products}

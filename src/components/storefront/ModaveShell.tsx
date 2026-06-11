@@ -3,6 +3,7 @@ import { ModaveHeader } from "./ModaveHeader";
 import { ModaveModals } from "./ModaveModals";
 import { CompareDrawer } from "./CompareDrawer";
 import { ModavePreload } from "./ModavePreload";
+import { BootstrapDismissBridge } from "./BootstrapDismissBridge";
 import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
 import { OrderBotWidget } from "./OrderBotWidget";
 import { AbandonedCartResumeBanner } from "./AbandonedCartResumeBanner";
@@ -49,6 +50,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
       </a>
       <div id="wrapper">
         <StorefrontScrollChrome />
+        <BootstrapDismissBridge />
         <OffcanvasRouteGuard />
         <ModaveHeader
           key={locale}

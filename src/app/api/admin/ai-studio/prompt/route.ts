@@ -1,4 +1,7 @@
-import { updateStudioPrompt } from "@/lib/ai-product-studio";
+import {
+  resetStudioPromptToDefault,
+  updateStudioPrompt,
+} from "@/lib/ai-product-studio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -6,8 +9,16 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
 
+  if (body.resetToDefault === true) {
+    const promptTemplate = await resetStudioPromptToDefault();
+    return Response.json({ promptTemplate });
+  }
+
   if (typeof body.promptTemplate !== "string") {
-    return Response.json({ error: "Prompt template required" }, { status: 400 });
+    return Response.json(
+      { error: "Prompt template required" },
+      { status: 400 },
+    );
   }
 
   const promptTemplate = await updateStudioPrompt(body.promptTemplate);

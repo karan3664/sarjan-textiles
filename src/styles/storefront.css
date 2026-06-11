@@ -28,6 +28,9 @@ body.preload-wrapper .preload.preload-container {
   background: transparent;
   cursor: pointer;
   color: var(--main, #181818);
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 #header .sarjan-mobile-menu-trigger__icon {
@@ -91,6 +94,7 @@ footer .footer-newsletter .form-newsletter.style-black input.subscribe-email,
 footer .footer-newsletter .subscribe-content input.subscribe-email {
   height: 50px !important;
   min-height: 50px;
+  padding-left: 16px !important;
   padding-right: 54px !important;
   line-height: 1.3;
   background-color: rgba(255, 255, 255, 0.08) !important;
@@ -2815,7 +2819,59 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   display: none !important;
 }
 
-@media (min-width: 768px) {
+/* PDP + quick view: stack icons under CTAs until wide desktop (avoids side clip) */
+@media (max-width: 991px) {
+  .tf-product-info-list .tf-product-info-by-btn.sarjan-product-action-row,
+  .flat-single-home .tf-product-info-by-btn.sarjan-product-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    flex-wrap: wrap !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  .tf-product-info-list .sarjan-product-action-buttons,
+  .flat-single-home .sarjan-product-action-buttons {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+  }
+
+  .tf-product-info-list .sarjan-product-action-icons,
+  .flat-single-home .sarjan-product-action-icons {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    justify-content: center !important;
+    align-self: stretch !important;
+    padding: 2px 0 0 !important;
+    gap: 32px !important;
+  }
+
+  .tf-product-info-list .sarjan-product-action-icons .sarjan-product-icon-link,
+  .flat-single-home .sarjan-product-action-icons .sarjan-product-icon-link {
+    flex-direction: column !important;
+    align-items: center !important;
+    min-width: 72px;
+    gap: 8px !important;
+  }
+
+  .tf-product-info-list .sarjan-product-icon-label,
+  .flat-single-home .sarjan-product-icon-label {
+    display: block !important;
+  }
+
+  .tf-product-info-list .sarjan-product-action-icons .hover-tooltip .tooltip,
+  .flat-single-home .sarjan-product-action-icons .hover-tooltip .tooltip {
+    display: none !important;
+  }
+}
+
+@media (min-width: 992px) {
   .sarjan-product-action-row {
     flex-direction: row;
     flex-wrap: wrap;
@@ -2862,12 +2918,6 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 
   .sarjan-product-action-icons .hover-tooltip .tooltip {
     display: revert;
-  }
-}
-
-@media (max-width: 767px) {
-  .tf-product-info-list .tf-product-info-by-btn.sarjan-product-action-row {
-    flex-wrap: nowrap;
   }
 }
 
@@ -4665,6 +4715,44 @@ button.accordion-button:not(.collapsed),
   }
 }
 
+/* ── Download / deep-link utility cards ── */
+.sarjan-download-app {
+  padding-top: 48px;
+  padding-bottom: 64px;
+}
+
+.sarjan-download-card,
+.sarjan-product-open-card {
+  background: #fff;
+  border: 1px solid #ece7df;
+  border-radius: 20px;
+  padding: 36px 28px 32px;
+  box-shadow: 0 12px 40px rgba(20, 20, 20, 0.06);
+}
+
+.sarjan-download-qr-wrap {
+  width: fit-content;
+  padding: 12px;
+  border-radius: 16px;
+  background: #faf7f2;
+  border: 1px solid #ece7df;
+}
+
+.sarjan-download-qr {
+  display: block;
+  border-radius: 8px;
+}
+
+.sarjan-download-steps ol {
+  line-height: 1.55;
+}
+
+.sarjan-product-open {
+  padding-top: 56px;
+  padding-bottom: 64px;
+  min-height: 60vh;
+}
+
 .order-timeline {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -4928,22 +5016,72 @@ button.accordion-button:not(.collapsed),
   left: 0;
   z-index: 3000;
   background-color: var(--white, #fff);
+  visibility: visible;
 }
 
-.sarjan-mobile-menu.canvas-mb {
-  width: min(100vw, 380px);
-  max-width: 100%;
+#mobileMenu.sarjan-mobile-menu.offcanvas.show {
+  transform: none;
+  visibility: visible;
 }
 
-.sarjan-mobile-menu .sarjan-mobile-menu__canvas {
-  width: 100%;
-  max-width: 100%;
+.offcanvas-backdrop {
+  z-index: 2990;
+}
+
+.sarjan-mobile-menu.canvas-mb,
+#mobileMenu.sarjan-mobile-menu.offcanvas {
+  width: min(86vw, 320px) !important;
+  max-width: min(86vw, 320px) !important;
+}
+
+.sarjan-mobile-menu .sarjan-mobile-menu__canvas,
+.sarjan-mobile-menu .mb-canvas-content {
+  position: relative;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding-top: 56px;
+  box-sizing: border-box;
+}
+
+.sarjan-mobile-menu .icon-close-popup,
+.sarjan-mobile-menu .sarjan-mobile-menu__close {
+  position: absolute !important;
+  top: max(10px, env(safe-area-inset-top, 0px)) !important;
+  right: max(12px, env(safe-area-inset-right, 0px)) !important;
+  left: auto !important;
+  z-index: 20 !important;
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border: none !important;
+  border-radius: 50% !important;
+  background: #f3f3f3 !important;
+  color: var(--main, #111) !important;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sarjan-mobile-menu .icon-close-popup:hover,
+.sarjan-mobile-menu .sarjan-mobile-menu__close:hover {
+  background: #e8e8e8 !important;
+  color: var(--main, #111) !important;
+  transform: none !important;
 }
 
 .sarjan-mobile-menu .sarjan-mobile-menu__body {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding-top: 4px;
   padding-bottom: 28px;
 }
 
@@ -5867,69 +6005,287 @@ button.accordion-button:not(.collapsed),
   margin-top: 40px;
 }
 
-/* Contact — left banner fills full column height (no grey gap below image) */
+/* Contact — intro + information (stack on mobile, split on desktop) */
 .sarjan-contact-us-map.contact-us-map {
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
+  overflow: visible;
+  gap: 0;
 }
 
 .sarjan-contact-us-map.contact-us-map .wrap-map {
-  flex: 1 1 0;
+  flex: 0 0 auto;
+  width: 100%;
   min-width: 0;
-  min-height: 500px !important;
+  min-height: 0 !important;
   height: auto !important;
   display: flex !important;
   flex-direction: column;
-  align-self: stretch;
 }
 
-.sarjan-contact-us-map.contact-us-map
-  .wrap-map
-  .map-contact.sarjan-contact-map {
-  flex: 1 1 auto;
+.sarjan-contact-us-map.contact-us-map .wrap-map .sarjan-contact-intro {
+  flex: 0 0 auto;
   width: 100%;
-  min-height: 100% !important;
-  height: 100% !important;
-  align-self: stretch;
-}
-
-.sarjan-contact-map {
+  min-height: 0 !important;
+  height: auto !important;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(32px, 5vw, 48px);
-  text-align: center;
-  background-image:
-    linear-gradient(
-      135deg,
-      rgba(250, 226, 211, 0.78),
-      rgba(244, 244, 244, 0.72)
-    ),
-    var(--sarjan-contact-bg, url("/sarjan-assets/banner-textiles-studio.webp"));
-  background-position: center center;
-  background-size: cover;
-  background-repeat: no-repeat;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: clamp(24px, 5vw, 48px);
+  text-align: left;
+  background: var(--sarjan-home-cream, #faf8f5);
+  border: 1px solid rgba(24, 24, 24, 0.08);
 }
 
-.sarjan-contact-map > div {
+.sarjan-contact-us-map.contact-us-map .right {
   position: relative;
   z-index: 1;
-  max-width: 420px;
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.sarjan-contact-intro h3 {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sarjan-contact-intro p {
+  max-width: 52ch;
+  line-height: 1.65;
+  font-size: clamp(15px, 1.8vw, 17px);
+  word-break: break-word;
+}
+
+.sarjan-contact-us-map.contact-us-map .right h4 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 992px) {
+  .sarjan-contact-us-map.contact-us-map {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .sarjan-contact-us-map.contact-us-map .wrap-map {
+    flex: 1 1 0;
+    min-height: 500px !important;
+  }
+
+  .sarjan-contact-us-map.contact-us-map .wrap-map .sarjan-contact-intro {
+    flex: 1 1 auto;
+    min-height: 100% !important;
+    height: 100% !important;
+    justify-content: center;
+  }
+
+  .sarjan-contact-us-map.contact-us-map .right {
+    flex: 0 0 min(470px, 42%);
+    max-width: 470px;
+    width: auto;
+  }
+
+  .sarjan-contact-intro p {
+    max-width: 42ch;
+  }
 }
 
 @media (max-width: 991px) {
-  .sarjan-contact-us-map.contact-us-map .wrap-map,
-  .sarjan-contact-us-map.contact-us-map
-    .wrap-map
-    .map-contact.sarjan-contact-map {
-    min-height: 320px !important;
-    height: auto !important;
+  .sarjan-contact-us-map.contact-us-map {
+    flex-direction: column !important;
+    border-radius: 0;
   }
 
-  .sarjan-contact-us-map.contact-us-map
-    .wrap-map
-    .map-contact.sarjan-contact-map {
-    min-height: 320px !important;
-    height: 320px !important;
+  .sarjan-contact-us-map.contact-us-map .wrap-map,
+  .sarjan-contact-us-map.contact-us-map .wrap-map .sarjan-contact-intro,
+  .sarjan-contact-us-map.contact-us-map .right {
+    min-height: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .sarjan-contact-us-map.contact-us-map .wrap-map .sarjan-contact-intro {
+    border-bottom: 1px solid rgba(24, 24, 24, 0.08);
+    padding: clamp(20px, 5vw, 28px) clamp(16px, 4vw, 20px);
+  }
+
+  .sarjan-contact-us-map.contact-us-map .right {
+    padding: clamp(20px, 5vw, 28px) clamp(16px, 4vw, 20px) !important;
+  }
+}
+
+/* About — intro card + section navigation */
+.sarjan-about-main,
+.sarjan-about-section-page {
+  background: var(--sarjan-home-cream, #faf8f5);
+}
+
+.sarjan-about-card {
+  max-width: min(100%, 820px);
+  margin-inline: auto;
+  padding: clamp(24px, 5vw, 40px);
+  background: #fff;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(24, 24, 24, 0.06);
+}
+
+.sarjan-about-intro-wrap {
+  margin-bottom: clamp(24px, 4vw, 32px);
+}
+
+.sarjan-about-main .title,
+.sarjan-about-section-page .title {
+  margin: 0 0 10px;
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--main, #181818);
+}
+
+.sarjan-about-intro-label {
+  margin: 0 0 18px;
+  color: var(--sarjan-accent, #8b1e2d);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+}
+
+.sarjan-about-body {
+  font-size: clamp(15px, 1.8vw, 17px);
+  line-height: 1.75;
+  color: var(--secondary, #64666c);
+}
+
+.sarjan-about-body.cms-html-content p {
+  margin-bottom: 0.85em;
+}
+
+.sarjan-about-body.cms-html-content p:last-child {
+  margin-bottom: 0;
+}
+
+.sarjan-about-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: clamp(20px, 3vw, 28px);
+  border-top: 1px solid rgba(24, 24, 24, 0.08);
+}
+
+.sarjan-about-section-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.sarjan-about-section-nav .sarjan-about-section-btn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.sarjan-about-section-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0 !important;
+  min-height: 48px;
+  padding: 12px 18px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(139, 30, 45, 0.2) !important;
+  background: rgba(139, 30, 45, 0.04) !important;
+  color: var(--sarjan-accent, #8b1e2d) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  text-align: center;
+  text-decoration: none !important;
+  white-space: normal;
+  box-shadow: 0 2px 8px rgba(24, 24, 24, 0.04);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-text-fill-color: var(--sarjan-accent, #8b1e2d) !important;
+}
+
+.sarjan-about-section-btn:hover,
+.sarjan-about-section-btn--active {
+  background: var(--sarjan-accent, #8b1e2d) !important;
+  border-color: var(--sarjan-accent, #8b1e2d) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 6px 18px rgba(139, 30, 45, 0.22);
+  transform: translateY(-1px);
+}
+
+.sarjan-about-contact-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  padding: 14px 24px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--sarjan-accent, #8b1e2d) !important;
+  background: var(--sarjan-accent, #8b1e2d) !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 22px rgba(139, 30, 45, 0.24);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.sarjan-about-contact-btn:hover {
+  background: #a52435 !important;
+  border-color: #a52435 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(139, 30, 45, 0.28);
+}
+
+.sarjan-about-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--sarjan-accent, #8b1e2d);
+}
+
+@media (min-width: 576px) {
+  .sarjan-about-section-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sarjan-about-section-nav
+    .sarjan-about-section-btn:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .sarjan-about-contact-btn {
+    width: auto;
+    min-width: 220px;
   }
 }
 
@@ -6916,6 +7272,63 @@ button.accordion-button:not(.collapsed),
   }
 }
 
+/* Empty cart drawer — full-width stacked CTAs (fixes overlap on narrow / responsive) */
+.modal-shopping-cart .sarjan-mini-cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: min(52vh, 420px);
+  padding: clamp(24px, 5vw, 32px) clamp(16px, 4vw, 24px);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.modal-shopping-cart .sarjan-mini-cart-empty h6 {
+  margin-bottom: 8px;
+}
+
+.modal-shopping-cart .sarjan-mini-cart-empty-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: min(100%, 300px);
+  margin: 20px auto 0;
+}
+
+.modal-shopping-cart
+  .sarjan-mini-cart-empty-actions
+  > :is(.sarjan-btn, .tf-btn, button.sarjan-btn, button.tf-btn) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 48px !important;
+  height: auto !important;
+  margin: 0 !important;
+  flex: none !important;
+  position: relative !important;
+  border-radius: 999px !important;
+  padding: 12px 18px !important;
+  box-sizing: border-box !important;
+  white-space: normal !important;
+  overflow: visible !important;
+}
+
+.modal-shopping-cart
+  .sarjan-mini-cart-empty-actions
+  :is(.sarjan-btn, .tf-btn)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+}
+
 /* Full cart page — stacked CTAs with gap (all viewports; was mobile-only before) */
 .sarjan-cart-page .sarjan-cart-page-actions {
   display: flex;
@@ -6971,6 +7384,42 @@ button.accordion-button:not(.collapsed),
 
 .modal-shopping-cart .tf-cart-checkbox label a {
   text-decoration: underline;
+}
+
+/* Modal/offcanvas close — reliable taps on touch devices */
+body.sarjan-storefront .modal .icon-close-popup,
+body.sarjan-storefront .modal [data-bs-dismiss="modal"],
+body.sarjan-storefront .offcanvas .icon-close-popup,
+body.sarjan-storefront .offcanvas [data-bs-dismiss="offcanvas"] {
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+  position: relative;
+  z-index: 6;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-shopping-cart .header .icon-close-popup,
+.modal-wishlist .header .icon-close-popup,
+.sarjan-search-modal .icon-close-popup,
+.modal-quick-view .icon-close-popup,
+.modal-size-guide .header .icon-close-popup {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background-color: var(--surface, #f5f5f5);
+  border-radius: 50%;
+}
+
+.modal-shopping-cart .header,
+.modal-wishlist .header,
+.sarjan-search-modal .d-flex.justify-content-between {
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 767px) {
@@ -7442,6 +7891,17 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   color: var(--success);
 }
 
+.sarjan-ai-prompt-top {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.sarjan-ai-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .sarjan-ai-prompt {
   width: 100%;
   min-height: 260px;
@@ -7453,6 +7913,30 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   font-size: 12px;
   line-height: 1.55;
   resize: vertical;
+}
+
+.sarjan-ai-prompt--compact {
+  min-height: 140px;
+  margin-top: 12px;
+}
+
+.sarjan-ai-record-prompt {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.sarjan-ai-record-prompt summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sarjan-ai-record-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .sarjan-ai-filter-top {
@@ -7720,18 +8204,14 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
 }
 
 @media (max-width: 575px) {
-  .sarjan-mini-cart-empty {
+  .modal-shopping-cart .sarjan-mini-cart-empty {
     min-height: min(48vh, 360px);
     padding: 24px 16px;
   }
 
-  .sarjan-mini-cart-empty-actions {
-    grid-template-columns: 1fr;
-    width: min(100%, 260px);
-  }
-
-  .sarjan-mini-cart-empty-actions:has(> :only-child) {
-    grid-template-columns: 1fr;
+  .modal-shopping-cart .sarjan-mini-cart-empty-actions {
+    max-width: min(100%, 280px);
+    gap: 10px !important;
   }
 }
 
@@ -9289,6 +9769,29 @@ a.sarjan-order-bot-card:focus-visible {
   text-decoration: none;
 }
 
+/* Blog detail — room below comment form before Related Posts */
+.blog-detail-wrap > .inner {
+  padding-bottom: 48px !important;
+}
+
+.blog-detail-wrap .leave-comment {
+  margin-bottom: 0;
+}
+
+.sarjan-blog-related-section.flat-spacing {
+  padding-top: 104px;
+}
+
+@media (max-width: 991px) {
+  .blog-detail-wrap > .inner {
+    padding-bottom: 36px !important;
+  }
+
+  .sarjan-blog-related-section.flat-spacing {
+    padding-top: 72px;
+  }
+}
+
 /* Post-registration thank-you: spaced, equally rounded CTAs (storefront has gap-10 not gap10) */
 .sarjan-registration-thankyou-actions {
   display: flex;
@@ -9667,6 +10170,13 @@ a.sarjan-order-bot-card:focus-visible {
   padding: 0;
   border: 0;
   min-width: 0;
+}
+
+.sarjan-auth-page .sarjan-auth-form form,
+.sarjan-auth-page .login-wrap.sarjan-auth-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .sarjan-auth-page .sarjan-auth-form input[type="text"],
@@ -10140,11 +10650,17 @@ body.sarjan-storefront
   }
 
   .sarjan-mobile-menu.canvas-mb,
-  .sarjan-mobile-menu .sarjan-mobile-menu__canvas,
-  .sarjan-mobile-menu .mb-canvas-content {
-    width: min(92vw, 360px) !important;
-    max-width: min(92vw, 360px) !important;
-    min-width: 0 !important;
+  #mobileMenu.sarjan-mobile-menu.offcanvas {
+    width: min(88vw, 300px) !important;
+    max-width: min(88vw, 300px) !important;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 1199.98px) {
+  .sarjan-mobile-menu.canvas-mb,
+  #mobileMenu.sarjan-mobile-menu.offcanvas {
+    width: min(50vw, 340px) !important;
+    max-width: min(50vw, 340px) !important;
   }
 }
 
