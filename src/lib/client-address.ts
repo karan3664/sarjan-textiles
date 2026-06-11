@@ -1,5 +1,10 @@
 import type { LocalClient } from "@/lib/local-db";
 import {
+  getDefaultSavedAddress,
+  listSavedAddresses,
+  type ClientAddressBook,
+} from "@/lib/client-saved-addresses";
+import {
   hasMeaningfulDispatchAddress,
   resolveDispatchAddress,
 } from "@/lib/dispatch-address";
@@ -23,8 +28,7 @@ export type ClientAddressSource = Pick<
   "companyName" | "gst" | "city" | "phone" | "address"
 >;
 
-/** Merge top-level client fields into the address book shape. */
-export function mergeClientAddressBook(
+function mergeLegacyClientAddressBook(
   client: ClientAddressSource,
 ): ClientAddressFields {
   const book = client.address ?? {};
@@ -44,6 +48,40 @@ export function mergeClientAddressBook(
     ownerLegalName: book.ownerLegalName?.trim(),
   };
 }
+
+/** Merge top-level client fields into the address book shape. */
+export function mergeClientAddressBook(
+  client: ClientAddressSource,
+): ClientAddressFields {
+  const legacy = mergeLegacyClientAddressBook(client);
+  const book = (client.address ?? {}) as ClientAddressBook;
+  const savedDefault = getDefaultSavedAddress(book, legacy);
+  if (savedDefault) {
+    return {
+      contactName:
+        savedDefault.contactName?.trim() || client.companyName?.trim(),
+      phone: savedDefault.phone?.trim() || client.phone?.trim(),
+      gst: savedDefault.gst?.trim() || client.gst?.trim(),
+      city: savedDefault.city?.trim() || client.city?.trim(),
+      line1: savedDefault.line1?.trim() ?? "",
+      line2: savedDefault.line2?.trim(),
+      state:
+        savedDefault.state?.trim() ||
+        findStateForCity(savedDefault.city ?? client.city ?? "") ||
+        "",
+      pincode: savedDefault.pincode?.trim(),
+      transport: savedDefault.transport?.trim(),
+      ownerLegalName: savedDefault.ownerLegalName?.trim(),
+    };
+  }
+  return legacy;
+}
+
+export { listSavedAddresses, getDefaultSavedAddress };
+export type {
+  ClientAddressBook,
+  SavedClientAddress,
+} from "@/lib/client-saved-addresses";
 
 /** Pick the first line that looks like a street address from dispatch text. */
 export function streetLineFromDispatch(dispatch: string) {

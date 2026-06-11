@@ -47,9 +47,48 @@ import {
   verifyIndianPincode,
 } from "@/lib/india-pincode";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
+import {
+  listSavedAddresses,
+  savedAddressSummary,
+  type ClientAddressBook,
+  type SavedClientAddress,
+} from "@/lib/client-saved-addresses";
 import { productSetPrice } from "@/lib/product-pricing";
 import type { StorefrontCommerceLabels } from "@/lib/storefront-ui";
 import { PriceGate } from "./PriceGate";
+
+type AddressEntryMode = "saved" | "manual";
+
+function checkoutFieldsFromClient(client: CheckoutClient) {
+  const city = client.address?.city ?? client.city ?? "";
+  return {
+    companyName: client.companyName ?? "",
+    contactPerson: client.address?.contactName ?? "",
+    checkoutEmail: client.email ?? "",
+    checkoutPhone: client.phone ?? client.address?.phone ?? "",
+    dispatchLine1: client.address?.line1 ?? "",
+    checkoutState: client.address?.state ?? findStateForCity(city),
+    checkoutCity: city,
+    checkoutPincode: normalizeIndianPincode(client.address?.pincode ?? ""),
+  };
+}
+
+function checkoutFieldsFromSaved(
+  address: SavedClientAddress,
+  client: CheckoutClient,
+) {
+  return {
+    companyName: client.companyName ?? "",
+    contactPerson: address.contactName ?? "",
+    checkoutEmail: client.email ?? "",
+    checkoutPhone: address.phone ?? client.phone ?? "",
+    dispatchLine1: address.line1 ?? "",
+    checkoutState:
+      address.state ?? findStateForCity(address.city ?? client.city ?? ""),
+    checkoutCity: address.city ?? "",
+    checkoutPincode: normalizeIndianPincode(address.pincode ?? ""),
+  };
+}
 
 type CheckoutLine = StoredCartItem & {
   product: Product;
@@ -76,6 +115,15 @@ export function CheckoutPageClient({
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginMessage, setLoginMessage] = useState("");
   const [checkoutPincode, setCheckoutPincode] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [checkoutEmail, setCheckoutEmail] = useState("");
+  const [checkoutPhone, setCheckoutPhone] = useState("");
+  const [dispatchLine1, setDispatchLine1] = useState("");
+  const [checkoutNote, setCheckoutNote] = useState("");
+  const [addressEntryMode, setAddressEntryMode] =
+    useState<AddressEntryMode>("manual");
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [pincodeChecking, setPincodeChecking] = useState(false);
   const [pincodeFeedback, setPincodeFeedback] = useState<{
     tone: "muted" | "success" | "error";
@@ -126,14 +174,64 @@ export function CheckoutPageClient({
     };
   }, []);
 
+  const savedAddressBook = useMemo(() => {
+    if (!client?.address) {
+      return { saved: [] as SavedClientAddress[], defaultAddressId: "" };
+    }
+    return listSavedAddresses(client.address as ClientAddressBook);
+  }, [client?.address]);
+
+  const hasMultipleSavedAddresses = savedAddressBook.saved.length > 1;
+  const useSavedAddressPicker =
+    Boolean(client?.id) &&
+    hasMultipleSavedAddresses &&
+    addressEntryMode === "saved";
+
+  const applyCheckoutFields = useCallback(
+    (fields: ReturnType<typeof checkoutFieldsFromClient>) => {
+      setCompanyName(fields.companyName);
+      setContactPerson(fields.contactPerson);
+      setCheckoutEmail(fields.checkoutEmail);
+      setCheckoutPhone(fields.checkoutPhone);
+      setDispatchLine1(fields.dispatchLine1);
+      setCheckoutState(fields.checkoutState);
+      setCheckoutCity(fields.checkoutCity);
+      setCheckoutPincode(fields.checkoutPincode);
+      setPincodeFeedback({ tone: "muted", text: "" });
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!client) return;
-    const city = client.address?.city ?? client.city ?? "";
-    setCheckoutCity(city);
-    setCheckoutState(client.address?.state ?? findStateForCity(city));
-    setCheckoutPincode(normalizeIndianPincode(client.address?.pincode ?? ""));
-    setPincodeFeedback({ tone: "muted", text: "" });
-  }, [client]);
+
+    const { saved, defaultAddressId } = savedAddressBook;
+    if (saved.length > 1) {
+      const pick =
+        saved.find((item) => item.id === defaultAddressId) ?? saved[0];
+      setSelectedAddressId(pick.id);
+      setAddressEntryMode("saved");
+      applyCheckoutFields(checkoutFieldsFromSaved(pick, client));
+      return;
+    }
+
+    setAddressEntryMode("manual");
+    setSelectedAddressId(saved[0]?.id ?? "");
+    if (saved.length === 1) {
+      applyCheckoutFields(checkoutFieldsFromSaved(saved[0], client));
+      return;
+    }
+    applyCheckoutFields(checkoutFieldsFromClient(client));
+  }, [client, savedAddressBook, applyCheckoutFields]);
+
+  const selectSavedAddress = (addressId: string) => {
+    if (!client) return;
+    const item = savedAddressBook.saved.find((entry) => entry.id === addressId);
+    if (!item) return;
+    setSelectedAddressId(addressId);
+    setAddressEntryMode("saved");
+    applyCheckoutFields(checkoutFieldsFromSaved(item, client));
+  };
 
   const validateCheckoutPincode = useCallback(async () => {
     const pincode = normalizeIndianPincode(checkoutPincode);
@@ -295,19 +393,7 @@ export function CheckoutPageClient({
       return;
     }
 
-    const street = (
-      document.querySelector<HTMLInputElement>("[name='dispatchAddress']")
-        ?.value ?? ""
-    ).trim();
-    const pin = normalizeIndianPincode(checkoutPincode);
-    const dispatchAddress = [
-      street,
-      checkoutCity.trim(),
-      checkoutState.trim(),
-      pin,
-    ]
-      .filter(Boolean)
-      .join(", ");
+    const street = dispatchLine1.trim();
 
     const res = await fetch("/api/orders", {
       method: "POST",
@@ -317,14 +403,8 @@ export function CheckoutPageClient({
         clientId: client.id,
         clientEmail: client.email,
         subtotal,
-        dispatchAddress: (
-          document.querySelector<HTMLInputElement>("[name='dispatchAddress']")
-            ?.value ?? ""
-        ).trim(),
-        note: (
-          document.querySelector<HTMLTextAreaElement>("[name='note']")?.value ??
-          ""
-        ).trim(),
+        dispatchAddress: street,
+        note: checkoutNote.trim(),
         items: lines.map((item) => ({
           slug: item.slug,
           name: item.product.name,
@@ -467,97 +547,209 @@ export function CheckoutPageClient({
                     {labels.information ?? "Information"}
                   </h5>
                   <form className="info-box" key={client?.id ?? "guest"}>
-                    <div className="grid-2">
-                      <input
-                        type="text"
-                        placeholder={labels.companyName ?? "Company Name*"}
-                        name="companyName"
-                        defaultValue={client?.companyName ?? ""}
-                      />
-                      <input
-                        type="text"
-                        placeholder={labels.contactPerson ?? "Contact Person*"}
-                        name="contactPerson"
-                        defaultValue={client?.address?.contactName ?? ""}
-                      />
-                    </div>
-                    <div className="grid-2">
-                      <input
-                        type="text"
-                        name="checkoutEmail"
-                        placeholder={labels.emailAddress ?? "Email Address*"}
-                        defaultValue={client?.email ?? ""}
-                      />
-                      <input
-                        type="text"
-                        name="checkoutPhone"
-                        placeholder={labels.phoneNumber ?? "Phone Number*"}
-                        defaultValue={client?.phone ?? ""}
-                      />
-                    </div>
-                    <div className="tf-select">
-                      <select
-                        className="text-title"
-                        name="address[country]"
-                        defaultValue="India"
-                      >
-                        <option value="Choose Country/Region">
-                          {labels.chooseCountry ?? "Choose Country/Region"}
-                        </option>
-                        <option value="India">{labels.india ?? "India"}</option>
-                      </select>
-                    </div>
-                    <IndiaStateCitySelect
-                      layout="grid-2"
-                      state={checkoutState}
-                      city={checkoutCity}
-                      onStateChange={setCheckoutState}
-                      onCityChange={setCheckoutCity}
-                      stateRequired
-                      cityRequired
-                    />
-                    <div className="grid-2">
-                      <input
-                        type="text"
-                        placeholder={
-                          labels.streetAddress ?? "Street, address..."
-                        }
-                        name="dispatchAddress"
-                        defaultValue={client?.address?.line1 ?? ""}
-                      />
-                      <input
-                        type="text"
-                        name="pincode"
-                        inputMode="numeric"
-                        autoComplete="postal-code"
-                        maxLength={6}
-                        placeholder={labels.postalCode ?? "Postal Code*"}
-                        value={checkoutPincode}
-                        onChange={(e) => {
-                          setCheckoutPincode(
-                            normalizeIndianPincode(e.target.value),
-                          );
-                          if (pincodeFeedback.tone !== "muted") {
-                            setPincodeFeedback({ tone: "muted", text: "" });
-                          }
-                        }}
-                        onBlur={() => void validateCheckoutPincode()}
-                        required
-                      />
-                    </div>
-                    {pincodeChecking || pincodeFeedback.text ? (
-                      <p
-                        className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
-                      >
-                        {pincodeChecking
-                          ? (labels.pincodeChecking ??
-                            "Checking PIN code against India Post…")
-                          : pincodeFeedback.text}
-                      </p>
+                    {hasMultipleSavedAddresses ? (
+                      <div className="sarjan-checkout-address-picker">
+                        <p className="text-secondary text-caption-1 sarjan-checkout-address-picker__hint">
+                          {labels.checkoutSavedAddressHint ??
+                            "Choose a saved dispatch address for this order."}
+                        </p>
+                        {useSavedAddressPicker ? (
+                          <>
+                            <div
+                              className="sarjan-saved-address-list"
+                              role="radiogroup"
+                              aria-label={
+                                labels.checkoutChooseAddress ??
+                                "Choose dispatch address"
+                              }
+                            >
+                              {savedAddressBook.saved.map((item) => {
+                                const isDefault =
+                                  item.id === savedAddressBook.defaultAddressId;
+                                const isSelected =
+                                  item.id === selectedAddressId;
+                                return (
+                                  <label
+                                    key={item.id}
+                                    className={`sarjan-saved-address-card sarjan-checkout-address-card${isSelected ? " is-selected" : ""}${isDefault ? " is-default" : ""}`}
+                                  >
+                                    <span className="sarjan-saved-address-card__select">
+                                      <input
+                                        type="radio"
+                                        name="checkout-saved-address"
+                                        value={item.id}
+                                        checked={isSelected}
+                                        onChange={() =>
+                                          selectSavedAddress(item.id)
+                                        }
+                                      />
+                                      <span
+                                        className="sarjan-saved-address-card__radio"
+                                        aria-hidden
+                                      />
+                                      <span className="sarjan-saved-address-card__badge">
+                                        {isDefault
+                                          ? (labels.defaultAddress ??
+                                            "Default address")
+                                          : (labels.otherAddress ??
+                                            "Other address")}
+                                      </span>
+                                    </span>
+                                    <div className="sarjan-saved-address-card__body">
+                                      {savedAddressSummary(item).map((line) => (
+                                        <p key={line} className="mb_6">
+                                          {line}
+                                        </p>
+                                      ))}
+                                      {item.transport ? (
+                                        <p className="mb_6 text-secondary text-caption-1">
+                                          Transport: {item.transport}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <button
+                              type="button"
+                              className="text-button sarjan-checkout-address-picker__manual"
+                              onClick={() => setAddressEntryMode("manual")}
+                            >
+                              {labels.checkoutEnterDifferentAddress ??
+                                "Enter a different address"}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            className="text-button sarjan-checkout-address-picker__back"
+                            onClick={() =>
+                              selectSavedAddress(
+                                selectedAddressId ||
+                                  savedAddressBook.defaultAddressId ||
+                                  savedAddressBook.saved[0]?.id ||
+                                  "",
+                              )
+                            }
+                          >
+                            {labels.checkoutUseSavedAddress ??
+                              "Use a saved address"}
+                          </button>
+                        )}
+                      </div>
+                    ) : null}
+                    {!useSavedAddressPicker ? (
+                      <>
+                        <div className="grid-2">
+                          <input
+                            type="text"
+                            placeholder={labels.companyName ?? "Company Name*"}
+                            name="companyName"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            placeholder={
+                              labels.contactPerson ?? "Contact Person*"
+                            }
+                            name="contactPerson"
+                            value={contactPerson}
+                            onChange={(e) => setContactPerson(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid-2">
+                          <input
+                            type="text"
+                            name="checkoutEmail"
+                            placeholder={
+                              labels.emailAddress ?? "Email Address*"
+                            }
+                            value={checkoutEmail}
+                            onChange={(e) => setCheckoutEmail(e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            name="checkoutPhone"
+                            placeholder={labels.phoneNumber ?? "Phone Number*"}
+                            value={checkoutPhone}
+                            onChange={(e) => setCheckoutPhone(e.target.value)}
+                          />
+                        </div>
+                        <div className="tf-select">
+                          <select
+                            className="text-title"
+                            name="address[country]"
+                            defaultValue="India"
+                          >
+                            <option value="Choose Country/Region">
+                              {labels.chooseCountry ?? "Choose Country/Region"}
+                            </option>
+                            <option value="India">
+                              {labels.india ?? "India"}
+                            </option>
+                          </select>
+                        </div>
+                        <IndiaStateCitySelect
+                          layout="grid-2"
+                          state={checkoutState}
+                          city={checkoutCity}
+                          onStateChange={setCheckoutState}
+                          onCityChange={setCheckoutCity}
+                          stateRequired
+                          cityRequired
+                        />
+                        <div className="grid-2">
+                          <input
+                            type="text"
+                            placeholder={
+                              labels.streetAddress ?? "Street, address..."
+                            }
+                            name="dispatchAddress"
+                            value={dispatchLine1}
+                            onChange={(e) => setDispatchLine1(e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            name="pincode"
+                            inputMode="numeric"
+                            autoComplete="postal-code"
+                            maxLength={6}
+                            placeholder={labels.postalCode ?? "Postal Code*"}
+                            value={checkoutPincode}
+                            onChange={(e) => {
+                              setCheckoutPincode(
+                                normalizeIndianPincode(e.target.value),
+                              );
+                              if (pincodeFeedback.tone !== "muted") {
+                                setPincodeFeedback({
+                                  tone: "muted",
+                                  text: "",
+                                });
+                              }
+                            }}
+                            onBlur={() => void validateCheckoutPincode()}
+                            required
+                          />
+                        </div>
+                        {pincodeChecking || pincodeFeedback.text ? (
+                          <p
+                            className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
+                          >
+                            {pincodeChecking
+                              ? (labels.pincodeChecking ??
+                                "Checking PIN code against India Post…")
+                              : pincodeFeedback.text}
+                          </p>
+                        ) : null}
+                      </>
                     ) : null}
                     <textarea
                       placeholder={labels.writeNote ?? "Write note..."}
                       name="note"
+                      value={checkoutNote}
+                      onChange={(e) => setCheckoutNote(e.target.value)}
                     />
                   </form>
                 </div>

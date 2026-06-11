@@ -8,6 +8,7 @@ import { StorefrontThemeProvider } from "@/components/storefront/StorefrontTheme
 import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
 import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner";
 import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
+import { StorefrontOriginGuard } from "@/components/storefront/StorefrontOriginGuard";
 import { StorefrontPwaRegistration } from "@/components/storefront/StorefrontPwaRegistration";
 
 export function StorefrontRootProviders({
@@ -20,6 +21,7 @@ export function StorefrontRootProviders({
       <SiteAnalytics />
       <AnalyticsTracker />
       <CookieConsentBanner />
+      <StorefrontOriginGuard />
       <StorefrontPwaRegistration />
       {children}
     </StorefrontThemeProvider>

@@ -7,6 +7,7 @@ import {
   type ClientUniqueFields,
 } from "@/lib/client-duplicate-check";
 import { streetLineFromDispatch } from "@/lib/client-address";
+import { syncAddressBookFlatFields } from "@/lib/client-saved-addresses";
 import {
   formatClientDispatchAddress,
   hasMeaningfulDispatchAddress,
@@ -52,6 +53,21 @@ export type LocalClient = {
     transport?: string;
     /** Legal / proprietor full name as on GST certificate (lgnm). */
     ownerLegalName?: string;
+    defaultAddressId?: string;
+    saved?: Array<{
+      id: string;
+      label?: string;
+      contactName?: string;
+      phone?: string;
+      line1?: string;
+      line2?: string;
+      city?: string;
+      state?: string;
+      pincode?: string;
+      gst?: string;
+      transport?: string;
+      ownerLegalName?: string;
+    }>;
   };
   status: "pending" | "approved" | "rejected" | "inactive";
   createdAt: string;
@@ -628,6 +644,30 @@ export async function updateClient(
     id,
   );
 
+  let normalizedAddress = input.address;
+  if (input.address !== undefined) {
+    let next = syncAddressBookFlatFields({
+      ...(existing.address ?? {}),
+      ...input.address,
+    });
+    if (input.address.gst !== undefined) {
+      const gst = input.address.gst.trim();
+      next.gst = gst || undefined;
+    }
+    if (input.address.ownerLegalName !== undefined) {
+      const legal = input.address.ownerLegalName.trim();
+      next.ownerLegalName = legal || undefined;
+    }
+    normalizedAddress = syncAddressBookFlatFields(next);
+    input = {
+      ...input,
+      address: normalizedAddress,
+      city: input.city ?? normalizedAddress.city,
+      phone: input.phone ?? normalizedAddress.phone,
+      gst: input.gst ?? normalizedAddress.gst,
+    };
+  }
+
   if (isPostgresEnabled()) {
     try {
       const updateRow: Record<string, unknown> = {};
@@ -637,7 +677,8 @@ export async function updateClient(
         updateRow.gst = input.gst.trim() ? input.gst.trim() : null;
       if (input.city !== undefined) updateRow.city = input.city;
       if (input.phone !== undefined) updateRow.phone = input.phone;
-      if (input.address !== undefined) updateRow.address = input.address;
+      if (normalizedAddress !== undefined)
+        updateRow.address = normalizedAddress;
       if (input.avatarUrl !== undefined) {
         const cleared =
           input.avatarUrl === null || !String(input.avatarUrl).trim();
@@ -676,17 +717,17 @@ export async function updateClient(
     const phone = input.phone.trim();
     client.phone = phone || undefined;
   }
-  if (input.address !== undefined) {
-    const next = { ...(client.address ?? {}), ...input.address };
-    if (input.address.gst !== undefined) {
-      const gst = input.address.gst.trim();
-      next.gst = gst || undefined;
+  if (normalizedAddress !== undefined) {
+    client.address = normalizedAddress;
+    if (client.address.city?.trim()) {
+      client.city = client.address.city.trim();
     }
-    if (input.address.ownerLegalName !== undefined) {
-      const legal = input.address.ownerLegalName.trim();
-      next.ownerLegalName = legal || undefined;
+    if (client.address.phone?.trim()) {
+      client.phone = client.address.phone.trim();
     }
-    client.address = next;
+    if (client.address.gst?.trim()) {
+      client.gst = client.address.gst.trim();
+    }
   }
   if (input.avatarUrl !== undefined) {
     const cleared =

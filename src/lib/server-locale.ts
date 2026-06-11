@@ -1,4 +1,5 @@
 import { cookies, headers } from "next/headers";
+import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import {
   isAppLocale,
   parseRequestLocale,
@@ -14,15 +15,17 @@ export const DEFAULT_STOREFRONT_LOCALE: AppLocale = "en";
  * Use `localeFromHeaders()` only on session/cart/checkout pages.
  */
 export function getCacheableStorefrontLocale(): AppLocale {
-  return DEFAULT_STOREFRONT_LOCALE;
+  return effectiveStorefrontLocale(DEFAULT_STOREFRONT_LOCALE);
 }
 
 export async function localeFromHeaders(): Promise<AppLocale> {
   const cookieStore = await cookies();
   const cookieLang = cookieStore.get(SARJAN_LANG_COOKIE)?.value?.trim();
   const headerStore = await headers();
-  return parseRequestLocale(
-    headerStore.get("accept-language"),
-    cookieLang && isAppLocale(cookieLang) ? cookieLang : null,
+  return effectiveStorefrontLocale(
+    parseRequestLocale(
+      headerStore.get("accept-language"),
+      cookieLang && isAppLocale(cookieLang) ? cookieLang : null,
+    ),
   );
 }

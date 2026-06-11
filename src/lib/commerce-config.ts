@@ -29,6 +29,14 @@ export function guestCheckoutMarketingEnabled() {
   return envBool("NEXT_PUBLIC_GUEST_CHECKOUT_MARKETING", true);
 }
 
+/**
+ * Hindi/Gujarati storefront UI — off at launch.
+ * Set NEXT_PUBLIC_MULTI_LANGUAGE=true when re-enabling (target ~2–3 months post-launch).
+ */
+export function multiLanguageEnabled() {
+  return envBool("NEXT_PUBLIC_MULTI_LANGUAGE", false);
+}
+
 /** GST rate on taxable subtotal (0.05 = 5%). Shown for logged-in B2B cart/checkout. */
 export function gstRateOnSale() {
   return envNumber("NEXT_PUBLIC_GST_RATE_ON_SALE", 0.05);

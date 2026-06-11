@@ -121,8 +121,7 @@ export function ModaveProductCard({
         <div className="list-btn-main">
           {soldOut ? (
             <span
-              className="btn-main-product"
-              style={{ opacity: 0.55, cursor: "not-allowed" }}
+              className="btn-main-product sarjan-oos-card-btn"
               aria-disabled="true"
             >
               Out of stock

@@ -23,8 +23,10 @@ import {
   showBootstrapModal,
   showBootstrapOffcanvas,
 } from "@/lib/bootstrap-modal";
+import { multiLanguageEnabled } from "@/lib/commerce-config";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import type { AppLocale } from "@/lib/localized-text";
 import type {
@@ -85,12 +87,16 @@ export function ModaveHeader({
   >([]);
 
   function readHeaderLocale(): string {
-    if (typeof document === "undefined") return initialLocale;
+    if (typeof document === "undefined") {
+      return effectiveStorefrontLocale(initialLocale);
+    }
     const match = document.cookie
       .split(";")
       .map((part) => part.trim())
       .find((part) => part.startsWith(`${SARJAN_LANG_COOKIE}=`));
-    return match?.split("=")[1]?.trim() || initialLocale;
+    return effectiveStorefrontLocale(
+      match?.split("=")[1]?.trim() || initialLocale,
+    );
   }
 
   const isActive = (href: string) => isStorefrontNavLinkActive(href, pathname);
@@ -275,9 +281,11 @@ export function ModaveHeader({
                   <li className="nav-theme d-none d-md-block">
                     <ThemeToggle variant="icon" />
                   </li>
-                  <li className="nav-lang d-none d-md-block">
-                    <LanguageSwitcher initialLocale={initialLocale} />
-                  </li>
+                  {multiLanguageEnabled() ? (
+                    <li className="nav-lang d-none d-md-block">
+                      <LanguageSwitcher initialLocale={initialLocale} />
+                    </li>
+                  ) : null}
                   <li className="nav-search">
                     <a
                       href="#"
@@ -621,10 +629,12 @@ export function ModaveHeader({
                 variant="select"
                 className="sarjan-mobile-menu__theme"
               />
-              <LanguageSwitcher
-                initialLocale={initialLocale}
-                className="sarjan-mobile-menu__lang"
-              />
+              {multiLanguageEnabled() ? (
+                <LanguageSwitcher
+                  initialLocale={initialLocale}
+                  className="sarjan-mobile-menu__lang"
+                />
+              ) : null}
             </div>
 
             <form

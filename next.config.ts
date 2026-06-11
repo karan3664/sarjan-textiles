@@ -95,6 +95,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/sarjan-assets/client-avatars/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache",
+          },
+        ],
+      },
+      {
         source: "/sarjan-assets/:path*",
         headers: [
           {

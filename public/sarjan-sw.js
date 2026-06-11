@@ -1,6 +1,6 @@
 /* Sarjan Textiles storefront service worker — Sprint 7 */
 
-const SW_VERSION = "sarjan-storefront-20260611a";
+const SW_VERSION = "sarjan-storefront-20260611c";
 const STATIC_CACHE = `sarjan-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `sarjan-runtime-${SW_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -53,6 +53,10 @@ function isStylesheet(pathname) {
   return pathname.toLowerCase().includes(".css");
 }
 
+function isRuntimeUserAsset(pathname) {
+  return pathname.startsWith("/sarjan-assets/client-avatars/");
+}
+
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
@@ -91,12 +95,21 @@ async function staleWhileRevalidate(request, cacheName) {
   return network || new Response("", { status: 504, statusText: "Offline" });
 }
 
+function isLocalhostUrl(url) {
+  const host = url.hostname.toLowerCase();
+  return host === "localhost" || host === "127.0.0.1";
+}
+
 async function networkFirstNavigation(request) {
   const cache = await caches.open(RUNTIME_CACHE);
 
   try {
-    const response = await fetch(request);
-    if (response.ok) {
+    const response = await fetch(request, { redirect: "follow" });
+    const responseUrl = new URL(response.url);
+    if (isLocalhostUrl(responseUrl) && !isLocalhostUrl(new URL(request.url))) {
+      return Response.error();
+    }
+    if (response.ok && response.status < 300) {
       await cache.put(request, response.clone());
     }
     return response;
@@ -175,7 +188,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isStaticAsset(url.pathname)) {
-    if (isStylesheet(url.pathname)) {
+    if (isStylesheet(url.pathname) || isRuntimeUserAsset(url.pathname)) {
       event.respondWith(networkFirstAsset(request, RUNTIME_CACHE));
       return;
     }

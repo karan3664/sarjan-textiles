@@ -108,8 +108,7 @@ export function ProductListCard({ product }: { product: Product }) {
           <div className="list-product-btn">
             {soldOut ? (
               <span
-                className="btn-main-product"
-                style={{ opacity: 0.55, cursor: "not-allowed" }}
+                className="btn-main-product sarjan-oos-card-btn"
                 aria-disabled="true"
               >
                 Out of stock

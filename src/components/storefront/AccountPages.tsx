@@ -10,12 +10,7 @@ import {
   hasCustomClientAvatar,
 } from "@/lib/client-avatar-display";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
-import { resolveAccountAddress } from "@/lib/client-address";
 import { findStateForCity } from "@/lib/india-locations";
-import {
-  normalizeIndianPincode,
-  verifyIndianPincode,
-} from "@/lib/india-pincode";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import {
@@ -47,24 +42,12 @@ import {
   filterAccountNavItems,
   type PublicAccountNavItem,
 } from "@/lib/account-nav-client";
+import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import { enrichOrderPricing, gstPercentLabel } from "@/lib/gst-display";
+import { AccountAddressManager } from "@/components/storefront/AccountAddressManager";
 
 type Client = AccountClient;
-
-type Address = {
-  contactName?: string;
-  phone?: string;
-  line1?: string;
-  line2?: string;
-  city?: string;
-  state?: string;
-  pincode?: string;
-  gst?: string;
-  transport?: string;
-  /** Legal / proprietor full name as on GST certificate (lgnm). */
-  ownerLegalName?: string;
-};
 
 type Order = AccountOrder;
 
@@ -97,7 +80,7 @@ function readAccountLocale(): string {
     .split(";")
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${SARJAN_LANG_COOKIE}=`));
-  return match?.split("=")[1]?.trim() || "en";
+  return effectiveStorefrontLocale(match?.split("=")[1]?.trim() || "en");
 }
 
 function sidebarNavFromApi(items: PublicAccountNavItem[]) {
@@ -176,7 +159,10 @@ function AccountFrameInner({
               <div className="sidebar-account">
                 <div className="account-avatar">
                   <div className="image">
-                    <img src={clientAvatarSrc(client?.avatarUrl)} alt="" />
+                    <img
+                      src={clientAvatarSrc(client?.avatarUrl, client?.id)}
+                      alt=""
+                    />
                   </div>
                   <h6 className="mb_4">
                     {loading ? "Loading…" : (client?.companyName ?? "Account")}
@@ -549,10 +535,14 @@ function AccountDashboardContent() {
                   <div className="sarjan-profile-avatar-thumb">
                     <img
                       key={avatarPreviewKey}
-                      src={clientAvatarSrc(client.avatarUrl)}
+                      src={clientAvatarSrc(client.avatarUrl, client.id)}
                       alt=""
                       width={100}
                       height={100}
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src = clientAvatarSrc();
+                      }}
                     />
                   </div>
                   <div className="sarjan-profile-avatar-actions">
@@ -1058,338 +1048,13 @@ export function AccountAddressPage() {
 
 function AccountAddressContent() {
   const { client, orders, loading, setClient } = useAccountSession();
-  const [address, setAddress] = useState<Address>({});
-  const [addressFromOrder, setAddressFromOrder] = useState(false);
-  const [message, setMessage] = useState("");
-  const [pincodeChecking, setPincodeChecking] = useState(false);
-  const [pincodeFeedback, setPincodeFeedback] = useState<{
-    tone: "muted" | "success" | "error";
-    text: string;
-  }>({ tone: "muted", text: "" });
-
-  useEffect(() => {
-    if (!client) return;
-    const resolved = resolveAccountAddress(client, orders);
-    setAddress(resolved.address);
-    setAddressFromOrder(resolved.fromOrder);
-  }, [client, orders]);
-
-  const update = (key: keyof Address, value: string) =>
-    setAddress((current) => ({ ...current, [key]: value }));
-
-  const validatePincode = useCallback(async () => {
-    const pincode = normalizeIndianPincode(address.pincode ?? "");
-    if (!pincode) {
-      const text = "Postal code is required.";
-      setPincodeFeedback({ tone: "error", text });
-      return { ok: false, message: text };
-    }
-    if (!address.state?.trim() || !address.city?.trim()) {
-      const text = "Select state and city before validating PIN code.";
-      setPincodeFeedback({ tone: "error", text });
-      return { ok: false, message: text };
-    }
-
-    setPincodeChecking(true);
-    try {
-      const result = await verifyIndianPincode(
-        pincode,
-        address.state ?? "",
-        address.city ?? "",
-      );
-      setPincodeFeedback({
-        tone: result.valid ? "success" : "error",
-        text: result.message,
-      });
-      if (result.valid && result.pincode !== address.pincode) {
-        setAddress((current) => ({ ...current, pincode: result.pincode }));
-      }
-      return { ok: result.valid, message: result.message };
-    } catch {
-      const text = "Could not verify PIN code. Try again.";
-      setPincodeFeedback({ tone: "error", text });
-      return { ok: false, message: text };
-    } finally {
-      setPincodeChecking(false);
-    }
-  }, [address.pincode, address.state, address.city]);
-
-  useEffect(() => {
-    const pincode = normalizeIndianPincode(address.pincode ?? "");
-    if (
-      pincode.length !== 6 ||
-      !address.state?.trim() ||
-      !address.city?.trim()
-    ) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      void validatePincode();
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [address.pincode, address.state, address.city, validatePincode]);
-
-  const save = async () => {
-    if (!client?.id) {
-      setMessage("Login required.");
-      return;
-    }
-    const pinCheck = await validatePincode();
-    if (!pinCheck.ok) {
-      setMessage(pinCheck.message);
-      return;
-    }
-    const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
-      method: "PATCH",
-      headers: clientAuthJsonHeaders(),
-      body: JSON.stringify({
-        address,
-        city: address.city,
-        gst: address.gst,
-        phone: address.phone,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setClient(persistAccountClient(data.client));
-      setAddressFromOrder(false);
-      setMessage("Address saved.");
-    } else {
-      setMessage(data.error ?? "Address save failed.");
-    }
-  };
-
-  const remove = async () => {
-    if (!client?.id) {
-      setMessage("Login required.");
-      return;
-    }
-    const emptyAddress = {};
-    const res = await fetch(`/api/clients/${encodeURIComponent(client.id)}`, {
-      method: "PATCH",
-      headers: clientAuthJsonHeaders(),
-      body: JSON.stringify({ address: emptyAddress }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setAddress(emptyAddress);
-      setAddressFromOrder(false);
-      setClient(persistAccountClient(data.client));
-      setMessage("Address removed.");
-    } else {
-      setMessage(data.error ?? "Address remove failed.");
-    }
-  };
-
   return (
-    <div className="account-address">
-      {loading ? (
-        <p>Loading address...</p>
-      ) : (
-        <div className="text-center widget-inner-address">
-          <button
-            type="button"
-            className={withBtnIcon(
-              "tf-btn btn-fill radius-4 mb_20 btn-address",
-            )}
-          >
-            <TfButtonIcon
-              icon="icon-map-pin"
-              textClassName="text text-caption-1"
-            >
-              Add / Edit address
-            </TfButtonIcon>
-          </button>
-          <form
-            className="show-form-address wd-form-address sarjan-address-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void save();
-            }}
-          >
-            <div className="title">Add a new address</div>
-            <div className="cols mb_20">
-              <fieldset>
-                <input
-                  type="text"
-                  placeholder="Contact Name*"
-                  value={address.contactName ?? ""}
-                  onChange={(e) => update("contactName", e.target.value)}
-                />
-              </fieldset>
-              <fieldset>
-                <input
-                  type="text"
-                  placeholder="Phone*"
-                  value={address.phone ?? ""}
-                  onChange={(e) => update("phone", e.target.value)}
-                />
-              </fieldset>
-            </div>
-            <div className="cols mb_20">
-              <fieldset>
-                <input
-                  type="text"
-                  placeholder="GST Number"
-                  value={address.gst ?? ""}
-                  onChange={(e) => update("gst", e.target.value)}
-                />
-              </fieldset>
-              <fieldset>
-                <input
-                  type="text"
-                  placeholder="Transport"
-                  value={address.transport ?? ""}
-                  onChange={(e) => update("transport", e.target.value)}
-                />
-              </fieldset>
-            </div>
-            <fieldset className="mb_20">
-              <input
-                type="text"
-                placeholder="Address"
-                value={address.line1 ?? ""}
-                onChange={(e) => update("line1", e.target.value)}
-              />
-            </fieldset>
-            <fieldset className="mb_20">
-              <input
-                type="text"
-                placeholder="Address line 2"
-                value={address.line2 ?? ""}
-                onChange={(e) => update("line2", e.target.value)}
-              />
-            </fieldset>
-            <IndiaStateCitySelect
-              state={address.state ?? ""}
-              city={address.city ?? ""}
-              onStateChange={(value) => update("state", value)}
-              onCityChange={(value) => update("city", value)}
-              stateRequired
-              cityRequired
-            />
-            <fieldset className="mb_20">
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                maxLength={6}
-                placeholder="Postal Code*"
-                value={address.pincode ?? ""}
-                onChange={(e) => {
-                  update("pincode", normalizeIndianPincode(e.target.value));
-                  if (pincodeFeedback.tone !== "muted") {
-                    setPincodeFeedback({ tone: "muted", text: "" });
-                  }
-                }}
-                onBlur={() => void validatePincode()}
-                required
-              />
-              {pincodeChecking || pincodeFeedback.text ? (
-                <p
-                  className={`text-caption-1 mt_8 mb_0 sarjan-pincode-feedback sarjan-pincode-feedback--${pincodeChecking ? "muted" : pincodeFeedback.tone}`}
-                >
-                  {pincodeChecking
-                    ? "Checking PIN code against India Post…"
-                    : pincodeFeedback.text}
-                </p>
-              ) : null}
-            </fieldset>
-            <div className="tf-cart-checkbox mb_20">
-              <div className="tf-checkbox-wrapp">
-                <input defaultChecked type="checkbox" id="address-default" />
-                <div>
-                  <i className="icon-check" />
-                </div>
-              </div>
-              <label htmlFor="address-default">Set as default address.</label>
-            </div>
-            <div className="d-flex align-items-center justify-content-center gap-20">
-              <button
-                type="submit"
-                className={withBtnIcon("tf-btn btn-fill radius-4")}
-              >
-                <TfButtonIcon icon="icon-checkCircle">
-                  Save address
-                </TfButtonIcon>
-              </button>
-              <button
-                type="button"
-                className={withBtnIcon("tf-btn btn-white has-border radius-4")}
-                onClick={() => {
-                  if (!client) return;
-                  const resolved = resolveAccountAddress(client, orders);
-                  setAddress(resolved.address);
-                  setAddressFromOrder(resolved.fromOrder);
-                }}
-              >
-                <TfButtonIcon icon="icon-close">Cancel</TfButtonIcon>
-              </button>
-            </div>
-            {message ? (
-              <p
-                className={
-                  message.includes("failed") || message.includes("required")
-                    ? "text-danger mt_16"
-                    : "text-success mt_16"
-                }
-              >
-                {message}
-              </p>
-            ) : null}
-          </form>
-          <div className="list-account-address">
-            <div className="account-address-item">
-              <h6 className="mb_20">Default</h6>
-              <p>
-                {address.contactName || client?.companyName || "Sarjan Client"}
-              </p>
-              <p>{address.line1 || "No address saved"}</p>
-              {addressFromOrder ? (
-                <p className="text-secondary text-caption-1 mb_8">
-                  Street address loaded from your latest order. Click Save
-                  address to store it on your profile.
-                </p>
-              ) : null}
-              {address.line2 ? <p>{address.line2}</p> : null}
-              <p>
-                {[address.city, address.state, address.pincode]
-                  .filter(Boolean)
-                  .join(", ")}
-              </p>
-              <p>{address.gst ? `GST: ${address.gst}` : "GST not saved"}</p>
-              <p className="mb_10">{address.phone || "Phone not saved"}</p>
-              <div className="d-flex gap-10 justify-content-center">
-                <button
-                  type="button"
-                  className={withBtnIcon(
-                    "tf-btn radius-4 btn-fill justify-content-center",
-                  )}
-                  onClick={() =>
-                    document
-                      .querySelector<HTMLInputElement>(
-                        ".sarjan-address-form input",
-                      )
-                      ?.focus()
-                  }
-                >
-                  <TfButtonIcon icon="icon-arrowUpRight">Edit</TfButtonIcon>
-                </button>
-                <button
-                  type="button"
-                  className={withBtnIcon(
-                    "tf-btn radius-4 btn-white has-border justify-content-center",
-                  )}
-                  onClick={remove}
-                >
-                  <TfButtonIcon icon="icon-close">Delete</TfButtonIcon>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <AccountAddressManager
+      client={client}
+      orders={orders}
+      loading={loading}
+      setClient={setClient}
+    />
   );
 }
 

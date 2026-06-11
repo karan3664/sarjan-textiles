@@ -17,6 +17,14 @@ export function FabricSwatchViewer({ imageUrl, alt, fabricLabel }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const [arError, setArError] = useState("");
 
+  const bindStreamToVideo = (stream: MediaStream) => {
+    const video = videoRef.current;
+    if (!video) return false;
+    video.srcObject = stream;
+    void video.play().catch(() => undefined);
+    return true;
+  };
+
   useEffect(() => {
     if (mode !== "ar") {
       streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -27,17 +35,26 @@ export function FabricSwatchViewer({ imageUrl, alt, fabricLabel }: Props) {
     let cancelled = false;
     setArError("");
 
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setArError(
+        "Camera needs a secure connection (HTTPS). Open sarjantextiles.com in the browser and allow camera access.",
+      );
+      return;
+    }
+
     void navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+      .getUserMedia({ video: { facingMode: "environment" }, audio: false })
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
           return;
         }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          void videoRef.current.play().catch(() => undefined);
+        if (!bindStreamToVideo(stream)) {
+          // Video element may mount after getUserMedia resolves — retry on next frame.
+          window.requestAnimationFrame(() => {
+            if (!cancelled) bindStreamToVideo(stream);
+          });
         }
       })
       .catch(() => {
@@ -54,6 +71,11 @@ export function FabricSwatchViewer({ imageUrl, alt, fabricLabel }: Props) {
       streamRef.current = null;
     };
   }, [mode]);
+
+  useEffect(() => {
+    if (mode !== "ar" || !streamRef.current) return;
+    bindStreamToVideo(streamRef.current);
+  });
 
   return (
     <div className="sarjan-fabric-swatch-viewer">
@@ -104,6 +126,9 @@ export function FabricSwatchViewer({ imageUrl, alt, fabricLabel }: Props) {
                 playsInline
                 muted
                 autoPlay
+                onLoadedMetadata={(event) => {
+                  void event.currentTarget.play().catch(() => undefined);
+                }}
               />
               <div
                 className="sarjan-fabric-ar-overlay"

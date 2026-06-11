@@ -201,6 +201,7 @@ export async function executeBotTool(
     case "clear_cart": {
       session.cart = [];
       await persistBotCartToStore(session);
+      session.attachCartCards = true;
       return "Cart cleared.";
     }
 

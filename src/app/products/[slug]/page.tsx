@@ -19,8 +19,8 @@ import {
 import { listApprovedProductReviews } from "@/lib/reviews-store";
 import { notFound, redirect } from "next/navigation";
 
-/** ISR PDP — public catalog pricing; session pricing via /api/catalog/products. */
-export const revalidate = 60;
+/** PDP is rendered on demand — avoids ISR + dynamic CMS read conflicts in production. */
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return [];

@@ -4288,9 +4288,9 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
   max-width: 520px;
   margin: 0 auto;
   padding: clamp(28px, 6vw, 40px) clamp(20px, 5vw, 32px);
-  border: 1px solid var(--line, #ececec);
+  border: 1px solid var(--sarjan-border, var(--line, #ececec));
   border-radius: 16px;
-  background: #fff;
+  background: var(--sarjan-bg-elevated, #fff);
   box-shadow: 0 8px 32px rgba(24, 24, 24, 0.06);
 }
 
@@ -4318,7 +4318,7 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
   font-size: clamp(22px, 5.5vw, 28px);
   line-height: 1.25;
   font-weight: 700;
-  color: var(--main, #181818);
+  color: var(--sarjan-text, var(--main, #181818));
 }
 
 .sarjan-payment-confirmation-lead {
@@ -4337,8 +4337,8 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
   padding: 12px 18px;
   max-width: 100%;
   border-radius: 10px;
-  background: #faf6f1;
-  border: 1px solid #efe5dc;
+  background: var(--sarjan-bg-muted, #faf6f1);
+  border: 1px solid var(--sarjan-border, #efe5dc);
 }
 
 .sarjan-payment-order-id__label {
@@ -4346,14 +4346,14 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--secondary, #5c5c5c);
+  color: var(--sarjan-muted, var(--secondary, #5c5c5c));
 }
 
 .sarjan-payment-order-id__value {
   font-size: clamp(14px, 3.8vw, 17px);
   font-weight: 700;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--main, #181818);
+  color: var(--sarjan-text, var(--main, #181818));
   word-break: break-all;
 }
 
@@ -5014,14 +5014,20 @@ button.accordion-button:not(.collapsed),
   top: 0;
   bottom: 0;
   left: 0;
-  z-index: 3000;
+  z-index: 100200;
   background-color: var(--white, #fff);
   visibility: visible;
+  pointer-events: auto;
 }
 
 #mobileMenu.sarjan-mobile-menu.offcanvas.show {
   transform: none;
   visibility: visible;
+}
+
+body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
+  .offcanvas-backdrop {
+  z-index: 100199;
 }
 
 .offcanvas-backdrop {
@@ -5180,6 +5186,19 @@ button.accordion-button:not(.collapsed),
 .sarjan-mobile-menu__links .mb-menu-link {
   font-size: 16px;
   font-weight: 600;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.sarjan-mobile-menu__btn,
+.sarjan-mobile-menu__nav a,
+.sarjan-mobile-menu__details-summary,
+.sarjan-mobile-menu__sub .mb-menu-link,
+.sarjan-mobile-menu__quick a {
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
 .sarjan-mobile-menu__details {
@@ -6003,6 +6022,150 @@ button.accordion-button:not(.collapsed),
 
 .account-address .list-account-address {
   margin-top: 40px;
+}
+
+.sarjan-address-manager {
+  text-align: left;
+}
+
+.sarjan-address-manager__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.sarjan-address-manager__title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sarjan-address-manager__empty {
+  margin: 8px 0 20px;
+  line-height: 1.55;
+}
+
+.sarjan-saved-address-list {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 24px;
+}
+
+.sarjan-saved-address-card {
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--sarjan-surface, #fff);
+  text-align: left;
+}
+
+.sarjan-saved-address-card.is-default {
+  border-color: rgba(139, 30, 45, 0.35);
+  box-shadow: 0 0 0 1px rgba(139, 30, 45, 0.08);
+}
+
+.sarjan-saved-address-card__select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.sarjan-saved-address-card__select input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sarjan-saved-address-card__radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--sarjan-border, #cfc7bc);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sarjan-saved-address-card__select
+  input:checked
+  + .sarjan-saved-address-card__radio {
+  border-color: var(--primary, #8b1e2d);
+}
+
+.sarjan-saved-address-card__select
+  input:checked
+  + .sarjan-saved-address-card__radio::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--primary, #8b1e2d);
+}
+
+.sarjan-saved-address-card__badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--main, #181818);
+}
+
+.sarjan-saved-address-card.is-default .sarjan-saved-address-card__badge {
+  color: var(--primary, #8b1e2d);
+}
+
+.sarjan-saved-address-card__body p {
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.sarjan-saved-address-card__actions {
+  margin-top: 14px;
+}
+
+.sarjan-address-form--panel {
+  margin-top: 8px;
+  padding: 18px 16px 20px;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+  border-radius: 14px;
+  background: var(--sarjan-bg-muted, #faf7f2);
+}
+
+.sarjan-address-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sarjan-address-form__close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sarjan-surface, #fff);
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .sarjan-address-manager__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sarjan-address-manager__add {
+    width: 100%;
+  }
+
+  .sarjan-saved-address-card__actions {
+    flex-direction: column;
+  }
+
+  .sarjan-saved-address-card__actions .tf-btn {
+    width: 100%;
+  }
 }
 
 /* Contact — intro + information (stack on mobile, split on desktop) */
@@ -7387,8 +7550,8 @@ button.accordion-button:not(.collapsed),
 }
 
 /* Modal/offcanvas close — reliable taps on touch devices */
-body.sarjan-storefront .modal .icon-close-popup,
-body.sarjan-storefront .modal [data-bs-dismiss="modal"],
+body.sarjan-storefront .modal:not(.modal-quick-view) .icon-close-popup,
+body.sarjan-storefront .modal:not(.modal-quick-view) [data-bs-dismiss="modal"],
 body.sarjan-storefront .offcanvas .icon-close-popup,
 body.sarjan-storefront .offcanvas [data-bs-dismiss="offcanvas"] {
   pointer-events: auto;
@@ -7402,7 +7565,6 @@ body.sarjan-storefront .offcanvas [data-bs-dismiss="offcanvas"] {
 .modal-shopping-cart .header .icon-close-popup,
 .modal-wishlist .header .icon-close-popup,
 .sarjan-search-modal .icon-close-popup,
-.modal-quick-view .icon-close-popup,
 .modal-size-guide .header .icon-close-popup {
   display: inline-flex;
   align-items: center;
@@ -7413,6 +7575,29 @@ body.sarjan-storefront .offcanvas [data-bs-dismiss="offcanvas"] {
   border: none;
   background-color: var(--surface, #f5f5f5);
   border-radius: 50%;
+}
+
+/* Quick view close floats top-right — must stay absolute (not relative flow) */
+.sarjan-quick-view-modal .icon-close-popup,
+.modal-quick-view .icon-close-popup {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  left: auto;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background-color: var(--surface, #f5f5f5);
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .modal-shopping-cart .header,
@@ -8687,6 +8872,26 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   border-radius: 4px;
 }
 
+/* Product card hover pill — excluded from storefront-buttons (aria-disabled) */
+body.sarjan-storefront
+  #wrapper
+  .card-product
+  .list-btn-main
+  .btn-main-product.sarjan-oos-card-btn,
+body.sarjan-storefront
+  #wrapper
+  .card-product
+  .list-btn-main
+  .btn-main-product[aria-disabled="true"] {
+  background-color: var(--sarjan-accent) !important;
+  background-image: none !important;
+  border-color: var(--sarjan-accent) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
 .sarjan-stock-unavailable {
   color: var(--sarjan-accent);
   font-weight: 600;
@@ -8904,6 +9109,33 @@ footer.bg-main
 .tf-page-checkout .form-payment .sarjan-checkout-submit-wrap > .tf-btn {
   margin-top: 0 !important;
   width: 100%;
+}
+
+.sarjan-checkout-address-picker {
+  margin-bottom: 24px;
+}
+
+.sarjan-checkout-address-picker__hint {
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.sarjan-checkout-address-card {
+  display: block;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.sarjan-checkout-address-card.is-selected {
+  border-color: rgba(139, 30, 45, 0.45);
+  box-shadow: 0 0 0 1px rgba(139, 30, 45, 0.12);
+}
+
+.sarjan-checkout-address-picker__manual,
+.sarjan-checkout-address-picker__back {
+  margin-top: 14px;
 }
 
 /* Sarjan AI chat + scroll-to-top: stack scroll button above launcher (shared inset) */
@@ -9135,8 +9367,9 @@ body.sarjan-storefront:has(.sarjan-order-bot .sarjan-order-bot-panel)
 
 .sarjan-order-bot-bubble--user {
   align-self: flex-end;
-  background: var(--main, #181818);
-  color: #fff;
+  background: var(--sarjan-chat-user-bg, #181818);
+  color: var(--sarjan-chat-user-color, #ffffff);
+  -webkit-text-fill-color: var(--sarjan-chat-user-color, #ffffff);
 }
 
 .sarjan-order-bot-bubble.sarjan-order-bot-gate {
@@ -9887,10 +10120,10 @@ a.sarjan-order-bot-card:focus-visible {
   width: 100%;
   min-height: 52px;
   padding: 12px 44px 12px 16px;
-  border: 1px solid var(--sarjan-border);
+  border: 1px solid var(--sarjan-input-border, var(--sarjan-border));
   border-radius: 8px;
-  background: #fff;
-  color: var(--sarjan-ink);
+  background: var(--sarjan-input-bg, #fff);
+  color: var(--sarjan-input-text, var(--sarjan-ink));
   cursor: pointer;
   text-align: left;
   transition:
@@ -9912,7 +10145,7 @@ a.sarjan-order-bot-card:focus-visible {
 .sarjan-location-select.is-disabled .sarjan-location-select__trigger {
   opacity: 0.55;
   cursor: not-allowed;
-  background: #f5f3ef;
+  background: var(--sarjan-bg-muted, #f5f3ef);
 }
 
 .sarjan-location-select__placeholder {
@@ -9923,6 +10156,7 @@ a.sarjan-order-bot-card:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--sarjan-input-text, var(--sarjan-ink));
 }
 
 .sarjan-location-select__chevron {
@@ -9961,7 +10195,7 @@ a.sarjan-order-bot-card:focus-visible {
   overflow: hidden;
   border: 1px solid var(--sarjan-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--sarjan-bg-elevated, #fff);
   box-shadow: 0 14px 40px rgba(20, 20, 20, 0.14);
 }
 
@@ -9975,10 +10209,10 @@ a.sarjan-order-bot-card:focus-visible {
   width: 100%;
   height: 40px;
   padding: 8px 12px;
-  border: 1px solid var(--sarjan-border);
+  border: 1px solid var(--sarjan-input-border, var(--sarjan-border));
   border-radius: 8px;
-  background: #fff;
-  color: var(--sarjan-ink);
+  background: var(--sarjan-input-bg, #fff);
+  color: var(--sarjan-input-text, var(--sarjan-ink));
   font-size: 14px;
 }
 
@@ -10410,8 +10644,8 @@ body.sarjan-storefront
 .sarjan-auth-page .sarjan-location-select__trigger {
   min-height: 48px;
   border-radius: 10px;
-  border: 1px solid var(--sarjan-border);
-  background: #fff;
+  border: 1px solid var(--sarjan-input-border, var(--sarjan-border));
+  background: var(--sarjan-input-bg, #fff);
 }
 
 .sarjan-auth-page .sarjan-location-select__trigger:focus,

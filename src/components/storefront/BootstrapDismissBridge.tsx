@@ -30,11 +30,20 @@ export function BootstrapDismissBridge() {
       );
       if (offcanvasDismiss) {
         const panel = offcanvasDismiss.closest<HTMLElement>(".offcanvas");
-        if (panel?.id) {
-          event.preventDefault();
-          event.stopPropagation();
-          hideBootstrapOffcanvas(panel.id);
+        if (!panel?.id) return;
+
+        // Mobile menu links use data-bs-dismiss to close the drawer — still navigate.
+        if (offcanvasDismiss instanceof HTMLAnchorElement) {
+          const href = offcanvasDismiss.getAttribute("href")?.trim() ?? "";
+          if (href && href !== "#") {
+            hideBootstrapOffcanvas(panel.id);
+            return;
+          }
         }
+
+        event.preventDefault();
+        event.stopPropagation();
+        hideBootstrapOffcanvas(panel.id);
       }
     };
 

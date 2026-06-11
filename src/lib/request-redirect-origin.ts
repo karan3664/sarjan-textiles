@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 const UNREACHABLE_HOSTS = new Set(["0.0.0.0", "[::]", "::"]);
+const PRODUCTION_APEX_ORIGIN = "https://sarjantextiles.com";
 
 function isUnreachableHost(host: string) {
   return UNREACHABLE_HOSTS.has(host.toLowerCase());
@@ -13,29 +14,75 @@ function localDevHostname(hostname: string) {
   );
 }
 
+function headerValue(request: NextRequest | Request, name: string) {
+  return request.headers.get(name)?.split(",")[0]?.trim() ?? "";
+}
+
+function configuredSiteOrigin(): string | undefined {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(
+    /\/$/,
+    "",
+  );
+  if (!configured) return undefined;
+  try {
+    return new URL(configured).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Public hostname — prefer proxy headers over internal container host. */
+function publicRequestHostname(request: NextRequest | Request): string {
+  const forwardedHost = headerValue(request, "x-forwarded-host");
+  if (forwardedHost) {
+    return forwardedHost.split(":")[0].toLowerCase();
+  }
+
+  const host = headerValue(request, "host");
+  if (host && !isUnreachableHost(host)) {
+    return host.split(":")[0].toLowerCase();
+  }
+
+  const incoming = new URL(request.url);
+  if (isUnreachableHost(incoming.hostname)) {
+    return "localhost";
+  }
+  return incoming.hostname.toLowerCase();
+}
+
+function publicRequestProtocol(request: NextRequest | Request): string {
+  const forwardedProto = headerValue(request, "x-forwarded-proto");
+  if (forwardedProto === "http" || forwardedProto === "https") {
+    return forwardedProto;
+  }
+  return new URL(request.url).protocol === "http:" ? "http" : "https";
+}
+
 /** Origin for redirects — browsers cannot open http://0.0.0.0. */
 export function requestRedirectOrigin(request: NextRequest | Request): string {
+  if (process.env.NODE_ENV === "production") {
+    const configured = configuredSiteOrigin();
+    if (configured) return configured;
+
+    const hostname = publicRequestHostname(request);
+    if (!localDevHostname(hostname) && !isUnreachableHost(hostname)) {
+      return `${publicRequestProtocol(request)}://${hostname}`;
+    }
+
+    return PRODUCTION_APEX_ORIGIN;
+  }
+
   const incoming = new URL(request.url);
   if (isUnreachableHost(incoming.hostname)) {
     incoming.hostname = "localhost";
   }
 
-  // `next start` on localhost must not redirect to NEXT_PUBLIC_SITE_URL.
   if (localDevHostname(incoming.hostname)) {
     return incoming.origin;
   }
 
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(
-    /\/$/,
-    "",
-  );
-  if (process.env.NODE_ENV === "production" && configured) {
-    try {
-      return new URL(configured).origin;
-    } catch {
-      // fall through to request host
-    }
-  }
+  const configured = configuredSiteOrigin();
+  if (configured) return configured;
 
   return incoming.origin;
 }
@@ -50,11 +97,11 @@ export function redirectAbsoluteUrl(
   );
 }
 
-/** Clone nextUrl for redirects; replace 0.0.0.0 with localhost in dev. */
+/** Clone nextUrl for redirects; never emit localhost origins in production. */
 export function redirectFromNextUrl(request: NextRequest): URL {
-  const url = request.nextUrl.clone();
-  if (isUnreachableHost(url.hostname)) {
-    url.hostname = "localhost";
-  }
+  const origin = requestRedirectOrigin(request);
+  const url = new URL(origin);
+  url.pathname = request.nextUrl.pathname;
+  url.search = request.nextUrl.search;
   return url;
 }

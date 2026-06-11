@@ -136,6 +136,37 @@ export function cartItemCount(cart: StoredCartItem[]) {
   return cart.reduce((sum, item) => sum + item.quantity, 0);
 }
 
+export type BotCartMirrorLine = {
+  slug: string;
+  setQuantity: number;
+  color: string;
+  sizes: string[];
+};
+
+export function storedCartFromBotLines(
+  lines: BotCartMirrorLine[],
+): StoredCartItem[] {
+  return lines
+    .map((line) =>
+      normalizeCartItem({
+        slug: line.slug,
+        quantity: line.setQuantity,
+        color: line.color,
+        sizes: line.sizes,
+      }),
+    )
+    .filter(Boolean) as StoredCartItem[];
+}
+
+/** Web header + mini-cart read localStorage — clear after AI/checkout order. */
+export function clearStorefrontCartAfterOrder() {
+  writeCart([]);
+}
+
+export function mirrorStorefrontCartFromBot(lines: BotCartMirrorLine[]) {
+  writeCart(storedCartFromBotLines(lines), { syncApi: false });
+}
+
 /** Restore server-only lines on login; never re-add lines the user removed locally. */
 export function mergeCartLinesPull(
   local: StoredCartItem[],

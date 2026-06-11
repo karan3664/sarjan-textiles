@@ -13,14 +13,38 @@ export function hasCustomClientAvatar(avatarUrl?: string | null) {
   return Boolean(avatarUrl?.trim());
 }
 
-export function clientAvatarSrc(avatarUrl?: string | null): string {
-  const raw = avatarUrl?.trim();
-  if (!raw) return DEFAULT_CLIENT_AVATAR;
+function clientAvatarApiPath(
+  clientId?: string | null,
+  avatarUrl?: string | null,
+) {
+  const id = clientId?.trim();
+  if (id) {
+    return `/api/clients/${encodeURIComponent(id)}/avatar`;
+  }
+  const raw = avatarUrl?.trim() ?? "";
+  const match = raw.match(/^\/sarjan-assets\/client-avatars\/([^/.]+)\.webp$/i);
+  if (match?.[1]) {
+    return `/api/clients/${encodeURIComponent(match[1])}/avatar`;
+  }
+  return null;
+}
+
+function withAvatarCacheBuster(src: string) {
   const version =
     typeof window !== "undefined"
       ? localStorage.getItem(AVATAR_CACHE_KEY)?.trim()
       : "";
-  if (!version) return raw;
-  const separator = raw.includes("?") ? "&" : "?";
-  return `${raw}${separator}v=${encodeURIComponent(version)}`;
+  if (!version) return src;
+  const separator = src.includes("?") ? "&" : "?";
+  return `${src}${separator}v=${encodeURIComponent(version)}`;
+}
+
+export function clientAvatarSrc(
+  avatarUrl?: string | null,
+  clientId?: string | null,
+): string {
+  if (!hasCustomClientAvatar(avatarUrl)) return DEFAULT_CLIENT_AVATAR;
+  const apiPath = clientAvatarApiPath(clientId, avatarUrl);
+  if (apiPath) return withAvatarCacheBuster(apiPath);
+  return withAvatarCacheBuster(avatarUrl!.trim());
 }

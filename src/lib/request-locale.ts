@@ -1,3 +1,4 @@
+import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import {
   isAppLocale,
   parseRequestLocale,
@@ -21,11 +22,13 @@ export function localeFromRequest(request: Request): AppLocale {
   const cookieLang = localeFromCookieHeader(request.headers.get("cookie"));
 
   if (queryLang && isAppLocale(queryLang.trim().toLowerCase())) {
-    return queryLang.trim().toLowerCase() as AppLocale;
+    return effectiveStorefrontLocale(queryLang.trim().toLowerCase());
   }
-  if (cookieLang) return cookieLang;
+  if (cookieLang) return effectiveStorefrontLocale(cookieLang);
 
-  return parseRequestLocale(request.headers.get("accept-language"), null);
+  return effectiveStorefrontLocale(
+    parseRequestLocale(request.headers.get("accept-language"), null),
+  );
 }
 
 export function localizedResponseInit(

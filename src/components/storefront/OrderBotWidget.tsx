@@ -38,6 +38,11 @@ import {
   OrderBotOrderCards,
   OrderBotProductCards,
 } from "@/components/storefront/OrderBotVisuals";
+import {
+  clearStorefrontCartAfterOrder,
+  mirrorStorefrontCartFromBot,
+  syncCartWithApi,
+} from "@/lib/cart-client";
 import type { BotChatResponse, BotNavAction } from "@/lib/order-bot/types";
 
 type ChatMessage = {
@@ -319,6 +324,13 @@ export function OrderBotWidget() {
   }, [messages, visible]);
 
   const applyResponse = useCallback((data: BotChatResponse) => {
+    if (data.orderPlaced) {
+      clearStorefrontCartAfterOrder();
+      void syncCartWithApi();
+    } else if (data.cart !== undefined) {
+      mirrorStorefrontCartFromBot(data.cart);
+    }
+
     setSessionId(data.sessionId);
     setMessages((prev) => [
       ...prev,

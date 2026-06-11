@@ -11,6 +11,8 @@ ENV NODE_OPTIONS=--max-old-space-size=1280
 ENV NEXT_PRIVATE_BUILD_WORKER=0
 ARG SITE_LAUNCH_AT
 ENV SITE_LAUNCH_AT=${SITE_LAUNCH_AT}
+ARG NEXT_PUBLIC_SITE_URL=https://sarjantextiles.com
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -36,7 +38,8 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-RUN mkdir -p data data/downloads public/downloads public/uploads/cms
+RUN mkdir -p data data/downloads public/downloads public/uploads/cms \
+    public/sarjan-assets/client-avatars public/sarjan-assets/review-uploads
 
 EXPOSE 3000
 CMD ["npm", "start"]

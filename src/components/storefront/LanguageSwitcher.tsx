@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { multiLanguageEnabled } from "@/lib/commerce-config";
+import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { type AppLocale, isAppLocale } from "@/lib/localized-text";
 import { localeCookieOptions, SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import { LANGUAGE_OPTIONS } from "@/lib/storefront-ui";
@@ -23,6 +25,10 @@ export function LanguageSwitcher({
   className?: string;
   initialLocale?: AppLocale;
 }) {
+  if (!multiLanguageEnabled()) {
+    return null;
+  }
+
   return (
     <Suspense
       fallback={
@@ -59,13 +65,14 @@ function LanguageSwitcherInner({
       setLocale(queryLang);
       return;
     }
-    setLocale(readCookieLocale() ?? initialLocale);
+    setLocale(effectiveStorefrontLocale(readCookieLocale() ?? initialLocale));
   }, [searchParams, initialLocale]);
 
   const switchLocale = (next: AppLocale) => {
-    if (next === locale) return;
-    const { name, path, maxAge, sameSite } = localeCookieOptions(next);
-    document.cookie = `${name}=${next}; path=${path}; max-age=${maxAge}; samesite=${sameSite}`;
+    const resolved = effectiveStorefrontLocale(next);
+    if (resolved === locale) return;
+    const { name, path, maxAge, sameSite } = localeCookieOptions(resolved);
+    document.cookie = `${name}=${resolved}; path=${path}; max-age=${maxAge}; samesite=${sameSite}`;
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete("lang");

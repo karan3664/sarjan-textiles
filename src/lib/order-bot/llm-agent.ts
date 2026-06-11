@@ -315,7 +315,7 @@ function sessionToResponse(
   );
   if (session.attachProductCards) session.attachProductCards = undefined;
 
-  const showCartCards = Boolean(session.attachCartCards && session.cart.length);
+  const showCartCards = Boolean(session.attachCartCards);
   if (session.attachCartCards) session.attachCartCards = undefined;
 
   let finalReply = reply;
@@ -335,8 +335,8 @@ function sessionToResponse(
     sessionId: session.id,
     reply: finalReply,
     products: showProductCards ? session.lastProducts : undefined,
-    cart: showCartCards ? session.cart : undefined,
-    cartTotal: showCartCards ? cartTotal : undefined,
+    cart: placedOrderId ? [] : showCartCards ? session.cart : undefined,
+    cartTotal: placedOrderId ? 0 : showCartCards ? cartTotal : undefined,
     orders: orderPreviews?.length ? orderPreviews : undefined,
     quickReplies: placedOrderId
       ? ["My orders", "Categories"]

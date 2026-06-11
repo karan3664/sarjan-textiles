@@ -25,6 +25,8 @@ html[data-theme="light"] {
   --sarjan-input-bg: #ffffff;
   --sarjan-input-border: #e5e5e5;
   --sarjan-input-text: #181818;
+  --sarjan-chat-user-bg: #181818;
+  --sarjan-chat-user-color: #ffffff;
   /* Main header + desktop nav (header-style-4) */
   --sarjan-storefront-header: 88px;
 }

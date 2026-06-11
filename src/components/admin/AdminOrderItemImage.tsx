@@ -1,7 +1,10 @@
 "use client";
 
 import { normalizeAdminImageSrc } from "@/lib/admin-report-export";
-import { productImageClassName } from "@/lib/product-placeholder-image";
+import {
+  isProductPlaceholderImage,
+  productImageClassName,
+} from "@/lib/product-placeholder-image";
 
 export function AdminOrderItemImage({
   src,
@@ -13,23 +16,26 @@ export function AdminOrderItemImage({
   size?: number;
 }) {
   const url = normalizeAdminImageSrc(src);
-  if (!url) {
-    return (
-      <span
-        className="sarjan-order-item-thumb sarjan-order-item-thumb--empty"
-        style={{ width: size, height: size }}
-        aria-hidden
-      />
-    );
-  }
+  const placeholder = isProductPlaceholderImage(src);
+
   return (
-    <img
-      src={url}
-      alt={alt}
-      width={size}
-      height={size}
-      className={productImageClassName(src, "sarjan-order-item-thumb")}
-      loading="lazy"
-    />
+    <span
+      className={`sarjan-order-item-thumb-wrap${placeholder ? " sarjan-order-item-thumb-wrap--placeholder" : ""}`}
+      style={{ width: size, height: size }}
+      aria-hidden={!url ? true : undefined}
+    >
+      {url ? (
+        <img
+          src={url}
+          alt={alt}
+          width={size}
+          height={size}
+          className={productImageClassName(src, "sarjan-order-item-thumb")}
+          loading="lazy"
+        />
+      ) : (
+        <span className="sarjan-order-item-thumb sarjan-order-item-thumb--empty" />
+      )}
+    </span>
   );
 }

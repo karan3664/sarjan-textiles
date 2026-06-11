@@ -1,4 +1,4 @@
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 
@@ -25,9 +25,35 @@ function isImageFile(file: File) {
   );
 }
 
+function localAvatarPath(clientId: string) {
+  return path.join(localAvatarDir, `${clientId}.webp`);
+}
+
 async function deleteLocalAvatarFile(clientId: string) {
-  const filename = `${clientId}.webp`;
-  await unlink(path.join(localAvatarDir, filename)).catch(() => null);
+  await unlink(localAvatarPath(clientId)).catch(() => null);
+}
+
+/** Serve uploaded avatars via API — runtime uploads are not always reachable as static files. */
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  if (!id?.trim()) {
+    return new Response(null, { status: 400 });
+  }
+
+  try {
+    const data = await readFile(localAvatarPath(id.trim()));
+    return new Response(data, {
+      headers: {
+        "Content-Type": "image/webp",
+        "Cache-Control": "private, max-age=0, must-revalidate",
+      },
+    });
+  } catch {
+    return new Response(null, { status: 404 });
+  }
 }
 
 async function authorizeAvatarRequest(request: Request, id: string) {
@@ -139,7 +165,7 @@ export async function POST(
   try {
     await mkdir(localAvatarDir, { recursive: true });
     const filename = `${id}.webp`;
-    await writeFile(path.join(localAvatarDir, filename), webp);
+    await writeFile(localAvatarPath(id), webp);
     avatarUrl = `/sarjan-assets/client-avatars/${filename}`;
   } catch (error) {
     return Response.json(

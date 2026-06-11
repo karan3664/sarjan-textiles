@@ -1272,7 +1272,8 @@ img.sarjan-product-img-placeholder {
 .tf-cart-item .img-box img.sarjan-product-img-placeholder,
 .tf-page-checkout .img-product img.sarjan-product-img-placeholder,
 .tf-mini-cart-image img.sarjan-product-img-placeholder,
-.sarjan-order-item-thumb img.sarjan-product-img-placeholder,
+.sarjan-order-item-thumb-wrap img.sarjan-product-img-placeholder,
+.sarjan-order-item-thumb.sarjan-product-img-placeholder,
 .sidebar-checkout-content
   .item-product
   .img-product
@@ -1928,19 +1929,51 @@ img.sarjan-product-img-placeholder {
   font-size: 13px;
 }
 
-.sarjan-order-item-thumb {
+/* Fixed frame — global admin `img { max-width:100% }` was collapsing thumbs to ~1px in flex/button layouts */
+.sarjan-order-item-thumb-wrap {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 48px;
   height: 48px;
-  object-fit: cover;
+  overflow: hidden;
   border-radius: 8px;
   border: 1px solid rgba(24, 24, 24, 0.08);
   background: #eee;
 }
 
+.sarjan-order-item-thumb-wrap--placeholder {
+  background: #fff;
+}
+
+.sarjan-order-item-thumb-wrap .sarjan-order-item-thumb,
+.sarjan-order-item-thumb-wrap img.sarjan-order-item-thumb {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  object-fit: cover;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.sarjan-order-item-thumb-wrap--placeholder .sarjan-order-item-thumb,
+.sarjan-order-item-thumb-wrap--placeholder img.sarjan-order-item-thumb {
+  object-fit: contain !important;
+  padding: 8%;
+  box-sizing: border-box;
+  background: #fff;
+}
+
 .sarjan-order-item-thumb--empty {
-  display: inline-block;
-  border-radius: 8px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
   background: #e8e8e8;
 }
 
@@ -1951,10 +1984,18 @@ img.sarjan-product-img-placeholder {
   margin-top: 8px;
 }
 
-.sarjan-order-list-thumbs .sarjan-order-item-thumb,
-.sarjan-order-list-thumbs .sarjan-order-item-thumb--empty {
-  width: 32px;
-  height: 32px;
+.sarjan-order-list-thumbs .sarjan-order-item-thumb-wrap {
+  width: 40px;
+  height: 40px;
+}
+
+.sarjan-order-list-item .sarjan-order-list-thumbs {
+  align-items: center;
+}
+
+.sarjan-customer-order-line .sarjan-order-item-thumb-wrap {
+  width: 44px;
+  height: 44px;
 }
 
 .sarjan-order-item-photo-cell {
@@ -5329,6 +5370,17 @@ img.sarjan-product-img-placeholder {
   }
 }
 
+body.sarjan-admin:has(.sarjan-admin-login) {
+  color: #181818;
+  --main: #181818;
+  background: #f6f5f2;
+}
+
+body.sarjan-admin:has(.sarjan-admin-login)[data-theme-background] {
+  color: #181818;
+  background: #f6f5f2;
+}
+
 .sarjan-admin-login {
   display: grid;
   min-height: 100vh;
@@ -5337,6 +5389,7 @@ img.sarjan-product-img-placeholder {
   background: #f6f5f2;
   position: relative;
   z-index: 1;
+  color: #181818;
 }
 .sarjan-admin-login-card {
   display: grid;
@@ -5368,6 +5421,8 @@ img.sarjan-product-img-placeholder {
   font-size: 1.2rem;
   line-height: 1.25;
   text-align: center;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
 }
 .sarjan-admin-login-card > p {
   margin: 0 0 4px;
@@ -5382,6 +5437,23 @@ img.sarjan-product-img-placeholder {
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   width: 100%;
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+  background: #ffffff !important;
+  caret-color: #181818;
+}
+
+.sarjan-admin-login-card input::placeholder {
+  color: #6f6a64 !important;
+  opacity: 1;
+}
+
+.sarjan-admin-login-card input:-webkit-autofill,
+.sarjan-admin-login-card input:-webkit-autofill:hover,
+.sarjan-admin-login-card input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #181818 !important;
+  caret-color: #181818;
 }
 .sarjan-admin-login-password {
   position: relative;

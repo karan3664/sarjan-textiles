@@ -6,7 +6,7 @@ import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { blogJsonLd, blogMetadata, JsonLd } from "@/lib/seo";
 import { notFound } from "next/navigation";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return [];

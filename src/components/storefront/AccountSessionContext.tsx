@@ -38,6 +38,21 @@ export type AccountClient = {
     gst?: string;
     ownerLegalName?: string;
     transport?: string;
+    defaultAddressId?: string;
+    saved?: Array<{
+      id: string;
+      label?: string;
+      contactName?: string;
+      phone?: string;
+      line1?: string;
+      line2?: string;
+      city?: string;
+      state?: string;
+      pincode?: string;
+      gst?: string;
+      transport?: string;
+      ownerLegalName?: string;
+    }>;
   };
 };
 

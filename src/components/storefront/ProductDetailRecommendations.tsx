@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
+import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import { readRecentlyViewed } from "@/lib/product-recently-viewed";
@@ -13,8 +14,7 @@ function readLocaleFromCookie(): string {
     .split(";")
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${SARJAN_LANG_COOKIE}=`));
-  const value = match?.split("=")[1]?.trim();
-  return value === "hi" || value === "gu" ? value : "en";
+  return effectiveStorefrontLocale(match?.split("=")[1]?.trim() || "en");
 }
 
 type RecommendationPayload = {

@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth-route-guards";
 import { verifyClientToken } from "@/lib/client-token";
 import { isAppLocale } from "@/lib/localized-text";
+import { multiLanguageEnabled } from "@/lib/commerce-config";
 import { localeCookieOptions } from "@/lib/locale-cookie";
 import {
   redirectAbsoluteUrl,
@@ -242,7 +243,7 @@ export async function middleware(request: NextRequest) {
     .get("lang")
     ?.trim()
     .toLowerCase();
-  if (queryLang && isAppLocale(queryLang)) {
+  if (multiLanguageEnabled() && queryLang && isAppLocale(queryLang)) {
     response.cookies.set(localeCookieOptions(queryLang));
   }
   response.headers.set("X-Content-Type-Options", "nosniff");

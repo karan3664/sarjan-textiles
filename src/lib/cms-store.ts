@@ -1233,7 +1233,7 @@ export async function getAuditLogs(): Promise<AuditLog[]> {
 }
 
 export async function getCmsProductBySlug(slug: string) {
-  const cms = await getCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   return (
     cms.products.find(
       (product) => product.slug === slug || product.legacySlugs?.includes(slug),
@@ -1242,7 +1242,7 @@ export async function getCmsProductBySlug(slug: string) {
 }
 
 export async function getCmsBlogBySlug(slug: string) {
-  const cms = await getCmsSnapshot();
+  const cms = await getCachedCmsSnapshot();
   return cms.blogs.find((blog) => blog.slug === slug);
 }
 

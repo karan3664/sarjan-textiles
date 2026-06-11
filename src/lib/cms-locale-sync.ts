@@ -11,7 +11,7 @@ import {
   seoPagesNeedLocalization,
 } from "@/lib/pages-localize";
 import type { CmsSnapshot } from "@/lib/cms-store";
-import { getCmsSnapshot } from "@/lib/cms-store";
+import { getCachedCmsSnapshot, getCmsSnapshot } from "@/lib/cms-store";
 import {
   blogsNeedLocalization,
   ensureBlogsLocalized,
@@ -386,5 +386,5 @@ export async function ensureCmsLocalized(
  * Bulk backfill runs from admin "Translate all now" (ensureCmsLocalized), not on every page view.
  */
 export async function getLocalizedCmsSnapshot(): Promise<CmsSnapshot> {
-  return getCmsSnapshot();
+  return getCachedCmsSnapshot();
 }
