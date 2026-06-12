@@ -39,7 +39,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
 RUN mkdir -p data data/downloads public/downloads public/uploads/cms \
-    public/sarjan-assets/client-avatars public/sarjan-assets/review-uploads
+    public/uploads/client-avatars public/sarjan-assets/client-avatars \
+    public/sarjan-assets/review-uploads
 
 EXPOSE 3000
 CMD ["npm", "start"]

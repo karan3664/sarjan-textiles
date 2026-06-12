@@ -39,6 +39,7 @@ import { resolvePlatformFeeConfig } from "@/lib/platform-fee-config";
 
 /** One-shot Postgres DDL for order columns added after initial VPS bootstrap. */
 let orderPostgresSchemaEnsured = false;
+let clientPostgresSchemaEnsured = false;
 
 async function ensureOrderPostgresSchema() {
   if (!isPostgresEnabled() || orderPostgresSchemaEnsured) return;
@@ -50,6 +51,15 @@ async function ensureOrderPostgresSchema() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS platform_fee_gst numeric(12, 2) DEFAULT 0;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS round_off numeric(12, 2) DEFAULT 0;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS total numeric(12, 2);
+  `).catch(() => null);
+}
+
+async function ensureClientPostgresSchema() {
+  if (!isPostgresEnabled() || clientPostgresSchemaEnsured) return;
+  clientPostgresSchemaEnsured = true;
+  await pgQuery(`
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url text;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS session_version integer NOT NULL DEFAULT 0;
   `).catch(() => null);
 }
 
@@ -740,6 +750,7 @@ export async function updateClient(
 
   if (isPostgresEnabled()) {
     try {
+      await ensureClientPostgresSchema();
       const updateRow: Record<string, unknown> = {};
       if (input.companyName !== undefined)
         updateRow.company_name = input.companyName;

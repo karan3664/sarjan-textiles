@@ -1,23 +1,20 @@
 import { mkdir, readFile, unlink, writeFile } from "fs/promises";
-import path from "path";
-import sharp from "sharp";
 
 import { assertClientAvatarContentAllowed } from "@/lib/client-avatar-moderation";
+import {
+  clientAvatarFilePath,
+  resolveClientAvatarsRoot,
+} from "@/lib/client-avatars-path";
 import { clientStatusAuthError } from "@/lib/client-approved-session";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { getClient, publicClient, updateClient } from "@/lib/local-db";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const maxBytes = 4 * 1024 * 1024;
-const localAvatarDir = path.join(
-  process.cwd(),
-  "public",
-  "sarjan-assets",
-  "client-avatars",
-);
 
 function isImageFile(file: File) {
   return (
@@ -26,12 +23,8 @@ function isImageFile(file: File) {
   );
 }
 
-function localAvatarPath(clientId: string) {
-  return path.join(localAvatarDir, `${clientId}.webp`);
-}
-
 async function deleteLocalAvatarFile(clientId: string) {
-  await unlink(localAvatarPath(clientId)).catch(() => null);
+  await unlink(clientAvatarFilePath(clientId)).catch(() => null);
 }
 
 /** Serve uploaded avatars via API — runtime uploads are not always reachable as static files. */
@@ -45,7 +38,7 @@ export async function GET(
   }
 
   try {
-    const data = await readFile(localAvatarPath(id.trim()));
+    const data = await readFile(clientAvatarFilePath(id.trim()));
     return new Response(data, {
       headers: {
         "Content-Type": "image/webp",
@@ -169,12 +162,10 @@ export async function POST(
     );
   }
 
-  let avatarUrl: string;
+  const avatarUrl = `/sarjan-assets/client-avatars/${id}.webp`;
   try {
-    await mkdir(localAvatarDir, { recursive: true });
-    const filename = `${id}.webp`;
-    await writeFile(localAvatarPath(id), webp);
-    avatarUrl = `/sarjan-assets/client-avatars/${filename}`;
+    await mkdir(resolveClientAvatarsRoot(), { recursive: true });
+    await writeFile(clientAvatarFilePath(id), webp);
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Avatar save failed" },
@@ -182,6 +173,19 @@ export async function POST(
     );
   }
 
-  const client = await updateClient(id, { avatarUrl });
-  return Response.json({ client: publicClient(client) });
+  try {
+    const client = await updateClient(id, { avatarUrl });
+    return Response.json({ client: publicClient(client) });
+  } catch (error) {
+    await deleteLocalAvatarFile(id).catch(() => null);
+    return Response.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Could not save profile photo",
+      },
+      { status: 500 },
+    );
+  }
 }
