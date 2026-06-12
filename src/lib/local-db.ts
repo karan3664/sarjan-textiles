@@ -37,6 +37,17 @@ import { enrichOrderPricing } from "@/lib/gst-display";
 import { computeOrderPricing } from "@/lib/order-pricing-breakdown";
 import { resolvePlatformFeeConfig } from "@/lib/platform-fee-config";
 
+/** One-shot Postgres DDL for order columns added after initial VPS bootstrap. */
+let orderPostgresSchemaEnsured = false;
+
+async function ensureOrderPostgresSchema() {
+  if (!isPostgresEnabled() || orderPostgresSchemaEnsured) return;
+  orderPostgresSchemaEnsured = true;
+  await pgQuery(
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping numeric(12, 2) DEFAULT 0`,
+  ).catch(() => null);
+}
+
 export type LocalClient = {
   id: string;
   email: string;
@@ -1123,6 +1134,7 @@ export async function createOrder(
   const orderInput = { ...input, dispatchAddress };
 
   if (isPostgresEnabled()) {
+    await ensureOrderPostgresSchema();
     if (clientRow.status !== "approved")
       throw new Error("Client approval required before placing orders");
     const createdAt = new Date().toISOString();
@@ -1266,6 +1278,7 @@ export async function createAdminOrder(input: {
   };
 
   if (isPostgresEnabled()) {
+    await ensureOrderPostgresSchema();
     try {
       const data = await pgInsertReturning("orders", {
         id: order.id,

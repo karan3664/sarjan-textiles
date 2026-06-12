@@ -135,24 +135,31 @@ export async function middleware(request: NextRequest) {
   }
 
   if (shouldGateToLaunchPage(pathname)) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "Site launching soon. Please check back shortly." },
-        {
-          status: 503,
-          headers: { "Retry-After": "3600", ...LAUNCH_GATE_CACHE_HEADERS },
-        },
-      );
-    }
-    if (pathname !== "/launch") {
-      const redirect = NextResponse.redirect(
-        redirectAbsoluteUrl(request, "/launch"),
-        307,
-      );
-      for (const [key, value] of Object.entries(LAUNCH_GATE_CACHE_HEADERS)) {
-        redirect.headers.set(key, value);
+    const adminPreviewSession = await verifyAdminFromRequest(
+      request,
+      request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+      { edge: true },
+    );
+    if (!adminPreviewSession) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Site launching soon. Please check back shortly." },
+          {
+            status: 503,
+            headers: { "Retry-After": "3600", ...LAUNCH_GATE_CACHE_HEADERS },
+          },
+        );
       }
-      return redirect;
+      if (pathname !== "/launch") {
+        const redirect = NextResponse.redirect(
+          redirectAbsoluteUrl(request, "/launch"),
+          307,
+        );
+        for (const [key, value] of Object.entries(LAUNCH_GATE_CACHE_HEADERS)) {
+          redirect.headers.set(key, value);
+        }
+        return redirect;
+      }
     }
   } else if (pathname === "/launch" && !isSiteLaunchPending()) {
     const redirect = NextResponse.redirect(

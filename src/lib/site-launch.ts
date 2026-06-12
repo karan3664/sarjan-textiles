@@ -42,6 +42,7 @@ export const LAUNCH_GATE_CACHE_HEADERS = {
 export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname === "/launch") return true;
   if (isAdminLoginPath(pathname)) return true;
+  // Logged-in admins preview the storefront via middleware (sarjan-admin-session cookie).
   if (pathname.startsWith("/admin")) return true;
   if (pathname.startsWith("/api/admin")) return true;
   if (pathname.startsWith("/api/cron")) return true;
