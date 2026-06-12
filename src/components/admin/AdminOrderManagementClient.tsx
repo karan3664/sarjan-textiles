@@ -78,6 +78,39 @@ function firstColor(colors?: string[] | null) {
   return colors?.[0] ?? "Default";
 }
 
+function resolveOrderItemDraft(
+  item: OrderItemDraft,
+  products: Product[],
+): OrderItemDraft {
+  const product = products.find((entry) => entry.slug === item.slug);
+  const sizes = item.sizes?.length
+    ? item.sizes
+    : product?.sizes?.length
+      ? product.sizes
+      : ["M"];
+  const setQuantity = Math.max(1, Number(item.setQuantity) || 1);
+  const unitPrice = Math.max(
+    0,
+    Number(item.unitPrice) || Number(product?.price) || 0,
+  );
+  const piecesPerSet = Math.max(1, item.piecesPerSet || sizes.length || 1);
+  const lineTotal = Math.max(
+    0,
+    Number(item.lineTotal) || unitPrice * setQuantity * piecesPerSet,
+  );
+
+  return {
+    ...item,
+    name: item.name?.trim() || product?.name || item.slug,
+    color: item.color?.trim() || firstColor(product?.colors),
+    sizes,
+    setQuantity,
+    piecesPerSet,
+    unitPrice,
+    lineTotal,
+  };
+}
+
 function statusClass(value?: string) {
   if (
     value === "Delivered" ||
@@ -1320,94 +1353,92 @@ export function AdminOrderManagementClient({
                   ) : null}
                 </div>
                 {draft.items.length ? (
-                  <div className="sarjan-product-bulk-table sarjan-order-items-table">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Photo</th>
-                          <th>Product</th>
-                          <th>Qty sets</th>
-                          <th>Unit price</th>
-                          <th>Sizes</th>
-                          <th>Total</th>
-                          <th />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {draft.items.map((item, index) => (
-                          <tr key={`${item.slug}-${item.color}-${index}`}>
-                            <td className="sarjan-order-item-photo-cell">
-                              <AdminOrderItemImage
-                                src={resolveOrderItemImage(
-                                  productImageBySlug,
-                                  item,
-                                )}
-                                alt={item.name}
-                                size={48}
-                              />
-                            </td>
-                            <td>
-                              {item.name}
-                              <div className="text-caption-1 text-secondary">
-                                {item.color}
+                  <ul className="sarjan-customer-order-lines sarjan-order-editor-lines">
+                    {draft.items.map((item, index) => {
+                      const line = resolveOrderItemDraft(item, products);
+                      const sizesLabel = formatSizesList(line.sizes);
+                      const canEditLine =
+                        mode === "orders" && draft.source !== "demo";
+                      return (
+                        <li
+                          key={`${line.slug}-${line.color}-${index}`}
+                          className="sarjan-customer-order-line sarjan-order-editor-line"
+                        >
+                          <AdminOrderItemImage
+                            src={resolveOrderItemImage(
+                              productImageBySlug,
+                              line,
+                            )}
+                            alt={line.name}
+                            size={44}
+                          />
+                          <div className="sarjan-order-editor-line__body">
+                            <div className="sarjan-customer-order-line__info">
+                              <strong>{line.name}</strong>
+                              <span className="text-caption-1 text-secondary">
+                                {line.color}
+                                {sizesLabel ? ` · ${sizesLabel}` : ""} ·{" "}
+                                {line.setQuantity} set
+                                {line.setQuantity === 1 ? "" : "s"} ·{" "}
+                                {formatInr(line.lineTotal)}
+                              </span>
+                            </div>
+                            {canEditLine ? (
+                              <div className="sarjan-order-editor-line__fields">
+                                <label className="sarjan-order-editor-field">
+                                  <span>Qty sets</span>
+                                  <input
+                                    type="number"
+                                    value={line.setQuantity}
+                                    onChange={(event) =>
+                                      updateDraftItem(index, {
+                                        setQuantity: Number(event.target.value),
+                                      })
+                                    }
+                                  />
+                                </label>
+                                <label className="sarjan-order-editor-field">
+                                  <span>Unit price</span>
+                                  <input
+                                    type="number"
+                                    value={line.unitPrice}
+                                    onChange={(event) =>
+                                      updateDraftItem(index, {
+                                        unitPrice: Number(event.target.value),
+                                      })
+                                    }
+                                  />
+                                </label>
+                                <label className="sarjan-order-editor-field sarjan-order-editor-field--sizes">
+                                  <span>Sizes</span>
+                                  <input
+                                    value={sizesLabel}
+                                    onChange={(event) => {
+                                      const sizes = event.target.value
+                                        .split(",")
+                                        .map((size) => size.trim())
+                                        .filter(Boolean);
+                                      updateDraftItem(index, {
+                                        sizes,
+                                        piecesPerSet: Math.max(1, sizes.length),
+                                      });
+                                    }}
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  className="tf-button style-2 sarjan-order-editor-remove"
+                                  onClick={() => removeDraftItem(index)}
+                                >
+                                  Remove
+                                </button>
                               </div>
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                value={item.setQuantity}
-                                disabled={draft.source === "demo"}
-                                onChange={(event) =>
-                                  updateDraftItem(index, {
-                                    setQuantity: Number(event.target.value),
-                                  })
-                                }
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                value={item.unitPrice}
-                                disabled={draft.source === "demo"}
-                                onChange={(event) =>
-                                  updateDraftItem(index, {
-                                    unitPrice: Number(event.target.value),
-                                  })
-                                }
-                              />
-                            </td>
-                            <td>
-                              <input
-                                value={formatSizesList(item.sizes)}
-                                disabled={draft.source === "demo"}
-                                onChange={(event) => {
-                                  const sizes = event.target.value
-                                    .split(",")
-                                    .map((size) => size.trim())
-                                    .filter(Boolean);
-                                  updateDraftItem(index, {
-                                    sizes,
-                                    piecesPerSet: Math.max(1, sizes.length),
-                                  });
-                                }}
-                              />
-                            </td>
-                            <td>{formatInr(item.lineTotal)}</td>
-                            <td>
-                              <button
-                                type="button"
-                                className="tf-button style-2"
-                                disabled={draft.source === "demo"}
-                                onClick={() => removeDraftItem(index)}
-                              >
-                                Remove
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 ) : (
                   <p className="text-secondary">Demo item details pending.</p>
                 )}

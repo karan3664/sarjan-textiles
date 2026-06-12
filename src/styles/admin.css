@@ -2196,18 +2196,45 @@ img.sarjan-product-img-placeholder {
   border-top: 1px solid var(--line);
 }
 
-.sarjan-order-items .sarjan-order-items-table {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  overflow-x: auto;
+.sarjan-order-items .sarjan-order-editor-lines {
+  margin-top: 4px;
 }
 
-.sarjan-order-items-table td input {
+.sarjan-order-editor-line {
+  align-items: flex-start;
+}
+
+.sarjan-order-editor-line__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.sarjan-order-editor-line__fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(88px, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.sarjan-order-editor-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sarjan-order-editor-field > span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.sarjan-order-editor-field input {
   box-sizing: border-box;
-  display: block;
   width: 100%;
-  min-width: 72px;
   min-height: 40px;
   padding: 8px 10px;
   font-size: 13px;
@@ -2217,17 +2244,29 @@ img.sarjan-product-img-placeholder {
   border-radius: 4px;
 }
 
-.sarjan-order-items-table td:nth-child(2) {
-  min-width: 160px;
+.sarjan-order-editor-field--sizes {
+  grid-column: span 1;
 }
 
-.sarjan-order-items-table td:nth-child(3),
-.sarjan-order-items-table td:nth-child(4) {
-  min-width: 96px;
+.sarjan-order-editor-remove {
+  align-self: end;
+  min-height: 40px;
+  white-space: nowrap;
 }
 
-.sarjan-order-items-table td:nth-child(5) {
-  min-width: 140px;
+@media (max-width: 720px) {
+  .sarjan-order-editor-line__fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sarjan-order-editor-field--sizes {
+    grid-column: 1 / -1;
+  }
+
+  .sarjan-order-editor-remove {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
 }
 
 .sarjan-inventory-grid {
