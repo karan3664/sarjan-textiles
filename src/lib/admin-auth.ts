@@ -7,9 +7,8 @@ function passwordMatches(admin: ConfiguredAdmin, password: string) {
   if (hash && isPlausiblePasswordHash(hash)) {
     return verifyPassword(password, hash);
   }
-  if (process.env.NODE_ENV === "production") {
-    return false;
-  }
+  // No valid hash — compare env-configured password (allowed in production when
+  // configuredAdmins() already enforced a strong ADMIN_PASSWORD).
   return admin.password === password;
 }
 
