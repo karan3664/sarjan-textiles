@@ -1,6 +1,6 @@
 /* Sarjan Textiles storefront service worker — Sprint 7 */
 
-const SW_VERSION = "sarjan-storefront-20260612-launch-gate";
+const SW_VERSION = "sarjan-storefront-20260612-nav-fix";
 const STATIC_CACHE = `sarjan-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `sarjan-runtime-${SW_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -38,6 +38,8 @@ function isSkippableRequest(request, url) {
   if (url.origin !== self.location.origin) return true;
   if (url.pathname.startsWith("/api/")) return true;
   if (url.pathname.startsWith("/admin")) return true;
+  // Pre-launch gate + countdown — never intercept (admin already bypassed above).
+  if (url.pathname === "/launch") return true;
   return false;
 }
 
@@ -95,20 +97,10 @@ async function staleWhileRevalidate(request, cacheName) {
   return network || new Response("", { status: 504, statusText: "Offline" });
 }
 
-function isLocalhostUrl(url) {
-  const host = url.hostname.toLowerCase();
-  return host === "localhost" || host === "127.0.0.1";
-}
-
 async function networkFirstNavigation(request) {
   try {
-    const response = await fetch(request, { redirect: "follow" });
-    const responseUrl = new URL(response.url);
-    if (isLocalhostUrl(responseUrl) && !isLocalhostUrl(new URL(request.url))) {
-      return Response.error();
-    }
-    // Never cache HTML navigations — stale cache bypassed the pre-launch /launch gate.
-    return response;
+    // Never cache HTML — pass through to the network (redirects included).
+    return await fetch(request, { redirect: "follow" });
   } catch {
     const offline = await caches.match(OFFLINE_URL);
     if (offline) return offline;
