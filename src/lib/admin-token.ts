@@ -274,6 +274,40 @@ export async function verifyAdminToken(
 }
 
 /**
+ * Edge-safe session check for middleware — no filesystem or Postgres imports.
+ * API routes should use verifyAdminToken for full session-version validation.
+ */
+export async function verifyAdminTokenForMiddleware(
+  token?: string,
+): Promise<AdminSession | null> {
+  if (!token || !token.includes(".")) return null;
+  const [encoded, signature] = token.split(".");
+  if (
+    !encoded ||
+    !signature ||
+    !constantTimeEqual(signature, await hmac(encoded))
+  )
+    return null;
+  try {
+    const payload = JSON.parse(base64UrlDecode(encoded)) as AdminSession;
+    if (
+      !payload.email ||
+      !payload.role ||
+      !roleAccess[payload.role] ||
+      Date.now() > payload.exp
+    )
+      return null;
+    const admin = configuredAdmins().find(
+      (item) => item.email.toLowerCase() === payload.email.toLowerCase(),
+    );
+    if (!admin || admin.role !== payload.role) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Returns true when `pathname` is allowed for `role`.
  * For non–super roles, the prefix `/admin` only matches the dashboard (`/admin`),
  * not every child route — otherwise `/admin` would incorrectly allow all admin pages.

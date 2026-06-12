@@ -122,6 +122,7 @@ export async function middleware(request: NextRequest) {
     const session = await verifyAdminFromRequest(
       request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+      { edge: true },
     );
     if (session) {
       const dest = adminPostLoginPath(request.nextUrl.searchParams.get("next"));
@@ -175,6 +176,7 @@ export async function middleware(request: NextRequest) {
     const session = await verifyAdminFromRequest(
       request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+      { edge: true },
     );
     if (!session) {
       if (isAdminApi) {
