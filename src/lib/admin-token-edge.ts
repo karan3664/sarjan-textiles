@@ -1,27 +1,10 @@
-import { configuredAdmins } from "@/lib/admin-config";
-import {
-  roleAccess,
-  roleCanAccess,
-  roleLabel,
-  roleModules,
-  type AdminRole,
-  type AdminSession,
-  type ConfiguredAdmin,
-} from "@/lib/admin-rbac";
+/**
+ * Edge-only admin JWT verification for middleware.
+ * No Postgres, fs, or admin-profile-override imports.
+ */
 
-export type {
-  AdminRole,
-  AdminSession,
-  ConfiguredAdmin,
-} from "@/lib/admin-rbac";
-export {
-  roleAccess,
-  roleCanAccess,
-  roleLabel,
-  roleModules,
-} from "@/lib/admin-rbac";
-export { configuredAdmins } from "@/lib/admin-config";
-export { verifyAdminTokenForMiddleware } from "@/lib/admin-token-edge";
+import { configuredAdmins } from "@/lib/admin-config";
+import { roleAccess, type AdminSession } from "@/lib/admin-rbac";
 
 function secret() {
   const value = process.env.ADMIN_SESSION_SECRET?.trim();
@@ -29,13 +12,6 @@ function secret() {
     throw new Error("ADMIN_SESSION_SECRET is required in production");
   }
   return value || "sarjan-demo-admin-secret-change-before-production";
-}
-
-function base64UrlEncode(value: string) {
-  return btoa(value)
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replaceAll("=", "");
 }
 
 function base64UrlDecode(value: string) {
@@ -52,6 +28,13 @@ function constantTimeEqual(a: string, b: string) {
   for (let index = 0; index < a.length; index += 1)
     diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
   return diff === 0;
+}
+
+function base64UrlEncode(value: string) {
+  return btoa(value)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
 async function hmac(value: string) {
@@ -71,21 +54,8 @@ async function hmac(value: string) {
   return base64UrlEncode(String.fromCharCode(...bytes));
 }
 
-export async function createAdminToken(session: Omit<AdminSession, "exp">) {
-  const { getAdminSessionVersion } = await import("@/lib/session-version");
-  const now = Date.now();
-  const sv = session.sv ?? (await getAdminSessionVersion(session.email));
-  const payload: AdminSession = {
-    ...session,
-    sv,
-    iat: session.iat ?? now,
-    exp: now + 1000 * 60 * 60 * 8,
-  };
-  const encoded = base64UrlEncode(JSON.stringify(payload));
-  return `${encoded}.${await hmac(encoded)}`;
-}
-
-export async function verifyAdminToken(
+/** Signature + expiry only — session_version checked on API routes (Node runtime). */
+export async function verifyAdminTokenForMiddleware(
   token?: string,
 ): Promise<AdminSession | null> {
   if (!token || !token.includes(".")) return null;
@@ -105,16 +75,10 @@ export async function verifyAdminToken(
       Date.now() > payload.exp
     )
       return null;
-    const { mergedConfiguredAdmins } =
-      await import("@/lib/admin-profile-override");
-    const admins = await mergedConfiguredAdmins(configuredAdmins());
-    const admin = admins.find(
+    const admin = configuredAdmins().find(
       (item) => item.email.toLowerCase() === payload.email.toLowerCase(),
     );
     if (!admin || admin.role !== payload.role) return null;
-    const { getAdminSessionVersion } = await import("@/lib/session-version");
-    const expectedSv = await getAdminSessionVersion(payload.email);
-    if ((payload.sv ?? 0) !== expectedSv) return null;
     return payload;
   } catch {
     return null;

@@ -1,10 +1,6 @@
-export type ClientSession = {
-  clientId: string;
-  email: string;
-  sv?: number;
-  iat: number;
-  exp: number;
-};
+import type { ClientSession } from "@/lib/client-token-edge";
+
+export type { ClientSession } from "@/lib/client-token-edge";
 
 /** Client JWT lifetime — B2B buyers often return after several days. */
 export const CLIENT_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
@@ -124,16 +120,6 @@ export async function verifyClientToken(
   const expectedSv = await getClientSessionVersion(payload.clientId);
   if ((payload.sv ?? 0) !== expectedSv) return null;
   return payload;
-}
-
-/**
- * Edge-safe session check for middleware — no Postgres/filesystem.
- * Same pattern as verifyAdminTokenForMiddleware (ef1437c).
- */
-export async function verifyClientTokenForMiddleware(
-  token?: string | null,
-): Promise<ClientSession | null> {
-  return parseVerifiedClientSession(token);
 }
 
 export function bearerToken(request: Request) {

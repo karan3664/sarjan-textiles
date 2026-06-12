@@ -1,10 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getAdminApiSession } from "@/lib/admin-api-session";
-import {
-  verifyAdminToken,
-  verifyAdminTokenForMiddleware,
-  type AdminSession,
-} from "@/lib/admin-token";
+import { verifyAdminTokenForMiddleware } from "@/lib/admin-token-edge";
+import { verifyAdminToken, type AdminSession } from "@/lib/admin-token";
 
 /** Cookie (web) or Authorization Bearer (native admin app). */
 export async function verifyAdminFromRequest(

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyAdminFromRequest } from "@/lib/admin-session-resolve";
-import { roleCanAccess } from "@/lib/admin-token";
+import { verifyAdminFromRequestEdge } from "@/lib/admin-session-edge";
+import { roleCanAccess } from "@/lib/admin-rbac";
 import {
   clientPostLoginPath,
   isClientProtectedApi,
@@ -8,7 +8,7 @@ import {
   isClientPublicAuthPage,
   requestReturnPath,
 } from "@/lib/auth-route-guards";
-import { verifyClientTokenForMiddleware } from "@/lib/client-token";
+import { verifyClientTokenForMiddleware } from "@/lib/client-token-edge";
 import { isAppLocale } from "@/lib/localized-text";
 import { multiLanguageEnabled } from "@/lib/commerce-config";
 import { localeCookieOptions } from "@/lib/locale-cookie";
@@ -119,10 +119,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const session = await verifyAdminFromRequest(
+    const session = await verifyAdminFromRequestEdge(
       request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-      { edge: true },
     );
     if (session) {
       const dest = adminPostLoginPath(request.nextUrl.searchParams.get("next"));
@@ -135,10 +134,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (shouldGateToLaunchPage(pathname)) {
-    const adminPreviewSession = await verifyAdminFromRequest(
+    const adminPreviewSession = await verifyAdminFromRequestEdge(
       request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-      { edge: true },
     );
     if (!adminPreviewSession) {
       if (pathname.startsWith("/api/")) {
@@ -180,10 +178,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/admin/auth/") || isAdminLoginPath(pathname);
 
   if ((isAdminPage || isAdminApi) && !isAdminAuth) {
-    const session = await verifyAdminFromRequest(
+    const session = await verifyAdminFromRequestEdge(
       request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-      { edge: true },
     );
     if (!session) {
       if (isAdminApi) {
