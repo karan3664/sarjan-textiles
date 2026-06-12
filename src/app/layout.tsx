@@ -17,6 +17,9 @@ import { DEFAULT_STOREFRONT_LOCALE } from "@/lib/server-locale";
 import { ChunkLoadRecovery } from "@/components/shared/ChunkLoadRecovery";
 import { StorefrontRootProviders } from "@/components/storefront/StorefrontRootProviders";
 
+/** Runs on admin + storefront so a broken legacy worker cannot block /launch. */
+const SW_UNREGISTER_SCRIPT = `(function(){if(!('serviceWorker'in navigator))return;navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){void x.unregister();});});if('caches'in window){caches.keys().then(function(k){k.forEach(function(n){if(n.indexOf('sarjan-')===0)void caches.delete(n);});});}})();`;
+
 export const metadata: Metadata = {
   ...pageMetadata({
     title: siteSettings.seo.title,
@@ -96,6 +99,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <Script
+          id="sarjan-sw-unregister"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: SW_UNREGISTER_SCRIPT }}
+        />
         {!isAdminRoute ? (
           <Script
             id="sarjan-theme-init"
