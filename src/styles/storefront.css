@@ -5459,17 +5459,64 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   }
 }
 
-/* My Account — dashboard polish */
+/* My Account — sidebar + content layout (all AccountFrame pages) */
+.sarjan-account-page .my-account-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: min(1440px, 100%);
+  margin-inline: auto;
+  gap: 0;
+}
+
+.sarjan-account-page .wrap-sidebar-account {
+  width: auto !important;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+
+.sarjan-account-page .my-account-content {
+  width: 100% !important;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.page-title:has(+ section.sarjan-account-page) {
+  padding: 40px 0 44px;
+}
+
+.page-title:has(+ section.sarjan-account-page) .heading {
+  margin-bottom: 8px;
+}
+
 @media (min-width: 992px) {
   .sarjan-account-page .my-account-wrap {
-    display: grid;
+    display: grid !important;
     grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
     gap: 28px;
     align-items: start;
+    max-width: min(1440px, calc(100vw - 48px));
+  }
+
+  .sarjan-account-page .wrap-sidebar-account {
+    grid-column: 1;
+    width: auto !important;
+    max-width: 100%;
+    position: static;
+  }
+
+  .sarjan-account-page .sidebar-account {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .sarjan-account-page .my-account-content {
+    grid-column: 2;
+    width: auto !important;
     min-width: 0;
+    max-width: 100%;
     padding: 28px 32px;
     border-radius: 20px;
     border: 1px solid var(--sarjan-border, #e8e2d9);
@@ -6153,7 +6200,7 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   }
 }
 
-/* Account — Your Orders page */
+/* Account — Your Orders page (table scroll; layout uses shared .sarjan-account-page rules) */
 .page-title:has(+ section.sarjan-account-page--orders) {
   padding: 32px 0 36px;
 }
@@ -6176,36 +6223,6 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
 }
 
 @media (min-width: 992px) {
-  .sarjan-account-page--orders .my-account-wrap {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-    gap: 28px;
-    align-items: flex-start;
-  }
-
-  .sarjan-account-page--orders .wrap-sidebar-account {
-    width: 260px;
-    flex-shrink: 0;
-  }
-
-  .sarjan-account-page--orders .sidebar-account {
-    padding: 24px 18px;
-  }
-
-  .sarjan-account-page--orders .sidebar-account .account-avatar {
-    margin-bottom: 20px;
-  }
-
-  .sarjan-account-page--orders .my-account-content {
-    min-width: 0;
-    flex: 1 1 0;
-    width: auto;
-    max-width: 100%;
-    overflow-x: visible;
-  }
-
   .sarjan-account-page--orders .sarjan-account-order-placed-banner {
     margin-bottom: 16px;
   }
@@ -7941,9 +7958,27 @@ body.sarjan-storefront .offcanvas [data-bs-dismiss="offcanvas"] {
   min-width: 44px;
   min-height: 44px;
   padding: 0;
-  border: none;
+  border: 1px solid rgba(24, 24, 24, 0.14);
   background-color: var(--surface, #f5f5f5);
+  color: #181818;
   border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(24, 24, 24, 0.1);
+}
+
+.modal-shopping-cart .header .icon-close-popup.icon-close::before,
+.modal-wishlist .header .icon-close-popup.icon-close::before,
+.sarjan-search-modal .icon-close-popup.icon-close::before,
+.modal-size-guide .header .icon-close-popup.icon-close::before {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.modal-shopping-cart .header .icon-close-popup:hover,
+.modal-wishlist .header .icon-close-popup:hover,
+.sarjan-search-modal .icon-close-popup:hover,
+.modal-size-guide .header .icon-close-popup:hover {
+  color: var(--primary, #8b2942);
+  border-color: rgba(139, 41, 66, 0.35);
 }
 
 /* Quick view close floats top-right — must stay absolute (not relative flow) */
@@ -12866,26 +12901,36 @@ body.sarjan-scroll-chrome:has(.sarjan-mobile-bottom-nav):has(
 /* ── Sprint 1/2: empty + error states, skip link ── */
 .sarjan-skip-link {
   position: absolute;
-  left: -9999px;
-  top: auto;
   width: 1px;
   height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
   z-index: 100000;
+}
+
+.sarjan-skip-link:focus,
+.sarjan-skip-link:focus-visible {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  width: auto;
+  height: auto;
+  margin: 0;
   padding: 10px 16px;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
   border-radius: 999px;
   background: var(--sarjan-accent, #8b1e2d);
   color: #fff;
   font-weight: 600;
   text-decoration: none;
-}
-
-.sarjan-skip-link:focus {
-  left: 12px;
-  top: 12px;
-  width: auto;
-  height: auto;
-  overflow: visible;
 }
 
 .sarjan-storefront-empty {

@@ -393,11 +393,16 @@ export function ModaveModals() {
     syncWishlistFromCatalog();
     document.addEventListener("click", onWishlist, true);
     window.addEventListener("sarjan-wishlist-updated", syncWishlistButtons);
+    window.addEventListener("sarjan-saved-lists-synced", syncWishlistButtons);
     window.addEventListener("storage", syncWishlistButtons);
     return () => {
       document.removeEventListener("click", onWishlist, true);
       window.removeEventListener(
         "sarjan-wishlist-updated",
+        syncWishlistButtons,
+      );
+      window.removeEventListener(
+        "sarjan-saved-lists-synced",
         syncWishlistButtons,
       );
       window.removeEventListener("storage", syncWishlistButtons);
@@ -415,17 +420,24 @@ export function ModaveModals() {
       return;
     }
 
+    let cancelled = false;
     fetch(
       `/api/catalog/products?ids=${encodeURIComponent(wishlistSlugs.join(","))}&limit=${wishlistSlugs.length}`,
     )
       .then((res) => res.json())
       .then((data) => {
+        if (cancelled) return;
         const bySlug = new Map<Product["slug"], Product>(
           (data.items ?? []).map((product: Product) => [product.slug, product]),
         );
         const validSlugs = wishlistSlugs.filter((slug) => bySlug.has(slug));
         if (validSlugs.length !== wishlistSlugs.length) {
           writeWishlist(validSlugs);
+          setWishlistItems(
+            validSlugs
+              .map((slug) => bySlug.get(slug))
+              .filter(Boolean) as Product[],
+          );
           return;
         }
         setWishlistItems(
@@ -434,7 +446,13 @@ export function ModaveModals() {
             .filter(Boolean) as Product[],
         );
       })
-      .catch(() => setWishlistItems([]));
+      .catch(() => {
+        if (!cancelled) setWishlistItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [wishlistSlugs]);
 
   const removeWishlistItem = (slug: string) => {

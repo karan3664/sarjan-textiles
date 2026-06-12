@@ -1,4 +1,7 @@
-import { scheduleSavedListsSync } from "@/lib/saved-lists-sync";
+import {
+  scheduleSavedListsSync,
+  touchLocalSavedListsUpdatedAt,
+} from "@/lib/saved-lists-sync";
 
 export const COMPARE_KEY = "sarjan-compare";
 export const MAX_COMPARE_ITEMS = 3;
@@ -25,7 +28,10 @@ export function writeCompare(
     0,
     MAX_COMPARE_ITEMS,
   );
+  const current = readCompare();
+  if (JSON.stringify(current) === JSON.stringify(unique)) return unique;
   window.localStorage.setItem(COMPARE_KEY, JSON.stringify(unique));
+  touchLocalSavedListsUpdatedAt();
   window.dispatchEvent(new CustomEvent("sarjan-compare-updated"));
   if (options.syncApi !== false) {
     scheduleSavedListsSync();

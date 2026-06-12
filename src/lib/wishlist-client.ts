@@ -1,4 +1,7 @@
-import { scheduleSavedListsSync } from "@/lib/saved-lists-sync";
+import {
+  scheduleSavedListsSync,
+  touchLocalSavedListsUpdatedAt,
+} from "@/lib/saved-lists-sync";
 
 export const WISHLIST_KEY = "sarjan-wishlist";
 
@@ -36,6 +39,7 @@ export function writeWishlist(
   const current = readWishlist();
   if (slugSetsEqual(current, next)) return;
   window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
+  touchLocalSavedListsUpdatedAt();
   window.dispatchEvent(new CustomEvent("sarjan-wishlist-updated"));
   if (options.syncApi !== false) {
     scheduleSavedListsSync();

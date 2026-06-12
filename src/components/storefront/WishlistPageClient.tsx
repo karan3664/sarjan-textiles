@@ -9,6 +9,7 @@ import {
   syncWishlistButtonStates,
   writeWishlist,
 } from "@/lib/wishlist-client";
+import { pullSavedListsFromServer } from "@/lib/saved-lists-sync";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { paginationRangeLabel } from "@/lib/pagination-utils";
 import { StorefrontPagination } from "./StorefrontPagination";
@@ -19,37 +20,56 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
   const [slugs, setSlugs] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncReady, setSyncReady] = useState(false);
 
   useEffect(() => {
-    const sync = () => setSlugs(readWishlist());
-    sync();
+    let cancelled = false;
+
+    const sync = () => {
+      if (!cancelled) setSlugs(readWishlist());
+    };
+
+    void pullSavedListsFromServer({ force: true }).finally(() => {
+      if (cancelled) return;
+      setSyncReady(true);
+      sync();
+    });
+
     window.addEventListener("sarjan-wishlist-updated", sync);
+    window.addEventListener("sarjan-saved-lists-synced", sync);
     window.addEventListener("storage", sync);
     return () => {
+      cancelled = true;
       window.removeEventListener("sarjan-wishlist-updated", sync);
+      window.removeEventListener("sarjan-saved-lists-synced", sync);
       window.removeEventListener("storage", sync);
     };
   }, []);
 
   useEffect(() => {
+    if (!syncReady) return;
+
     if (!slugs.length) {
       setProducts([]);
       setLoading(false);
       return;
     }
 
+    let cancelled = false;
     setLoading(true);
     fetch(
       `/api/catalog/products?ids=${encodeURIComponent(slugs.join(","))}&limit=${slugs.length}`,
     )
       .then((res) => res.json())
       .then((data) => {
+        if (cancelled) return;
         const bySlug = new Map<Product["slug"], Product>(
           (data.items ?? []).map((product: Product) => [product.slug, product]),
         );
         const validSlugs = slugs.filter((slug) => bySlug.has(slug));
         if (validSlugs.length !== slugs.length) {
           writeWishlist(validSlugs);
+          return;
         }
         setProducts(
           validSlugs
@@ -57,9 +77,17 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
             .filter(Boolean) as Product[],
         );
       })
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
-  }, [slugs]);
+      .catch(() => {
+        if (!cancelled) setProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slugs, syncReady]);
 
   useEffect(() => {
     window.requestAnimationFrame(() =>
