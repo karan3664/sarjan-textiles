@@ -57,10 +57,16 @@ async function ensureOrderPostgresSchema() {
 async function ensureClientPostgresSchema() {
   if (!isPostgresEnabled() || clientPostgresSchemaEnsured) return;
   clientPostgresSchemaEnsured = true;
-  await pgQuery(`
-    ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url text;
-    ALTER TABLE clients ADD COLUMN IF NOT EXISTS session_version integer NOT NULL DEFAULT 0;
-  `).catch(() => null);
+  try {
+    await pgQuery(`
+      ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url text;
+      ALTER TABLE clients ADD COLUMN IF NOT EXISTS session_version integer NOT NULL DEFAULT 0;
+    `);
+  } catch (error) {
+    clientPostgresSchemaEnsured = false;
+    console.error("[local-db] ensureClientPostgresSchema failed:", error);
+    throw error;
+  }
 }
 
 export type LocalClient = {
@@ -774,8 +780,13 @@ export async function updateClient(
         return refreshed ?? updated;
       }
       return updated;
-    } catch {
-      // Fall through to JSON fallback.
+    } catch (error) {
+      if (isPostgresEnabled()) {
+        const message =
+          error instanceof Error ? error.message : "Database update failed";
+        throw new Error(message);
+      }
+      // Fall through to JSON fallback only when Postgres is disabled.
     }
   }
   const db = await readLocalDb();

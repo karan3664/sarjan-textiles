@@ -175,28 +175,39 @@ export async function assertClientAvatarContentAllowed(
     throw new Error("AVATAR_CONTENT_REJECTED");
   }
 
-  const model = await getNsfwModel();
-
-  const { data, info } = await sharp(imageBuffer)
-    .rotate()
-    .resize(224, 224, { fit: "cover" })
-    .removeAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  if (info.channels !== 3) {
-    throw new Error("Avatar must be a colour image (RGB).");
-  }
-
-  const h = info.height;
-  const w = info.width;
-  const tensor = tf.tensor3d(new Uint8Array(data), [h, w, 3], "int32");
   try {
-    const predictions = await model.classify(tensor as never);
-    if (isAvatarContentRejectedByNsfw(readScores(predictions))) {
-      throw new Error("AVATAR_CONTENT_REJECTED");
+    const model = await getNsfwModel();
+
+    const { data, info } = await sharp(imageBuffer)
+      .rotate()
+      .resize(224, 224, { fit: "cover" })
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    if (info.channels !== 3) {
+      throw new Error("Avatar must be a colour image (RGB).");
     }
-  } finally {
-    tensor.dispose();
+
+    const h = info.height;
+    const w = info.width;
+    const tensor = tf.tensor3d(new Uint8Array(data), [h, w, 3], "int32");
+    try {
+      const predictions = await model.classify(tensor as never);
+      if (isAvatarContentRejectedByNsfw(readScores(predictions))) {
+        throw new Error("AVATAR_CONTENT_REJECTED");
+      }
+    } finally {
+      tensor.dispose();
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "AVATAR_CONTENT_REJECTED") {
+      throw error;
+    }
+    // NSFWJS + TensorFlow often OOM on small VPS hosts — skin check still applied.
+    console.warn(
+      "[avatar-moderation] NSFW model unavailable, skipping:",
+      error,
+    );
   }
 }
