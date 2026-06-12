@@ -95,7 +95,7 @@ export async function createClientToken(input: {
   return `${unsigned}.${await hmac(unsigned)}`;
 }
 
-export async function verifyClientToken(
+async function parseVerifiedClientSession(
   token?: string | null,
 ): Promise<ClientSession | null> {
   if (!token) return null;
@@ -108,13 +108,32 @@ export async function verifyClientToken(
     const payload = JSON.parse(base64UrlDecode(parts[1])) as ClientSession;
     if (!payload.clientId || !payload.email || Date.now() > payload.exp)
       return null;
-    const { getClientSessionVersion } = await import("@/lib/session-version");
-    const expectedSv = await getClientSessionVersion(payload.clientId);
-    if ((payload.sv ?? 0) !== expectedSv) return null;
     return payload;
   } catch {
     return null;
   }
+}
+
+/** API routes — full check including Postgres session_version (mobile logout invalidation). */
+export async function verifyClientToken(
+  token?: string | null,
+): Promise<ClientSession | null> {
+  const payload = await parseVerifiedClientSession(token);
+  if (!payload) return null;
+  const { getClientSessionVersion } = await import("@/lib/session-version");
+  const expectedSv = await getClientSessionVersion(payload.clientId);
+  if ((payload.sv ?? 0) !== expectedSv) return null;
+  return payload;
+}
+
+/**
+ * Edge-safe session check for middleware — no Postgres/filesystem.
+ * Same pattern as verifyAdminTokenForMiddleware (ef1437c).
+ */
+export async function verifyClientTokenForMiddleware(
+  token?: string | null,
+): Promise<ClientSession | null> {
+  return parseVerifiedClientSession(token);
 }
 
 export function bearerToken(request: Request) {

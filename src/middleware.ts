@@ -8,7 +8,7 @@ import {
   isClientPublicAuthPage,
   requestReturnPath,
 } from "@/lib/auth-route-guards";
-import { verifyClientToken } from "@/lib/client-token";
+import { verifyClientTokenForMiddleware } from "@/lib/client-token";
 import { isAppLocale } from "@/lib/localized-text";
 import { multiLanguageEnabled } from "@/lib/commerce-config";
 import { localeCookieOptions } from "@/lib/locale-cookie";
@@ -210,7 +210,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const clientSession = await verifyClientToken(
+  const clientSession = await verifyClientTokenForMiddleware(
     clientTokenFromRequest(request),
   );
 

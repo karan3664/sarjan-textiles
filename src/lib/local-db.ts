@@ -287,6 +287,10 @@ function mapClient(row: Record<string, unknown>): LocalClient {
       row.avatar_url != null && String(row.avatar_url).trim()
         ? String(row.avatar_url).trim()
         : undefined,
+    sessionVersion:
+      row.session_version != null
+        ? Number(row.session_version) || 0
+        : undefined,
   };
 }
 

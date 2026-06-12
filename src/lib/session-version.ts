@@ -42,18 +42,15 @@ async function ensureClientSessionVersionColumn() {
 
 export async function getClientSessionVersion(clientId: string) {
   if (isPostgresEnabled()) {
-    try {
-      await ensureClientSessionVersionColumn();
-      const result = await pgQuery<{ session_version: number }>(
-        `SELECT COALESCE(session_version, 0) AS session_version FROM clients WHERE id = $1 LIMIT 1`,
-        [clientId],
-      );
-      if (result.rows[0]) {
-        return Number(result.rows[0].session_version) || 0;
-      }
-    } catch {
-      /* fall through */
+    await ensureClientSessionVersionColumn();
+    const result = await pgQuery<{ session_version: number }>(
+      `SELECT COALESCE(session_version, 0) AS session_version FROM clients WHERE id = $1 LIMIT 1`,
+      [clientId],
+    );
+    if (result.rows[0]) {
+      return Number(result.rows[0].session_version) || 0;
     }
+    return 0;
   }
   return readJsonClientSessionVersion(clientId);
 }
