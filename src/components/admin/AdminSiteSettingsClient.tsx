@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import type { CmsSiteSettings, CmsSnapshot } from "@/lib/cms-store";
+import {
+  DEFAULT_PLATFORM_FEE_CONFIG,
+  type PlatformFeeConfig,
+} from "@/lib/platform-fee-config";
+import {
+  DEFAULT_SHIPPING_CONFIG,
+  type ShippingConfig,
+} from "@/lib/shipping-config";
 import { AdminAuthBannersEditor } from "@/components/admin/AdminAuthBannersEditor";
 import { putAdminCms } from "@/lib/admin-cms-fetch";
 
@@ -26,6 +34,36 @@ export function AdminSiteSettingsClient({
     setCms((current) => ({
       ...current,
       siteSettings: { ...current.siteSettings, [key]: value },
+    }));
+  };
+
+  const setShipping = (patch: Partial<ShippingConfig>) => {
+    setSaveState("idle");
+    setCms((current) => ({
+      ...current,
+      siteSettings: {
+        ...current.siteSettings,
+        shipping: {
+          ...DEFAULT_SHIPPING_CONFIG,
+          ...current.siteSettings.shipping,
+          ...patch,
+        },
+      },
+    }));
+  };
+
+  const setPlatformFee = (patch: Partial<PlatformFeeConfig>) => {
+    setSaveState("idle");
+    setCms((current) => ({
+      ...current,
+      siteSettings: {
+        ...current.siteSettings,
+        platformFee: {
+          ...DEFAULT_PLATFORM_FEE_CONFIG,
+          ...current.siteSettings.platformFee,
+          ...patch,
+        },
+      },
     }));
   };
 
@@ -144,6 +182,85 @@ export function AdminSiteSettingsClient({
                 setSettings("openTimeSunday", event.target.value)
               }
             />
+          </fieldset>
+          <fieldset className="cols-span-full">
+            <div className="body-title mb-10">Shipping & GST (checkout)</div>
+            <label className="sarjan-product-switch mb-12">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.shipping?.enabled ?? true)}
+                onChange={(event) =>
+                  setShipping({ enabled: event.target.checked })
+                }
+              />
+              <span>Enable shipping charges on orders</span>
+            </label>
+            <fieldset>
+              <div className="body-title mb-10">
+                Shipping per 100 pieces (INR)
+              </div>
+              <input
+                type="number"
+                min={0}
+                value={settings.shipping?.amountPer100Pieces ?? 500}
+                onChange={(event) =>
+                  setShipping({
+                    amountPer100Pieces: Number(event.target.value),
+                  })
+                }
+              />
+              <p className="body-text text-secondary mt-8 mb-0">
+                Formula: ceil(total pieces ÷ 100) × this amount. GST is
+                calculated on product total + shipping.
+              </p>
+            </fieldset>
+          </fieldset>
+          <fieldset className="cols-span-full">
+            <div className="body-title mb-10">Platform fee (checkout)</div>
+            <label className="sarjan-product-switch mb-12">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.platformFee?.enabled)}
+                onChange={(event) =>
+                  setPlatformFee({ enabled: event.target.checked })
+                }
+              />
+              <span>Charge platform fee on orders</span>
+            </label>
+            <div className="cols gap22">
+              <fieldset>
+                <div className="body-title mb-10">Fee amount (INR)</div>
+                <input
+                  type="number"
+                  min={0}
+                  value={settings.platformFee?.amountInr ?? 10}
+                  onChange={(event) =>
+                    setPlatformFee({ amountInr: Number(event.target.value) })
+                  }
+                />
+              </fieldset>
+              <fieldset>
+                <div className="body-title mb-10">GST on fee (0.18 = 18%)</div>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={settings.platformFee?.gstRate ?? 0.18}
+                  onChange={(event) =>
+                    setPlatformFee({ gstRate: Number(event.target.value) })
+                  }
+                />
+              </fieldset>
+              <fieldset>
+                <div className="body-title mb-10">Checkout label</div>
+                <input
+                  value={settings.platformFee?.label ?? "Platform Fee"}
+                  onChange={(event) =>
+                    setPlatformFee({ label: event.target.value })
+                  }
+                />
+              </fieldset>
+            </div>
           </fieldset>
           <fieldset>
             <div className="body-title mb-10">Credit Days</div>

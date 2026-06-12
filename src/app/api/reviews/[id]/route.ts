@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
 import { assertReviewEligible } from "@/lib/review-eligibility";
 import { trackReviewEvent } from "@/lib/review-analytics";
-import { getAdminRouteSession } from "@/lib/admin-route-session";
+import { requireReviewModeratorSession } from "@/lib/require-admin-session";
 import { syncProductReviewAggregates } from "@/lib/review-aggregates";
 import {
   deleteProductReview,
@@ -18,8 +18,37 @@ function parseMediaUrls(value: unknown, max = 6) {
   if (!Array.isArray(value)) return undefined;
   return value
     .map((entry) => String(entry ?? "").trim())
-    .filter((entry) => entry.startsWith("/") || entry.startsWith("https://"))
+    .filter((entry) => entry.startsWith("/sarjan-assets/review-uploads/"))
     .slice(0, max);
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireApprovedClientRequest(request);
+  if (auth instanceof Response) return auth;
+  const { client } = auth;
+  const { id } = await params;
+
+  const review = await getReviewById(id);
+  if (!review || review.clientId !== client.id) {
+    return Response.json({ error: "Review not found." }, { status: 404 });
+  }
+
+  return Response.json({
+    review: {
+      id: review.id,
+      productSlug: review.productSlug,
+      orderId: review.orderId,
+      rating: review.rating,
+      title: review.title,
+      body: review.body,
+      images: review.images,
+      videos: review.videos,
+      status: review.status,
+    },
+  });
 }
 
 export async function PUT(
@@ -31,7 +60,7 @@ export async function PUT(
   const { client } = auth;
   const { id } = await params;
 
-  const limit = rateLimit(
+  const limit = await rateLimit(
     rateLimitKey(request, "review-update", client.email),
     8,
     60_000,
@@ -127,10 +156,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getAdminRouteSession(request);
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireReviewModeratorSession(request);
+  if (session instanceof Response) return session;
   const { id } = await params;
   const current = await getReviewById(id);
   if (!current) {

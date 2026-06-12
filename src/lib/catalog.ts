@@ -9,6 +9,11 @@ import {
 } from "@/lib/product-availability";
 import type { Product } from "@/data/mock";
 import { getClient } from "@/lib/local-db";
+import {
+  normalizeClientTier,
+  productCatalogActive,
+  withProductAvailability,
+} from "@/lib/product-purchase-eligibility";
 
 export type CatalogSort =
   | "best-selling"
@@ -287,7 +292,11 @@ export async function getCatalogProducts({
       )
     : source;
   const viewerLoggedIn = Boolean(clientId);
-  const filtered = searched.filter((product) =>
+  const browseOnly = !ids?.length;
+  const catalogVisible = browseOnly
+    ? searched.filter((product) => productCatalogActive(product))
+    : searched;
+  const filtered = catalogVisible.filter((product) =>
     matchesFilters(product, filters, viewerLoggedIn),
   );
   const sorted = sortProductList(
@@ -299,11 +308,17 @@ export async function getCatalogProducts({
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));
   const currentPage = Math.min(Math.max(Math.floor(page) || 1, 1), totalPages);
   const start = (currentPage - 1) * safeLimit;
+  const clientTier = clientId
+    ? normalizeClientTier((await getClient(clientId))?.clientTier)
+    : "standard";
+  const priced = await applyClientPricing(
+    sorted.slice(start, start + safeLimit),
+    clientId,
+  );
 
   return {
-    items: await applyClientPricing(
-      sorted.slice(start, start + safeLimit),
-      clientId,
+    items: priced.map((product) =>
+      withProductAvailability(product, clientTier, viewerLoggedIn),
     ),
     total,
     page: currentPage,

@@ -21,6 +21,7 @@ export function isPwaStandalone(): boolean {
 export function shouldRegisterStorefrontServiceWorker(
   pathname: string,
 ): boolean {
+  if (pathname === "/launch") return false;
   if (pathname.startsWith("/admin")) return false;
   if (pathname.startsWith("/api")) return false;
   return true;

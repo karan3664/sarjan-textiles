@@ -3,6 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { celebrateOrderPlaced } from "@/lib/order-celebration";
+import {
+  B2B_ORDER_SUCCESS_BODY,
+  B2B_ORDER_SUCCESS_TITLE,
+} from "@/lib/b2b-order-messages";
 import { GstVerificationFields } from "./GstVerificationFields";
 import {
   bumpClientAvatarCache,
@@ -16,7 +20,7 @@ import { checkClientFieldsUnique } from "@/lib/check-client-unique";
 import {
   clientAuthHeaders,
   clientAuthJsonHeaders,
-  clientAuthToken,
+  hasLocalClientSession,
   logoutClientSession,
   restoreClientSessionFromCookie,
 } from "@/lib/client-auth-browser";
@@ -44,8 +48,11 @@ import {
 } from "@/lib/account-nav-client";
 import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
-import { enrichOrderPricing, gstPercentLabel } from "@/lib/gst-display";
+import { enrichOrderPricing, formatInrPricingLine } from "@/lib/gst-display";
+import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
 import { AccountAddressManager } from "@/components/storefront/AccountAddressManager";
+import { OrderLineReviewCta } from "@/components/storefront/OrderLineReviewCta";
+import { ReviewRequestBanner } from "@/components/storefront/ReviewRequestBanner";
 
 type Client = AccountClient;
 
@@ -156,7 +163,7 @@ function AccountFrameInner({
         <div className="container">
           <div className="my-account-wrap">
             <div className="wrap-sidebar-account">
-              <div className="sidebar-account">
+              <div className="sidebar-account sarjan-account-sidebar-card">
                 <div className="account-avatar">
                   <div className="image">
                     <img
@@ -446,7 +453,7 @@ function AccountDashboardContent() {
 
   const uploadAvatar = async (file: File) => {
     if (!client?.id) return;
-    if (!clientAuthToken()) {
+    if (!hasLocalClientSession()) {
       setAvatarMessage("Login required.");
       return;
     }
@@ -481,7 +488,7 @@ function AccountDashboardContent() {
   const removeAvatar = async () => {
     if (!client?.id) return;
     if (!hasCustomClientAvatar(client.avatarUrl)) return;
-    if (!clientAuthToken()) {
+    if (!hasLocalClientSession()) {
       setAvatarMessage("Login required.");
       return;
     }
@@ -515,137 +522,218 @@ function AccountDashboardContent() {
     }
   };
 
+  const pendingOrderCount = useMemo(
+    () =>
+      orders.filter((order) => order.status.toLowerCase().includes("pending"))
+        .length,
+    [orders],
+  );
+  const accountStatusLabel =
+    client?.status === "approved"
+      ? "Wholesale account active"
+      : client?.status === "pending"
+        ? "Pending approval"
+        : client?.status === "rejected"
+          ? "Application not approved"
+          : "Account";
+
   return (
-    <div className="account-details">
+    <div className="account-details sarjan-account-dashboard">
       {loading ? (
-        <p>Loading account...</p>
+        <p className="sarjan-account-dashboard__loading">Loading account…</p>
       ) : client ? (
         <>
+          <header className="sarjan-account-dashboard__header">
+            <div>
+              <p className="sarjan-account-dashboard__eyebrow">B2B wholesale</p>
+              <h2 className="sarjan-account-dashboard__title">
+                Welcome back{form.companyName ? `, ${form.companyName}` : ""}
+              </h2>
+              <p className="sarjan-account-dashboard__subtitle text-secondary">
+                Manage your business profile, orders, and dispatch details in
+                one place.
+              </p>
+            </div>
+            <span
+              className={`sarjan-account-status-pill sarjan-account-status-pill--${client.status ?? "pending"}`}
+            >
+              {accountStatusLabel}
+            </span>
+          </header>
+
+          <div className="sarjan-account-stat-grid mb_24">
+            <div className="sarjan-account-stat-card">
+              <span className="sarjan-account-stat-card__label">
+                Total orders
+              </span>
+              <strong className="sarjan-account-stat-card__value">
+                {orders.length}
+              </strong>
+            </div>
+            <div className="sarjan-account-stat-card">
+              <span className="sarjan-account-stat-card__label">
+                Pending approval
+              </span>
+              <strong className="sarjan-account-stat-card__value">
+                {pendingOrderCount}
+              </strong>
+            </div>
+            <div className="sarjan-account-stat-card">
+              <span className="sarjan-account-stat-card__label">
+                Credit terms
+              </span>
+              <strong className="sarjan-account-stat-card__value">
+                90 days
+              </strong>
+            </div>
+          </div>
+
           <form className="form-account-details" onSubmit={saveProfile}>
-            <div className="account-info">
-              <h5 className="title">Information</h5>
-              <div className="sarjan-profile-avatar-block mb_24">
-                <div className="text-title mb_8">Profile photo</div>
-                <p className="text-secondary text-caption-1 mb_16">
-                  JPG, PNG, or WebP · max 4MB. Use a professional headshot (with
-                  shirt) or company logo only — nudity, shirtless, and
-                  suggestive photos are blocked automatically.
+            <div className="sarjan-account-panel sarjan-account-panel--profile mb_24">
+              <div className="sarjan-account-panel__head">
+                <h5 className="title mb_0">Profile photo</h5>
+                <p className="text-secondary text-caption-1 mb_0">
+                  Company logo or professional headshot · JPG, PNG, WebP · max
+                  4MB
                 </p>
-                <div className="sarjan-profile-avatar-layout">
-                  <div className="sarjan-profile-avatar-thumb">
-                    <img
-                      key={avatarPreviewKey}
-                      src={clientAvatarSrc(client.avatarUrl, client.id)}
-                      alt=""
-                      width={100}
-                      height={100}
-                      onError={(event) => {
-                        event.currentTarget.onerror = null;
-                        event.currentTarget.src = clientAvatarSrc();
-                      }}
-                    />
-                  </div>
-                  <div className="sarjan-profile-avatar-actions">
-                    <input
-                      ref={avatarInputRef}
-                      id="sarjan-profile-avatar-input"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                      className="d-none"
-                      disabled={avatarUploading || avatarRemoving}
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (file) void uploadAvatar(file);
-                        event.target.value = "";
-                      }}
-                    />
+              </div>
+              <div className="sarjan-profile-avatar-layout">
+                <div className="sarjan-profile-avatar-thumb">
+                  <img
+                    key={avatarPreviewKey}
+                    src={clientAvatarSrc(client.avatarUrl, client.id)}
+                    alt=""
+                    width={100}
+                    height={100}
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = clientAvatarSrc();
+                    }}
+                  />
+                </div>
+                <div className="sarjan-profile-avatar-actions">
+                  <input
+                    ref={avatarInputRef}
+                    id="sarjan-profile-avatar-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                    className="d-none"
+                    disabled={avatarUploading || avatarRemoving}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void uploadAvatar(file);
+                      event.target.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className={withBtnIcon(
+                      "tf-btn btn-white has-border radius-4",
+                    )}
+                    disabled={avatarUploading || avatarRemoving}
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    <TfButtonIcon icon="icon-arrowUpRight">
+                      {avatarUploading ? "Uploading…" : "Choose photo"}
+                    </TfButtonIcon>
+                  </button>
+                  {hasCustomClientAvatar(client.avatarUrl) ? (
                     <button
                       type="button"
                       className={withBtnIcon(
-                        "tf-btn btn-white has-border radius-4",
+                        "tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove",
                       )}
                       disabled={avatarUploading || avatarRemoving}
-                      onClick={() => avatarInputRef.current?.click()}
+                      onClick={() => void removeAvatar()}
                     >
-                      <TfButtonIcon icon="icon-arrowUpRight">
-                        {avatarUploading ? "Uploading…" : "Choose photo"}
+                      <TfButtonIcon icon="icon-close">
+                        {avatarRemoving ? "Removing…" : "Remove photo"}
                       </TfButtonIcon>
                     </button>
-                    {hasCustomClientAvatar(client.avatarUrl) ? (
-                      <button
-                        type="button"
-                        className={withBtnIcon(
-                          "tf-btn btn-white has-border radius-4 sarjan-profile-avatar-remove",
-                        )}
-                        disabled={avatarUploading || avatarRemoving}
-                        onClick={() => void removeAvatar()}
-                      >
-                        <TfButtonIcon icon="icon-close">
-                          {avatarRemoving
-                            ? "Removing…"
-                            : "Remove profile photo"}
-                        </TfButtonIcon>
-                      </button>
-                    ) : null}
-                    {avatarMessage ? (
-                      <p
-                        className={
-                          avatarMessage.includes("failed") ||
-                          avatarMessage.includes("blocked") ||
-                          avatarMessage.includes("Could not") ||
-                          avatarMessage.includes("adult") ||
-                          avatarMessage.includes("explicit") ||
-                          avatarMessage.includes("not verify")
-                            ? "text-danger text-caption-1 mt_8 mb_0"
-                            : "text-success text-caption-1 mt_8 mb_0"
-                        }
-                      >
-                        {avatarMessage}
-                      </p>
-                    ) : null}
-                  </div>
+                  ) : null}
+                  {avatarMessage ? (
+                    <p
+                      className={
+                        avatarMessage.includes("failed") ||
+                        avatarMessage.includes("blocked") ||
+                        avatarMessage.includes("Could not") ||
+                        avatarMessage.includes("adult") ||
+                        avatarMessage.includes("explicit") ||
+                        avatarMessage.includes("not verify")
+                          ? "text-danger text-caption-1 mt_8 mb_0"
+                          : "text-success text-caption-1 mt_8 mb_0"
+                      }
+                    >
+                      {avatarMessage}
+                    </p>
+                  ) : null}
                 </div>
               </div>
+            </div>
+
+            <div className="sarjan-account-panel account-info mb_24">
+              <div className="sarjan-account-panel__head">
+                <h5 className="title mb_0">Business information</h5>
+                <p className="text-secondary text-caption-1 mb_0">
+                  Used for GST invoices, order confirmation, and dispatch.
+                </p>
+              </div>
               <div className="cols mb_20">
-                <fieldset>
+                <fieldset className="sarjan-field">
+                  <label className="sarjan-field__label" htmlFor="acct-company">
+                    Company / trade name
+                  </label>
                   <input
+                    id="acct-company"
                     type="text"
-                    placeholder="Company Name*"
+                    placeholder="Company name"
                     value={form.companyName}
                     onChange={(e) => updateForm("companyName", e.target.value)}
                     required
                   />
                 </fieldset>
-                <fieldset>
+                <fieldset className="sarjan-field">
+                  <label className="sarjan-field__label" htmlFor="acct-email">
+                    Email
+                  </label>
                   <input
+                    id="acct-email"
                     type="email"
-                    placeholder="Username or email address*"
+                    placeholder="Email address"
                     value={form.email}
                     readOnly
                   />
                 </fieldset>
               </div>
               <div className="cols mb_20">
-                <fieldset>
+                <fieldset className="sarjan-field">
+                  <label className="sarjan-field__label" htmlFor="acct-legal">
+                    Legal / proprietor name
+                  </label>
                   <input
+                    id="acct-legal"
                     type="text"
-                    placeholder="Legal name / proprietor (as on GST)"
+                    placeholder="As on GST registration"
                     value={form.ownerLegalName}
                     onChange={(e) =>
                       updateForm("ownerLegalName", e.target.value)
                     }
                   />
                 </fieldset>
-                <fieldset>
+                <fieldset className="sarjan-field">
+                  <label className="sarjan-field__label" htmlFor="acct-phone">
+                    Phone
+                  </label>
                   <input
+                    id="acct-phone"
                     type="text"
-                    placeholder="Phone*"
+                    placeholder="Mobile number"
                     value={form.phone}
                     onChange={(e) => updateForm("phone", e.target.value)}
                   />
                 </fieldset>
               </div>
-              <div className="mb_20">
+              <div className="mb_20 sarjan-profile-gst-block">
                 <GstVerificationFields
                   gst={form.gst}
                   savedGst={savedGst}
@@ -672,50 +760,64 @@ function AccountDashboardContent() {
                 stateRequired
                 cityRequired
               />
-              <div className="row mb_32">
-                <div className="col-md-4">
-                  <p className="text-secondary">Orders</p>
-                  <h5>{orders.length}</h5>
-                </div>
+            </div>
+
+            <div className="sarjan-account-panel mb_24">
+              <div className="sarjan-account-panel__head">
+                <h5 className="title mb_0">Quick actions</h5>
+                <p className="text-secondary text-caption-1 mb_0">
+                  Common tasks for your wholesale account.
+                </p>
               </div>
-              <div className="sarjan-account-quick-actions mb_32">
+              <div className="sarjan-account-quick-grid">
                 <a
                   href="/my-account-address"
-                  className={withBtnIcon(
-                    "tf-btn btn-white has-border radius-4",
-                  )}
+                  className="sarjan-account-quick-card"
                 >
-                  <TfButtonIcon icon="icon-map-pin">
-                    Add / Edit Address
-                  </TfButtonIcon>
+                  <span className="sarjan-account-quick-card__icon" aria-hidden>
+                    <i className="icon icon-map-pin" />
+                  </span>
+                  <span className="sarjan-account-quick-card__body">
+                    <strong>Address</strong>
+                    <span>Add or edit dispatch locations</span>
+                  </span>
+                  <i className="icon icon-arrRight sarjan-account-quick-card__arrow" />
                 </a>
                 <a
                   href="/my-account-orders"
-                  className={withBtnIcon(
-                    "tf-btn btn-white has-border radius-4",
-                  )}
+                  className="sarjan-account-quick-card"
                 >
-                  <TfButtonIcon icon="icon-ShoppingBagOpen">
-                    View Orders
-                  </TfButtonIcon>
+                  <span className="sarjan-account-quick-card__icon" aria-hidden>
+                    <i className="icon icon-ShoppingBagOpen" />
+                  </span>
+                  <span className="sarjan-account-quick-card__body">
+                    <strong>Orders</strong>
+                    <span>View history and order status</span>
+                  </span>
+                  <i className="icon icon-arrRight sarjan-account-quick-card__arrow" />
                 </a>
-                <a
-                  href="/order-tracking"
-                  className={withBtnIcon(
-                    "tf-btn btn-white has-border radius-4",
-                  )}
-                >
-                  <TfButtonIcon icon="icon-shipping">Track Order</TfButtonIcon>
+                <a href="/order-tracking" className="sarjan-account-quick-card">
+                  <span className="sarjan-account-quick-card__icon" aria-hidden>
+                    <i className="icon icon-shipping" />
+                  </span>
+                  <span className="sarjan-account-quick-card__body">
+                    <strong>Tracking</strong>
+                    <span>Follow dispatch and delivery</span>
+                  </span>
+                  <i className="icon icon-arrRight sarjan-account-quick-card__arrow" />
                 </a>
                 <a
                   href="/my-account-testimonials"
-                  className={withBtnIcon(
-                    "tf-btn btn-white has-border radius-4",
-                  )}
+                  className="sarjan-account-quick-card"
                 >
-                  <TfButtonIcon icon="icon-star">
-                    Share Testimonial
-                  </TfButtonIcon>
+                  <span className="sarjan-account-quick-card__icon" aria-hidden>
+                    <i className="icon icon-star" />
+                  </span>
+                  <span className="sarjan-account-quick-card__body">
+                    <strong>Testimonial</strong>
+                    <span>Share your experience with us</span>
+                  </span>
+                  <i className="icon icon-arrRight sarjan-account-quick-card__arrow" />
                 </a>
               </div>
             </div>
@@ -733,35 +835,37 @@ function AccountDashboardContent() {
                 {message}
               </p>
             ) : null}
-            <div className="button-submit sarjan-account-submit-actions">
-              <button
-                className={withBtnIcon("tf-btn btn-fill radius-4 w-100")}
-                type="submit"
-              >
-                <TfButtonIcon
-                  icon="icon-checkCircle"
-                  textClassName="text text-button"
+            <div className="sarjan-account-panel sarjan-account-panel--actions">
+              <div className="button-submit sarjan-account-submit-actions mb_0">
+                <button
+                  className={withBtnIcon("tf-btn btn-fill radius-4 w-100")}
+                  type="submit"
                 >
-                  Update Account
-                </TfButtonIcon>
-              </button>
-              <button
-                className={withBtnIcon(
-                  "tf-btn btn-white has-border radius-4 w-100",
-                )}
-                type="button"
-                onClick={() => {
-                  setPasswordModalOpen(true);
-                  setPasswordMessage("");
-                }}
-              >
-                <TfButtonIcon
-                  icon="icon-security"
-                  textClassName="text text-button"
+                  <TfButtonIcon
+                    icon="icon-checkCircle"
+                    textClassName="text text-button"
+                  >
+                    Update Account
+                  </TfButtonIcon>
+                </button>
+                <button
+                  className={withBtnIcon(
+                    "tf-btn btn-white has-border radius-4 w-100",
+                  )}
+                  type="button"
+                  onClick={() => {
+                    setPasswordModalOpen(true);
+                    setPasswordMessage("");
+                  }}
                 >
-                  Change Password
-                </TfButtonIcon>
-              </button>
+                  <TfButtonIcon
+                    icon="icon-security"
+                    textClassName="text text-button"
+                  >
+                    Change Password
+                  </TfButtonIcon>
+                </button>
+              </div>
             </div>
           </form>
           {passwordModalOpen ? (
@@ -942,10 +1046,15 @@ function AccountOrdersContent() {
     <>
       {placedOrderId ? (
         <div className="sarjan-account-order-placed-banner mb_20" role="status">
-          <p className="mb_0">
-            Order request <strong>{placedOrderId}</strong> submitted
-            successfully. Our team will review stock, MOQ, and dispatch details.
+          <p className="mb_6 fw-6">{B2B_ORDER_SUCCESS_TITLE}</p>
+          <p className="mb_6 text-caption-1">
+            Order <strong>{placedOrderId}</strong>
           </p>
+          {B2B_ORDER_SUCCESS_BODY.map((line) => (
+            <p key={line} className="text-caption-1 text-secondary mb_6">
+              {line}
+            </p>
+          ))}
           <a
             href={`/my-account-orders-details?orderId=${encodeURIComponent(placedOrderId)}`}
             className={withBtnIcon("tf-btn btn-fill radius-4 mt_12")}
@@ -954,6 +1063,7 @@ function AccountOrdersContent() {
           </a>
         </div>
       ) : null}
+      <ReviewRequestBanner />
       <div className="account-orders sarjan-account-orders">
         <div className="wrap-account-order sarjan-account-orders-table-wrap">
           <table className="sarjan-account-orders-table">
@@ -1118,20 +1228,25 @@ function OrderView({
                   {item.color} / {item.sizes.join(" / ")} / {item.setQuantity}{" "}
                   set
                 </p>
+                {item.slug ? (
+                  <OrderLineReviewCta
+                    orderId={order.id}
+                    productSlug={item.slug}
+                    orderStatus={order.status}
+                  />
+                ) : null}
               </div>
               <div className="text-button">{money(item.lineTotal)}</div>
             </div>
           ))}
         </div>
         <div className="sarjan-order-totals-card mt_24">
-          <div className="sarjan-order-totals-row">
-            <span>Subtotal</span>
-            <span>{money(priced.subtotal)}</span>
-          </div>
-          <div className="sarjan-order-totals-row">
-            <span>GST ({gstPercentLabel()}%)</span>
-            <span>{money(priced.tax)}</span>
-          </div>
+          {buildPricingDisplayLines(priced).map((line) => (
+            <div key={line.key} className="sarjan-order-totals-row">
+              <span>{line.label}</span>
+              <span>{formatInrPricingLine(line.amount)}</span>
+            </div>
+          ))}
           <div className="sarjan-order-totals-row sarjan-order-totals-row--total">
             <span>Total payable</span>
             <strong>{money(priced.total)}</strong>

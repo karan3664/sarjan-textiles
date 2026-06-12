@@ -18,11 +18,7 @@ import {
   pullSavedListsFromServer,
   resetSavedListsSession,
 } from "@/lib/saved-lists-sync";
-import {
-  hideBootstrapOffcanvas,
-  showBootstrapModal,
-  showBootstrapOffcanvas,
-} from "@/lib/bootstrap-modal";
+import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { multiLanguageEnabled } from "@/lib/commerce-config";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
@@ -85,6 +81,25 @@ export function ModaveHeader({
   const [accountHeaderNav, setAccountHeaderNav] = useState<
     PublicAccountNavItem[]
   >([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const openMobileMenu = () => setMobileMenuOpen(true);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    document.body.classList.add("offcanvas-open");
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.classList.remove("offcanvas-open");
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileMenuOpen]);
 
   function readHeaderLocale(): string {
     if (typeof document === "undefined") {
@@ -251,11 +266,10 @@ export function ModaveHeader({
                 <button
                   type="button"
                   className="mobile-menu sarjan-mobile-menu-trigger"
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#mobileMenu"
                   aria-controls="mobileMenu"
+                  aria-expanded={mobileMenuOpen}
                   aria-label="Open menu"
-                  onClick={() => showBootstrapOffcanvas("mobileMenu")}
+                  onClick={openMobileMenu}
                 >
                   <span
                     className="sarjan-mobile-menu-trigger__icon"
@@ -541,19 +555,33 @@ export function ModaveHeader({
           </div>
         </div>
       </header>
+      {mobileMenuOpen ? (
+        <div
+          className="offcanvas-backdrop fade show"
+          aria-hidden
+          onClick={closeMobileMenu}
+        />
+      ) : null}
       <div
-        className="offcanvas offcanvas-start canvas-mb sarjan-mobile-menu"
+        className={`offcanvas offcanvas-start canvas-mb sarjan-mobile-menu${mobileMenuOpen ? " show" : ""}`}
         id="mobileMenu"
         tabIndex={-1}
         aria-labelledby="mobileMenuLabel"
+        aria-hidden={!mobileMenuOpen}
+        aria-modal={mobileMenuOpen}
+        role="dialog"
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest("a[href]")) {
+            closeMobileMenu();
+          }
+        }}
       >
         <div className="mb-canvas-content sarjan-mobile-menu__canvas">
           <button
             type="button"
             className="icon-close-popup sarjan-mobile-menu__close"
-            data-bs-dismiss="offcanvas"
             aria-label="Close menu"
-            onClick={() => hideBootstrapOffcanvas("mobileMenu")}
+            onClick={closeMobileMenu}
           >
             <i className="icon icon-close" />
           </button>
@@ -571,7 +599,6 @@ export function ModaveHeader({
                         key={item.id}
                         href={item.href}
                         className="sarjan-mobile-menu__btn"
-                        data-bs-dismiss="offcanvas"
                       >
                         {item.label}
                       </Link>
@@ -596,7 +623,6 @@ export function ModaveHeader({
                         key={item.id}
                         href={item.href}
                         className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--primary"
-                        data-bs-dismiss="offcanvas"
                       >
                         {item.label}
                       </Link>
@@ -604,7 +630,6 @@ export function ModaveHeader({
                   <Link
                     href="/register"
                     className="sarjan-mobile-menu__btn sarjan-mobile-menu__btn--outline"
-                    data-bs-dismiss="offcanvas"
                   >
                     Register
                   </Link>
@@ -615,7 +640,6 @@ export function ModaveHeader({
                         key={item.id}
                         href={item.href}
                         className="sarjan-mobile-menu__btn"
-                        data-bs-dismiss="offcanvas"
                       >
                         {item.label}
                       </Link>
@@ -659,11 +683,7 @@ export function ModaveHeader({
                     <li
                       className={`nav-mb-item${isActive(item.href) ? " active" : ""}`}
                     >
-                      <a
-                        href={item.href}
-                        className="mb-menu-link"
-                        data-bs-dismiss="offcanvas"
-                      >
+                      <a href={item.href} className="mb-menu-link">
                         <span>{item.label}</span>
                       </a>
                     </li>
@@ -672,11 +692,7 @@ export function ModaveHeader({
                       <li
                         className={`nav-mb-item${categoriesMenuActive ? " active" : ""}`}
                       >
-                        <Link
-                          href="/categories"
-                          className="mb-menu-link"
-                          data-bs-dismiss="offcanvas"
-                        >
+                        <Link href="/categories" className="mb-menu-link">
                           <span>Categories</span>
                         </Link>
                       </li>
@@ -695,7 +711,6 @@ export function ModaveHeader({
                       <a
                         href={`/categories/${hub.slug}`}
                         className="mb-menu-link"
-                        data-bs-dismiss="offcanvas"
                       >
                         <span>{hub.title}</span>
                       </a>
@@ -706,7 +721,6 @@ export function ModaveHeader({
                       <a
                         href={catalogCategoryHref(cat.slug)}
                         className="mb-menu-link"
-                        data-bs-dismiss="offcanvas"
                       >
                         <span>
                           {cat.name}{" "}
@@ -726,7 +740,6 @@ export function ModaveHeader({
                 <a
                   href="#wishlist"
                   className="site-nav-icon"
-                  data-bs-dismiss="offcanvas"
                   data-bs-toggle="modal"
                 >
                   <i className="icon icon-heart" />
@@ -735,7 +748,6 @@ export function ModaveHeader({
                 <a
                   href="#shoppingCart"
                   className="site-nav-icon"
-                  data-bs-dismiss="offcanvas"
                   data-bs-toggle="modal"
                 >
                   <i className="icon icon-ShoppingBagOpen" />

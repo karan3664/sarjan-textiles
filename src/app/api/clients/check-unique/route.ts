@@ -5,21 +5,30 @@ import {
 } from "@/lib/client-duplicate-check";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { readLocalDb } from "@/lib/local-db";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   try {
+    const limit = await rateLimit(
+      rateLimitKey(request, "check-unique"),
+      10,
+      60_000,
+    );
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
+
     const body = await request.json();
     const excludeClientId =
       body.excludeClientId != null
         ? String(body.excludeClientId).trim()
         : undefined;
 
+    const clientSession = await verifyClientToken(bearerToken(request));
+    const adminSession = await verifyAdminToken(
+      (await cookies()).get("sarjan-admin-session")?.value,
+    );
+
     if (excludeClientId) {
-      const clientSession = await verifyClientToken(bearerToken(request));
-      const adminSession = await verifyAdminToken(
-        (await cookies()).get("sarjan-admin-session")?.value,
-      );
       const selfUpdate = clientSession?.clientId === excludeClientId;
       const adminOk =
         adminSession &&
@@ -53,9 +62,22 @@ export async function POST(request: Request) {
       fields,
       excludeClientId,
     );
+    const privileged = Boolean(
+      excludeClientId || clientSession || adminSession,
+    );
+
     if (duplicate) {
+      if (privileged) {
+        return Response.json(
+          { ok: false, field: duplicate.field, error: duplicate.message },
+          { status: 409 },
+        );
+      }
       return Response.json(
-        { ok: false, field: duplicate.field, error: duplicate.message },
+        {
+          ok: false,
+          error: "One or more values are already registered.",
+        },
         { status: 409 },
       );
     }

@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { getAdminRouteSession } from "@/lib/admin-route-session";
+import { requireReviewModeratorSession } from "@/lib/require-admin-session";
 import { syncProductReviewAggregates } from "@/lib/review-aggregates";
 import { getReviewById, setReviewStatus } from "@/lib/reviews-store";
 
@@ -9,10 +9,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getAdminRouteSession(request);
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireReviewModeratorSession(request);
+  if (session instanceof Response) return session;
   const { id } = await params;
   const current = await getReviewById(id);
   if (!current) {

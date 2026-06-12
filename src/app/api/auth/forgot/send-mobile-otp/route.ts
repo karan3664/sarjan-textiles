@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const phone = normalizeMobilePhone(parsed.session.phone);
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "forgot-mobile-otp", phone),
       3,
       60_000,

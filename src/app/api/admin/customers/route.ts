@@ -1,5 +1,7 @@
+import { getCatalogProducts } from "@/lib/catalog";
 import { getAdminCustomers } from "@/lib/admin-customers";
 import { orderStatuses } from "@/lib/admin-orders";
+import { buildPartialApprovalItems } from "@/lib/order-stock-review";
 import { appendAuditLog } from "@/lib/cms-store";
 import { sendClientAccountApprovedEmail } from "@/lib/client-account-emails";
 import {
@@ -7,6 +9,7 @@ import {
   deleteClientIfAllowed,
   getClient,
   updateClientStatus,
+  updateOrderAdmin,
   updateOrderStatus,
   type LocalClient,
 } from "@/lib/local-db";
@@ -122,14 +125,57 @@ export async function PATCH(request: Request) {
     }
 
     if (body.type === "order") {
-      if (!body.id || !orderStatuses.includes(body.status))
+      if (!body.id) {
+        return Response.json({ error: "Order id required" }, { status: 400 });
+      }
+
+      const before = (await getAdminCustomers())
+        .flatMap((customer) => customer.orders)
+        .find((order) => order.id === body.id);
+      if (!before) {
+        return Response.json({ error: "Order not found" }, { status: 404 });
+      }
+
+      if (body.action === "partial_approve") {
+        const slugs = [...new Set(before.items.map((item) => item.slug))];
+        const catalog = await getCatalogProducts({
+          ids: slugs,
+          clientId: before.clientId,
+          limit: Math.max(slugs.length, 1),
+        });
+        const items = buildPartialApprovalItems(before, catalog.items);
+        const updated = await updateOrderAdmin(body.id, {
+          items,
+          status: "Partially Approved",
+        });
+        if (before.status !== updated.status) {
+          after(() =>
+            sendOrderStatusEmail(updated).catch((error) =>
+              console.error("Order status email failed", error),
+            ),
+          );
+        }
+        const customers = await getAdminCustomers();
+        const updatedOrder = customers
+          .flatMap((customer) => customer.orders)
+          .find((order) => order.id === body.id);
+        appendAuditLog({
+          actor: session.email,
+          role: session.role,
+          action: "partial_approve_customer_order",
+          entity: "order",
+          entityId: body.id,
+          after: updatedOrder,
+          note: "Partially Approved",
+        }).catch(() => null);
+        return Response.json({ customers });
+      }
+
+      if (!body.status || !orderStatuses.includes(body.status))
         return Response.json(
           { error: "Valid order id and status required" },
           { status: 400 },
         );
-      const before = (await getAdminCustomers())
-        .flatMap((customer) => customer.orders)
-        .find((order) => order.id === body.id);
       const updated = await updateOrderStatus(body.id, body.status, body.note);
       if (before?.status !== updated.status) {
         after(() =>

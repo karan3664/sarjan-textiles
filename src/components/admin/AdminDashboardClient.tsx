@@ -59,7 +59,8 @@ function statusClass(status: string, col: StatusCol) {
   if (col === "approval") {
     if (n.includes("pending approval")) return "type-pending";
     if (n.includes("rejected")) return "type-pending";
-    if (n === "approved") return "type-completed";
+    if (n === "approved" || n.includes("partially approved"))
+      return "type-completed";
     return "type-pending";
   }
   if (col === "payment") {

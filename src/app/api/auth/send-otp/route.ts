@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return Response.json({ error: "Valid email required" }, { status: 400 });
     }
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "email-otp", email),
       3,
       60_000,

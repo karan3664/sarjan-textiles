@@ -1,10 +1,16 @@
 import { Readable } from "stream";
-import { contentTypeForProductFile, getProductFileStream } from "@/lib/ai-product-studio";
+import { requireAdminRouteSession } from "@/lib/require-admin-session";
+import {
+  contentTypeForProductFile,
+  getProductFileStream,
+} from "@/lib/ai-product-studio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const session = await requireAdminRouteSession(request);
+  if (session instanceof Response) return session;
   const url = new URL(request.url);
   const relativePath = url.searchParams.get("path");
 

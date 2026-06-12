@@ -11,10 +11,11 @@ import {
   createClientToken,
   verifyClientToken,
 } from "@/lib/client-token";
+import { isNativeClientRequest } from "@/lib/native-client-detect";
 
 const SLIDING_REFRESH_WINDOW_MS = 1000 * 60 * 60 * 24 * 7;
 
-/** Restore storefront session from HttpOnly cookie (fixes login redirect loops on mobile). */
+/** Restore storefront session from HttpOnly cookie. */
 export async function GET(request: Request) {
   const session = await verifyClientToken(bearerToken(request));
   if (!session) {
@@ -42,13 +43,18 @@ export async function GET(request: Request) {
     ? await createClientToken({
         clientId: session.clientId,
         email: session.email,
+        sessionVersion: client.sessionVersion,
       })
     : existing;
 
-  const response = NextResponse.json({
+  const body: { client: ReturnType<typeof publicClient>; token?: string } = {
     client: publicClient(client),
-    token,
-  });
+  };
+  if (isNativeClientRequest(request) && token) {
+    body.token = token;
+  }
+
+  const response = NextResponse.json(body);
 
   if (shouldRefresh && token) {
     setClientSessionCookie(response, token);

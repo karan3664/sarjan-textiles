@@ -1,17 +1,36 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import type { CmsTestimonial } from "@/lib/cms-store";
+import { requireAdminRouteSession } from "@/lib/require-admin-session";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/testimonials",
+  });
+  if (session instanceof Response) return session;
   const cms = await getCmsSnapshot();
   return Response.json({ testimonials: cms.testimonials });
 }
 
 export async function PATCH(request: Request) {
-  const body = (await request.json()) as { id?: string; status?: CmsTestimonial["status"] };
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/testimonials",
+  });
+  if (session instanceof Response) return session;
+  const body = (await request.json()) as {
+    id?: string;
+    status?: CmsTestimonial["status"];
+  };
   const cms = await getCmsSnapshot();
 
-  if (!body.id || !body.status || !["pending", "approved", "rejected"].includes(body.status)) {
-    return Response.json({ error: "Valid id and status required" }, { status: 400 });
+  if (
+    !body.id ||
+    !body.status ||
+    !["pending", "approved", "rejected"].includes(body.status)
+  ) {
+    return Response.json(
+      { error: "Valid id and status required" },
+      { status: 400 },
+    );
   }
 
   const status = body.status as CmsTestimonial["status"];

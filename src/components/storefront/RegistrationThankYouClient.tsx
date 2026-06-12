@@ -8,7 +8,9 @@ export function RegistrationThankYouClient() {
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    setSignedIn(Boolean(localStorage.getItem("sarjan-client-token")?.trim()));
+    fetch("/api/auth/session", { credentials: "include" })
+      .then((res) => setSignedIn(res.ok))
+      .catch(() => setSignedIn(false));
   }, []);
 
   return (

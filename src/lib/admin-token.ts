@@ -10,6 +10,7 @@ export type AdminSession = {
   email: string;
   name: string;
   role: AdminRole;
+  sv?: number;
   iat: number;
   exp: number;
 };
@@ -75,6 +76,8 @@ export const roleAccess: Record<AdminRole, string[]> = {
     "/admin/custom-pages",
     "/admin/mobile",
     "/admin/mobile-branding",
+    "/admin/promotions",
+    "/admin/analytics",
     "/admin/bulk-images",
     "/admin/products-list",
     "/admin/products-create",
@@ -98,6 +101,10 @@ export const roleAccess: Record<AdminRole, string[]> = {
     "/api/admin/cms",
     "/api/admin/cms/translate-all",
     "/api/admin/mobile-branding/analytics",
+    "/api/admin/promotions",
+    "/api/admin/analytics/installs",
+    "/api/admin/analytics/users",
+    "/api/admin/crashes",
     "/api/admin/uploads",
     "/api/admin/testimonials",
     "/api/admin/inquiries",
@@ -169,10 +176,11 @@ export const roleModules = [
 ] as const satisfies Array<{ key: string; label: string; roles: AdminRole[] }>;
 
 function secret() {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    "sarjan-demo-admin-secret-change-before-production"
-  );
+  const value = process.env.ADMIN_SESSION_SECRET?.trim();
+  if (!value && process.env.NODE_ENV === "production") {
+    throw new Error("ADMIN_SESSION_SECRET is required in production");
+  }
+  return value || "sarjan-demo-admin-secret-change-before-production";
 }
 
 function base64UrlEncode(value: string) {
@@ -216,9 +224,12 @@ async function hmac(value: string) {
 }
 
 export async function createAdminToken(session: Omit<AdminSession, "exp">) {
+  const { getAdminSessionVersion } = await import("@/lib/session-version");
   const now = Date.now();
+  const sv = session.sv ?? (await getAdminSessionVersion(session.email));
   const payload: AdminSession = {
     ...session,
+    sv,
     iat: session.iat ?? now,
     exp: now + 1000 * 60 * 60 * 8,
   };
@@ -246,6 +257,16 @@ export async function verifyAdminToken(
       Date.now() > payload.exp
     )
       return null;
+    const { mergedConfiguredAdmins } =
+      await import("@/lib/admin-profile-override");
+    const admins = await mergedConfiguredAdmins(configuredAdmins());
+    const admin = admins.find(
+      (item) => item.email.toLowerCase() === payload.email.toLowerCase(),
+    );
+    if (!admin || admin.role !== payload.role) return null;
+    const { getAdminSessionVersion } = await import("@/lib/session-version");
+    const expectedSv = await getAdminSessionVersion(payload.email);
+    if ((payload.sv ?? 0) !== expectedSv) return null;
     return payload;
   } catch {
     return null;
@@ -295,6 +316,19 @@ export function configuredAdmins(): ConfiguredAdmin[] {
   const password =
     rawPass === undefined ? "admin123" : rawPass.trim() || "admin123";
   const rawHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+
+  if (process.env.NODE_ENV === "production" && !raw) {
+    const hasHash = Boolean(rawHash);
+    const hasStrongPassword =
+      Boolean(rawPass?.trim()) &&
+      rawPass!.trim() !== "admin123" &&
+      rawPass!.trim().length >= 12;
+    if (!hasHash && !hasStrongPassword) {
+      throw new Error(
+        "Set ADMIN_PASSWORD_HASH or a strong ADMIN_PASSWORD in production",
+      );
+    }
+  }
 
   return [
     {

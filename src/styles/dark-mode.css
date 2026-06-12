@@ -1352,6 +1352,136 @@ html[data-theme="dark"]
   color: var(--sarjan-text) !important;
 }
 
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .my-account-content,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-sidebar-card {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-dashboard__header,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-panel__head,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-sidebar-card
+  .account-avatar {
+  border-bottom-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-stat-card,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-panel {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-panel--profile {
+  background: linear-gradient(
+    135deg,
+    rgba(196, 90, 106, 0.1) 0%,
+    var(--sarjan-bg-muted) 52%
+  ) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-stat-card__value,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-field__label,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-dashboard__title {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-quick-card {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-quick-card:hover {
+  border-color: var(--primary, #c45a6a) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-account-quick-card__body
+  strong {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-account-page
+  .sarjan-field
+  input[readonly] {
+  background-color: var(--sarjan-bg) !important;
+  color: var(--sarjan-muted) !important;
+}
+
 /* Homepage sections */
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
@@ -3214,6 +3344,38 @@ html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
   )
+  .sarjan-address-form__close.icon-close,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-address-form
+  button.sarjan-address-form__close.icon-close {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-address-form__close.icon-close::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-address-form
+  button.sarjan-address-form__close.icon-close::before {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-saved-address-card__badge,
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
@@ -4130,6 +4292,32 @@ html[data-theme="dark"]
   hr {
   border-color: var(--sarjan-border) !important;
   opacity: 1;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-storefront-empty {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-storefront-empty__title {
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-products-page
+  .sarjan-products-sort-label {
+  color: var(--sarjan-text) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

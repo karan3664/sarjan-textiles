@@ -1,4 +1,7 @@
 import type { CmsHome, CmsSiteSettings } from "@/lib/cms-store";
+import { gstRateOnSale } from "@/lib/commerce-config";
+import { resolvePlatformFeeConfig } from "@/lib/platform-fee-config";
+import { resolveShippingConfig } from "@/lib/shipping-config";
 import {
   brandingCampaignsForAppIconSync,
   flattenMobileBrandingForAdmin,
@@ -208,12 +211,19 @@ export type MobileAppConfigStored = {
   localizedExtras?: MobileLocalizedExtras;
 };
 
+export type MobileCommercePricingConfig = {
+  gstRate: number;
+  platformFee: ReturnType<typeof resolvePlatformFeeConfig>;
+  shipping: ReturnType<typeof resolveShippingConfig>;
+};
+
 export type MobileAppPublicConfig = MobileAppConfig & {
   brandName: string;
   logoUrl?: string;
   marqueeLines: string[];
   highlights: Array<{ value: string; label: string }>;
   services: Array<{ icon?: string; title: string; body: string }>;
+  commerce: MobileCommercePricingConfig;
   updatedAt: string;
   locale: AppLocale;
   activeBranding?: MobileBrandingCampaign | null;
@@ -1082,6 +1092,11 @@ export function buildMobileConfigResponse(
       title: pickLocalized(item.title, locale),
       body: pickLocalized(item.body, locale),
     })),
+    commerce: {
+      gstRate: gstRateOnSale(),
+      platformFee: resolvePlatformFeeConfig(site),
+      shipping: resolveShippingConfig(site),
+    },
     updatedAt: new Date().toISOString(),
     locale,
   };

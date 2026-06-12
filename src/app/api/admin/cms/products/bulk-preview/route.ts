@@ -1,6 +1,10 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { Readable } from "node:stream";
 import type { Product } from "@/data/mock";
 import { PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/product-placeholder-image";
+import { requireAdminRouteSession } from "@/lib/require-admin-session";
+
+const maxBulkBytes = 10 * 1024 * 1024;
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -116,33 +120,84 @@ function validProduct(product: Product) {
   return Boolean(product.name && product.sku && product.slug);
 }
 
+function parseCsvRows(buffer: Buffer): SheetRow[] {
+  const lines = buffer
+    .toString("utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (!lines.length) return [];
+  const headers = lines[0].split(",").map((header) => header.trim());
+  return lines.slice(1).map((line) => {
+    const values = line.split(",");
+    const row: SheetRow = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index]?.trim() ?? "";
+    });
+    return row;
+  });
+}
+
+async function parseWorkbookRows(buffer: Buffer): Promise<SheetRow[]> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.read(Readable.from(buffer));
+  const sheet = workbook.worksheets[0];
+  if (!sheet) return [];
+
+  const headers: string[] = [];
+  const rows: SheetRow[] = [];
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      row.eachCell((cell, colNumber) => {
+        headers[colNumber] = String(cell.value ?? "").trim();
+      });
+      return;
+    }
+    const record: SheetRow = {};
+    row.eachCell((cell, colNumber) => {
+      const key = headers[colNumber];
+      if (key) record[key] = cell.value as SheetRow[string];
+    });
+    rows.push(record);
+  });
+  return rows;
+}
+
 export async function POST(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/cms",
+  });
+  if (session instanceof Response) return session;
+
   const formData = await request.formData();
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
     return Response.json({ error: "Excel file required" }, { status: 400 });
   }
+  if (file.size > maxBulkBytes) {
+    return Response.json(
+      { error: "Spreadsheet must be under 10 MB" },
+      { status: 400 },
+    );
+  }
 
   const extension = file.name.split(".").pop()?.toLowerCase();
-  if (!extension || !["xlsx", "xls", "csv"].includes(extension)) {
+  if (!extension || !["xlsx", "csv"].includes(extension)) {
     return Response.json(
-      { error: "Only xlsx, xls, or csv files allowed" },
+      { error: "Only xlsx or csv files allowed" },
       { status: 400 },
     );
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const workbook = XLSX.read(buffer, { type: "buffer" });
-  const sheetName = workbook.SheetNames[0];
-
-  if (!sheetName) {
-    return Response.json({ error: "No worksheet found" }, { status: 400 });
+  const rows =
+    extension === "csv"
+      ? parseCsvRows(buffer)
+      : await parseWorkbookRows(buffer);
+  if (!rows.length) {
+    return Response.json({ error: "No worksheet rows found" }, { status: 400 });
   }
-
-  const rows = XLSX.utils.sheet_to_json<SheetRow>(workbook.Sheets[sheetName], {
-    defval: "",
-  });
   const parsedProducts = rows.map(productFromRow);
   const products = parsedProducts.filter(validProduct);
   const invalidRows = parsedProducts.length - products.length;

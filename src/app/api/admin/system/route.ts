@@ -1,7 +1,12 @@
 import { databaseMode } from "@/lib/database-status";
 import { isPostgresEnabled } from "@/lib/postgres";
+import { requireAdminRouteSession } from "@/lib/require-admin-session";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    roles: ["super_admin"],
+  });
+  if (session instanceof Response) return session;
   const smtpMissing = [
     "SMTP_HOST",
     "SMTP_USER",

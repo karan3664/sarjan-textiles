@@ -1,10 +1,8 @@
-import { cookies } from "next/headers";
 import {
   getCmsSnapshot,
   saveCmsSnapshot,
   appendAuditLog,
 } from "@/lib/cms-store";
-import { verifyAdminToken } from "@/lib/admin-token";
 import {
   localizeMobileAppOnSave,
   syncMobileAppExtrasFromHome,
@@ -26,19 +24,27 @@ import {
   asStoredProductFilters,
   asStoredSeoPages,
   adminCmsPutResponse,
+  cmsSnapshotForRole,
 } from "@/lib/cms-admin-view";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 
 export const maxDuration = 60;
 
-export async function GET() {
-  return Response.json(await getCmsSnapshot());
+export async function GET(request: Request) {
+  const session = await getAdminRouteSession(request);
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const snapshot = await getCmsSnapshot();
+  return Response.json(cmsSnapshotForRole(snapshot, session.role));
 }
 
 export async function PUT(request: Request) {
   try {
-    const session = await verifyAdminToken(
-      (await cookies()).get("sarjan-admin-session")?.value,
-    );
+    const session = await getAdminRouteSession(request);
+    if (!session) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await request.json();
     const before = await getCmsSnapshot();
     const mergedHome = body.home
@@ -107,16 +113,14 @@ export async function PUT(request: Request) {
 
     const bodyKeys = Object.keys(body);
     const next = await saveCmsSnapshot(body, before, { light: true });
-    if (session) {
-      void appendAuditLog({
-        actor: session.email,
-        role: session.role,
-        action: "update_cms",
-        entity: "cms_snapshot",
-        entityId: "main",
-        note: bodyKeys.join(", "),
-      }).catch(() => null);
-    }
+    void appendAuditLog({
+      actor: session.email,
+      role: session.role,
+      action: "update_cms",
+      entity: "cms_snapshot",
+      entityId: "main",
+      note: bodyKeys.join(", "),
+    }).catch(() => null);
 
     return Response.json(adminCmsPutResponse(next, bodyKeys));
   } catch (error) {

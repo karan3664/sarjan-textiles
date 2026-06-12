@@ -11,12 +11,15 @@ import {
   buildProductImageBySlug,
   resolveOrderItemImage,
 } from "@/lib/product-image-resolve";
+import { summarizeOrderStockLines } from "@/lib/order-stock-review";
+import type { LocalOrder } from "@/lib/local-db";
 
 type Mode = "orders" | "dispatch" | "payments";
 
 const orderStatusOptions = [
   "Pending approval",
   "Approved",
+  "Partially Approved",
   "Rejected",
   "In Production",
   "Packed",
@@ -121,11 +124,8 @@ async function downloadXlsx(
   filename: string,
   rows: Array<Record<string, string | number | undefined>>,
 ) {
-  const XLSX = await import("xlsx");
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-  XLSX.writeFile(workbook, filename);
+  const { downloadExcelJsonSheet } = await import("@/lib/excel-export-client");
+  await downloadExcelJsonSheet(filename, "Report", rows);
 }
 
 function printPdf(
@@ -957,6 +957,102 @@ export function AdminOrderManagementClient({
                       }
                     />
                   </fieldset>
+                  {products.length ? (
+                    <div className="sarjan-order-stock-review mb_20">
+                      <div className="body-title mb-10">Stock review</div>
+                      <div className="wg-table">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Product</th>
+                              <th>Requested</th>
+                              <th>Available</th>
+                              <th>Shortfall</th>
+                              <th>Approved sets</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {summarizeOrderStockLines(
+                              draft as unknown as LocalOrder,
+                              products,
+                            ).map((line) => {
+                              const item = draft.items.find(
+                                (row) => row.slug === line.slug,
+                              );
+                              const approvedSets =
+                                item?.approvedSetQuantity ?? item?.setQuantity;
+                              return (
+                                <tr key={line.slug}>
+                                  <td>{line.name}</td>
+                                  <td>{line.requestedPieces} pcs</td>
+                                  <td>{line.availablePieces} pcs</td>
+                                  <td>
+                                    {line.shortfallPieces > 0
+                                      ? `${line.shortfallPieces} pcs`
+                                      : "—"}
+                                  </td>
+                                  <td>{approvedSets ?? "—"}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="d-flex gap-10 flex-wrap mt_16">
+                        <button
+                          type="button"
+                          className="tf-button style-1"
+                          disabled={selectedSaving}
+                          onClick={() =>
+                            setDraft(draft.id, { status: "Approved" })
+                          }
+                        >
+                          Approve full order
+                        </button>
+                        <button
+                          type="button"
+                          className="tf-button style-2"
+                          disabled={selectedSaving}
+                          onClick={() => {
+                            const stockLines = summarizeOrderStockLines(
+                              draft as unknown as LocalOrder,
+                              products,
+                            );
+                            const nextItems = draft.items.map((item) => {
+                              const line = stockLines.find(
+                                (row) => row.slug === item.slug,
+                              );
+                              const perSet = Math.max(1, item.piecesPerSet);
+                              const maxSets = line
+                                ? Math.floor(line.availablePieces / perSet)
+                                : item.setQuantity;
+                              const approvedSetQuantity = Math.min(
+                                item.setQuantity,
+                                Math.max(0, maxSets),
+                              );
+                              return { ...item, approvedSetQuantity };
+                            });
+                            setDraft(draft.id, {
+                              items: nextItems,
+                              status: "Partially Approved",
+                            });
+                          }}
+                        >
+                          Partially approve (available stock)
+                        </button>
+                        <button
+                          type="button"
+                          className="tf-button style-3"
+                          disabled={selectedSaving}
+                          onClick={() =>
+                            setDraft(draft.id, { status: "Rejected" })
+                          }
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </>
               ) : null}
 
@@ -1200,7 +1296,7 @@ export function AdminOrderManagementClient({
               ) : null}
 
               <div className="sarjan-order-items">
-                <div className="flex flex-wrap justify-between gap14 items-center mb-16">
+                <div className="sarjan-order-items-head flex flex-wrap justify-between gap14 items-center mb-16">
                   <h6>Ordered Products</h6>
                   {mode === "orders" && products.length ? (
                     <div className="tf-select">
@@ -1224,7 +1320,7 @@ export function AdminOrderManagementClient({
                   ) : null}
                 </div>
                 {draft.items.length ? (
-                  <div className="sarjan-product-bulk-table">
+                  <div className="sarjan-product-bulk-table sarjan-order-items-table">
                     <table>
                       <thead>
                         <tr>

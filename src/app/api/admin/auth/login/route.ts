@@ -2,6 +2,7 @@ import { authenticateAdmin } from "@/lib/admin-auth";
 import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
 import { NextResponse } from "next/server";
 import { createAdminToken } from "@/lib/admin-token";
+import { isNativeAdminRequest } from "@/lib/native-client-detect";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
       .trim()
       .toLowerCase();
     const password = String(body.password ?? "").trim();
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "admin-login", email),
       6,
       60_000,
@@ -30,11 +31,16 @@ export async function POST(request: Request) {
       role: admin.role,
       iat: Date.now(),
     });
-    const response = NextResponse.json({
+    const payload: {
+      admin: { email: string; name: string; role: string };
+      token?: string;
+    } = {
       admin: { email: admin.email, name: admin.name, role: admin.role },
-      /** Mobile admin app — use as Bearer token or WebView session cookie value. */
-      token,
-    });
+    };
+    if (isNativeAdminRequest(request)) {
+      payload.token = token;
+    }
+    const response = NextResponse.json(payload);
     setAdminSessionCookie(response, token);
     return response;
   } catch {

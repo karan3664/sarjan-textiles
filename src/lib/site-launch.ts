@@ -25,6 +25,19 @@ export function isSiteLaunchPending(now = Date.now()): boolean {
   return ms !== null && now < ms;
 }
 
+/** Public HTML pages that must redirect to /launch while the gate is active. */
+export function shouldGateToLaunchPage(
+  pathname: string,
+  now = Date.now(),
+): boolean {
+  return isSiteLaunchPending(now) && !isLaunchBypassPath(pathname);
+}
+
+export const LAUNCH_GATE_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+  Pragma: "no-cache",
+} as const;
+
 /** Routes that stay reachable while the public site is gated. */
 export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname === "/launch") return true;
@@ -33,6 +46,7 @@ export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname.startsWith("/api/admin")) return true;
   if (pathname.startsWith("/api/cron")) return true;
   if (pathname === "/api/health") return true;
+  if (pathname === "/api/newsletter") return true;
   if (pathname === "/api/download/apk") return true;
   if (pathname === "/api/version") return true;
   if (pathname === "/download") return true;

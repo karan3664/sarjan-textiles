@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "forgot-start", `${email}:${phone}`),
       5,
       60_000,

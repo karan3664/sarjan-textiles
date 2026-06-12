@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import { useShowProductSoldOut } from "./PriceGate";
+import { B2B_ORDER_EXCEEDS_STOCK_NOTICE } from "@/lib/b2b-order-messages";
+import { PRODUCT_UNAVAILABLE_MESSAGE } from "@/lib/product-purchase-eligibility";
+import { cartMaxSetQuantity } from "@/lib/product-availability";
+import { useClientHasB2BToken, useShowProductUnavailable } from "./PriceGate";
 import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
@@ -86,7 +89,12 @@ export function ProductPurchasePanel({
   const activeColor = colors[colorIndex] ?? colors[0];
   const sizeRun = productSizeRun(product);
   const setPrice = productSetPrice(product, activeColor, sizeRun);
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
+  const hasB2BSession = useClientHasB2BToken();
+  const [setQuantity, setSetQuantity] = useState(1);
+  const availableSets = cartMaxSetQuantity(product, sizeRun, true);
+  const exceedsStock =
+    hasB2BSession && !unavailable && setQuantity > availableSets;
   const wishlistActive = wishlistActiveProp ?? localWishlisted;
 
   useEffect(() => {
@@ -94,6 +102,33 @@ export function ProductPurchasePanel({
       setInternalIndex(0);
     }
   }, [product.slug, controlledIndex]);
+
+  useEffect(() => {
+    const readQty = () => {
+      const input = document.querySelector<HTMLInputElement>(
+        `.tf-product-info-choose-option .quantity-product[name="number"]`,
+      );
+      if (!input) return;
+      const next = Math.max(1, Number(input.value.replace(/\D/g, "")) || 1);
+      setSetQuantity(next);
+    };
+    const onClick = (event: Event) => {
+      if (
+        (event.target as HTMLElement).closest(
+          ".tf-product-info-quantity .btn-increase, .tf-product-info-quantity .btn-decrease",
+        )
+      ) {
+        window.setTimeout(readQty, 0);
+      }
+    };
+    readQty();
+    document.addEventListener("input", readQty);
+    document.addEventListener("click", onClick);
+    return () => {
+      document.removeEventListener("input", readQty);
+      document.removeEventListener("click", onClick);
+    };
+  }, [product.slug]);
 
   useEffect(() => {
     const sync = () => setLocalWishlisted(isWishlisted(product.slug));
@@ -122,30 +157,53 @@ export function ProductPurchasePanel({
             type="text"
             name="number"
             defaultValue="1"
+            onChange={(event) => {
+              const next = Math.max(
+                1,
+                Number(event.currentTarget.value.replace(/\D/g, "")) || 1,
+              );
+              setSetQuantity(next);
+            }}
           />
           <span className="btn-quantity btn-increase">+</span>
         </div>
         <div className="text-caption-1 text-secondary mt_8">
           1 set = {sizeRun.join(" / ")}
         </div>
+        {exceedsStock ? (
+          <div
+            className="sarjan-pdp-exceeds-stock-notice text-caption-1 text-secondary mt_8"
+            role="status"
+          >
+            <p className="mb_4">
+              Available: {availableSets} set{availableSets === 1 ? "" : "s"}.
+              Requested: {setQuantity} set{setQuantity === 1 ? "" : "s"}.
+            </p>
+            <ul className="mb_0">
+              {B2B_ORDER_EXCEEDS_STOCK_NOTICE.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
       <div className="tf-product-info-by-btn mb_10 sarjan-product-action-row">
         <div className="sarjan-product-action-buttons">
-          {soldOut ? (
+          {unavailable ? (
             <>
               <span
                 className="btn-style-2 flex-grow-1 text-btn-uppercase fw-6"
                 style={{ opacity: 0.55, cursor: "not-allowed" }}
                 aria-disabled="true"
               >
-                Out of stock
+                {PRODUCT_UNAVAILABLE_MESSAGE}
               </span>
               <span
                 className="btn-style-3 flex-grow-1 text-btn-uppercase"
                 style={{ opacity: 0.55, cursor: "not-allowed" }}
                 aria-disabled="true"
               >
-                Out of stock
+                {PRODUCT_UNAVAILABLE_MESSAGE}
               </span>
             </>
           ) : (

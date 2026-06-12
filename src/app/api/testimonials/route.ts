@@ -1,8 +1,10 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import type { CmsTestimonial } from "@/lib/cms-store";
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import { resolveTestimonials } from "@/lib/content-localize";
 import { formatTestimonialPrice } from "@/lib/testimonial-price";
+import { sanitizeSameOriginAssetUrl } from "@/lib/media-url-allowlist";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 import {
   sanitizeUserText,
@@ -39,6 +41,13 @@ export async function POST(request: Request) {
   const auth = await requireApprovedClientRequest(request);
   if (auth instanceof Response) return auth;
   const { client } = auth;
+
+  const limit = await rateLimit(
+    rateLimitKey(request, "testimonials", client.email),
+    3,
+    24 * 60 * 60_000,
+  );
+  if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
   const body = (await request.json()) as Partial<CmsTestimonial>;
   const cms = await getCmsSnapshot();
@@ -79,8 +88,14 @@ export async function POST(request: Request) {
     product: product || "Sarjan Textiles",
     price: formatTestimonialPrice(body.price ?? ""),
     rating,
-    image: body.image ?? "/sarjan-assets/banner-textiles-studio.webp",
-    avatar: body.avatar ?? defaultAvatar,
+    image: sanitizeSameOriginAssetUrl(
+      String(body.image ?? ""),
+      "/sarjan-assets/banner-textiles-studio.webp",
+    ),
+    avatar: sanitizeSameOriginAssetUrl(
+      String(body.avatar ?? ""),
+      defaultAvatar,
+    ),
     status: "pending",
     submittedAt: new Date().toISOString(),
   };

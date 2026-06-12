@@ -6,6 +6,7 @@ import { assertClientAvatarContentAllowed } from "@/lib/client-avatar-moderation
 import { clientStatusAuthError } from "@/lib/client-approved-session";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { getClient, publicClient, updateClient } from "@/lib/local-db";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -97,6 +98,13 @@ export async function POST(
   const { id } = await params;
   const auth = await authorizeAvatarRequest(request, id);
   if ("error" in auth && auth.error) return auth.error;
+
+  const limit = await rateLimit(
+    rateLimitKey(request, "avatar-upload", id),
+    5,
+    60 * 60_000,
+  );
+  if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
   const formData = await request.formData();
   const file = formData.get("file");

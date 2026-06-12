@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminLoginPath } from "@/lib/admin-login-path";
 import { clearAdminSessionCookie } from "@/lib/admin-session-cookie";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
+import { bumpAdminSessionVersion } from "@/lib/session-version";
+
+async function revokeAdminSession(request: Request) {
+  const session = await getAdminRouteSession(request);
+  if (session?.email) {
+    await bumpAdminSessionVersion(session.email).catch(() => null);
+  }
+}
 
 function logoutRedirect(request: NextRequest) {
   const loginUrl = redirectAbsoluteUrl(request, getAdminLoginPath());
@@ -12,11 +21,13 @@ function logoutRedirect(request: NextRequest) {
 
 /** Full-page logout — browser navigation reliably clears the HttpOnly cookie. */
 export async function GET(request: NextRequest) {
+  await revokeAdminSession(request);
   return logoutRedirect(request);
 }
 
 /** JSON logout for fetch clients; optional redirect via ?redirect=1 */
 export async function POST(request: NextRequest) {
+  await revokeAdminSession(request);
   const redirect =
     request.nextUrl.searchParams.get("redirect") === "1" ||
     (request.headers.get("accept") ?? "").includes("text/html");

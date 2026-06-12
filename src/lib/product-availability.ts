@@ -14,6 +14,30 @@ export function productStockOnHand(
   return Number.isFinite(n) ? n : undefined;
 }
 
+function variantStockTotal(
+  variants: Product["variants"] | undefined,
+): number | undefined {
+  if (!variants?.length) return undefined;
+  let total = 0;
+  let hasValue = false;
+  for (const variant of variants) {
+    const n = Number(variant.stock);
+    if (!Number.isFinite(n)) continue;
+    hasValue = true;
+    total += Math.max(0, n);
+  }
+  return hasValue ? total : undefined;
+}
+
+/** Admin inventory + catalog: parent stock, or sum of variant rows when variants carry stock. */
+export function productInventoryOnHand(
+  product: Pick<Product, "stock" | "variants">,
+): number {
+  const variantTotal = variantStockTotal(product.variants);
+  if (variantTotal !== undefined) return variantTotal;
+  return productStockOnHand(product) ?? 0;
+}
+
 export function productSizeRun(product: Pick<Product, "sizes">): string[] {
   return product.sizes?.length ? product.sizes : FULL_SIZE_RUN;
 }
@@ -50,6 +74,21 @@ export function showProductSoldOutToViewer(
 ): boolean {
   if (!viewerLoggedIn) return false;
   return isProductSoldOut(product);
+}
+
+/** B2B carts may request above live stock — approval workflow handles shortfall. */
+export const B2B_CART_MAX_SETS = 9999;
+
+export function cartMaxSetQuantity(
+  product: Pick<Product, "stock" | "reserved" | "moq" | "sizes" | "variants">,
+  sizes: string[] = productSizeRun(product),
+  capToAvailableStock = false,
+): number {
+  const minSets = productWholesaleMinSets(product, sizes);
+  if (!capToAvailableStock) {
+    return Math.max(minSets, B2B_CART_MAX_SETS);
+  }
+  return Math.max(minSets, productMaxSets(product, sizes));
 }
 
 /** Minimum wholesale order quantity in full size sets (not pieces). */

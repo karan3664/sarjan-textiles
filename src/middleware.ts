@@ -23,10 +23,11 @@ import {
   isLegacyAdminLoginPath,
   LEGACY_ADMIN_LOGIN_PATH,
 } from "@/lib/admin-login-path";
+import { SECURITY_HEADERS as securityHeaders } from "@/lib/security-headers";
 import {
-  getSiteLaunchAtMs,
-  isLaunchBypassPath,
   isSiteLaunchPending,
+  LAUNCH_GATE_CACHE_HEADERS,
+  shouldGateToLaunchPage,
 } from "@/lib/site-launch";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
@@ -132,35 +133,35 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  if (isSiteLaunchPending()) {
-    const launchBlocked = !isLaunchBypassPath(pathname);
-    const adminStorefrontPreview =
-      launchBlocked &&
-      !pathname.startsWith("/api/") &&
-      (await verifyAdminFromRequest(
-        request,
-        request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-      ));
-
-    if (launchBlocked && !adminStorefrontPreview) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json(
-          { error: "Site launching soon. Please check back shortly." },
-          {
-            status: 503,
-            headers: { "Retry-After": "3600" },
-          },
-        );
-      }
-      if (pathname !== "/launch") {
-        return NextResponse.redirect(
-          redirectAbsoluteUrl(request, "/launch"),
-          307,
-        );
-      }
+  if (shouldGateToLaunchPage(pathname)) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Site launching soon. Please check back shortly." },
+        {
+          status: 503,
+          headers: { "Retry-After": "3600", ...LAUNCH_GATE_CACHE_HEADERS },
+        },
+      );
     }
-  } else if (pathname === "/launch" && getSiteLaunchAtMs() !== null) {
-    return NextResponse.redirect(redirectAbsoluteUrl(request, "/"), 307);
+    if (pathname !== "/launch") {
+      const redirect = NextResponse.redirect(
+        redirectAbsoluteUrl(request, "/launch"),
+        307,
+      );
+      for (const [key, value] of Object.entries(LAUNCH_GATE_CACHE_HEADERS)) {
+        redirect.headers.set(key, value);
+      }
+      return redirect;
+    }
+  } else if (pathname === "/launch" && !isSiteLaunchPending()) {
+    const redirect = NextResponse.redirect(
+      redirectAbsoluteUrl(request, "/"),
+      307,
+    );
+    for (const [key, value] of Object.entries(LAUNCH_GATE_CACHE_HEADERS)) {
+      redirect.headers.set(key, value);
+    }
+    return redirect;
   }
 
   const returnPath = requestReturnPath(pathname, request.nextUrl.search);
@@ -246,14 +247,22 @@ export async function middleware(request: NextRequest) {
   if (multiLanguageEnabled() && queryLang && isAppLocale(queryLang)) {
     response.cookies.set(localeCookieOptions(queryLang));
   }
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "SAMEORIGIN");
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=()",
-  );
-  response.headers.set("X-DNS-Prefetch-Control", "on");
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    if (
+      key === "Content-Security-Policy" &&
+      process.env.NODE_ENV === "development"
+    ) {
+      response.headers.set(
+        key,
+        value.replace(
+          "script-src 'self' 'unsafe-inline'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        ),
+      );
+      continue;
+    }
+    response.headers.set(key, value);
+  }
   if (request.nextUrl.protocol === "https:") {
     response.headers.set(
       "Strict-Transport-Security",
@@ -262,3 +271,13 @@ export async function middleware(request: NextRequest) {
   }
   return response;
 }
+
+export const config = {
+  matcher: [
+    /*
+     * Run on all paths except Next static assets and common static files.
+     * Launch gate must catch /, /products, and every storefront HTML route.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|css|js)$).*)",
+  ],
+};

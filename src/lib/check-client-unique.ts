@@ -17,6 +17,7 @@ export async function checkClientFieldsUnique(
 ): Promise<CheckClientUniqueResult> {
   const res = await fetch("/api/clients/check-unique", {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(options?.authHeaders ?? {}),

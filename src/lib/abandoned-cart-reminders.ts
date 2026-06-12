@@ -19,21 +19,47 @@ const REMINDER_COPY: Record<
   }
 > = {
   1: {
-    pushTitle: "Your cart is waiting 🛒",
-    pushBody: (count) =>
-      `You left ${count} set${count === 1 ? "" : "s"} in your Sarjan cart. Complete your wholesale order when ready.`,
+    pushTitle: "Your cart is calling",
+    pushBody: () => "Tap now to complete your purchase",
     emailSubject: "Your Sarjan Textiles cart is saved",
   },
   2: {
-    pushTitle: "Still thinking it over?",
+    pushTitle: "Still in your cart",
     pushBody: (count) =>
-      `${count} set${count === 1 ? "" : "s"} are still in your cart. MOQ stock moves fast — checkout when you're ready.`,
+      `${count} wholesale set${count === 1 ? "" : "s"} waiting — checkout before stock moves.`,
     emailSubject: "Reminder: items waiting in your Sarjan cart",
+  },
+  daily: {
+    pushTitle: "Your cart is calling",
+    pushBody: () => "Tap now to complete your purchase",
+    emailSubject: "Your Sarjan cart is still waiting",
   },
 };
 
 function cartSetCount(items: AbandonedCartCandidate["items"]) {
   return items.reduce((sum, line) => sum + Math.max(1, line.quantity), 0);
+}
+
+function absoluteAssetUrl(path: string) {
+  const trimmed = path.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return `${siteUrl}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+}
+
+async function cartHeroImageUrl(items: AbandonedCartCandidate["items"]) {
+  const cms = await getCachedCmsSnapshot();
+  const bySlug = new Map(
+    cms.products.map((product) => [product.slug, product]),
+  );
+  for (const line of items) {
+    const product = bySlug.get(line.slug);
+    const image = product?.images?.[0]?.trim();
+    if (image) return absoluteAssetUrl(image);
+  }
+  return undefined;
 }
 
 async function resolveCartLineLabels(items: AbandonedCartCandidate["items"]) {
@@ -56,7 +82,7 @@ function buildCartEmailHtml(input: {
   brandName: string;
 }) {
   const intro =
-    input.stage === 1
+    input.stage === 1 || input.stage === "daily"
       ? "You added wholesale sets to your cart but haven't placed the order yet."
       : "A quick reminder — your saved cart is still waiting for checkout.";
 
@@ -79,7 +105,7 @@ function buildCartEmailHtml(input: {
           <p style="margin:0 0 12px;color:#333;font-size:16px;line-height:1.6;">Hi ${input.companyName},</p>
           <p style="margin:0 0 18px;color:#555;font-size:15px;line-height:1.6;">${intro}</p>
           <ul style="margin:0 0 24px;padding-left:20px;">${lineItems}</ul>
-          <a href="${input.checkoutUrl}" style="display:inline-block;background:#6b1228;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:700;">Resume checkout</a>
+          <a href="${input.checkoutUrl}" style="display:inline-block;background:#6b1228;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:700;">Open cart</a>
           <p style="margin:24px 0 0;color:#888;font-size:13px;line-height:1.5;">Your cart is synced on web and mobile when you're signed in.</p>
         </td></tr>
       </table>
@@ -98,7 +124,7 @@ async function sendAbandonedCartEmail(
   const lines = await resolveCartLineLabels(candidate.items);
   const setCount = cartSetCount(candidate.items);
   const copy = REMINDER_COPY[candidate.stage];
-  const checkoutUrl = `${siteUrl}/checkout?resume=cart`;
+  const checkoutUrl = `${siteUrl}/shopping-cart?resume=cart`;
   const cms = await getCachedCmsSnapshot();
   const text = [
     `Hi ${client.companyName},`,
@@ -107,7 +133,7 @@ async function sendAbandonedCartEmail(
     "",
     ...lines.map((line) => `• ${line}`),
     "",
-    `Resume checkout: ${checkoutUrl}`,
+    `Open cart: ${checkoutUrl}`,
   ].join("\n");
 
   await sendDomainMail({
@@ -161,7 +187,8 @@ export async function processAbandonedCartReminders() {
 
     const setCount = cartSetCount(candidate.items);
     const copy = REMINDER_COPY[candidate.stage];
-    const checkoutUrl = `${siteUrl}/checkout?resume=cart`;
+    const checkoutUrl = `${siteUrl}/shopping-cart?resume=cart`;
+    const imageUrl = await cartHeroImageUrl(candidate.items);
 
     await sendAbandonedCartPush({
       clientId: candidate.clientId,
@@ -170,14 +197,17 @@ export async function processAbandonedCartReminders() {
       stage: candidate.stage,
       checkoutUrl,
       itemCount: String(setCount),
+      imageUrl,
     }).catch(() => undefined);
 
     let emailSent = false;
-    try {
-      const emailResult = await sendAbandonedCartEmail(candidate, client);
-      emailSent = emailResult.sent;
-    } catch {
-      emailSent = false;
+    if (candidate.stage !== "daily") {
+      try {
+        const emailResult = await sendAbandonedCartEmail(candidate, client);
+        emailSent = emailResult.sent;
+      } catch {
+        emailSent = false;
+      }
     }
 
     await markCartReminderSent(candidate.clientId, candidate.stage);

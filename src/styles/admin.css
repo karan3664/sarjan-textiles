@@ -2188,12 +2188,46 @@ img.sarjan-product-img-placeholder {
   background: #fafafa;
 }
 
-.sarjan-order-items > div {
+.sarjan-order-items-head {
   display: flex;
   justify-content: space-between;
   gap: 14px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
+}
+
+.sarjan-order-items .sarjan-order-items-table {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.sarjan-order-items-table td input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 72px;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--main);
+  background: var(--White);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.sarjan-order-items-table td:nth-child(2) {
+  min-width: 160px;
+}
+
+.sarjan-order-items-table td:nth-child(3),
+.sarjan-order-items-table td:nth-child(4) {
+  min-width: 96px;
+}
+
+.sarjan-order-items-table td:nth-child(5) {
+  min-width: 140px;
 }
 
 .sarjan-inventory-grid {

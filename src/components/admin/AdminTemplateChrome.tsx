@@ -80,6 +80,8 @@ type AdminActiveSection =
   | "sendNotifications"
   | "mobileApp"
   | "mobileBranding"
+  | "promotions"
+  | "analytics"
   | "bulkImages"
   | "accountMenu"
   | "account";
@@ -247,6 +249,18 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-star",
     label: "Mobile branding",
     section: "mobileBranding",
+  },
+  {
+    href: "/admin/promotions",
+    icon: "icon-image",
+    label: "Promotions",
+    section: "promotions",
+  },
+  {
+    href: "/admin/analytics",
+    icon: "icon-chart-bar",
+    label: "App analytics",
+    section: "analytics",
   },
   {
     href: "/admin/bulk-images",

@@ -6,6 +6,9 @@ import {
 } from "@/lib/cms-store";
 import { roleCanAccess, verifyAdminToken } from "@/lib/admin-token";
 import type { Product } from "@/data/mock";
+import { readEnglish } from "@/lib/cms-localize";
+import { flattenProductsForAdmin } from "@/lib/product-localize";
+import { productInventoryOnHand } from "@/lib/product-availability";
 import { cookies } from "next/headers";
 
 const operations = [
@@ -22,33 +25,54 @@ function normalizeNumber(value: unknown) {
   return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : 0;
 }
 
+function distributeVariantStock(product: Product, totalStock: number): Product {
+  const variants = product.variants;
+  if (!variants?.length) {
+    return { ...product, stock: totalStock };
+  }
+  const perVariant = Math.floor(totalStock / variants.length);
+  const remainder = totalStock % variants.length;
+  return {
+    ...product,
+    stock: totalStock,
+    variants: variants.map((variant, index) => ({
+      ...variant,
+      stock: perVariant + (index < remainder ? 1 : 0),
+    })),
+  };
+}
+
 function applyStock(
   product: Product,
   operation: InventoryMovement["operation"],
   quantity: number,
 ) {
-  const currentStock = normalizeNumber(product.stock);
+  const currentStock = normalizeNumber(productInventoryOnHand(product));
   const returned = normalizeNumber(product.returned);
   const damaged = normalizeNumber(product.damaged);
+  let nextStock = currentStock;
 
-  if (operation === "add")
-    return { ...product, stock: currentStock + quantity };
-  if (operation === "reduce")
-    return { ...product, stock: Math.max(0, currentStock - quantity) };
-  if (operation === "adjust") return { ...product, stock: quantity };
-  if (operation === "transfer")
-    return { ...product, stock: Math.max(0, currentStock - quantity) };
-  if (operation === "return")
-    return {
-      ...product,
-      stock: currentStock + quantity,
-      returned: returned + quantity,
-    };
-  return {
-    ...product,
-    stock: Math.max(0, currentStock - quantity),
-    damaged: damaged + quantity,
-  };
+  if (operation === "add") nextStock = currentStock + quantity;
+  else if (operation === "reduce")
+    nextStock = Math.max(0, currentStock - quantity);
+  else if (operation === "adjust") nextStock = quantity;
+  else if (operation === "transfer")
+    nextStock = Math.max(0, currentStock - quantity);
+  else if (operation === "return") {
+    nextStock = currentStock + quantity;
+    return distributeVariantStock(
+      { ...product, returned: returned + quantity },
+      nextStock,
+    );
+  } else {
+    nextStock = Math.max(0, currentStock - quantity);
+    return distributeVariantStock(
+      { ...product, damaged: damaged + quantity },
+      nextStock,
+    );
+  }
+
+  return distributeVariantStock(product, nextStock);
 }
 
 const INVENTORY_API_PATH = "/api/admin/inventory";
@@ -64,7 +88,7 @@ export async function GET() {
 
   const cms = await getCmsSnapshot();
   return Response.json({
-    products: cms.products,
+    products: flattenProductsForAdmin(cms.products),
     inventoryLogs: cms.inventoryLogs ?? [],
   });
 }
@@ -103,17 +127,17 @@ export async function PATCH(request: Request) {
     if (!product)
       return Response.json({ error: "Product not found" }, { status: 404 });
 
-    const beforeStock = normalizeNumber(product.stock);
+    const beforeStock = normalizeNumber(productInventoryOnHand(product));
     const nextProduct = applyStock(product, operation, quantity);
     const movement: InventoryMovement = {
       id: randomUUID(),
       productSlug: product.slug,
-      productName: product.name,
+      productName: readEnglish(product.name),
       sku: product.sku,
       operation,
       quantity,
       beforeStock,
-      afterStock: normalizeNumber(nextProduct.stock),
+      afterStock: normalizeNumber(productInventoryOnHand(nextProduct)),
       reference: String(body.reference ?? "").trim() || undefined,
       note: String(body.note ?? "").trim() || undefined,
       createdAt: new Date().toISOString(),
@@ -148,7 +172,7 @@ export async function PATCH(request: Request) {
     });
 
     return Response.json({
-      products: next.products,
+      products: flattenProductsForAdmin(next.products),
       inventoryLogs: next.inventoryLogs,
     });
   } catch (error) {

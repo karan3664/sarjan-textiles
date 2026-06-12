@@ -1,4 +1,5 @@
 import type { CmsSnapshot } from "@/lib/cms-store";
+import type { AdminRole } from "@/lib/admin-token";
 import type { Product } from "@/data/mock";
 import {
   flattenBlogForAdmin,
@@ -46,6 +47,21 @@ export function adminCmsPutResponse(
   if (keys.has("testimonials")) out.testimonials = flat.testimonials;
 
   return Object.keys(out).length ? out : flat;
+}
+
+/** Strip pricing/audit/inventory data for roles that must not see B2B secrets. */
+export function cmsSnapshotForRole(
+  cms: CmsSnapshot,
+  role: AdminRole,
+): CmsSnapshot {
+  const flat = flattenCmsSnapshotForAdmin(cms);
+  if (role === "super_admin" || role === "admin") return flat;
+  return {
+    ...flat,
+    clientPricing: [],
+    auditLogs: [],
+    inventoryLogs: [],
+  };
 }
 
 /** English-only view for admin UI — localized `{en,hi,gu}` fields flattened. */

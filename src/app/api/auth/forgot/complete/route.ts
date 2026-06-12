@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "forgot-complete", parsed.session.clientId),
       5,
       60_000,

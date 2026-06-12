@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
+import { validateReviewVideoBuffer } from "@/lib/file-magic";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
   if (auth instanceof Response) return auth;
   const { client } = auth;
 
-  const limit = rateLimit(
+  const limit = await rateLimit(
     rateLimitKey(request, "review-upload", client.email),
     12,
     60_000,
@@ -56,6 +57,9 @@ export async function POST(request: Request) {
         { error: "Video must be under 40 MB." },
         { status: 400 },
       );
+    }
+    if (!validateReviewVideoBuffer(buffer)) {
+      return Response.json({ error: "Invalid video file." }, { status: 400 });
     }
     await mkdir(uploadDir, { recursive: true });
     const filename = `${client.id}-${Date.now()}.mp4`;

@@ -4360,30 +4360,34 @@ body.sarjan-storefront button.sarjan-btn.is-hovered {
 .sarjan-payment-confirmation-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: stretch;
+  gap: 12px;
   margin-top: 28px;
   width: 100%;
-  max-width: 320px;
+  max-width: 360px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .sarjan-payment-confirmation-actions .tf-btn {
+  width: 100%;
   min-height: 48px;
+  flex: none;
   justify-content: center;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 640px) {
   .sarjan-payment-confirmation-actions {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    max-width: none;
+    max-width: 480px;
   }
 
   .sarjan-payment-confirmation-actions .tf-btn {
-    flex: 1 1 calc(50% - 5px);
-    min-width: 148px;
+    flex: 1 1 calc(50% - 6px);
+    width: auto;
+    min-width: 160px;
     max-width: 220px;
   }
 }
@@ -5016,13 +5020,15 @@ button.accordion-button:not(.collapsed),
   left: 0;
   z-index: 100200;
   background-color: var(--white, #fff);
-  visibility: visible;
-  pointer-events: auto;
+  transform: translateX(-100%);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 #mobileMenu.sarjan-mobile-menu.offcanvas.show {
-  transform: none;
+  transform: translate3d(0, 0, 0) !important;
   visibility: visible;
+  pointer-events: auto;
 }
 
 body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
@@ -5423,14 +5429,25 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
     margin-right: auto;
   }
 
-  .sarjan-profile-avatar-layout {
+  .sarjan-account-panel--profile .sarjan-profile-avatar-layout {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 24px;
+  }
+
+  .sarjan-account-panel--profile .sarjan-profile-avatar-layout {
     align-items: center;
   }
 
-  .sarjan-profile-avatar-layout .sarjan-profile-avatar-actions {
-    max-width: 320px;
-    margin-left: auto;
-    margin-right: auto;
+  .sarjan-account-panel--profile
+    .sarjan-profile-avatar-layout
+    .sarjan-profile-avatar-actions {
+    flex: 1;
+    max-width: none;
+    margin: 0;
+    justify-content: flex-start;
   }
 
   .sarjan-account-submit-actions {
@@ -5439,6 +5456,320 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
 
   .sarjan-account-quick-actions .tf-btn {
     min-height: 48px;
+  }
+}
+
+/* My Account — dashboard polish */
+@media (min-width: 992px) {
+  .sarjan-account-page .my-account-wrap {
+    display: grid;
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  .sarjan-account-page .my-account-content {
+    min-width: 0;
+    padding: 28px 32px;
+    border-radius: 20px;
+    border: 1px solid var(--sarjan-border, #e8e2d9);
+    background: var(--sarjan-surface, #fff);
+    box-shadow: 0 12px 40px rgba(24, 24, 24, 0.04);
+  }
+
+  .sarjan-account-sidebar-card {
+    padding: 24px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--sarjan-border, #e8e2d9);
+    background: var(--sarjan-surface, #fff);
+    box-shadow: 0 12px 40px rgba(24, 24, 24, 0.04);
+    position: sticky;
+    top: 96px;
+  }
+
+  .sarjan-account-sidebar-card .account-avatar {
+    padding-bottom: 20px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--sarjan-border, #e8e2d9);
+  }
+
+  .sarjan-account-sidebar-card .account-avatar .image {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--sarjan-border, #e8e2d9);
+  }
+}
+
+.sarjan-account-dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--sarjan-border, #e8e2d9);
+}
+
+.sarjan-account-dashboard__eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary, #9b1c31);
+}
+
+.sarjan-account-dashboard__title {
+  margin: 0 0 8px;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.sarjan-account-dashboard__subtitle {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.sarjan-account-status-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+  background: var(--sarjan-bg-muted, #f7f4ef);
+  color: var(--main, #181818);
+}
+
+.sarjan-account-status-pill--approved {
+  border-color: rgba(22, 128, 61, 0.25);
+  background: rgba(22, 128, 61, 0.08);
+  color: #166534;
+}
+
+.sarjan-account-status-pill--pending {
+  border-color: rgba(180, 83, 9, 0.25);
+  background: rgba(180, 83, 9, 0.08);
+  color: #9a3412;
+}
+
+.sarjan-account-status-pill--rejected,
+.sarjan-account-status-pill--inactive {
+  border-color: rgba(180, 35, 24, 0.25);
+  background: rgba(180, 35, 24, 0.08);
+  color: #b42318;
+}
+
+.sarjan-account-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sarjan-account-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+  background: var(--sarjan-bg-muted, #faf7f2);
+}
+
+.sarjan-account-stat-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary, #6f6a64);
+  text-transform: uppercase;
+}
+
+.sarjan-account-stat-card__value {
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--main, #181818);
+}
+
+.sarjan-account-panel {
+  padding: 22px 22px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+  background: var(--sarjan-bg-muted, #faf7f2);
+}
+
+.sarjan-account-panel--profile {
+  background: linear-gradient(
+    135deg,
+    rgba(155, 28, 49, 0.04) 0%,
+    var(--sarjan-bg-muted, #faf7f2) 48%
+  );
+}
+
+.sarjan-account-panel--actions {
+  margin-top: 8px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  background: transparent;
+  border-style: dashed;
+}
+
+.sarjan-account-panel--actions .sarjan-account-submit-actions {
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .sarjan-account-panel--actions .sarjan-account-submit-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    max-width: none;
+  }
+}
+
+.sarjan-account-panel__head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--sarjan-border, #e8e2d9);
+}
+
+.sarjan-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.sarjan-field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--main, #181818);
+  line-height: 1.3;
+}
+
+.sarjan-account-page .sarjan-field input {
+  min-height: 48px;
+}
+
+.sarjan-account-page .sarjan-field input[readonly] {
+  background: var(--sarjan-surface, #fff);
+  color: var(--text-secondary, #6f6a64);
+  cursor: default;
+}
+
+.sarjan-account-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sarjan-account-quick-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+  background: var(--sarjan-surface, #fff);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sarjan-account-quick-card:hover {
+  border-color: var(--primary, #9b1c31);
+  box-shadow: 0 8px 24px rgba(155, 28, 49, 0.08);
+  transform: translateY(-1px);
+  color: inherit;
+}
+
+.sarjan-account-quick-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(155, 28, 49, 0.08);
+  color: var(--primary, #9b1c31);
+  flex-shrink: 0;
+}
+
+.sarjan-account-quick-card__icon .icon {
+  font-size: 18px;
+}
+
+.sarjan-account-quick-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sarjan-account-quick-card__body strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.sarjan-account-quick-card__body span:last-child {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-secondary, #6f6a64);
+}
+
+.sarjan-account-quick-card__arrow {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #6f6a64);
+  opacity: 0.7;
+}
+
+.sarjan-account-dashboard__loading {
+  padding: 24px 0;
+  color: var(--text-secondary, #6f6a64);
+}
+
+@media (max-width: 767px) {
+  .sarjan-account-dashboard__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sarjan-account-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-account-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sarjan-account-panel {
+    padding: 18px 16px 20px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .sarjan-account-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -6140,13 +6471,51 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   margin-bottom: 18px;
 }
 
-.sarjan-address-form__close {
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--sarjan-surface, #fff);
-  cursor: pointer;
+.sarjan-address-form__close,
+.sarjan-address-form button.sarjan-address-form__close.icon-close {
+  flex-shrink: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid rgba(24, 24, 24, 0.14) !important;
+  border-radius: 50% !important;
+  background-color: #fff !important;
+  color: #181818 !important;
+  font-family: icomoon, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: 0 2px 8px rgba(24, 24, 24, 0.08);
+  transform: none !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease !important;
+}
+
+.sarjan-address-form__close::before,
+.sarjan-address-form button.sarjan-address-form__close.icon-close::before {
+  display: block;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.sarjan-address-form__close:hover,
+.sarjan-address-form button.sarjan-address-form__close.icon-close:hover {
+  background-color: #8b1e2d !important;
+  color: #fff !important;
+  border-color: #8b1e2d !important;
+  transform: none !important;
 }
 
 @media (max-width: 767px) {
@@ -8572,21 +8941,61 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
 }
 
 .sarjan-deal-price-row {
-  display: inline-flex;
+  display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sarjan-deal-price-row .price,
+.sarjan-deal-price-row .sarjan-price-locked {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
 }
 
 .sarjan-deal-original-price {
-  font-size: 0.92em;
+  flex-shrink: 0;
+  font-size: 0.88em;
   font-weight: 500;
   color: var(--sarjan-muted);
   text-decoration: line-through;
+  white-space: nowrap;
 }
 
 .card-product .sarjan-deal-price-row {
   margin-bottom: 4px;
+}
+
+.card-product-info .sarjan-deal-price-row {
+  width: 100%;
+}
+
+.sarjan-cart-block-notice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #f0c4c4;
+  background: #fff5f5;
+  color: #9b1c31;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sarjan-cart-block-notice__dismiss {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
 }
 
 .sarjan-price-locked {
@@ -9879,6 +10288,29 @@ a.sarjan-order-bot-card:focus-visible {
   color: var(--main, #181818);
   font-size: 15px;
   line-height: 1.5;
+}
+
+.sarjan-review-request-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 155, 60, 0.35);
+  background: rgba(200, 155, 60, 0.08);
+}
+
+.sarjan-review-request-banner__title {
+  font-weight: 600;
+  margin: 0;
+  color: var(--main, #181818);
+}
+
+.sarjan-order-review-cta {
+  display: inline-flex;
+  width: fit-content;
 }
 
 .sarjan-order-placed-via-badge {
@@ -12501,8 +12933,84 @@ body.sarjan-scroll-chrome:has(.sarjan-mobile-bottom-nav):has(
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.sarjan-storefront-empty__actions .sarjan-btn {
+  min-height: 46px;
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.sarjan-storefront-empty__actions .sarjan-btn.sarjan-has-btn-icon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
-  margin-top: 18px;
+}
+
+.sarjan-storefront-empty__actions
+  .sarjan-btn.sarjan-has-btn-icon
+  .sarjan-tf-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1em;
+  min-width: 1em;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.sarjan-storefront-empty__secondary {
+  background: transparent !important;
+  border-color: transparent !important;
+  padding-inline: 14px;
+}
+
+body.sarjan-storefront
+  .sarjan-storefront-empty__actions
+  .sarjan-storefront-empty__secondary:is(:hover, :focus-visible, .is-hovered) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--sarjan-accent, #8b1e2d) !important;
+  -webkit-text-fill-color: var(--sarjan-accent, #8b1e2d) !important;
+}
+
+body.sarjan-storefront
+  .sarjan-storefront-empty__actions
+  .sarjan-storefront-empty__secondary:is(:hover, :focus-visible, .is-hovered)
+  :is(.text, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-accent, #8b1e2d) !important;
+  -webkit-text-fill-color: var(--sarjan-accent, #8b1e2d) !important;
+}
+
+.sarjan-products-page .sarjan-storefront-empty {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 575px) {
+  .sarjan-storefront-empty {
+    padding: 28px 18px;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 16px;
+  }
+
+  .sarjan-storefront-empty__actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .sarjan-storefront-empty__actions .sarjan-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .sarjan-storefront-error {

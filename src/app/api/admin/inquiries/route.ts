@@ -5,12 +5,21 @@ import {
   contactInquiryReplyPlainText,
 } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
+import { requireAdminRouteSession } from "@/lib/require-admin-session";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/inquiries",
+  });
+  if (session instanceof Response) return session;
   return Response.json({ inquiries: await getFeedbacks() });
 }
 
 export async function PATCH(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/inquiries",
+  });
+  if (session instanceof Response) return session;
   const body = await request.json();
   if (!body.id)
     return Response.json({ error: "Inquiry id required" }, { status: 400 });
@@ -21,6 +30,10 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/inquiries",
+  });
+  if (session instanceof Response) return session;
   try {
     const body = await request.json();
     if (!body.id || !body.to || !body.subject || !body.message) {

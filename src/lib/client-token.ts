@@ -1,6 +1,7 @@
 export type ClientSession = {
   clientId: string;
   email: string;
+  sv?: number;
   iat: number;
   exp: number;
 };
@@ -76,11 +77,17 @@ async function hmac(value: string) {
 export async function createClientToken(input: {
   clientId: string;
   email: string;
+  sessionVersion?: number;
 }) {
+  const { getClientSessionVersion } = await import("@/lib/session-version");
+  const sv =
+    input.sessionVersion ?? (await getClientSessionVersion(input.clientId));
   const header = encodeSegment({ alg: "HS256", typ: "JWT" });
   const now = Date.now();
   const payload = encodeSegment({
-    ...input,
+    clientId: input.clientId,
+    email: input.email,
+    sv,
     iat: now,
     exp: now + CLIENT_SESSION_TTL_MS,
   });
@@ -101,6 +108,9 @@ export async function verifyClientToken(
     const payload = JSON.parse(base64UrlDecode(parts[1])) as ClientSession;
     if (!payload.clientId || !payload.email || Date.now() > payload.exp)
       return null;
+    const { getClientSessionVersion } = await import("@/lib/session-version");
+    const expectedSv = await getClientSessionVersion(payload.clientId);
+    if ((payload.sv ?? 0) !== expectedSv) return null;
     return payload;
   } catch {
     return null;

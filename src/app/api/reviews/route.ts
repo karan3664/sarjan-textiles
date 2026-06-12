@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   if (auth instanceof Response) return auth;
   const { client } = auth;
 
-  const limit = rateLimit(
+  const limit = await rateLimit(
     rateLimitKey(request, "review-submit", client.email),
     5,
     60_000,

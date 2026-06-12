@@ -2,21 +2,41 @@
 
 import Link from "next/link";
 import type { Product } from "@/data/mock";
-import { useShowProductSoldOut } from "./PriceGate";
+import { useShowProductUnavailable } from "./PriceGate";
+import { PRODUCT_UNAVAILABLE_MESSAGE } from "@/lib/product-purchase-eligibility";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+import {
+  B2B_STOCK_INDICATIVE_PDP,
+  formatAvailablePieces,
+} from "@/lib/b2b-order-messages";
+import { productAvailablePieces } from "@/lib/product-availability";
 
 export function ProductDetailStockLine({
   product,
 }: {
   product: Pick<Product, "stock" | "reserved">;
 }) {
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
+  const available = productAvailablePieces(product);
+  if (unavailable) {
+    return (
+      <p className="text-caption-1 text-1 sarjan-stock-unavailable">
+        {PRODUCT_UNAVAILABLE_MESSAGE}
+      </p>
+    );
+  }
   return (
-    <p
-      className={`text-caption-1 text-1${soldOut ? " sarjan-stock-unavailable" : ""}`}
-    >
-      {soldOut ? "Out of stock" : `In stock: ${product.stock}`}
-    </p>
+    <div className="sarjan-pdp-stock-line">
+      <p className="text-caption-1 text-1 mb_6">
+        <strong>Available quantity:</strong>{" "}
+        {formatAvailablePieces(available ?? 0)}
+      </p>
+      <ul className="text-caption-1 text-secondary mb_0 sarjan-pdp-stock-disclaimer">
+        {B2B_STOCK_INDICATIVE_PDP.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -27,13 +47,13 @@ export function ProductDetailBuyNowBlock({
   product: Product;
   sizeRun: string[];
 }) {
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
 
-  if (soldOut) {
+  if (unavailable) {
     return (
       <div className="mb_16">
         <p className="text-caption-1 text-secondary mb_0">
-          This product cannot be added to cart until stock returns.{" "}
+          {PRODUCT_UNAVAILABLE_MESSAGE}{" "}
           <Link href="/contact" className="link">
             Contact sales
           </Link>{" "}
@@ -72,16 +92,18 @@ export function ProductDetailStickyAtcButton({
   product: Product;
   sizeRun: string[];
 }) {
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
 
-  if (soldOut) {
+  if (unavailable) {
     return (
       <span
         className="tf-btn w-100 btn-reset radius-4"
         style={{ opacity: 0.7, cursor: "not-allowed" }}
         aria-disabled="true"
       >
-        <span className="text text-btn-uppercase">Out of stock</span>
+        <span className="text text-btn-uppercase">
+          {PRODUCT_UNAVAILABLE_MESSAGE}
+        </span>
       </span>
     );
   }
@@ -113,13 +135,18 @@ export function ProductFeatureStockCaption({
 }: {
   product: Pick<Product, "stock" | "reserved" | "moq">;
 }) {
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
+  const available = productAvailablePieces(product);
   return (
     <div className="text-caption-1 text-secondary">
       MOQ {product.moq}.{" "}
-      <span className={soldOut ? "sarjan-stock-unavailable" : undefined}>
-        Stock {product.stock}.
-      </span>
+      {unavailable ? (
+        <span className="sarjan-stock-unavailable">
+          {PRODUCT_UNAVAILABLE_MESSAGE}
+        </span>
+      ) : (
+        <span>Available {formatAvailablePieces(available ?? 0)}.</span>
+      )}
     </div>
   );
 }
@@ -131,17 +158,17 @@ export function ProductFeatureBuyActions({
   product: Product;
   sizeRun: string[];
 }) {
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
 
   return (
     <div className="mt_12">
-      {soldOut ? (
+      {unavailable ? (
         <span
           className="btn-style-3 text-btn-uppercase d-inline-block w-100 text-center"
           style={{ opacity: 0.55, cursor: "not-allowed" }}
           aria-disabled="true"
         >
-          Out of stock
+          {PRODUCT_UNAVAILABLE_MESSAGE}
         </span>
       ) : (
         <a

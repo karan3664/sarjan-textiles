@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   ).trim();
   const source = rawSource || "footer";
 
-  const limit = rateLimit(
+  const limit = await rateLimit(
     rateLimitKey(request, "newsletter", email),
     5,
     900_000,

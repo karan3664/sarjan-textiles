@@ -12,7 +12,7 @@ import {
 import { clientStatusAuthError } from "@/lib/client-status-auth";
 import {
   clientAuthHeaders,
-  clientAuthToken,
+  hasLocalClientSession,
   logoutClientSession,
   restoreClientSessionFromCookie,
 } from "@/lib/client-auth-browser";
@@ -229,8 +229,7 @@ export function AccountSessionProvider({ children }: { children: ReactNode }) {
 
   const refreshOrders = async () => {
     const current = readClient();
-    const token = clientAuthToken();
-    if (!isCompleteClient(current) || !token) return;
+    if (!isCompleteClient(current)) return;
     try {
       await loadOrders(current.id, current);
     } catch {
@@ -244,22 +243,20 @@ export function AccountSessionProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         let stored = readClient();
-        let token = clientAuthToken();
 
         const restored = await restoreClientSessionFromCookie();
         if (generation !== loadGeneration.current) return;
 
         if (restored.ok) {
           stored = restored.client as AccountClient;
-          token = restored.token;
-        } else if (!isCompleteClient(stored) || !token) {
+        } else if (!isCompleteClient(stored)) {
           setClient(null);
           setOrders([]);
           logoutClientSession("/login");
           return;
         }
 
-        if (!isCompleteClient(stored) || !token) {
+        if (!isCompleteClient(stored)) {
           setClient(null);
           setOrders([]);
           logoutClientSession("/login");

@@ -4,7 +4,11 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Product } from "@/data/mock";
 import { showProductSoldOutToViewer } from "@/lib/product-availability";
 import {
-  clientAuthToken,
+  normalizeClientTier,
+  showProductUnavailableToViewer,
+} from "@/lib/product-purchase-eligibility";
+import {
+  hasLocalClientSession,
   isClientTokenExpired,
   readStoredClientProfile,
 } from "@/lib/client-auth-browser";
@@ -37,9 +41,7 @@ export function clientHasApprovedPricing(): boolean {
 /** True when a valid, non-expired client session is present. */
 function readClientB2BTokenPresent(): boolean {
   if (typeof window === "undefined") return false;
-  const token = clientAuthToken();
-  if (!token || isClientTokenExpired(token)) return false;
-  return Boolean(readStoredClientProfile()?.id?.trim());
+  return hasLocalClientSession();
 }
 
 export function useClientHasB2BToken(): boolean {
@@ -50,12 +52,37 @@ export function useClientHasB2BToken(): boolean {
   );
 }
 
+function readClientTierFromStorage(): ReturnType<typeof normalizeClientTier> {
+  if (typeof window === "undefined") return "standard";
+  return normalizeClientTier(readStoredClientProfile()?.clientTier);
+}
+
+export function useClientTier() {
+  return useSyncExternalStore(
+    subscribeClientApproved,
+    readClientTierFromStorage,
+    () => "standard" as const,
+  );
+}
+
 /** Out-of-stock UI is shown only when a client session token exists. */
 export function useShowProductSoldOut(
   product: Pick<Product, "stock" | "reserved">,
 ): boolean {
   const loggedIn = useClientHasB2BToken();
   return showProductSoldOutToViewer(product, loggedIn);
+}
+
+/** Catalog inactive, dealer tier, or out-of-stock (logged-in). */
+export function useShowProductUnavailable(
+  product: Pick<
+    Product,
+    "catalogActive" | "active" | "dealerTiers" | "stock" | "reserved"
+  >,
+): boolean {
+  const loggedIn = useClientHasB2BToken();
+  const clientTier = useClientTier();
+  return showProductUnavailableToViewer(product, clientTier, loggedIn);
 }
 
 export function PriceGate({

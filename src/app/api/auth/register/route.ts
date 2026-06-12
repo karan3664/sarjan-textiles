@@ -7,7 +7,7 @@ import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "client-register", String(body.email ?? "")),
       5,
       60_000,
@@ -17,6 +17,13 @@ export async function POST(request: Request) {
     if (!body.email || !body.password) {
       return Response.json(
         { error: "Email and password are required" },
+        { status: 400 },
+      );
+    }
+    const password = String(body.password);
+    if (password.length < 10) {
+      return Response.json(
+        { error: "Password must be at least 10 characters" },
         { status: 400 },
       );
     }

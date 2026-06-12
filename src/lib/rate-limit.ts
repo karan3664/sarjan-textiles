@@ -1,28 +1,18 @@
-type Bucket = {
-  count: number;
-  resetAt: number;
-};
+import { consumeRateLimit } from "@/lib/rate-limit-store";
 
-const buckets = new Map<string, Bucket>();
-
-export function rateLimit(key: string, limit = 8, windowMs = 60_000) {
-  const now = Date.now();
-  const current = buckets.get(key);
-  if (!current || current.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
-    return { allowed: true, remaining: limit - 1, resetAt: now + windowMs };
-  }
-
-  current.count += 1;
-  return {
-    allowed: current.count <= limit,
-    remaining: Math.max(0, limit - current.count),
-    resetAt: current.resetAt,
-  };
+export async function rateLimit(key: string, limit = 8, windowMs = 60_000) {
+  return consumeRateLimit(key, limit, windowMs);
 }
 
-export function rateLimitKey(request: Request, scope: string, identity = "anonymous") {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+export function rateLimitKey(
+  request: Request,
+  scope: string,
+  identity = "anonymous",
+) {
+  const forwarded = request.headers
+    .get("x-forwarded-for")
+    ?.split(",")[0]
+    ?.trim();
   const realIp = request.headers.get("x-real-ip")?.trim();
   return `${scope}:${forwarded || realIp || "unknown"}:${identity.toLowerCase()}`;
 }
@@ -33,7 +23,9 @@ export function rateLimitResponse(resetAt: number) {
     {
       status: 429,
       headers: {
-        "Retry-After": String(Math.max(1, Math.ceil((resetAt - Date.now()) / 1000))),
+        "Retry-After": String(
+          Math.max(1, Math.ceil((resetAt - Date.now()) / 1000)),
+        ),
       },
     },
   );

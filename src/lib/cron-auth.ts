@@ -6,14 +6,11 @@ function readCronSecret(request: Request) {
 
   const auth = request.headers.get("authorization")?.trim() ?? "";
   const headerSecret = request.headers.get("x-cron-secret")?.trim() ?? "";
-  const querySecret =
-    new URL(request.url).searchParams.get("secret")?.trim() ?? "";
-
   const bearer = auth.toLowerCase().startsWith("bearer ")
     ? auth.slice(7).trim()
     : "";
 
-  const provided = bearer || headerSecret || querySecret;
+  const provided = bearer || headerSecret;
   return {
     configured,
     provided,
@@ -24,6 +21,12 @@ function readCronSecret(request: Request) {
 export function verifyCronRequest(request: Request) {
   const { configured, ok } = readCronSecret(request);
   if (!configured) {
+    if (process.env.NODE_ENV === "production") {
+      return Response.json(
+        { error: "CRON_SECRET is required in production" },
+        { status: 503 },
+      );
+    }
     return null;
   }
   if (!ok) {

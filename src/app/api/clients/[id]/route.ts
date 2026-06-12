@@ -5,6 +5,7 @@ import {
   updateClientPassword,
 } from "@/lib/local-db";
 import { isValidGstin, normalizeGstin } from "@/lib/gst";
+import { clientStatusAuthError } from "@/lib/client-status-auth";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 
 export async function GET(
@@ -27,6 +28,14 @@ export async function PATCH(
     const session = await verifyClientToken(bearerToken(request));
     if (!session || session.clientId !== id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const existing = await getClient(id);
+    if (!existing) {
+      return Response.json({ error: "Client not found" }, { status: 404 });
+    }
+    const statusError = clientStatusAuthError(existing.status);
+    if (statusError) {
+      return Response.json({ error: statusError }, { status: 403 });
     }
 
     const body = await request.json();

@@ -278,8 +278,8 @@ function AuthPageClientInner({
       return;
     }
 
-    if (data.token) {
-      persistClientSession(data.token, data.client);
+    if (data.client?.id) {
+      persistClientSession("", data.client);
       window.location.assign(safeAuthRedirect(searchParams.get("next")));
       return;
     }

@@ -4,11 +4,17 @@ import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { catalogFetchInit } from "@/lib/client-auth-browser";
 import {
+  B2B_CART_MAX_SETS,
+  cartMaxSetQuantity,
   clampCartSetQuantity,
-  productMaxSets,
   productWholesaleMinSets,
 } from "@/lib/product-availability";
-import { cartHasStockIssues, cartLineSoldOut } from "@/lib/cart-stock";
+import {
+  cartBlocksCheckout,
+  cartLineExceedsStock,
+  cartStockWarnings,
+} from "@/lib/cart-stock";
+import { B2B_CART_EXCEEDS_STOCK } from "@/lib/b2b-order-messages";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/data/mock";
 import {
@@ -19,7 +25,13 @@ import {
   writeCart,
 } from "@/lib/cart-client";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
-import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import { formatInr, formatInrPricingLine } from "@/lib/gst-display";
+import { sumOrderPieces } from "@/lib/order-pieces";
+import {
+  buildPricingDisplayLines,
+  computeOrderPricing,
+} from "@/lib/order-pricing-breakdown";
+import { useCommercePricingConfig } from "@/hooks/useCommercePricingConfig";
 import {
   cacheCatalogProducts,
   getCachedProducts,
@@ -166,18 +178,37 @@ export function CartPageClient({
     [lines],
   );
 
-  const gst = useMemo(
+  const commercePricing = useCommercePricingConfig();
+  const totalPieces = useMemo(
     () =>
-      computeGstOnSubtotal(subtotal, clientGst, {
-        b2bPricing: hasB2BSession,
-      }),
-    [subtotal, clientGst, hasB2BSession],
+      sumOrderPieces(
+        lines.map((line) => ({ quantity: line.quantity, sizes: line.sizes })),
+      ),
+    [lines],
   );
-  const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
+  const orderPricing = useMemo(
+    () =>
+      computeOrderPricing({
+        subtotal,
+        gstNumber: clientGst,
+        b2bPricing: hasB2BSession,
+        totalPieces,
+        shippingConfig: commercePricing.shipping,
+        platformFee: commercePricing.platformFee,
+      }),
+    [
+      subtotal,
+      clientGst,
+      hasB2BSession,
+      totalPieces,
+      commercePricing.platformFee,
+      commercePricing.shipping,
+    ],
+  );
 
   const updateQuantity = (item: CartLine, quantity: number) => {
     const minSets = productWholesaleMinSets(item.product, item.sizes);
-    const maxSets = productMaxSets(item.product, item.sizes);
+    const maxSets = cartMaxSetQuantity(item.product, item.sizes, false);
     const nextQuantity = clampCartSetQuantity(quantity, minSets, maxSets);
     writeCart(
       readCart().map((line) =>
@@ -186,7 +217,11 @@ export function CartPageClient({
     );
   };
 
-  const stockBlocked = cartHasStockIssues(lines, viewerLoggedIn);
+  const checkoutBlocked = cartBlocksCheckout(lines, viewerLoggedIn);
+  const stockWarnings = useMemo(
+    () => cartStockWarnings(lines, viewerLoggedIn),
+    [lines, viewerLoggedIn],
+  );
 
   const removeItem = (item: CartLine) => {
     writeCart(readCart().filter((line) => !sameCartLine(line, item)));
@@ -233,16 +268,17 @@ export function CartPageClient({
                               "img-box position-relative d-inline-block",
                             )}
                           >
-                            {cartLineSoldOut(
+                            {cartLineExceedsStock(
                               item.product,
                               item.sizes,
+                              item.quantity,
                               viewerLoggedIn,
                             ) ? (
                               <div
                                 className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                 role="status"
                               >
-                                {labels.outOfStock ?? "Out of stock"}
+                                Exceeds stock
                               </div>
                             ) : null}
                             <StorefrontProductImage
@@ -294,58 +330,55 @@ export function CartPageClient({
                           data-cart-title={labels.quantity ?? "Quantity"}
                           className="tf-cart-item_quantity"
                         >
-                          {cartLineSoldOut(
+                          <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
+                            <button
+                              type="button"
+                              className="btn-quantity btn-decrease"
+                              onClick={() =>
+                                updateQuantity(item, item.quantity - 1)
+                              }
+                              aria-label={
+                                labels.decreaseQty ?? "Decrease set quantity"
+                              }
+                            >
+                              -
+                            </button>
+                            <input
+                              type="text"
+                              className="quantity-product"
+                              name="number"
+                              value={item.quantity}
+                              onChange={(event) =>
+                                updateQuantity(
+                                  item,
+                                  Number(event.target.value) || 1,
+                                )
+                              }
+                            />
+                            <button
+                              type="button"
+                              className="btn-quantity btn-increase"
+                              onClick={() =>
+                                updateQuantity(item, item.quantity + 1)
+                              }
+                              disabled={item.quantity >= B2B_CART_MAX_SETS}
+                              aria-label={
+                                labels.increaseQty ?? "Increase set quantity"
+                              }
+                            >
+                              +
+                            </button>
+                          </div>
+                          {cartLineExceedsStock(
                             item.product,
                             item.sizes,
+                            item.quantity,
                             viewerLoggedIn,
                           ) ? (
-                            <span className="text-caption-1 text-danger">
-                              {labels.outOfStock ?? "Out of stock"}
-                            </span>
-                          ) : (
-                            <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
-                              <button
-                                type="button"
-                                className="btn-quantity btn-decrease"
-                                onClick={() =>
-                                  updateQuantity(item, item.quantity - 1)
-                                }
-                                aria-label={
-                                  labels.decreaseQty ?? "Decrease set quantity"
-                                }
-                              >
-                                -
-                              </button>
-                              <input
-                                type="text"
-                                className="quantity-product"
-                                name="number"
-                                value={item.quantity}
-                                onChange={(event) =>
-                                  updateQuantity(
-                                    item,
-                                    Number(event.target.value) || 1,
-                                  )
-                                }
-                              />
-                              <button
-                                type="button"
-                                className="btn-quantity btn-increase"
-                                onClick={() =>
-                                  updateQuantity(item, item.quantity + 1)
-                                }
-                                disabled={
-                                  item.quantity >=
-                                  productMaxSets(item.product, item.sizes)
-                                }
-                                aria-label={
-                                  labels.increaseQty ?? "Increase set quantity"
-                                }
-                              >
-                                +
-                              </button>
-                            </div>
-                          )}
+                            <p className="text-caption-1 text-secondary mt_8 mb_0">
+                              Exceeds available stock
+                            </p>
+                          ) : null}
                         </td>
                         <td
                           data-cart-title={labels.total ?? "Total"}
@@ -385,21 +418,22 @@ export function CartPageClient({
                   <h5 className="title">
                     {labels.orderSummary ?? "Order Summary"}
                   </h5>
-                  <div className="subtotal text-button d-flex justify-content-between align-items-center">
-                    <span>{labels.subtotal ?? "Subtotal"}</span>
-                    <PriceGate amount={subtotal} className="total" compact />
-                  </div>
-                  {gst.applies ? (
-                    <div className="discount text-button d-flex justify-content-between align-items-center">
-                      <span>
-                        {labels.gst ?? "GST"} ({(gst.rate * 100).toFixed(0)}%)
-                      </span>
-                      <span>{formatInr(gst.amount)}</span>
+                  {buildPricingDisplayLines(orderPricing).map((line) => (
+                    <div
+                      key={line.key}
+                      className="discount text-button d-flex justify-content-between align-items-center"
+                    >
+                      <span>{line.label}</span>
+                      <span>{formatInrPricingLine(line.amount)}</span>
                     </div>
-                  ) : null}
+                  ))}
                   <h5 className="total-order d-flex justify-content-between align-items-center">
                     <span>{labels.total ?? "Total"}</span>
-                    <PriceGate amount={grandTotal} className="total" compact />
+                    <PriceGate
+                      amount={orderPricing.total}
+                      className="total"
+                      compact
+                    />
                   </h5>
                   <div className="box-progress-checkout">
                     <fieldset className="check-agree">
@@ -416,17 +450,33 @@ export function CartPageClient({
                         </a>
                       </label>
                     </fieldset>
-                    {stockBlocked ? (
+                    {stockWarnings.length ? (
+                      <div
+                        className="sarjan-b2b-stock-warning mb_12"
+                        role="status"
+                      >
+                        {stockWarnings.map((warning) => (
+                          <p
+                            key={warning.slug}
+                            className="text-caption-1 text-secondary mb_6"
+                          >
+                            <strong>{warning.name}</strong> — Requested:{" "}
+                            {warning.requestedSets}, Available:{" "}
+                            {warning.availableSets}. {B2B_CART_EXCEEDS_STOCK}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
+                    {checkoutBlocked ? (
                       <p
                         className="text-caption-1 text-danger mb_12"
                         role="alert"
                       >
-                        {labels.stockIssueWarning ??
-                          "Some items are out of stock or exceed available quantity. Update your cart to continue."}
+                        Some items are unavailable for your account tier.
                       </p>
                     ) : null}
                     <div className="sarjan-cart-page-actions">
-                      {stockBlocked ? (
+                      {checkoutBlocked ? (
                         <span
                           className={withBtnIcon(
                             "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",

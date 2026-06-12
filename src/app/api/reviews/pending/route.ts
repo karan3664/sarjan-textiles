@@ -1,13 +1,11 @@
-import { getAdminRouteSession } from "@/lib/admin-route-session";
+import { requireReviewModeratorSession } from "@/lib/require-admin-session";
 import { getReviewDashboardMetrics, listAllReviews } from "@/lib/reviews-store";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const session = await getAdminRouteSession(request);
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireReviewModeratorSession(request);
+  if (session instanceof Response) return session;
 
   const { searchParams } = new URL(request.url);
   const status = (searchParams.get("status") ?? "pending").trim() as

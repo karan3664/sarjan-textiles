@@ -10,7 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import {
   clientAuthJsonHeaders,
-  clientAuthToken,
+  hasLocalClientSession,
   clearExpiredClientSession,
   isClientApproved,
   isClientTokenExpired,
@@ -96,11 +96,9 @@ function isOrderBotLoginRequired(res: Response, error?: string) {
 }
 
 function resolveBotAccess(): BotAccess {
-  const token = clientAuthToken();
-  if (token && isClientTokenExpired(token)) return "guest";
   const client = readStoredClient();
   const clientId = readStoredClientId();
-  if (!clientId && !token) return "guest";
+  if (!clientId && !hasLocalClientSession()) return "guest";
   const status = client?.status;
   if (!status || status === "pending") return "pending";
   if (status === "approved") return "approved";
@@ -204,7 +202,7 @@ export function OrderBotWidget() {
   }, []);
 
   const syncAccess = useCallback(async () => {
-    if (clientAuthToken()) {
+    if (hasLocalClientSession()) {
       await validateAndRefreshClientSession();
     } else {
       await restoreClientSessionFromCookie();
@@ -221,7 +219,7 @@ export function OrderBotWidget() {
       setQuickReplies((prev) =>
         prev.length ? prev : ["Categories", "My cart", "Place order"],
       );
-      setCanChat(Boolean(clientAuthToken()));
+      setCanChat(hasLocalClientSession());
     } else {
       setCanChat(false);
       setQuickReplies([]);

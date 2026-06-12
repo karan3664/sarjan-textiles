@@ -4,6 +4,7 @@ import {
   createBlogComment,
   getApprovedBlogComments,
 } from "@/lib/blog-comments-store";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import {
   sanitizeUserText,
   USER_TEXT_LIMITS,
@@ -73,6 +74,14 @@ export async function POST(request: Request) {
       !authorEmail.includes("@")
     ) {
       return jsonError(400, "Invalid email");
+    }
+    const limit = await rateLimit(
+      rateLimitKey(request, "blog-comment", authorEmail),
+      3,
+      60 * 60_000,
+    );
+    if (!limit.allowed) {
+      return jsonError(429, "Too many comments. Try again later.");
     }
     if (!bodyCheck.ok) {
       return jsonError(400, bodyCheck.error);

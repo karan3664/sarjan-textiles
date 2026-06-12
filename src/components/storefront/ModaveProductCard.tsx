@@ -4,7 +4,8 @@ import { useState, type CSSProperties } from "react";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
-import { useShowProductSoldOut } from "./PriceGate";
+import { useShowProductUnavailable } from "./PriceGate";
+import { PRODUCT_UNAVAILABLE_SHORT } from "@/lib/product-purchase-eligibility";
 import { productColorHex } from "@/lib/product-color-swatch";
 import {
   ProductDealCountdown,
@@ -36,7 +37,7 @@ export function ModaveProductCard({
   const [colorIndex, setColorIndex] = useState(0);
   const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
   const altText = buildProductImageAlt(product);
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
   const colors = product.colors.length ? product.colors : ["Default"];
   const activeColor = colors[colorIndex] ?? colors[0];
   const primaryImage = product.images[colorIndex] ?? product.images[0];
@@ -84,7 +85,7 @@ export function ModaveProductCard({
           ) : null}
         </a>
         <div
-          className={`list-product-btn${soldOut ? " list-product-btn--oos" : ""}`}
+          className={`list-product-btn${unavailable ? " list-product-btn--oos" : ""}`}
         >
           <a
             href="#compare"
@@ -119,12 +120,12 @@ export function ModaveProductCard({
           </a>
         </div>
         <div className="list-btn-main">
-          {soldOut ? (
+          {unavailable ? (
             <span
               className="btn-main-product sarjan-oos-card-btn"
               aria-disabled="true"
             >
-              Out of stock
+              {PRODUCT_UNAVAILABLE_SHORT}
             </span>
           ) : (
             <a
@@ -145,12 +146,12 @@ export function ModaveProductCard({
             </a>
           )}
         </div>
-        {soldOut ? (
+        {unavailable ? (
           <div
             className="sarjan-oos-ribbon sarjan-oos-ribbon--card"
             role="status"
           >
-            Out of stock
+            {PRODUCT_UNAVAILABLE_SHORT}
           </div>
         ) : null}
         {SHOW_PRODUCT_PROMO_TAG ? <ProductPromoTag /> : null}

@@ -14,6 +14,7 @@ import {
 } from "@/lib/content-localize";
 import { normalizeHomeBanners } from "@/lib/home-banners";
 import { PromoBannerCarousel } from "@/components/storefront/PromoBannerCarousel";
+import { InternalPromotionStrip } from "@/components/storefront/InternalPromotionStrip";
 import { resolveProducts } from "@/lib/product-localize";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
@@ -648,57 +649,60 @@ export async function HomeDynamic() {
       </>
     ),
     categories: (
-      <section className="sarjan-home-section sarjan-home-categories sarjan-category-strip">
-        <div
-          dir="ltr"
-          className="swiper tf-sw-collection sarjan-home-category-swiper"
-          data-preview="3"
-          data-tablet="2"
-          data-mobile="1"
-          data-space-lg="30"
-          data-space-md="30"
-          data-space="15"
-          data-pagination="1"
-          data-pagination-md="1"
-          data-pagination-lg="1"
-        >
-          <div className="swiper-wrapper">
-            {(
-              home.categories as Array<
-                (typeof home.categories)[number] & { href?: string }
-              >
-            ).map((category, index) => (
-              <div className="swiper-slide" key={category.name}>
-                <div
-                  className="collection-position-2 style-4 hover-img wow fadeInUp"
-                  data-wow-delay={`${index / 10}s`}
+      <>
+        <InternalPromotionStrip placement="categories" className="pb-0" />
+        <section className="sarjan-home-section sarjan-home-categories sarjan-category-strip">
+          <div
+            dir="ltr"
+            className="swiper tf-sw-collection sarjan-home-category-swiper"
+            data-preview="3"
+            data-tablet="2"
+            data-mobile="1"
+            data-space-lg="30"
+            data-space-md="30"
+            data-space="15"
+            data-pagination="1"
+            data-pagination-md="1"
+            data-pagination-lg="1"
+          >
+            <div className="swiper-wrapper">
+              {(
+                home.categories as Array<
+                  (typeof home.categories)[number] & { href?: string }
                 >
-                  <a className="img-style">
-                    <StorefrontBannerImage
-                      src={category.image}
-                      alt={category.name}
-                      variant="category"
-                      className="sarjan-category-strip-img"
-                      fill
-                    />
-                  </a>
-                  <div className="content">
-                    <a href={category.href ?? "#catalog"} className="cls-btn">
-                      <h6 className="text">
-                        <CmsHtml html={category.name} />
-                      </h6>
-                      <i className="icon icon-arrowUpRight" />
+              ).map((category, index) => (
+                <div className="swiper-slide" key={category.name}>
+                  <div
+                    className="collection-position-2 style-4 hover-img wow fadeInUp"
+                    data-wow-delay={`${index / 10}s`}
+                  >
+                    <a className="img-style">
+                      <StorefrontBannerImage
+                        src={category.image}
+                        alt={category.name}
+                        variant="category"
+                        className="sarjan-category-strip-img"
+                        fill
+                      />
                     </a>
+                    <div className="content">
+                      <a href={category.href ?? "#catalog"} className="cls-btn">
+                        <h6 className="text">
+                          <CmsHtml html={category.name} />
+                        </h6>
+                        <i className="icon icon-arrowUpRight" />
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="nav-sw nav-next-collection d-none" />
+            <div className="nav-sw nav-prev-collection d-none" />
+            <div className="sw-pagination-collection sw-dots type-circle justify-content-center" />
           </div>
-          <div className="nav-sw nav-next-collection d-none" />
-          <div className="nav-sw nav-prev-collection d-none" />
-          <div className="sw-pagination-collection sw-dots type-circle justify-content-center" />
-        </div>
-      </section>
+        </section>
+      </>
     ),
     topPicks: (
       <section
@@ -972,6 +976,7 @@ export async function HomeDynamic() {
 
   return (
     <div className="sarjan-home">
+      <InternalPromotionStrip placement="web_home" />
       {sections.map((section, index) => {
         const content =
           section.type === "custom" ? (
@@ -1700,10 +1705,12 @@ function productFilterHref(
   return listingQueryHref(basePath, params);
 }
 
-function resetFilterHref(sortValue: string, basePath: string, q?: string) {
+/** Clears search + facet filters; keeps sort and returns to page 1. */
+function resetFilterHref(sortValue: string, basePath: string) {
   const params = new URLSearchParams();
-  if (q) params.set("q", q);
-  if (sortValue) params.set("sort", sortValue);
+  if (sortValue && sortValue !== "best-selling") {
+    params.set("sort", sortValue);
+  }
   params.set("page", "1");
   return listingQueryHref(basePath, params);
 }
@@ -1849,7 +1856,7 @@ function ProductFilterPanel({
         </div>
       ) : null}
       <Link
-        href={resetFilterHref(sortValue, basePath, q)}
+        href={resetFilterHref(sortValue, basePath)}
         id="reset-filter"
         className={withBtnIcon("w-100 sarjan-filter-reset-btn")}
       >
@@ -2115,7 +2122,7 @@ export async function ProductsListingDynamic({
               <div id="applied-filters" />
               {activeFilterCount ? (
                 <Link
-                  href={resetFilterHref(sortValue, basePath, q)}
+                  href={resetFilterHref(sortValue, basePath)}
                   id="remove-all"
                   className="remove-all-filters text-btn-uppercase"
                 >
@@ -2141,7 +2148,7 @@ export async function ProductsListingDynamic({
                   activeFilterCount || q
                     ? {
                         label: "Reset filters",
-                        href: resetFilterHref(sortValue, basePath, q),
+                        href: resetFilterHref(sortValue, basePath),
                         icon: "icon-close",
                       }
                     : undefined

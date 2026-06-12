@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import type { AdminCustomer } from "@/lib/admin-customers";
+import { orderStatuses } from "@/lib/order-statuses";
 import { AdminOrderItemImage } from "@/components/admin/AdminOrderItemImage";
 import { OrderPlacedViaBadge } from "@/components/storefront/OrderPlacedViaBadge";
 import {
@@ -32,6 +33,7 @@ const statusClass: Record<string, string> = {
   inactive: "type-inactive",
   "Pending approval": "type-pending",
   Approved: "type-completed",
+  "Partially Approved": "type-pending",
   Rejected: "type-inactive",
   "In Production": "type-pending",
   Packed: "type-pending",
@@ -43,6 +45,7 @@ const statusClass: Record<string, string> = {
 const orderFlow: OrderStatus[] = [
   "Pending approval",
   "Approved",
+  "Partially Approved",
   "In Production",
   "Packed",
   "Ready for Dispatch",
@@ -183,9 +186,15 @@ export function AdminCustomerManagementClient({
 
   const updateCustomers = async (body: Record<string, string>) => {
     setSaving(body.id ?? "saving");
-    setNotice(body.type === "order" ? "Updating order status..." : "");
+    setNotice(
+      body.type === "order"
+        ? body.action === "partial_approve"
+          ? "Partially approving order..."
+          : "Updating order status..."
+        : "",
+    );
     const previousCustomers = customers;
-    if (body.type === "order") {
+    if (body.type === "order" && body.status && !body.action) {
       setCustomers((current) =>
         current.map((customer) =>
           customer.source === "local"
@@ -738,10 +747,12 @@ export function AdminCustomerManagementClient({
                       </div>
                       <div className="sarjan-order-flow">
                         {orderFlow.map((step) => {
+                          const statusIndex = orderFlow.indexOf(order.status);
+                          const stepIndex = orderFlow.indexOf(step);
                           const done =
-                            orderFlow.indexOf(step) <=
-                              orderFlow.indexOf(order.status) &&
-                            order.status !== "Rejected";
+                            order.status !== "Rejected" &&
+                            statusIndex >= 0 &&
+                            stepIndex <= statusIndex;
                           return (
                             <button
                               type="button"
@@ -779,18 +790,7 @@ export function AdminCustomerManagementClient({
                               })
                             }
                           >
-                            {(
-                              [
-                                "Pending approval",
-                                "Approved",
-                                "Rejected",
-                                "In Production",
-                                "Packed",
-                                "Ready for Dispatch",
-                                "Dispatched",
-                                "Delivered",
-                              ] as OrderStatus[]
-                            ).map((status) => (
+                            {orderStatuses.map((status) => (
                               <option value={status} key={status}>
                                 {status}
                               </option>
@@ -804,6 +804,53 @@ export function AdminCustomerManagementClient({
                           {order.status}
                         </span>
                       </div>
+                      {selected.source === "local" &&
+                      order.status === "Pending approval" ? (
+                        <div className="d-flex gap10 flex-wrap mt_12">
+                          <button
+                            type="button"
+                            className="tf-button style-1"
+                            disabled={saving === order.id}
+                            onClick={() =>
+                              updateCustomers({
+                                type: "order",
+                                id: order.id,
+                                status: "Approved",
+                              })
+                            }
+                          >
+                            Approve full order
+                          </button>
+                          <button
+                            type="button"
+                            className="tf-button style-2"
+                            disabled={saving === order.id}
+                            onClick={() =>
+                              updateCustomers({
+                                type: "order",
+                                id: order.id,
+                                action: "partial_approve",
+                              })
+                            }
+                          >
+                            Partially approve (available stock)
+                          </button>
+                          <button
+                            type="button"
+                            className="tf-button style-3"
+                            disabled={saving === order.id}
+                            onClick={() =>
+                              updateCustomers({
+                                type: "order",
+                                id: order.id,
+                                status: "Rejected",
+                              })
+                            }
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : null}
                       <div className="text-caption-1 text-secondary">
                         Dispatch:{" "}
                         {resolveDispatchAddress(order.dispatchAddress, {

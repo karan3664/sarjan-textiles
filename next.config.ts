@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { approvedImageHostnames } from "./src/lib/storefront-image";
+import { SECURITY_HEADERS } from "./src/lib/security-headers";
 
 const isDockerBuild = process.env.DOCKER_BUILD === "1";
 
@@ -93,7 +94,15 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    const globalSecurityHeaders = Object.entries(SECURITY_HEADERS).map(
+      ([key, value]) => ({ key, value }),
+    );
+
     return [
+      {
+        source: "/:path*",
+        headers: globalSecurityHeaders,
+      },
       {
         source: "/sarjan-assets/client-avatars/:path*",
         headers: [

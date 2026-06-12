@@ -8,12 +8,18 @@ import {
 } from "@/lib/auth-banner-process";
 import { resolveCmsUploadsRoot } from "@/lib/cms-uploads-path";
 import { listCmsUploadImages } from "@/lib/cms-uploads-index";
+import { requireAdminRouteSession } from "@/lib/require-admin-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** List CMS images already on disk (newest first). */
 export async function GET(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/uploads",
+  });
+  if (session instanceof Response) return session;
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") ?? undefined;
   const limit = Number(searchParams.get("limit") ?? "300");
@@ -93,11 +99,7 @@ async function imageBuffer(file: File) {
       contentType: "image/webp",
     };
   } catch {
-    return {
-      buffer: input,
-      extension: extensionFromFile(file),
-      contentType: file.type || "application/octet-stream",
-    };
+    throw new Error("Invalid image file");
   }
 }
 
@@ -113,6 +115,11 @@ async function persistCmsFile(
 }
 
 export async function POST(request: Request) {
+  const session = await requireAdminRouteSession(request, {
+    path: "/api/admin/uploads",
+  });
+  if (session instanceof Response) return session;
+
   const formData = await request.formData();
   const file = formData.get("file");
   const preset = formData.get("preset");

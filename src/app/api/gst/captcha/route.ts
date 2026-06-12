@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const preferredRegion = ["bom1"];
 
 export async function GET(request: Request) {
-  const limit = rateLimit(rateLimitKey(request, "gst-captcha"), 24, 60_000);
+  const limit = await rateLimit(rateLimitKey(request, "gst-captcha"), 24, 60_000);
   if (!limit.allowed) return rateLimitResponse(limit.resetAt);
   try {
     const { png, cookieHeader, contentType } = await fetchGstPortalCaptchaPng();

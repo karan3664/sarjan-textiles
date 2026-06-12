@@ -40,6 +40,8 @@ type ProductForm = {
   metaDescription: string;
   keywords: string;
   isFeatured: boolean;
+  catalogActive: boolean;
+  dealerTiers: string;
   dealEnabled: boolean;
   dealEndsAt: string;
   dealPrice: string;
@@ -124,6 +126,8 @@ const emptyForm: ProductForm = {
   metaDescription: "",
   keywords: "",
   isFeatured: false,
+  catalogActive: true,
+  dealerTiers: "",
   dealEnabled: false,
   dealEndsAt: "",
   dealPrice: "",
@@ -168,6 +172,32 @@ function productFromForm(
   const slug = isWeakProductSlug(draftSlug)
     ? buildSeoProductSlug({ category, fabric, colors, name })
     : draftSlug;
+  const sizes = splitList(form.sizes);
+  const variants = splitList(form.colors).flatMap((color) =>
+    sizes.map((size) => {
+      const key = `${color}__${size}`;
+      const override = variantOverrides[key] ?? {};
+      return {
+        sku: (
+          override.sku || `${sku}-${color.slice(0, 3).toUpperCase()}-${size}`
+        ).replace(/\s+/g, ""),
+        color,
+        size,
+        price: Number(override.price) || Number(form.price) || 0,
+        stock:
+          Number(override.stock) ||
+          Number(form.variantStock) ||
+          Math.floor(
+            (Number(form.stock) || 0) /
+              Math.max(1, splitList(form.colors).length * sizes.length),
+          ),
+      };
+    }),
+  );
+  const stock =
+    variants.length > 0
+      ? variants.reduce((sum, variant) => sum + (Number(variant.stock) || 0), 0)
+      : Number(form.stock) || 0;
 
   return {
     id: fallbackId,
@@ -182,11 +212,11 @@ function productFromForm(
     fabric,
     price: Number(form.price) || 0,
     moq: Number(form.moq) || 1,
-    stock: Number(form.stock) || 0,
+    stock,
     reserved: Number(form.reserved) || 0,
     sold: Number(form.sold) || 0,
     colors,
-    sizes: splitList(form.sizes),
+    sizes,
     images: form.images.length
       ? form.images
       : ["/sarjan-assets/sarjan-logo.svg"],
@@ -208,30 +238,7 @@ function productFromForm(
     metaDescription:
       form.metaDescription.trim() || form.description.trim().slice(0, 155),
     keywords: form.keywords.trim(),
-    variants: splitList(form.colors).flatMap((color) =>
-      splitList(form.sizes).map((size) => {
-        const key = `${color}__${size}`;
-        const override = variantOverrides[key] ?? {};
-        return {
-          sku: (
-            override.sku || `${sku}-${color.slice(0, 3).toUpperCase()}-${size}`
-          ).replace(/\s+/g, ""),
-          color,
-          size,
-          price: Number(override.price) || Number(form.price) || 0,
-          stock:
-            Number(override.stock) ||
-            Number(form.variantStock) ||
-            Math.floor(
-              (Number(form.stock) || 0) /
-                Math.max(
-                  1,
-                  splitList(form.colors).length * splitList(form.sizes).length,
-                ),
-            ),
-        };
-      }),
-    ),
+    variants,
     pricingRules: form.pricingRules
       .split("\n")
       .map((line) => line.split(",").map((item) => item.trim()))
@@ -244,6 +251,15 @@ function productFromForm(
         (rule) => Number.isFinite(rule.minQty) && Number.isFinite(rule.price),
       ),
     isFeatured: form.isFeatured,
+    catalogActive: form.catalogActive,
+    dealerTiers: form.dealerTiers.trim()
+      ? form.dealerTiers
+          .split(",")
+          .map((tier) => tier.trim().toLowerCase())
+          .filter((tier): tier is "standard" | "premium" | "dealer" =>
+            ["standard", "premium", "dealer"].includes(tier),
+          )
+      : undefined,
     dealEnabled: form.dealEnabled,
     dealEndsAt: form.dealEnabled
       ? dealEndsAtFromInput(form.dealEndsAt)
@@ -286,6 +302,8 @@ function formFromProduct(product?: Product): ProductForm {
     metaDescription: product.metaDescription ?? "",
     keywords: product.keywords ?? "",
     isFeatured: Boolean(product.isFeatured),
+    catalogActive: product.catalogActive !== false && product.active !== false,
+    dealerTiers: (product.dealerTiers ?? []).join(", "),
     dealEnabled: Boolean(product.dealEnabled),
     dealEndsAt: dealEndsAtInputValue(product.dealEndsAt),
     dealPrice:
@@ -1306,6 +1324,41 @@ export function AdminProductCreateClient({
                   </label>
                 </fieldset>
               </div>
+
+              <fieldset>
+                <div className="text-button font-instrument mb-8">
+                  Catalog availability
+                </div>
+                <label className="sarjan-product-switch mb-12">
+                  <input
+                    type="checkbox"
+                    checked={form.catalogActive}
+                    onChange={(event) =>
+                      update("catalogActive", event.target.checked)
+                    }
+                  />
+                  <span>
+                    Active in catalog (customers can browse and order)
+                  </span>
+                </label>
+                <fieldset>
+                  <div className="text-button font-instrument mb-8">
+                    Dealer tiers (optional)
+                  </div>
+                  <input
+                    type="text"
+                    value={form.dealerTiers}
+                    onChange={(event) =>
+                      update("dealerTiers", event.target.value)
+                    }
+                    placeholder="standard, premium, dealer"
+                  />
+                  <p className="body-text text-secondary mb-0 mt-8">
+                    Leave blank for all tiers. Comma-separated list restricts
+                    who can purchase this SKU.
+                  </p>
+                </fieldset>
+              </fieldset>
 
               <fieldset className="sarjan-deal-panel">
                 <div className="text-button font-instrument mb-8">

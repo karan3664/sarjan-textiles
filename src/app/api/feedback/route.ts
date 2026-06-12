@@ -1,5 +1,6 @@
 import { createFeedback } from "@/lib/local-db";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import {
   sanitizeUserText,
   USER_TEXT_LIMITS,
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
 
     const companyName = sanitizeUserText(String(raw.companyName ?? ""));
     const email = sanitizeUserText(String(raw.email ?? "")).toLowerCase();
+    const limit = await rateLimit(
+      rateLimitKey(request, "feedback", email || "anon"),
+      5,
+      60_000,
+    );
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
     if (!companyName || companyName.length > USER_TEXT_LIMITS.feedbackCompany) {
       return Response.json(
         { error: "Company name is required" },

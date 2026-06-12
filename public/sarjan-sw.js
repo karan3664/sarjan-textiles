@@ -1,6 +1,6 @@
 /* Sarjan Textiles storefront service worker — Sprint 7 */
 
-const SW_VERSION = "sarjan-storefront-20260611c";
+const SW_VERSION = "sarjan-storefront-20260612-launch-gate";
 const STATIC_CACHE = `sarjan-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `sarjan-runtime-${SW_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -101,21 +101,15 @@ function isLocalhostUrl(url) {
 }
 
 async function networkFirstNavigation(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
-
   try {
     const response = await fetch(request, { redirect: "follow" });
     const responseUrl = new URL(response.url);
     if (isLocalhostUrl(responseUrl) && !isLocalhostUrl(new URL(request.url))) {
       return Response.error();
     }
-    if (response.ok && response.status < 300) {
-      await cache.put(request, response.clone());
-    }
+    // Never cache HTML navigations — stale cache bypassed the pre-launch /launch gate.
     return response;
   } catch {
-    const cached = await cache.match(request);
-    if (cached) return cached;
     const offline = await caches.match(OFFLINE_URL);
     if (offline) return offline;
     return new Response("Offline", {

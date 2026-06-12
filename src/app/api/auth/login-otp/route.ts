@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { clientStatusAuthError } from "@/lib/client-approved-session";
 import { setClientSessionCookie } from "@/lib/client-session-cookie";
 import { createClientToken } from "@/lib/client-token";
+import { isNativeClientRequest } from "@/lib/native-client-detect";
 import { normalizeClientEmail } from "@/lib/client-duplicate-check";
 import { normalizeEmail, verifyEmailOtpToken } from "@/lib/email-otp";
+import { recordClientLogin } from "@/lib/client-activity";
 import { publicClient, readLocalDb } from "@/lib/local-db";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "email-otp-login", email),
       10,
       60_000,
@@ -63,11 +65,17 @@ export async function POST(request: Request) {
     const token = await createClientToken({
       clientId: client.id,
       email: client.email,
+      sessionVersion: client.sessionVersion,
     });
-    const response = NextResponse.json({
-      client: publicClient(client),
-      token,
-    });
+    await recordClientLogin(client.id).catch(() => null);
+    const payload: {
+      client: ReturnType<typeof publicClient>;
+      token?: string;
+    } = { client: publicClient(client) };
+    if (isNativeClientRequest(request)) {
+      payload.token = token;
+    }
+    const response = NextResponse.json(payload);
     setClientSessionCookie(response, token);
     return response;
   } catch (error) {

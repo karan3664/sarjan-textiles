@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { isClientPublicAuthPage } from "@/lib/auth-route-guards";
 import {
   clearClientSessionLocal,
-  clientAuthToken,
+  hasLocalClientSession,
   validateAndRefreshClientSession,
 } from "@/lib/client-auth-browser";
 
@@ -34,7 +34,7 @@ export function ClientSessionBootstrap() {
 
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
-      if (!clientAuthToken()) return;
+      if (!hasLocalClientSession()) return;
       void run();
     };
 

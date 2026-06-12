@@ -8,7 +8,7 @@ export const maxDuration = 30;
 export const preferredRegion = ["bom1"];
 
 export async function POST(request: Request) {
-  const limit = rateLimit(rateLimitKey(request, "gst-verify"), 20, 60_000);
+  const limit = await rateLimit(rateLimitKey(request, "gst-verify"), 20, 60_000);
   if (!limit.allowed) return rateLimitResponse(limit.resetAt);
   try {
     const body = await request.json();

@@ -1,10 +1,13 @@
 export type StoredClient = {
   id?: string;
   status?: "pending" | "approved" | "rejected" | "inactive";
+  clientTier?: "standard" | "premium" | "dealer";
   gst?: string;
   companyName?: string;
   email?: string;
   phone?: string;
+  city?: string;
+  avatarUrl?: string;
   address?: {
     contactName?: string;
     phone?: string;

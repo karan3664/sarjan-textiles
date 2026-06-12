@@ -1,0 +1,11 @@
+{
+  "ordersExceedingStock": 1,
+  "productRequestCounts": {
+    "bahaar-ajrakh-block-print-shirt-cotton": {
+      "name": "Bahaar Ajrakh Block Print Shirt Cotton",
+      "count": 1
+    }
+  },
+  "productionRequirementCount": 1,
+  "updatedAt": "2026-06-12T09:46:19.091Z"
+}

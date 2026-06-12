@@ -1,6 +1,12 @@
-/** Strip HTML tags only — keeps emoji and all Unicode text (UTF-8 safe). */
+import sanitizeHtml from "sanitize-html";
+
+/** Strip HTML — keeps emoji and Unicode text (UTF-8 safe). */
 export function sanitizeUserText(value: string): string {
-  return value.replace(/<[^>]*>/g, "").trim();
+  return sanitizeHtml(value, {
+    allowedTags: [],
+    allowedAttributes: {},
+    disallowedTagsMode: "discard",
+  }).trim();
 }
 
 export type UserTextValidation = {

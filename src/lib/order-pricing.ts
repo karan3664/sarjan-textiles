@@ -1,8 +1,15 @@
 import { getCatalogProducts } from "@/lib/catalog";
-import { computeGstOnSubtotal } from "@/lib/gst-display";
-import { assertInventoryAvailableForOrder } from "@/lib/order-inventory";
+import { getCmsSnapshot } from "@/lib/cms-store";
+import { getClient, type LocalOrder } from "@/lib/local-db";
+import { sumOrderPieces } from "@/lib/order-pieces";
+import { computeOrderPricing } from "@/lib/order-pricing-breakdown";
+import { resolvePlatformFeeConfig } from "@/lib/platform-fee-config";
+import { resolveShippingConfig } from "@/lib/shipping-config";
+import {
+  assertProductPurchasableForOrder,
+  normalizeClientTier,
+} from "@/lib/product-purchase-eligibility";
 import { productSetPrice } from "@/lib/product-pricing";
-import type { LocalOrder } from "@/lib/local-db";
 
 export type OrderItemInput = {
   slug: string;
@@ -24,6 +31,10 @@ export async function buildValidatedOrderPayload(
     items: OrderItemInput[];
   },
 ) {
+  const client = await getClient(clientId);
+  if (!client) throw new Error("Client not found");
+  const clientTier = normalizeClientTier(client.clientTier);
+
   const slugs = [...new Set(input.items.map((item) => item.slug))];
   const catalog = await getCatalogProducts({
     ids: slugs,
@@ -38,6 +49,7 @@ export async function buildValidatedOrderPayload(
   for (const line of input.items) {
     const product = bySlug.get(line.slug);
     if (!product) throw new Error(`Product not found: ${line.slug}`);
+    assertProductPurchasableForOrder(product, clientTier);
     const sizes = line.sizes?.length ? line.sizes : product.sizes;
     const setPrice = productSetPrice(product, line.color, sizes);
     const setQuantity = Math.max(1, Number(line.setQuantity) || 1);
@@ -57,29 +69,28 @@ export async function buildValidatedOrderPayload(
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const gst = computeGstOnSubtotal(subtotal, null, { b2bPricing: true });
-  const tax = gst.amount;
-  const total = subtotal + tax;
+  const totalPieces = sumOrderPieces(items);
+  const cms = await getCmsSnapshot();
+  const pricing = computeOrderPricing({
+    subtotal,
+    b2bPricing: true,
+    totalPieces,
+    shippingConfig: resolveShippingConfig(cms.siteSettings),
+    platformFee: resolvePlatformFeeConfig(cms.siteSettings),
+  });
   const payload = {
     clientId,
     clientEmail: input.clientEmail,
     dispatchAddress: input.dispatchAddress?.trim() ?? "",
     note: input.note?.trim(),
     items,
-    subtotal,
-    tax,
-    total,
+    subtotal: pricing.subtotal,
+    shipping: pricing.shipping,
+    tax: pricing.tax,
+    platformFee: pricing.platformFee,
+    platformFeeGst: pricing.platformFeeGst,
+    roundOff: pricing.roundOff,
+    total: pricing.total,
   };
-  await assertInventoryAvailableForOrder({
-    ...payload,
-    id: "validate",
-    status: "Pending approval",
-    paymentMode: "cheque",
-    paymentStatus: "Pending",
-    creditDays: 90,
-    depositStatus: "Not deposited",
-    dispatchHistory: [],
-    createdAt: new Date().toISOString(),
-  });
   return payload;
 }

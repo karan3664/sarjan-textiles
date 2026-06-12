@@ -12,11 +12,10 @@ import {
   formatClientDispatchAddress,
   hasMeaningfulDispatchAddress,
 } from "@/lib/dispatch-address";
-import {
-  releaseInventoryForOrder,
-  reserveInventoryForOrder,
-  syncInventoryForOrderStatusChange,
-} from "@/lib/order-inventory";
+import { getCmsSnapshot } from "@/lib/cms-store";
+import { recordOrderPlacementAnalytics } from "@/lib/order-approval-analytics";
+import { syncInventoryForOrderStatusChange } from "@/lib/order-inventory";
+import { orderExceedsAvailableStock } from "@/lib/order-stock-review";
 import { assertProductionDatabase } from "@/lib/database-status";
 import {
   isPostgresEnabled,
@@ -29,11 +28,20 @@ import {
   normalizeOrderPlacedVia,
   type OrderPlacedVia,
 } from "@/lib/order-placed-via";
-import { computeGstOnSubtotal, enrichOrderPricing } from "@/lib/gst-display";
+import {
+  abandonedCartFirstReminderHours,
+  abandonedCartSecondReminderHours,
+  abandonedCartRepeatReminderHours,
+} from "@/lib/abandoned-cart-config";
+import { enrichOrderPricing } from "@/lib/gst-display";
+import { computeOrderPricing } from "@/lib/order-pricing-breakdown";
+import { resolvePlatformFeeConfig } from "@/lib/platform-fee-config";
 
 export type LocalClient = {
   id: string;
   email: string;
+  /** Incremented on logout to invalidate outstanding JWTs. */
+  sessionVersion?: number;
   passwordHash: string;
   companyName: string;
   gst?: string;
@@ -70,6 +78,11 @@ export type LocalClient = {
     }>;
   };
   status: "pending" | "approved" | "rejected" | "inactive";
+  /** Wholesale tier for dealer-restricted catalog items. */
+  clientTier?: "standard" | "premium" | "dealer";
+  lastLoginAt?: string;
+  lastAppOpenAt?: string;
+  lastPurchaseAt?: string;
   createdAt: string;
 };
 
@@ -80,6 +93,7 @@ export type LocalOrder = {
   status:
     | "Pending approval"
     | "Approved"
+    | "Partially Approved"
     | "Rejected"
     | "In Production"
     | "Packed"
@@ -87,6 +101,8 @@ export type LocalOrder = {
     | "Dispatched"
     | "Delivered";
   approvalRemark?: string;
+  /** True when any line requested more than sellable stock at placement. */
+  exceedsAvailableStock?: boolean;
   paymentMode: "cheque";
   paymentStatus?: "Pending" | "Partial" | "Paid" | "Overdue";
   creditDays: number;
@@ -97,7 +113,11 @@ export type LocalOrder = {
   depositStatus?: "Not deposited" | "Deposited" | "Cleared" | "Bounced";
   paymentReceivedAt?: string;
   subtotal: number;
+  shipping?: number;
   tax?: number;
+  platformFee?: number;
+  platformFeeGst?: number;
+  roundOff?: number;
   total?: number;
   items: Array<{
     slug: string;
@@ -108,6 +128,8 @@ export type LocalOrder = {
     piecesPerSet: number;
     unitPrice: number;
     lineTotal: number;
+    /** Admin partial approval — approved wholesale sets (defaults to setQuantity). */
+    approvedSetQuantity?: number;
     /** Product photo at order time (or resolved from catalog). */
     image?: string;
   }>;
@@ -137,7 +159,7 @@ type CartState = {
   reminder2SentAt?: string;
 };
 
-export type CartReminderStage = 1 | 2;
+export type CartReminderStage = 1 | 2 | "daily";
 
 export type AbandonedCartCandidate = {
   clientId: string;
@@ -216,7 +238,19 @@ function mapClient(row: Record<string, unknown>): LocalClient {
         ? (row.address as LocalClient["address"])
         : undefined,
     status: (row.status as LocalClient["status"]) ?? "pending",
+    clientTier:
+      row.client_tier != null
+        ? (String(row.client_tier)
+            .trim()
+            .toLowerCase() as LocalClient["clientTier"])
+        : undefined,
     createdAt: String(row.created_at ?? ""),
+    lastLoginAt:
+      row.last_login_at != null ? String(row.last_login_at) : undefined,
+    lastAppOpenAt:
+      row.last_app_open_at != null ? String(row.last_app_open_at) : undefined,
+    lastPurchaseAt:
+      row.last_purchase_at != null ? String(row.last_purchase_at) : undefined,
     avatarUrl:
       row.avatar_url != null && String(row.avatar_url).trim()
         ? String(row.avatar_url).trim()
@@ -247,7 +281,13 @@ function mapOrder(row: Record<string, unknown>): LocalOrder {
         ? String(row.payment_received_at)
         : undefined,
     subtotal: Number(row.subtotal ?? 0),
+    shipping: row.shipping != null ? Number(row.shipping) : undefined,
     tax: row.tax != null ? Number(row.tax) : undefined,
+    platformFee:
+      row.platform_fee != null ? Number(row.platform_fee) : undefined,
+    platformFeeGst:
+      row.platform_fee_gst != null ? Number(row.platform_fee_gst) : undefined,
+    roundOff: row.round_off != null ? Number(row.round_off) : undefined,
     total: row.total != null ? Number(row.total) : undefined,
     items: (Array.isArray(row.items) ? row.items : []) as LocalOrder["items"],
     dispatchAddress: String(row.dispatch_address ?? ""),
@@ -270,7 +310,14 @@ function mapOrder(row: Record<string, unknown>): LocalOrder {
     createdAt: String(row.created_at ?? ""),
   };
   const priced = enrichOrderPricing(base);
-  return { ...base, tax: priced.tax, total: priced.total };
+  return {
+    ...base,
+    tax: priced.tax,
+    platformFee: priced.platformFee,
+    platformFeeGst: priced.platformFeeGst,
+    roundOff: priced.roundOff,
+    total: priced.total,
+  };
 }
 
 function orderRow(order: Partial<LocalOrder>) {
@@ -285,6 +332,12 @@ function orderRow(order: Partial<LocalOrder>) {
     deposit_status: order.depositStatus,
     payment_received_at: order.paymentReceivedAt || null,
     subtotal: order.subtotal,
+    shipping: order.shipping,
+    tax: order.tax,
+    platform_fee: order.platformFee,
+    platform_fee_gst: order.platformFeeGst,
+    round_off: order.roundOff,
+    total: order.total,
     items: order.items,
     dispatch_address: order.dispatchAddress,
     dispatch_date: order.dispatchDate || null,
@@ -331,6 +384,7 @@ export function publicClient(client: LocalClient) {
     phone: client.phone,
     address: client.address,
     status: client.status,
+    clientTier: client.clientTier,
     createdAt: client.createdAt,
     avatarUrl: client.avatarUrl,
   };
@@ -1034,6 +1088,17 @@ function orderCreatedHistoryNote(placedVia: OrderPlacedVia) {
     : "Order created by client.";
 }
 
+async function enrichOrderStockFlags(order: LocalOrder): Promise<LocalOrder> {
+  const cms = await getCmsSnapshot();
+  const bySlug = new Map(
+    cms.products.map((product) => [product.slug, product]),
+  );
+  return {
+    ...order,
+    exceedsAvailableStock: orderExceedsAvailableStock(order.items, bySlug),
+  };
+}
+
 export async function createOrder(
   input: Omit<
     LocalOrder,
@@ -1061,7 +1126,7 @@ export async function createOrder(
     if (clientRow.status !== "approved")
       throw new Error("Client approval required before placing orders");
     const createdAt = new Date().toISOString();
-    const order: LocalOrder = {
+    const order = await enrichOrderStockFlags({
       ...orderInput,
       id: `ST-${Date.now()}`,
       status: "Pending approval",
@@ -1078,8 +1143,8 @@ export async function createOrder(
         },
       ],
       createdAt,
-    };
-    await reserveInventoryForOrder(order);
+    });
+    void recordOrderPlacementAnalytics(order).catch(() => null);
     let mapped: LocalOrder;
     try {
       const data = await pgInsertReturning("orders", {
@@ -1092,6 +1157,12 @@ export async function createOrder(
         credit_days: order.creditDays,
         deposit_status: order.depositStatus,
         subtotal: order.subtotal,
+        shipping: order.shipping,
+        tax: order.tax,
+        platform_fee: order.platformFee,
+        platform_fee_gst: order.platformFeeGst,
+        round_off: order.roundOff,
+        total: order.total,
         items: order.items,
         dispatch_address: order.dispatchAddress,
         dispatch_history: order.dispatchHistory,
@@ -1101,7 +1172,6 @@ export async function createOrder(
       if (!data) throw new Error("Failed to create order");
       mapped = mapOrder(data);
     } catch (error) {
-      await releaseInventoryForOrder(order).catch(() => undefined);
       throw error;
     }
     await maybeBackfillClientAddressFromDispatch(
@@ -1115,7 +1185,7 @@ export async function createOrder(
   if (client.status !== "approved")
     throw new Error("Client approval required before placing orders");
 
-  const order: LocalOrder = {
+  const order = await enrichOrderStockFlags({
     ...orderInput,
     id: `ST-${Date.now()}`,
     status: "Pending approval",
@@ -1132,9 +1202,9 @@ export async function createOrder(
       },
     ],
     createdAt: new Date().toISOString(),
-  };
+  });
+  void recordOrderPlacementAnalytics(order).catch(() => null);
 
-  await reserveInventoryForOrder(order);
   db.orders.push(order);
   await writeLocalDb(db);
   await maybeBackfillClientAddressFromDispatch(
@@ -1156,7 +1226,12 @@ export async function createAdminOrder(input: {
   if (!client) throw new Error("Client not found");
   const createdAt = new Date().toISOString();
   const subtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const gst = computeGstOnSubtotal(subtotal, null, { b2bPricing: true });
+  const cms = await getCmsSnapshot();
+  const pricing = computeOrderPricing({
+    subtotal,
+    b2bPricing: true,
+    platformFee: resolvePlatformFeeConfig(cms.siteSettings),
+  });
   const order: LocalOrder = {
     id: `ST-${Date.now()}`,
     clientId: client.id,
@@ -1166,9 +1241,12 @@ export async function createAdminOrder(input: {
     paymentStatus: "Pending",
     creditDays: 90,
     depositStatus: "Not deposited",
-    subtotal,
-    tax: gst.amount,
-    total: subtotal + gst.amount,
+    subtotal: pricing.subtotal,
+    tax: pricing.tax,
+    platformFee: pricing.platformFee,
+    platformFeeGst: pricing.platformFeeGst,
+    roundOff: pricing.roundOff,
+    total: pricing.total,
     items: input.items,
     dispatchAddress: hasMeaningfulDispatchAddress(input.dispatchAddress)
       ? input.dispatchAddress!.trim()
@@ -1199,6 +1277,12 @@ export async function createAdminOrder(input: {
         credit_days: order.creditDays,
         deposit_status: order.depositStatus,
         subtotal: order.subtotal,
+        shipping: order.shipping,
+        tax: order.tax,
+        platform_fee: order.platformFee,
+        platform_fee_gst: order.platformFeeGst,
+        round_off: order.roundOff,
+        total: order.total,
         items: order.items,
         dispatch_address: order.dispatchAddress,
         dispatch_history: order.dispatchHistory,
@@ -1497,11 +1581,67 @@ export async function markCartReminderSent(
   await writeLocalDb(db);
 }
 
+function pushAbandonedCartCandidate(
+  candidates: AbandonedCartCandidate[],
+  row: {
+    clientId: string;
+    items: CartLine[];
+    updatedAt: string;
+    reminder1SentAt?: string;
+    reminder2SentAt?: string;
+  },
+  thresholds: { firstMs: number; secondMs: number; repeatMs: number },
+  now: number,
+) {
+  const { items, updatedAt, reminder1SentAt, reminder2SentAt } = row;
+  if (!items.length) return;
+  const updatedMs = new Date(updatedAt).getTime();
+  if (!Number.isFinite(updatedMs)) return;
+  const age = now - updatedMs;
+
+  if (age >= thresholds.firstMs && !reminder1SentAt) {
+    candidates.push({
+      clientId: row.clientId,
+      items,
+      updatedAt,
+      stage: 1,
+    });
+    return;
+  }
+  if (age >= thresholds.secondMs && reminder1SentAt && !reminder2SentAt) {
+    candidates.push({
+      clientId: row.clientId,
+      items,
+      updatedAt,
+      stage: 2,
+    });
+    return;
+  }
+  if (reminder1SentAt && reminder2SentAt) {
+    const lastPushMs = new Date(reminder2SentAt).getTime();
+    if (
+      Number.isFinite(lastPushMs) &&
+      now - lastPushMs >= thresholds.repeatMs
+    ) {
+      candidates.push({
+        clientId: row.clientId,
+        items,
+        updatedAt,
+        stage: "daily",
+      });
+    }
+  }
+}
+
 export async function listAbandonedCartCandidates(): Promise<
   AbandonedCartCandidate[]
 > {
   const hourMs = 60 * 60 * 1000;
-  const dayMs = 24 * hourMs;
+  const thresholds = {
+    firstMs: abandonedCartFirstReminderHours() * hourMs,
+    secondMs: abandonedCartSecondReminderHours() * hourMs,
+    repeatMs: abandonedCartRepeatReminderHours() * hourMs,
+  };
   const now = Date.now();
   const candidates: AbandonedCartCandidate[] = [];
 
@@ -1511,56 +1651,41 @@ export async function listAbandonedCartCandidates(): Promise<
     );
 
     for (const row of data) {
-      const items = Array.isArray(row.items) ? (row.items as CartLine[]) : [];
-      if (!items.length) continue;
-      const updatedAt = String(row.updated_at ?? "");
-      const updatedMs = new Date(updatedAt).getTime();
-      if (!Number.isFinite(updatedMs)) continue;
-      const age = now - updatedMs;
-      const reminder1SentAt = row.reminder_1_sent_at
-        ? String(row.reminder_1_sent_at)
-        : undefined;
-      const reminder2SentAt = row.reminder_2_sent_at
-        ? String(row.reminder_2_sent_at)
-        : undefined;
-
-      if (age >= hourMs && !reminder1SentAt) {
-        candidates.push({
+      pushAbandonedCartCandidate(
+        candidates,
+        {
           clientId: String(row.client_id),
-          items,
-          updatedAt,
-          stage: 1,
-        });
-        continue;
-      }
-      if (age >= dayMs && reminder1SentAt && !reminder2SentAt) {
-        candidates.push({
-          clientId: String(row.client_id),
-          items,
-          updatedAt,
-          stage: 2,
-        });
-      }
+          items: Array.isArray(row.items) ? (row.items as CartLine[]) : [],
+          updatedAt: String(row.updated_at ?? ""),
+          reminder1SentAt: row.reminder_1_sent_at
+            ? String(row.reminder_1_sent_at)
+            : undefined,
+          reminder2SentAt: row.reminder_2_sent_at
+            ? String(row.reminder_2_sent_at)
+            : undefined,
+        },
+        thresholds,
+        now,
+      );
     }
     return candidates;
   }
 
   const db = await readLocalDb();
   for (const [clientId, items] of Object.entries(db.carts ?? {})) {
-    if (!items.length) continue;
     const state = db.cartState?.[clientId];
-    const updatedAt = state?.updatedAt ?? new Date(0).toISOString();
-    const updatedMs = new Date(updatedAt).getTime();
-    if (!Number.isFinite(updatedMs)) continue;
-    const age = now - updatedMs;
-
-    if (age >= hourMs && !state?.reminder1SentAt) {
-      candidates.push({ clientId, items, updatedAt, stage: 1 });
-      continue;
-    }
-    if (age >= dayMs && state?.reminder1SentAt && !state?.reminder2SentAt) {
-      candidates.push({ clientId, items, updatedAt, stage: 2 });
-    }
+    pushAbandonedCartCandidate(
+      candidates,
+      {
+        clientId,
+        items,
+        updatedAt: state?.updatedAt ?? new Date(0).toISOString(),
+        reminder1SentAt: state?.reminder1SentAt,
+        reminder2SentAt: state?.reminder2SentAt,
+      },
+      thresholds,
+      now,
+    );
   }
 
   return candidates;

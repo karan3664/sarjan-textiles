@@ -21,7 +21,11 @@ export async function POST(request: Request) {
       return Response.json({ ok: true });
     }
 
-    const limited = rateLimit(rateLimitKey(request, "analytics", visitorId), 80, 60_000);
+    const limited = await rateLimit(
+      rateLimitKey(request, "analytics", visitorId),
+      80,
+      60_000,
+    );
     if (!limited.allowed) return rateLimitResponse(limited.resetAt);
 
     await trackVisit({

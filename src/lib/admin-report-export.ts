@@ -122,7 +122,7 @@ export async function downloadXlsxPlain(
   filename: string,
   rows: Array<Record<string, unknown>>,
 ) {
-  const XLSX = await import("xlsx");
+  const { downloadExcelJsonSheet } = await import("@/lib/excel-export-client");
   const exportRows = rows.map((row) => {
     const copy = { ...row };
     if (REPORT_IMAGE_KEY in copy) {
@@ -132,13 +132,7 @@ export async function downloadXlsxPlain(
     }
     return copy;
   });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(
-    workbook,
-    XLSX.utils.json_to_sheet(exportRows),
-    "Report",
-  );
-  XLSX.writeFile(workbook, filename);
+  await downloadExcelJsonSheet(filename, "Report", exportRows);
 }
 
 export function printPdfWithImages(

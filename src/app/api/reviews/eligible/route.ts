@@ -21,9 +21,17 @@ export async function GET(request: Request) {
       orderId,
       productSlug,
     );
+    const hasReview = Boolean(existing);
+    const canEdit = Boolean(
+      order &&
+      order.status === "Delivered" &&
+      existing &&
+      existing.status === "pending",
+    );
     return Response.json({
       canReview: Boolean(order && order.status === "Delivered" && !existing),
-      hasReview: Boolean(existing),
+      canEdit,
+      hasReview,
       reviewId: existing?.id,
       reviewStatus: existing?.status,
     });

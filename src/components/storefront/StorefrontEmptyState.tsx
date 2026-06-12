@@ -33,7 +33,7 @@ export function StorefrontEmptyState({
           {secondaryAction ? (
             <SarjanButton
               href={secondaryAction.href}
-              className="has-border"
+              className="sarjan-storefront-empty__secondary"
               icon={secondaryAction.icon}
             >
               {secondaryAction.label}

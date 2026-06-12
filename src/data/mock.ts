@@ -53,6 +53,16 @@ export type Product = {
   /** Computed at read time (API responses). */
   dealActive?: boolean;
   dealOriginalPrice?: number;
+  /** When false, hidden from catalog browse and cannot be ordered. */
+  catalogActive?: boolean;
+  /** Legacy alias for `catalogActive`. */
+  active?: boolean;
+  /** When set, only matching client tiers may purchase. */
+  dealerTiers?: Array<"standard" | "premium" | "dealer">;
+  /** Optional admin note (storefront uses unified unavailable copy). */
+  unavailableReason?: string;
+  /** Computed at read time (API responses). */
+  available?: boolean;
   /** Storefront card star rating (defaults to 4 when omitted). */
   rating?: number;
   ratingCount?: number;
@@ -99,6 +109,16 @@ export const siteSettings = {
   openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
   openTimeSunday: "Sunday: By appointment",
   creditTermDays: 90,
+  platformFee: {
+    enabled: false,
+    amountInr: 10,
+    gstRate: 0.18,
+    label: "Platform Fee",
+  },
+  shipping: {
+    enabled: true,
+    amountPer100Pieces: 500,
+  },
   footerNote:
     "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
   footerInfoHeading: "Information",

@@ -1,6 +1,10 @@
 "use client";
 
 import { celebrateOrderPlaced } from "@/lib/order-celebration";
+import {
+  B2B_ORDER_SUCCESS_BODY,
+  B2B_ORDER_SUCCESS_TITLE,
+} from "@/lib/b2b-order-messages";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
@@ -32,12 +36,15 @@ export function PaymentConfirmationClient({
             <i className="icon icon-check" aria-hidden />
           </div>
           <h3 className="sarjan-payment-confirmation-title">
-            Order request received
+            {B2B_ORDER_SUCCESS_TITLE}
           </h3>
-          <p className="sarjan-payment-confirmation-lead text-secondary">
-            Your order request has been sent to our team for stock, MOQ, and
-            dispatch confirmation. We will update you once it is reviewed.
-          </p>
+          <div className="sarjan-payment-confirmation-lead text-secondary">
+            {B2B_ORDER_SUCCESS_BODY.map((line) => (
+              <p key={line} className="mb_6">
+                {line}
+              </p>
+            ))}
+          </div>
           {orderId ? (
             <p className="sarjan-payment-order-id">
               <span className="sarjan-payment-order-id__label">Order ID</span>

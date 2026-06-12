@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return Response.json({ error: parsed.error }, { status: 400 });
     }
 
-    const limit = rateLimit(
+    const limit = await rateLimit(
       rateLimitKey(request, "forgot-verify-email", parsed.session.clientId),
       10,
       60_000,

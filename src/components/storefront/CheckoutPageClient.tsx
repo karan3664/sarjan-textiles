@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { useClientHasB2BToken } from "./PriceGate";
-import { cartHasStockIssues, cartLineSoldOut } from "@/lib/cart-stock";
+import {
+  cartBlocksCheckout,
+  cartLineExceedsStock,
+  cartStockWarnings,
+} from "@/lib/cart-stock";
+import {
+  B2B_CHECKOUT_APPROVAL_NOTICE,
+  B2B_CART_EXCEEDS_STOCK,
+} from "@/lib/b2b-order-messages";
 import {
   type FormEvent,
   useCallback,
@@ -34,7 +42,10 @@ import {
   storedClientGstNumber,
   type StoredClient,
 } from "@/lib/client-session";
-import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import { sumOrderPieces } from "@/lib/order-pieces";
+import { computeOrderPricing } from "@/lib/order-pricing-breakdown";
+import { useCommercePricingConfig } from "@/hooks/useCommercePricingConfig";
+import { OrderPricingTotals } from "./OrderPricingTotals";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import {
   productImageClassName,
@@ -340,15 +351,38 @@ export function CheckoutPageClient({
   );
 
   const clientGst = storedClientGstNumber(client);
-  const gst = useMemo(
+  const commercePricing = useCommercePricingConfig();
+  const totalPieces = useMemo(
     () =>
-      computeGstOnSubtotal(subtotal, clientGst, {
-        b2bPricing: Boolean(client?.id),
-      }),
-    [subtotal, clientGst, client?.id],
+      sumOrderPieces(
+        lines.map((line) => ({ quantity: line.quantity, sizes: line.sizes })),
+      ),
+    [lines],
   );
-  const grandTotal = subtotal + (gst.applies ? gst.amount : 0);
-  const stockBlocked = cartHasStockIssues(lines, viewerLoggedIn);
+  const orderPricing = useMemo(
+    () =>
+      computeOrderPricing({
+        subtotal,
+        gstNumber: clientGst,
+        b2bPricing: Boolean(client?.id),
+        totalPieces,
+        shippingConfig: commercePricing.shipping,
+        platformFee: commercePricing.platformFee,
+      }),
+    [
+      subtotal,
+      clientGst,
+      client?.id,
+      totalPieces,
+      commercePricing.platformFee,
+      commercePricing.shipping,
+    ],
+  );
+  const checkoutBlocked = cartBlocksCheckout(lines, viewerLoggedIn);
+  const stockWarnings = useMemo(
+    () => cartStockWarnings(lines, viewerLoggedIn),
+    [lines, viewerLoggedIn],
+  );
 
   const handleCheckoutLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -379,11 +413,8 @@ export function CheckoutPageClient({
       );
       return;
     }
-    if (cartHasStockIssues(lines, viewerLoggedIn)) {
-      setMessage(
-        labels.stockIssueWarning ??
-          "Some items are out of stock or exceed available quantity. Update your cart to continue.",
-      );
+    if (cartBlocksCheckout(lines, viewerLoggedIn)) {
+      setMessage("Some items are unavailable for your account tier.");
       return;
     }
 
@@ -784,10 +815,13 @@ export function CheckoutPageClient({
                           data-bs-parent="#payment-box"
                         >
                           <div className="payment-body">
-                            <p className="text-secondary">
-                              Sarjan admin will confirm stock, MOQ, dispatch
-                              details, and final order terms.
-                            </p>
+                            <div className="text-secondary">
+                              {B2B_CHECKOUT_APPROVAL_NOTICE.map((line) => (
+                                <p key={line} className="mb_6">
+                                  {line}
+                                </p>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -804,13 +838,29 @@ export function CheckoutPageClient({
                         {message}
                       </p>
                     ) : null}
-                    {stockBlocked ? (
+                    {stockWarnings.length ? (
+                      <div
+                        className="sarjan-b2b-stock-warning mb_12"
+                        role="status"
+                      >
+                        {stockWarnings.map((warning) => (
+                          <p
+                            key={warning.slug}
+                            className="text-caption-1 text-secondary mb_6"
+                          >
+                            <strong>{warning.name}</strong> — Requested:{" "}
+                            {warning.requestedSets}, Available:{" "}
+                            {warning.availableSets}. {B2B_CART_EXCEEDS_STOCK}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
+                    {checkoutBlocked ? (
                       <p
                         className="text-caption-1 text-danger mb_12"
                         role="alert"
                       >
-                        {labels.stockIssueWarning ??
-                          "Some items are out of stock or exceed available quantity. Update your cart to continue."}
+                        Some items are unavailable for your account tier.
                       </p>
                     ) : null}
                     <div className="sarjan-checkout-submit-wrap">
@@ -818,8 +868,8 @@ export function CheckoutPageClient({
                         className={withBtnIcon("tf-btn btn-reset")}
                         type="button"
                         onClick={submitOrder}
-                        disabled={stockBlocked}
-                        style={stockBlocked ? { opacity: 0.55 } : undefined}
+                        disabled={checkoutBlocked}
+                        style={checkoutBlocked ? { opacity: 0.55 } : undefined}
                       >
                         <TfButtonIcon icon="icon-checkCircle">
                           {labels.submitOrder ?? "Submit Order Request"}
@@ -852,16 +902,17 @@ export function CheckoutPageClient({
                             "img-product position-relative d-inline-block",
                           )}
                         >
-                          {cartLineSoldOut(
+                          {cartLineExceedsStock(
                             item.product,
                             item.sizes,
+                            item.quantity,
                             viewerLoggedIn,
                           ) ? (
                             <div
                               className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                               role="status"
                             >
-                              {labels.outOfStock ?? "Out of stock"}
+                              Exceeds stock
                             </div>
                           ) : null}
                           <StorefrontProductImage
@@ -902,31 +953,10 @@ export function CheckoutPageClient({
                     ))}
                   </div>
                   <div className="sec-total-price">
-                    <div className="top">
-                      <div className="item d-flex align-items-center justify-content-between text-button">
-                        <span>{labels.subtotal ?? "Subtotal"}</span>
-                        <PriceGate amount={subtotal} compact />
-                      </div>
-                      {gst.applies ? (
-                        <div className="item d-flex align-items-center justify-content-between text-button">
-                          <span>
-                            {labels.gst ?? "GST"} ({(gst.rate * 100).toFixed(0)}
-                            %)
-                          </span>
-                          <span>{formatInr(gst.amount)}</span>
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="bottom">
-                      <h5 className="d-flex justify-content-between">
-                        <span>{labels.total ?? "Total"}</span>
-                        <PriceGate
-                          amount={grandTotal}
-                          className="total-price-checkout"
-                          compact
-                        />
-                      </h5>
-                    </div>
+                    <OrderPricingTotals
+                      pricing={orderPricing}
+                      totalLabel={labels.total ?? "Total"}
+                    />
                   </div>
                 </div>
               </div>

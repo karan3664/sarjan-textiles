@@ -1,20 +1,12 @@
 import { clients as demoClients, orders as demoOrders } from "@/data/mock";
 import { includeAdminDemoData } from "@/lib/admin-demo-data";
 import { readLocalDb, type LocalOrder } from "@/lib/local-db";
+import { orderStatuses, type OrderStatus } from "@/lib/order-statuses";
 
-export const orderStatuses: LocalOrder["status"][] = [
-  "Pending approval",
-  "Approved",
-  "Rejected",
-  "In Production",
-  "Packed",
-  "Ready for Dispatch",
-  "Dispatched",
-  "Delivered",
-];
+export { orderStatuses, type OrderStatus };
 
 function demoOrderStatus(status: string): LocalOrder["status"] {
-  if (orderStatuses.includes(status as LocalOrder["status"]))
+  if (orderStatuses.includes(status as OrderStatus))
     return status as LocalOrder["status"];
   return "Pending approval";
 }

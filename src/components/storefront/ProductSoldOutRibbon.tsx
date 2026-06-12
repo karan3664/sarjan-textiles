@@ -1,7 +1,8 @@
 "use client";
 
 import type { Product } from "@/data/mock";
-import { useShowProductSoldOut } from "./PriceGate";
+import { PRODUCT_UNAVAILABLE_SHORT } from "@/lib/product-purchase-eligibility";
+import { useShowProductUnavailable } from "./PriceGate";
 
 type RibbonVariant = "card" | "thumb" | "default";
 
@@ -10,12 +11,15 @@ export function ProductSoldOutRibbon({
   variant = "default",
   className = "",
 }: {
-  product: Pick<Product, "stock" | "reserved">;
+  product: Pick<
+    Product,
+    "catalogActive" | "active" | "dealerTiers" | "stock" | "reserved"
+  >;
   variant?: RibbonVariant;
   className?: string;
 }) {
-  const soldOut = useShowProductSoldOut(product);
-  if (!soldOut) return null;
+  const unavailable = useShowProductUnavailable(product);
+  if (!unavailable) return null;
 
   const variantClass =
     variant === "card"
@@ -29,7 +33,7 @@ export function ProductSoldOutRibbon({
       className={`sarjan-oos-ribbon${variantClass}${className ? ` ${className}` : ""}`}
       role="status"
     >
-      Out of stock
+      {PRODUCT_UNAVAILABLE_SHORT}
     </div>
   );
 }

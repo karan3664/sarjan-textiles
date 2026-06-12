@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import type { InventoryMovement } from "@/lib/cms-store";
+import { productInventoryOnHand } from "@/lib/product-availability";
 import {
   isProductPlaceholderImage,
   PRODUCT_PLACEHOLDER_IMAGE,
@@ -34,11 +35,14 @@ function stockValue(value: number | undefined) {
 }
 
 function available(product: Product) {
-  return Math.max(0, stockValue(product.stock) - stockValue(product.reserved));
+  return Math.max(
+    0,
+    productInventoryOnHand(product) - stockValue(product.reserved),
+  );
 }
 
 function statusInfo(product: Product) {
-  const stock = stockValue(product.stock);
+  const stock = productInventoryOnHand(product);
   const moq = stockValue(product.moq);
   if (stock <= 0) return { label: "Out of Stock", className: "type-inactive" };
   if (available(product) <= moq)
@@ -96,14 +100,8 @@ async function downloadXlsx(
   filename: string,
   rows: Array<Record<string, string | number | undefined>>,
 ) {
-  const XLSX = await import("xlsx");
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(
-    workbook,
-    XLSX.utils.json_to_sheet(rows),
-    "Inventory",
-  );
-  XLSX.writeFile(workbook, filename);
+  const { downloadExcelJsonSheet } = await import("@/lib/excel-export-client");
+  await downloadExcelJsonSheet(filename, "Inventory", rows);
 }
 
 function printPdf(
@@ -229,6 +227,31 @@ export function AdminInventoryClient({
   };
 
   useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/admin/inventory");
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          products?: Product[];
+          inventoryLogs?: InventoryMovement[];
+        };
+        if (!cancelled && Array.isArray(data.products)) {
+          setProducts(data.products);
+        }
+        if (!cancelled && Array.isArray(data.inventoryLogs)) {
+          setLogs(data.inventoryLogs);
+        }
+      } catch {
+        /* keep SSR seed */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     setProductPage(1);
   }, [productPageSize, query, sortDirection, sortKey]);
 
@@ -301,9 +324,10 @@ export function AdminInventoryClient({
       low: products.filter(
         (product) =>
           available(product) <= stockValue(product.moq) &&
-          stockValue(product.stock) > 0,
+          productInventoryOnHand(product) > 0,
       ).length,
-      out: products.filter((product) => stockValue(product.stock) <= 0).length,
+      out: products.filter((product) => productInventoryOnHand(product) <= 0)
+        .length,
     };
   }, [products]);
 

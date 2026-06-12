@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Admin login required" }, { status: 401 });
   if (!["super_admin", "admin"].includes(session.role))
     return Response.json({ error: "Permission denied" }, { status: 403 });
-  const limit = rateLimit(
+  const limit = await rateLimit(
     rateLimitKey(request, "admin-test-email", session.email),
     3,
     60_000,

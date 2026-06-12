@@ -60,14 +60,12 @@ function rowsFromLogs(logs: AuditLog[]) {
 }
 
 async function downloadXlsx(logs: AuditLog[]) {
-  const XLSX = await import("xlsx");
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(
-    workbook,
-    XLSX.utils.json_to_sheet(rowsFromLogs(logs)),
+  const { downloadExcelJsonSheet } = await import("@/lib/excel-export-client");
+  await downloadExcelJsonSheet(
+    "admin-audit-logs.xlsx",
     "Audit Logs",
+    rowsFromLogs(logs),
   );
-  XLSX.writeFile(workbook, "admin-audit-logs.xlsx");
 }
 
 function printPdf(logs: AuditLog[]) {

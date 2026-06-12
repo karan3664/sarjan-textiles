@@ -8,7 +8,8 @@ import {
   isProductPlaceholderImage,
   productHasRealImages,
 } from "@/lib/product-placeholder-image";
-import { useShowProductSoldOut } from "./PriceGate";
+import { PRODUCT_UNAVAILABLE_SHORT } from "@/lib/product-purchase-eligibility";
+import { useShowProductUnavailable } from "./PriceGate";
 import {
   ProductDealCountdown,
   ProductDealOriginalPrice,
@@ -28,12 +29,12 @@ export function ProductListCard({ product }: { product: Product }) {
     !isProductPlaceholderImage(hover);
   const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
   const altText = buildProductImageAlt(product);
-  const soldOut = useShowProductSoldOut(product);
+  const unavailable = useShowProductUnavailable(product);
 
   return (
     <div
       className="card-product style-list"
-      data-availability={soldOut ? "Out of stock" : "In stock"}
+      data-availability={unavailable ? PRODUCT_UNAVAILABLE_SHORT : "In stock"}
       data-brand={siteSettings.brandName}
     >
       <div
@@ -60,7 +61,7 @@ export function ProductListCard({ product }: { product: Product }) {
           ) : null}
         </a>
         <ProductSoldOutRibbon product={product} variant="card" />
-        {!soldOut && product.isFeatured ? (
+        {!unavailable && product.isFeatured ? (
           <div className="on-sale-wrap">
             <span className="on-sale-item">Hot</span>
           </div>
@@ -106,12 +107,12 @@ export function ProductListCard({ product }: { product: Product }) {
             ))}
           </ul>
           <div className="list-product-btn">
-            {soldOut ? (
+            {unavailable ? (
               <span
                 className="btn-main-product sarjan-oos-card-btn"
                 aria-disabled="true"
               >
-                Out of stock
+                {PRODUCT_UNAVAILABLE_SHORT}
               </span>
             ) : (
               <a

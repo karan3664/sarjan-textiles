@@ -7,6 +7,7 @@ import {
 } from "@/lib/admin-login-path";
 import { createAdminToken } from "@/lib/admin-token";
 import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
+import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 function safeAdminNextPath(raw: string | null | undefined) {
   const next = String(raw ?? "").trim();
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
       ...(next !== "/admin" ? { next } : {}),
     });
   }
+
+  const limit = await rateLimit(
+    rateLimitKey(request, "admin-login-form", email),
+    6,
+    60_000,
+  );
+  if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
   const admin = await authenticateAdmin(email, password);
   if (!admin) {

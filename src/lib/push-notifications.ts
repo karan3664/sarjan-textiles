@@ -31,6 +31,11 @@ const statusCopy: Partial<
     title: "Order approved ✅",
     body: (o) => `Great news! Order ${o.id} has been approved.`,
   },
+  "Partially Approved": {
+    title: "Order partially approved",
+    body: (o) =>
+      `Order ${o.id} is partially approved. Our team will confirm production for the remaining quantity.`,
+  },
   "In Production": {
     title: "Order in production 🧵",
     body: (o) => `Order ${o.id} is now being produced.`,
@@ -71,6 +76,7 @@ async function pushToClient(
     body: string;
     type: ClientNotificationRecord["type"];
     data: Record<string, string>;
+    imageUrl?: string;
   },
 ) {
   await createClientNotification({
@@ -86,18 +92,32 @@ async function pushToClient(
   const tokens = await getClientDeviceTokens(clientId);
   if (!tokens.length) return;
 
+  const imageUrl = message.imageUrl?.trim();
   const response = await fcm.sendEachForMulticast({
     tokens,
-    notification: { title: message.title, body: message.body },
-    data: message.data,
+    notification: {
+      title: message.title,
+      body: message.body,
+      ...(imageUrl ? { imageUrl } : {}),
+    },
+    data: {
+      ...message.data,
+      ...(imageUrl ? { imageUrl } : {}),
+    },
     android: {
       priority: "high",
       notification: {
         sound: "default",
         channelId: "sarjan_default",
+        ...(imageUrl ? { imageUrl } : {}),
       },
     },
-    apns: { payload: { aps: { sound: "default" } } },
+    apns: {
+      payload: {
+        aps: { sound: "default", mutableContent: imageUrl ? true : undefined },
+      },
+      ...(imageUrl ? { fcmOptions: { imageUrl } } : {}),
+    },
   });
 
   // Prune tokens FCM says are no longer valid (app uninstalled, etc.).
@@ -269,14 +289,16 @@ export async function sendAbandonedCartPush(input: {
   clientId: string;
   title: string;
   body: string;
-  stage: 1 | 2;
+  stage: 1 | 2 | "daily";
   checkoutUrl: string;
   itemCount: string;
+  imageUrl?: string;
 }) {
   await pushToClient(input.clientId, {
     title: input.title,
     body: input.body,
     type: "cart",
+    imageUrl: input.imageUrl,
     data: {
       type: "cart",
       scope: "abandoned_cart",

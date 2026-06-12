@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+type OrderApprovalAnalytics = {
+  ordersExceedingStock: number;
+  productionRequirementCount: number;
+  topRequestedProducts: Array<{ slug: string; name: string; count: number }>;
+  updatedAt: string;
+};
+
 type HubPayload = {
   snapshot: {
     duplicateOrderSignals: Array<{
@@ -35,14 +42,22 @@ type HubPayload = {
 
 export function AdminCommerceHubClient() {
   const [data, setData] = useState<HubPayload | null>(null);
+  const [orderAnalytics, setOrderAnalytics] =
+    useState<OrderApprovalAnalytics | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/commerce/hub")
-      .then((res) => res.json())
-      .then((body) => {
-        if (!body?.snapshot) throw new Error(body?.error ?? "Load failed");
-        setData(body as HubPayload);
+    Promise.all([
+      fetch("/api/admin/commerce/hub").then((res) => res.json()),
+      fetch("/api/admin/analytics/order-approval").then((res) => res.json()),
+    ])
+      .then(([hubBody, analyticsBody]) => {
+        if (!hubBody?.snapshot)
+          throw new Error(hubBody?.error ?? "Load failed");
+        setData(hubBody as HubPayload);
+        if (!analyticsBody?.error) {
+          setOrderAnalytics(analyticsBody as OrderApprovalAnalytics);
+        }
       })
       .catch(() => setError("Could not load commerce hub."));
   }, []);
@@ -122,6 +137,46 @@ export function AdminCommerceHubClient() {
           </div>
         </div>
       </div>
+
+      {orderAnalytics ? (
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="wg-box h-full">
+              <h5>Order approval &amp; production signals</h5>
+              <p className="text-caption-1 text-secondary">
+                Orders placed above available stock require admin review — see{" "}
+                <Link href="/admin/orders">Orders</Link> for approval actions.
+              </p>
+              <div className="d-flex flex-wrap gap-20 mb_16">
+                <p className="text-button mb_0">
+                  Orders exceeding stock:{" "}
+                  <strong>{orderAnalytics.ordersExceedingStock}</strong>
+                </p>
+                <p className="text-button mb_0">
+                  Production required:{" "}
+                  <strong>{orderAnalytics.productionRequirementCount}</strong>
+                </p>
+              </div>
+              <p className="text-button">Most requested products</p>
+              <ul className="list-unstyled text-caption-1 mb_0">
+                {orderAnalytics.topRequestedProducts.length ? (
+                  orderAnalytics.topRequestedProducts.map((row) => (
+                    <li
+                      key={row.slug}
+                      className="d-flex justify-content-between mb-1"
+                    >
+                      <span>{row.name}</span>
+                      <span>{row.count} order lines</span>
+                    </li>
+                  ))
+                ) : (
+                  <li>No order lines recorded yet.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="row mb-4">
         <div className="col-md-6">

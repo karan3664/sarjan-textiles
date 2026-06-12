@@ -9,6 +9,10 @@ import { createAdminOrder, updateOrderAdmin } from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { after } from "next/server";
 import { getAdminRouteSession } from "@/lib/admin-route-session";
+import { getCmsSnapshot } from "@/lib/cms-store";
+import { readEnglish } from "@/lib/cms-localize";
+import { listPendingReviewItems } from "@/lib/review-eligibility";
+import { sendReviewRequestEmail } from "@/lib/review-emails";
 
 const paymentStatuses = ["Pending", "Partial", "Paid", "Overdue"];
 const depositStatuses = ["Not deposited", "Deposited", "Cleared", "Bounced"];
@@ -122,6 +126,11 @@ function normalizeItems(raw: unknown) {
         0,
         Number(item.lineTotal ?? unitPrice * setQuantity * piecesPerSet) || 0,
       );
+      const approvedSetQuantityRaw = Number(item.approvedSetQuantity);
+      const approvedSetQuantity =
+        Number.isFinite(approvedSetQuantityRaw) && approvedSetQuantityRaw > 0
+          ? Math.min(setQuantity, Math.floor(approvedSetQuantityRaw))
+          : undefined;
       return {
         slug: String(item.slug ?? "custom-item").trim(),
         name: String(item.name ?? "").trim(),
@@ -131,6 +140,7 @@ function normalizeItems(raw: unknown) {
         piecesPerSet,
         unitPrice,
         lineTotal,
+        approvedSetQuantity,
         image: typeof item.image === "string" ? item.image.trim() : undefined,
       };
     })
@@ -259,6 +269,31 @@ export async function PATCH(request: Request) {
           console.error("Order status email failed", error),
         ),
       );
+      if (updated.status === "Delivered" && before?.status !== "Delivered") {
+        after(async () => {
+          try {
+            const pending = await listPendingReviewItems(updated.clientId, [
+              updated,
+            ]);
+            const item = pending[0];
+            if (!item) return;
+            const cms = await getCmsSnapshot();
+            const product = cms.products.find(
+              (entry) => entry.slug === item.productSlug,
+            );
+            await sendReviewRequestEmail(updated, {
+              slug: item.productSlug,
+              name:
+                readEnglish(product?.name) ||
+                item.productName ||
+                item.productSlug,
+              image: product?.images?.[0],
+            });
+          } catch (error) {
+            console.error("Review request email failed", error);
+          }
+        });
+      }
       if (
         ["Dispatched", "Ready for Dispatch"].includes(String(updated.status))
       ) {

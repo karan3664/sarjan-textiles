@@ -1,5 +1,110 @@
 [
   {
+    "id": "903fcbae-4605-4c09-9260-f2ea5edd4a3c",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order received",
+    "body": "Order ST-1781257579088 is received and pending approval (₹45,000).",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781257579088",
+      "orderId": "ST-1781257579088",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T09:48:38.029Z"
+  },
+  {
+    "id": "6dfc01ff-a1f6-4b70-bd47-15e5c50d2799",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order approved ✅",
+    "body": "Great news! Order ST-1781257579088 has been approved.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781257579088",
+      "orderId": "ST-1781257579088",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T09:48:32.025Z"
+  },
+  {
+    "id": "9020ee88-d8f2-4327-bbc4-d790039b1394",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order placed 🎉",
+    "body": "Order ST-1781257579088 placed for ₹45,000. We'll review it shortly.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781257579088",
+      "orderId": "ST-1781257579088",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T09:46:19.096Z"
+  },
+  {
+    "id": "155fcc88-9fae-4ae6-8359-9306e558c227",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order delivered 🎉",
+    "body": "Order ST-1781188277825 has been delivered. Please rate your purchase when you have a moment.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781188277825",
+      "orderId": "ST-1781188277825",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T05:02:52.670Z"
+  },
+  {
+    "id": "b30bc666-2a0e-4d48-bb1a-0b82478e957b",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order approved ✅",
+    "body": "Great news! Order ST-1781188277825 has been approved.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781188277825",
+      "orderId": "ST-1781188277825",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T05:02:50.573Z"
+  },
+  {
+    "id": "388f9fa1-dda5-44ad-be28-9057d1d3be66",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order delivered 🎉",
+    "body": "Order ST-1781188027374 has been delivered. Please rate your purchase when you have a moment.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781188027374",
+      "orderId": "ST-1781188027374",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T05:02:47.027Z"
+  },
+  {
+    "id": "92ff6c72-20b8-4924-96a1-45a0e473abf5",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order delivered 🎉",
+    "body": "Order ST-1781192615178 has been delivered. Please rate your purchase when you have a moment.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781192615178",
+      "orderId": "ST-1781192615178",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-12T05:02:43.217Z"
+  },
+  {
     "id": "7a600378-05b1-4ef0-9b18-8bb5ede8e86d",
     "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
     "title": "Order placed 🎉",

@@ -16,14 +16,25 @@ import {
   getCachedProducts,
   slugsMissingFromCache,
 } from "@/lib/catalog-product-cache";
-import { catalogFetchInit } from "@/lib/client-auth-browser";
-import { productSetPrice } from "@/lib/product-pricing";
 import {
+  catalogFetchInit,
+  readStoredClientProfile,
+} from "@/lib/client-auth-browser";
+import { productSetPrice } from "@/lib/product-pricing";
+import { B2B_CART_EXCEEDS_STOCK } from "@/lib/b2b-order-messages";
+import { cartStockWarnings } from "@/lib/cart-stock";
+import {
+  cartMaxSetQuantity,
   clampCartSetQuantity,
-  productMaxSets,
   productWholesaleMinSets,
-  showProductSoldOutToViewer,
 } from "@/lib/product-availability";
+import {
+  isProductPurchasable,
+  normalizeClientTier,
+  PRODUCT_UNAVAILABLE_MESSAGE,
+  PRODUCT_UNAVAILABLE_SHORT,
+  showProductUnavailableToViewer,
+} from "@/lib/product-purchase-eligibility";
 import {
   productImageClassName,
   productImageThumbWrapClassName,
@@ -40,12 +51,19 @@ import {
   PriceGate,
   clientHasApprovedPricing,
   useClientHasB2BToken,
+  useClientTier,
 } from "./PriceGate";
 import { ModaveProductCard } from "./ModaveProductCard";
 import { QuickViewProduct } from "./QuickViewProduct";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
-import { computeGstOnSubtotal, formatInr } from "@/lib/gst-display";
+import { formatInr, formatInrPricingLine } from "@/lib/gst-display";
+import { sumOrderPieces } from "@/lib/order-pieces";
+import {
+  buildPricingDisplayLines,
+  computeOrderPricing,
+} from "@/lib/order-pricing-breakdown";
+import { useCommercePricingConfig } from "@/hooks/useCommercePricingConfig";
 import {
   hideBootstrapModal,
   openModalFromLocationHash,
@@ -109,6 +127,8 @@ export function ModaveModals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSearchItems, setVisibleSearchItems] = useState(4);
   const hasB2BSession = useClientHasB2BToken();
+  const clientTier = useClientTier();
+  const [cartBlockNotice, setCartBlockNotice] = useState("");
   const [clientGst, setClientGst] = useState("");
 
   useEffect(() => {
@@ -296,11 +316,18 @@ export function ModaveModals() {
       let quantity = Math.max(1, Number(quantityInput?.value ?? 1) || 1);
       const sizes = parseSizeRun(target.dataset.productSizeRun);
       const cachedProduct = getCachedProducts([slug])[0];
+      const tier = normalizeClientTier(readStoredClientProfile()?.clientTier);
+      if (
+        cachedProduct &&
+        !isProductPurchasable(cachedProduct, tier, hasB2BSession)
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        setCartBlockNotice(PRODUCT_UNAVAILABLE_MESSAGE);
+        return;
+      }
       if (cachedProduct && hasB2BSession) {
-        const maxSets = productMaxSets(cachedProduct, sizes);
-        if (maxSets <= 0) {
-          return;
-        }
+        const maxSets = cartMaxSetQuantity(cachedProduct, sizes, false);
         const minSets = productWholesaleMinSets(cachedProduct, sizes);
         quantity = clampCartSetQuantity(quantity, minSets, maxSets);
       }
@@ -333,7 +360,7 @@ export function ModaveModals() {
 
     document.addEventListener("click", onAdd);
     return () => document.removeEventListener("click", onAdd);
-  }, [hasB2BSession]);
+  }, [hasB2BSession, clientTier]);
 
   useEffect(() => {
     const applyWishlistSlugs = (slugs: string[]) => {
@@ -442,15 +469,50 @@ export function ModaveModals() {
     () => items.reduce((sum, item) => sum + item.lineTotal, 0),
     [items],
   );
-  const cartGst = useMemo(
+  const commercePricing = useCommercePricingConfig();
+  const totalPieces = useMemo(
     () =>
-      computeGstOnSubtotal(subtotal, clientGst, {
-        b2bPricing: hasB2BSession,
-      }),
-    [subtotal, clientGst, hasB2BSession],
+      sumOrderPieces(
+        items.map((item) => ({ quantity: item.quantity, sizes: item.sizes })),
+      ),
+    [items],
   );
-  const cartGrandTotal = subtotal + (cartGst.applies ? cartGst.amount : 0);
+  const cartPricing = useMemo(
+    () =>
+      computeOrderPricing({
+        subtotal,
+        gstNumber: clientGst,
+        b2bPricing: hasB2BSession,
+        totalPieces,
+        shippingConfig: commercePricing.shipping,
+        platformFee: commercePricing.platformFee,
+      }),
+    [
+      subtotal,
+      clientGst,
+      hasB2BSession,
+      totalPieces,
+      commercePricing.platformFee,
+      commercePricing.shipping,
+    ],
+  );
+  const cartPricingLines = useMemo(
+    () => buildPricingDisplayLines(cartPricing),
+    [cartPricing],
+  );
   const hasItems = items.length > 0;
+  const miniCartStockWarnings = useMemo(
+    () =>
+      cartStockWarnings(
+        items.map((item) => ({
+          product: item.product,
+          quantity: item.quantity,
+          sizes: item.sizes,
+        })),
+        hasB2BSession,
+      ),
+    [hasB2BSession, items],
+  );
   const quickWishlisted = Boolean(
     quickProduct && wishlistSlugs.includes(quickProduct.slug),
   );
@@ -646,6 +708,19 @@ export function ModaveModals() {
                 />
               </div>
               <div className="wrap">
+                {cartBlockNotice ? (
+                  <div className="sarjan-cart-block-notice" role="alert">
+                    <p className="mb_0">{cartBlockNotice}</p>
+                    <button
+                      type="button"
+                      className="sarjan-cart-block-notice__dismiss"
+                      aria-label="Dismiss"
+                      onClick={() => setCartBlockNotice("")}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : null}
                 <div className="tf-mini-cart-wrap">
                   <div className="tf-mini-cart-main">
                     <div className="tf-mini-cart-sroll">
@@ -668,15 +743,16 @@ export function ModaveModals() {
                                   )}
                                 >
                                   <a href={`/products/${item.product.slug}`}>
-                                    {showProductSoldOutToViewer(
+                                    {showProductUnavailableToViewer(
                                       item.product,
+                                      clientTier,
                                       hasB2BSession,
                                     ) ? (
                                       <div
                                         className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
                                         role="status"
                                       >
-                                        Out of stock
+                                        {PRODUCT_UNAVAILABLE_SHORT}
                                       </div>
                                     ) : null}
                                     <StorefrontProductImage
@@ -794,36 +870,43 @@ export function ModaveModals() {
                   {hasItems ? (
                     <div className="tf-mini-cart-bottom">
                       <div className="tf-mini-cart-bottom-wrap">
+                        {cartPricingLines.map((line) => (
+                          <div
+                            key={line.key}
+                            className="tf-cart-totals-discounts sarjan-cart-gst-row"
+                          >
+                            <span className="text-button">{line.label}</span>
+                            <span className="text-button">
+                              {formatInrPricingLine(line.amount)}
+                            </span>
+                          </div>
+                        ))}
                         <div className="tf-cart-totals-discounts">
-                          <h5>Subtotal</h5>
+                          <h5>Total</h5>
                           <h5>
                             <PriceGate
-                              amount={subtotal}
+                              amount={cartPricing.total}
                               className="tf-totals-total-value"
                               compact
                             />
                           </h5>
                         </div>
-                        {cartGst.applies ? (
-                          <div className="tf-cart-totals-discounts sarjan-cart-gst-row">
-                            <span className="text-button">
-                              GST ({(cartGst.rate * 100).toFixed(0)}%)
-                            </span>
-                            <span className="text-button">
-                              {formatInr(cartGst.amount)}
-                            </span>
-                          </div>
-                        ) : null}
-                        {cartGst.applies ? (
-                          <div className="tf-cart-totals-discounts">
-                            <h5>Total</h5>
-                            <h5>
-                              <PriceGate
-                                amount={cartGrandTotal}
-                                className="tf-totals-total-value"
-                                compact
-                              />
-                            </h5>
+                        {miniCartStockWarnings.length ? (
+                          <div
+                            className="sarjan-b2b-stock-warning mb_12"
+                            role="status"
+                          >
+                            {miniCartStockWarnings.map((warning) => (
+                              <p
+                                key={warning.slug}
+                                className="text-caption-1 text-secondary mb_6"
+                              >
+                                <strong>{warning.name}</strong> — Requested:{" "}
+                                {warning.requestedSets}, Available:{" "}
+                                {warning.availableSets}.{" "}
+                                {B2B_CART_EXCEEDS_STOCK}
+                              </p>
+                            ))}
                           </div>
                         ) : null}
                         <div className="tf-cart-checkbox">

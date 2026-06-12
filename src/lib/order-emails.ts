@@ -1,5 +1,7 @@
 import { siteSettings } from "@/data/mock";
 import { buildSarjanEmailHtml, escapeHtml } from "@/lib/email-template";
+import { enrichOrderPricing, formatInrPricingLine } from "@/lib/gst-display";
+import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
 import type { LocalOrder } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
 
@@ -12,6 +14,7 @@ type EmailKind =
 
 const statusEmailKind: Partial<Record<LocalOrder["status"], EmailKind>> = {
   Approved: "approved",
+  "Partially Approved": "approved",
   "In Production": "production",
   Dispatched: "dispatched",
   Delivered: "delivered",
@@ -22,11 +25,11 @@ const emailCopy: Record<
   { subject: string; title: string; intro: string; next: string }
 > = {
   placed: {
-    subject: "Order placed successfully",
-    title: "Order placed successfully",
+    subject: "Order Received - Pending Approval",
+    title: "Order Received - Pending Approval",
     intro:
-      "Thank you for placing your B2B order with Sarjan Textiles. Our team will review stock, MOQ, and production details shortly.",
-    next: "You will receive another email once your order is approved.",
+      "Thank you for your order. Your order has been received and is currently under review.",
+    next: "Stock availability and production timelines will be verified by our team. A Sarjan Textiles representative will contact you if additional production is required.",
   },
   approved: {
     subject: "Order approved",
@@ -86,7 +89,21 @@ function orderRows(order: LocalOrder) {
     .join("");
 }
 
+function pricingSummaryLines(order: LocalOrder) {
+  const priced = enrichOrderPricing(order, {
+    platformFee: siteSettings.platformFee,
+    shipping: siteSettings.shipping,
+  });
+  return buildPricingDisplayLines(priced).map(
+    (line) => `${line.label}: ${formatInrPricingLine(line.amount)}`,
+  );
+}
+
 function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
+  const priced = enrichOrderPricing(order, {
+    platformFee: siteSettings.platformFee,
+    shipping: siteSettings.shipping,
+  });
   const items = order.items.length
     ? order.items
         .map(
@@ -104,7 +121,10 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     `Order ID: ${order.id}`,
     `Status: ${order.status}`,
     `Order Date: ${formatDate(order.createdAt)}`,
-    `Total: ${formatInr(order.subtotal)}`,
+    `Grand total: ${formatInr(priced.total)}`,
+    "",
+    "Order summary:",
+    ...pricingSummaryLines(order),
     order.dispatchDate
       ? `Dispatch Date: ${formatDate(order.dispatchDate)}`
       : "",
@@ -126,11 +146,15 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
 }
 
 function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
+  const priced = enrichOrderPricing(order, {
+    platformFee: siteSettings.platformFee,
+    shipping: siteSettings.shipping,
+  });
   const details = [
     ["Order ID", order.id],
     ["Status", order.status],
     ["Order Date", formatDate(order.createdAt)],
-    ["Total", formatInr(order.subtotal)],
+    ["Grand total", formatInr(priced.total)],
     order.dispatchDate
       ? ["Dispatch Date", formatDate(order.dispatchDate)]
       : null,
@@ -150,6 +174,21 @@ function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
           <tr>
             <td style="width:36%;padding:10px 12px;border:1px solid #e8e2d9;background:#fbfaf7;color:#6f6a64;font-size:14px;">${escapeHtml(label)}</td>
             <td style="padding:10px 12px;border:1px solid #e8e2d9;font-weight:700;font-size:14px;color:#141414;">${escapeHtml(value)}</td>
+          </tr>
+        `,
+          )
+          .join("")}
+      </tbody>
+    </table>
+    <h2 style="margin:22px 0 10px;font-size:16px;color:#141414;">Order summary</h2>
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 18px;">
+      <tbody>
+        ${buildPricingDisplayLines(priced)
+          .map(
+            (line) => `
+          <tr>
+            <td style="width:56%;padding:8px 12px;border:1px solid #e8e2d9;color:#6f6a64;font-size:14px;">${escapeHtml(line.label)}</td>
+            <td style="padding:8px 12px;border:1px solid #e8e2d9;text-align:right;font-weight:700;font-size:14px;">${escapeHtml(formatInrPricingLine(line.amount))}</td>
           </tr>
         `,
           )

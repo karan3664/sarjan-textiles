@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductCardRating } from "@/components/storefront/ProductCardRating";
+import { clientAuthJsonHeaders } from "@/lib/client-auth-browser";
 
 type PublicReview = {
   id: string;
@@ -81,6 +82,7 @@ function ProductReviewsSectionInner({
   const searchParams = useSearchParams();
   const urlReviewIntent = searchParams.get("review") === "1";
   const urlOrderId = searchParams.get("orderId")?.trim() || undefined;
+  const urlReviewId = searchParams.get("reviewId")?.trim() || undefined;
   const urlRating = Number(searchParams.get("rating") ?? "");
 
   const [reviews, setReviews] = useState<PublicReview[]>([]);
@@ -97,12 +99,17 @@ function ProductReviewsSectionInner({
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [eligibleToWrite, setEligibleToWrite] = useState(false);
+  const [canEditReview, setCanEditReview] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<string | undefined>(
+    urlReviewId,
+  );
   const [resolvedOrderId, setResolvedOrderId] = useState<string | undefined>(
     orderIdProp ?? urlOrderId,
   );
 
   const orderId = resolvedOrderId ?? orderIdProp ?? urlOrderId;
-  const canWrite = canWriteProp || eligibleToWrite;
+  const canWrite = canWriteProp || eligibleToWrite || canEditReview;
+  const isEditing = Boolean(editingReviewId);
 
   const load = useCallback(
     async (nextPage: number, replace = false) => {
@@ -148,7 +155,7 @@ function ProductReviewsSectionInner({
       try {
         const res = await fetch(
           `/api/reviews/eligible?orderId=${encodeURIComponent(activeOrderId)}&productSlug=${encodeURIComponent(productSlug)}`,
-          { credentials: "include" },
+          { credentials: "include", headers: clientAuthJsonHeaders() },
         );
         if (!res.ok) {
           if (res.status === 401) {
@@ -158,12 +165,18 @@ function ProductReviewsSectionInner({
         }
         const data = (await res.json()) as {
           canReview?: boolean;
+          canEdit?: boolean;
           hasReview?: boolean;
+          reviewId?: string;
           reviewStatus?: string;
         };
         if (cancelled) return;
         setEligibleToWrite(Boolean(data.canReview));
-        if (data.hasReview) {
+        setCanEditReview(Boolean(data.canEdit));
+        if (data.canEdit && data.reviewId) {
+          setEditingReviewId(data.reviewId);
+        }
+        if (data.hasReview && !data.canEdit) {
           setMessage(
             data.reviewStatus === "pending"
               ? "Your review is pending moderation."
@@ -180,6 +193,46 @@ function ProductReviewsSectionInner({
       cancelled = true;
     };
   }, [orderIdProp, urlOrderId, productSlug]);
+
+  useEffect(() => {
+    const reviewId = urlReviewId ?? editingReviewId;
+    if (!reviewId || !canEditReview) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/reviews/${encodeURIComponent(reviewId)}`,
+          {
+            credentials: "include",
+            headers: clientAuthJsonHeaders(),
+          },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          review?: {
+            rating: number;
+            title: string;
+            body: string;
+            images: string[];
+            orderId: string;
+          };
+        };
+        if (cancelled || !data.review) return;
+        setRating(data.review.rating);
+        setTitle(data.review.title);
+        setBody(data.review.body);
+        setImages(data.review.images ?? []);
+        setResolvedOrderId(data.review.orderId);
+      } catch {
+        if (!cancelled) {
+          setMessage("Could not load your review for editing.");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [urlReviewId, editingReviewId, canEditReview]);
 
   useEffect(() => {
     if (!urlReviewIntent || !canWrite) return;
@@ -218,26 +271,44 @@ function ProductReviewsSectionInner({
     setSubmitting(true);
     setMessage("");
     try {
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          productSlug,
-          orderId,
-          rating,
-          title,
-          body,
-          images,
-        }),
-      });
+      const res =
+        isEditing && editingReviewId
+          ? await fetch(`/api/reviews/${encodeURIComponent(editingReviewId)}`, {
+              method: "PUT",
+              headers: clientAuthJsonHeaders(),
+              credentials: "include",
+              body: JSON.stringify({
+                rating,
+                title,
+                body,
+                images,
+              }),
+            })
+          : await fetch("/api/reviews", {
+              method: "POST",
+              headers: clientAuthJsonHeaders(),
+              credentials: "include",
+              body: JSON.stringify({
+                productSlug,
+                orderId,
+                rating,
+                title,
+                body,
+                images,
+              }),
+            });
       const data = (await res.json()) as { error?: string; message?: string };
       if (!res.ok) throw new Error(data.error ?? "Submit failed");
       setShowForm(false);
       setTitle("");
       setBody("");
       setImages([]);
-      setMessage(data.message ?? "Review submitted.");
+      setCanEditReview(false);
+      setEditingReviewId(undefined);
+      setEligibleToWrite(false);
+      setMessage(
+        data.message ?? (isEditing ? "Review updated." : "Review submitted."),
+      );
       await load(1, true);
     } catch (error) {
       setMessage(
@@ -361,7 +432,7 @@ function ProductReviewsSectionInner({
               className="tf-btn btn-fill"
               onClick={() => setShowForm((open) => !open)}
             >
-              Write a review
+              {isEditing ? "Edit review" : "Write a review"}
             </button>
           ) : null}
         </div>
@@ -370,7 +441,9 @@ function ProductReviewsSectionInner({
 
         {showForm ? (
           <div className="sarjan-review-form p-4 rounded-3 mb-30">
-            <h5 className="mb-3">Review {productName}</h5>
+            <h5 className="mb-3">
+              {isEditing ? "Edit your review" : `Review ${productName}`}
+            </h5>
             <div className="mb-3">
               <label className="form-label">Rating</label>
               <div
@@ -438,7 +511,13 @@ function ProductReviewsSectionInner({
               disabled={submitting}
               onClick={() => void submitReview()}
             >
-              {submitting ? "Submitting…" : "Submit review"}
+              {submitting
+                ? isEditing
+                  ? "Saving…"
+                  : "Submitting…"
+                : isEditing
+                  ? "Update review"
+                  : "Submit review"}
             </button>
           </div>
         ) : null}

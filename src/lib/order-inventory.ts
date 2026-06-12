@@ -1,10 +1,10 @@
 import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
 import type { Product } from "@/data/mock";
 import type { LocalOrder } from "@/lib/local-db";
-
-function pieceCount(item: LocalOrder["items"][number]) {
-  return item.setQuantity * Math.max(1, item.piecesPerSet || item.sizes.length);
-}
+import {
+  approvedPiecesForItem,
+  productSellablePieces,
+} from "@/lib/order-stock-review";
 
 function applyPieces(
   products: Product[],
@@ -22,78 +22,80 @@ function applyPieces(
   products[index] = product;
 }
 
-async function mutateInventory(
-  items: LocalOrder["items"],
-  mode: "reserve" | "release" | "deduct" | "restore",
+function deductPiecesFromStock(
+  products: Product[],
+  slug: string,
+  piecesRequested: number,
+): number {
+  const product = products.find((row) => row.slug === slug);
+  if (!product || piecesRequested <= 0) return 0;
+  const available = productSellablePieces(product);
+  const deduct = Math.min(piecesRequested, available);
+  if (deduct <= 0) return 0;
+  applyPieces(products, slug, { stock: -deduct, sold: deduct });
+  return deduct;
+}
+
+function restorePiecesToStock(
+  products: Product[],
+  slug: string,
+  pieces: number,
 ) {
+  if (pieces <= 0) return;
+  applyPieces(products, slug, { stock: pieces, sold: -pieces });
+}
+
+async function mutateInventoryForApproval(order: LocalOrder) {
   const cms = await getCmsSnapshot();
   const products = [...cms.products];
 
-  for (const item of items) {
-    const pieces = pieceCount(item);
-    if (pieces <= 0) continue;
-    if (mode === "reserve") {
-      const product = products.find((row) => row.slug === item.slug);
-      const available = (product?.stock ?? 0) - (product?.reserved ?? 0);
-      if (!product || available < pieces) {
-        throw new Error(
-          `Insufficient stock for ${item.name}. Available units: ${Math.max(0, available)}.`,
-        );
-      }
-      applyPieces(products, item.slug, { reserved: pieces });
-    }
-    if (mode === "release") {
-      applyPieces(products, item.slug, { reserved: -pieces });
-    }
-    if (mode === "deduct") {
-      applyPieces(products, item.slug, {
-        reserved: -pieces,
-        stock: -pieces,
-        sold: pieces,
-      });
-    }
-    if (mode === "restore") {
-      applyPieces(products, item.slug, {
-        stock: pieces,
-        sold: -pieces,
-      });
-    }
+  for (const item of order.items) {
+    const pieces = approvedPiecesForItem(item);
+    deductPiecesFromStock(products, item.slug, pieces);
   }
 
   await saveCmsSnapshot({ products });
 }
 
-/** Read-only check — same rules as reserve, without mutating inventory. */
-export async function assertInventoryAvailableForOrder(order: LocalOrder) {
+async function mutateInventoryForRestore(order: LocalOrder) {
   const cms = await getCmsSnapshot();
+  const products = [...cms.products];
+
   for (const item of order.items) {
-    const pieces = pieceCount(item);
-    if (pieces <= 0) continue;
-    const product = cms.products.find((row) => row.slug === item.slug);
-    const available = (product?.stock ?? 0) - (product?.reserved ?? 0);
-    if (!product || available < pieces) {
-      throw new Error(
-        `Insufficient stock for ${item.name}. Available units: ${Math.max(0, available)}.`,
-      );
-    }
+    const pieces = approvedPiecesForItem(item);
+    restorePiecesToStock(products, item.slug, pieces);
   }
+
+  await saveCmsSnapshot({ products });
 }
 
-export async function reserveInventoryForOrder(order: LocalOrder) {
-  await mutateInventory(order.items, "reserve");
+/** B2B: orders may exceed stock — placement never blocks or reserves inventory. */
+export async function assertInventoryAvailableForOrder(_order: LocalOrder) {
+  return;
 }
 
-export async function releaseInventoryForOrder(order: LocalOrder) {
-  await mutateInventory(order.items, "release");
+/** @deprecated B2B workflow — inventory is not reserved at placement. */
+export async function reserveInventoryForOrder(_order: LocalOrder) {
+  return;
+}
+
+/** @deprecated B2B workflow — nothing reserved at placement. */
+export async function releaseInventoryForOrder(_order: LocalOrder) {
+  return;
 }
 
 export async function deductInventoryForOrder(order: LocalOrder) {
-  await mutateInventory(order.items, "deduct");
+  await mutateInventoryForApproval(order);
 }
 
 export async function restoreInventoryForOrder(order: LocalOrder) {
-  await mutateInventory(order.items, "restore");
+  await mutateInventoryForRestore(order);
 }
+
+const INVENTORY_ACTIVE_STATUSES: LocalOrder["status"][] = [
+  "Approved",
+  "Partially Approved",
+];
 
 export async function syncInventoryForOrderStatusChange(
   order: LocalOrder,
@@ -103,15 +105,16 @@ export async function syncInventoryForOrderStatusChange(
   if (previousStatus === nextStatus) return;
 
   if (nextStatus === "Rejected") {
-    if (previousStatus === "Pending approval") {
-      await releaseInventoryForOrder(order);
-    } else {
+    if (INVENTORY_ACTIVE_STATUSES.includes(previousStatus)) {
       await restoreInventoryForOrder(order);
     }
     return;
   }
 
-  if (nextStatus === "Approved" && previousStatus === "Pending approval") {
+  if (
+    INVENTORY_ACTIVE_STATUSES.includes(nextStatus) &&
+    previousStatus === "Pending approval"
+  ) {
     await deductInventoryForOrder(order);
   }
 }
