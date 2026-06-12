@@ -43,3 +43,6 @@ log "Applying:  $SQL_FILE"
 docker exec -i "$PG_CONTAINER" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" <"$SQL_FILE"
 
 log "Done — retry Place Order in the app."
+
+log "Ensure upload dirs exist on the app volume (run inside app container if needed):"
+log "  mkdir -p /app/public/uploads/client-avatars && chmod -R ugo+rwX /app/public/uploads"
