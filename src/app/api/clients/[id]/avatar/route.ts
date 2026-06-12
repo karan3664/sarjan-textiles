@@ -8,20 +8,12 @@ import {
 import { clientStatusAuthError } from "@/lib/client-approved-session";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import { getClient, publicClient, updateClient } from "@/lib/local-db";
+import { readAvatarUploadBody } from "@/lib/avatar-upload-body";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-const maxBytes = 4 * 1024 * 1024;
-
-function isImageFile(file: File) {
-  return (
-    file.type.startsWith("image/") ||
-    /\.(jpe?g|png|webp|gif|avif|heic|heif)$/i.test(file.name)
-  );
-}
 
 async function deleteLocalAvatarFile(clientId: string) {
   await unlink(clientAvatarFilePath(clientId)).catch(() => null);
@@ -100,25 +92,11 @@ export async function POST(
     );
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
-    const formData = await request.formData();
-    const file = formData.get("file");
-    if (!(file instanceof File)) {
-      return Response.json({ error: "Image file required" }, { status: 400 });
+    const upload = await readAvatarUploadBody(request);
+    if (upload instanceof Response) {
+      return upload;
     }
-    if (!isImageFile(file)) {
-      return Response.json(
-        { error: "Only image uploads allowed" },
-        { status: 400 },
-      );
-    }
-    if (file.size > maxBytes) {
-      return Response.json(
-        { error: "Image must be under 4MB" },
-        { status: 400 },
-      );
-    }
-
-    const input = Buffer.from(await file.arrayBuffer());
+    const input = upload.buffer;
     let webp: Buffer;
     try {
       webp = await sharp(input)
