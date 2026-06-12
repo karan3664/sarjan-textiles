@@ -147,7 +147,7 @@ export async function POST(
       );
     }
 
-    const avatarUrl = `/sarjan-assets/client-avatars/${id}.webp`;
+    const avatarUrl = `/sarjan-assets/client-avatars/${id}.webp?v=${Date.now()}`;
     try {
       await mkdir(resolveClientAvatarsRoot(), { recursive: true });
       await writeFile(clientAvatarFilePath(id), webp);
