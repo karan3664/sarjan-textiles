@@ -135,6 +135,21 @@ export function syncAddressBookFlatFields(
   return next;
 }
 
+/** Apply flat address field updates onto the saved-address book (mobile profile PATCH). */
+export function applyFlatAddressPatch(
+  book: ClientAddressBook,
+  patch: Partial<ClientAddressFields>,
+): ClientAddressBook {
+  const merged: ClientAddressBook = { ...book, ...patch };
+  const fields = pickAddressFields(merged);
+  if (!hasSavedAddressContent(fields)) {
+    return syncAddressBookFlatFields(merged);
+  }
+  const { saved, defaultAddressId } = listSavedAddresses(merged);
+  const editId = defaultAddressId || saved[0]?.id;
+  return upsertSavedAddress(merged, fields, editId, true);
+}
+
 export function upsertSavedAddress(
   book: ClientAddressBook,
   fields: ClientAddressFields,

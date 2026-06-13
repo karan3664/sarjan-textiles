@@ -56,6 +56,7 @@ export const MOBILE_PROFILE_ICON_OPTIONS = [
   "search",
   "refresh",
   "download",
+  "share",
 ] as const;
 
 export const MOBILE_PROFILE_ACTION_OPTIONS: {
@@ -82,6 +83,7 @@ export const MOBILE_PROFILE_ACTION_OPTIONS: {
   { label: "Track order", action: "screen:OrderTracking", group: "explore" },
   { label: "Order feedback", action: "screen:Feedback", group: "explore" },
   { label: "Contact", action: "screen:Contact", group: "explore" },
+  { label: "Share app", action: "share:app", group: "explore" },
   { label: "Help & support", action: "screen:HelpSupport", group: "info" },
   { label: "FAQs", action: "screen:Faqs", group: "info" },
   { label: "About", action: "screen:About", group: "info" },
@@ -210,6 +212,14 @@ export const defaultMobileProfileMenus: MobileProfileMenus = {
       label: "Get in Touch",
       icon: "mail",
       action: "screen:Contact",
+      visible: true,
+      group: "explore",
+    },
+    {
+      id: "share-app",
+      label: "Share App",
+      icon: "share",
+      action: "share:app",
       visible: true,
       group: "explore",
     },

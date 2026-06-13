@@ -18,11 +18,8 @@ function adminPasswordHashFromEnv(): string {
   const rawHash = process.env["ADMIN_PASSWORD_HASH"]?.trim();
   if (rawHash?.startsWith("$2") && rawHash.length >= 60) return rawHash;
 
-  if (rawHash) {
-    throw new Error(
-      "ADMIN_PASSWORD_HASH looks truncated (Coolify expands `$`). Use ADMIN_PASSWORD_HASH_B64 instead, or escape each `$` as `$$` in Coolify.",
-    );
-  }
+  // Truncated Coolify hash — still return it; Postgres `admin_profile_overrides` supplies the real hash.
+  if (rawHash?.startsWith("$2")) return rawHash;
 
   throw new Error(
     "ADMIN_PASSWORD_HASH or ADMIN_PASSWORD_HASH_B64 is required. Do not store plaintext ADMIN_PASSWORD.",

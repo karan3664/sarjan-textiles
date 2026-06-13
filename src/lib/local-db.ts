@@ -7,7 +7,10 @@ import {
   type ClientUniqueFields,
 } from "@/lib/client-duplicate-check";
 import { streetLineFromDispatch } from "@/lib/client-address";
-import { syncAddressBookFlatFields } from "@/lib/client-saved-addresses";
+import {
+  applyFlatAddressPatch,
+  syncAddressBookFlatFields,
+} from "@/lib/client-saved-addresses";
 import {
   formatClientDispatchAddress,
   hasMeaningfulDispatchAddress,
@@ -721,19 +724,25 @@ export async function updateClient(
 
   let normalizedAddress = input.address;
   if (input.address !== undefined) {
-    let next = syncAddressBookFlatFields({
-      ...(existing.address ?? {}),
-      ...input.address,
-    });
+    normalizedAddress = applyFlatAddressPatch(
+      existing.address ?? {},
+      input.address,
+    );
     if (input.address.gst !== undefined) {
       const gst = input.address.gst.trim();
-      next.gst = gst || undefined;
+      normalizedAddress = {
+        ...normalizedAddress,
+        gst: gst || undefined,
+      };
     }
     if (input.address.ownerLegalName !== undefined) {
       const legal = input.address.ownerLegalName.trim();
-      next.ownerLegalName = legal || undefined;
+      normalizedAddress = {
+        ...normalizedAddress,
+        ownerLegalName: legal || undefined,
+      };
     }
-    normalizedAddress = syncAddressBookFlatFields(next);
+    normalizedAddress = syncAddressBookFlatFields(normalizedAddress);
     input = {
       ...input,
       address: normalizedAddress,
