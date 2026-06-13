@@ -50,6 +50,15 @@ function clientPhoneValues(client: Pick<LocalClient, "phone" | "address">) {
   return [...values];
 }
 
+export function findClientByEmail(clients: LocalClient[], emailInput: string) {
+  const email = normalizeClientEmail(emailInput);
+  if (!email) return null;
+  return (
+    clients.find((client) => normalizeClientEmail(client.email) === email) ??
+    null
+  );
+}
+
 export function findClientByEmailAndPhone(
   clients: LocalClient[],
   emailInput: string,
@@ -117,5 +126,5 @@ export function parsePasswordResetSession(token: string | undefined) {
 }
 
 export function passwordResetReady(session: PasswordResetSession) {
-  return session.emailVerified && session.mobileVerified;
+  return session.emailVerified;
 }

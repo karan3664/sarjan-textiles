@@ -29,10 +29,8 @@ export const CLIENT_PUBLIC_API_PREFIXES = [
   "/api/auth/forgot",
   "/api/auth/forgot/start",
   "/api/auth/forgot/verify-email",
-  "/api/auth/forgot/send-mobile-otp",
-  "/api/auth/forgot/verify-mobile",
   "/api/auth/forgot/complete",
-  "/api/auth/firebase-phone-login",
+  "/api/auth/login-otp",
 ] as const;
 
 export function isClientProtectedPage(pathname: string): boolean {

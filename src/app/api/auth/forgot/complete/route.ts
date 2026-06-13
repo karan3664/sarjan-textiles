@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     }
     if (!passwordResetReady(parsed.session)) {
       return Response.json(
-        { error: "Verify email and mobile before setting a new password" },
+        { error: "Verify your email before setting a new password" },
         { status: 400 },
       );
     }

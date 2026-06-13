@@ -11,7 +11,6 @@ import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 /**
  * Login via email one-time password.
- * Mobile login uses Firebase Phone Auth → POST /api/auth/firebase-phone-login.
  */
 export async function POST(request: Request) {
   try {

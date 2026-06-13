@@ -1,21 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
 import { OtpCodeInput } from "@/components/storefront/OtpCodeInput";
 import type { AuthBanners } from "@/lib/auth-banner-types";
+import { persistClientSession } from "@/lib/client-auth-browser";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
-type Step = "account" | "email" | "mobile" | "password" | "done";
-
-function normalizeMobile(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
-  if (digits.length > 10) return digits.slice(-10);
-  return digits;
-}
+type Step = "account" | "email" | "password" | "done";
 
 export function ForgotPasswordFlowClient({
   banners,
@@ -24,30 +18,23 @@ export function ForgotPasswordFlowClient({
 }) {
   const [step, setStep] = useState<Step>("account");
   const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
   const [resetToken, setResetToken] = useState("");
   const [emailOtpToken, setEmailOtpToken] = useState("");
-  const [mobileOtpToken, setMobileOtpToken] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
-  const [mobileOtp, setMobileOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [mobileOtpSent, setMobileOtpSent] = useState(false);
-  const mobileAutoSendStarted = useRef(false);
 
   const startReset = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setMessage("");
-    const normalizedMobile = normalizeMobile(mobile);
     const res = await fetch("/api/auth/forgot/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: email.trim().toLowerCase(),
-        mobile: normalizedMobile,
       }),
     });
     const data = await res.json();
@@ -57,7 +44,6 @@ export function ForgotPasswordFlowClient({
       return;
     }
     setResetToken(String(data.resetToken ?? ""));
-    setMobile(normalizedMobile);
     setStep("email");
     setMessage("Account found. Verify your email next.");
   };
@@ -103,62 +89,8 @@ export function ForgotPasswordFlowClient({
       return;
     }
     setResetToken(String(data.resetToken ?? ""));
-    setStep("mobile");
-    setMobileOtp("");
-    setMobileOtpToken("");
-    setMobileOtpSent(false);
-    mobileAutoSendStarted.current = false;
-    setMessage("Email verified. Verify your mobile number next.");
-  };
-
-  const sendMobileOtp = async () => {
-    setLoading(true);
-    setMessage("");
-    const res = await fetch("/api/auth/forgot/send-mobile-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resetToken }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setMessage(data.error ?? "Could not send mobile OTP");
-      return;
-    }
-    setMobileOtpToken(String(data.otpToken ?? ""));
-    setMobileOtpSent(true);
-    setMessage(data.message ?? "OTP sent to your mobile");
-  };
-
-  useEffect(() => {
-    if (step !== "mobile" || mobileAutoSendStarted.current) return;
-    mobileAutoSendStarted.current = true;
-    void sendMobileOtp();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-send once per mobile step
-  }, [step]);
-
-  const verifyMobileOtp = async () => {
-    setLoading(true);
-    setMessage("");
-    const res = await fetch("/api/auth/forgot/verify-mobile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        resetToken,
-        otpToken: mobileOtpToken,
-        otp: mobileOtp,
-        mobile,
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setMessage(data.error ?? "Mobile verification failed");
-      return;
-    }
-    setResetToken(String(data.resetToken ?? ""));
     setStep("password");
-    setMessage("Mobile verified. Set your new password.");
+    setMessage("Email verified. Set your new password.");
   };
 
   const completeReset = async (event: FormEvent) => {
@@ -189,11 +121,9 @@ export function ForgotPasswordFlowClient({
       ? "Reset password"
       : step === "email"
         ? "Verify email"
-        : step === "mobile"
-          ? "Verify mobile"
-          : step === "password"
-            ? "New password"
-            : "Password updated";
+        : step === "password"
+          ? "New password"
+          : "Password updated";
 
   return (
     <>
@@ -228,10 +158,10 @@ export function ForgotPasswordFlowClient({
                 <h4 className="mb_18">{stepTitle}</h4>
                 <p className="text-secondary mb_24">
                   {step === "account"
-                    ? "Enter the email and mobile on your Sarjan wholesale account."
+                    ? "Enter the email on your Sarjan wholesale account."
                     : step === "done"
                       ? "Your password has been updated. Sign in with your new password."
-                      : "Complete each verification step to set a new password yourself."}
+                      : "Verify your email to set a new password yourself."}
                 </p>
               </div>
 
@@ -243,22 +173,6 @@ export function ForgotPasswordFlowClient({
                       placeholder="Email address*"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </fieldset>
-                  <fieldset className="sarjan-mobile-prefix-field">
-                    <span className="sarjan-mobile-prefix">+91</span>
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      placeholder="Mobile number*"
-                      value={mobile}
-                      maxLength={10}
-                      onChange={(e) =>
-                        setMobile(
-                          e.target.value.replace(/\D/g, "").slice(0, 10),
-                        )
-                      }
                       required
                     />
                   </fieldset>
@@ -303,46 +217,6 @@ export function ForgotPasswordFlowClient({
                       onClick={verifyEmailOtp}
                       disabled={
                         loading || emailOtp.length !== 6 || !emailOtpToken
-                      }
-                    >
-                      Verify
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {step === "mobile" ? (
-                <div>
-                  <p className="mb_16">
-                    Mobile: <strong>+91 {mobile}</strong>
-                  </p>
-                  <OtpCodeInput
-                    label="Mobile verification code"
-                    value={mobileOtp}
-                    onChange={setMobileOtp}
-                    focusTrigger={mobileOtpSent ? mobileOtpToken : loading}
-                    autoFocus={mobileOtpSent}
-                    disabled={!mobileOtpSent && loading}
-                  />
-                  <div className="sarjan-otp-actions sarjan-otp-actions--stack mt_12">
-                    <button
-                      type="button"
-                      className={withBtnIcon(
-                        sarjanButtonClass("sarjan-auth-btn"),
-                      )}
-                      onClick={sendMobileOtp}
-                      disabled={loading}
-                    >
-                      {mobileOtpSent ? "Resend OTP" : "Send OTP"}
-                    </button>
-                    <button
-                      type="button"
-                      className={withBtnIcon(
-                        sarjanButtonClass("sarjan-auth-btn"),
-                      )}
-                      onClick={verifyMobileOtp}
-                      disabled={
-                        loading || mobileOtp.length !== 6 || !mobileOtpToken
                       }
                     >
                       Verify

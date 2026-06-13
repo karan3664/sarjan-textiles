@@ -120,8 +120,13 @@ function AuthPageClientInner({
   const [emailOtpLoading, setEmailOtpLoading] = useState(false);
   const [registerState, setRegisterState] = useState("");
   const [registerCity, setRegisterCity] = useState("");
+  const [usePasswordLogin, setUsePasswordLogin] = useState(false);
+  const [loginOtp, setLoginOtp] = useState("");
+  const [loginOtpToken, setLoginOtpToken] = useState("");
+  const [loginOtpLoading, setLoginOtpLoading] = useState(false);
   const isRegister = mode === "register";
   const isForgot = mode === "forgot";
+  const isLogin = mode === "login";
   const normalizedGst = normalizeGstin(gst);
   const gstinReady = isValidGstin(normalizedGst);
 
@@ -190,6 +195,51 @@ function AuthPageClientInner({
     event.preventDefault();
     setLoading(true);
     setMessage("");
+
+    if (isLogin && !usePasswordLogin) {
+      const normalized = email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+        setLoading(false);
+        setMessage("Enter a valid email address");
+        return;
+      }
+      if (!loginOtpToken) {
+        setLoading(false);
+        await sendLoginOtp();
+        return;
+      }
+      if (loginOtp.length !== 6) {
+        setLoading(false);
+        setMessage("Enter the 6-digit OTP sent to your email");
+        return;
+      }
+      try {
+        const res = await fetch("/api/auth/login-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            email: normalized,
+            otp: loginOtp,
+            otpToken: loginOtpToken,
+          }),
+        });
+        const data = await res.json();
+        setLoading(false);
+        if (!res.ok) {
+          setMessage(data.error ?? "Login failed");
+          return;
+        }
+        if (data.client?.id) {
+          persistClientSession("", data.client);
+          window.location.assign(safeAuthRedirect(searchParams.get("next")));
+        }
+      } catch {
+        setLoading(false);
+        setMessage("Login failed");
+      }
+      return;
+    }
 
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
@@ -294,6 +344,34 @@ function AuthPageClientInner({
         ? (data.message ?? "Password reset email sent.")
         : "Password reset request saved. Admin will contact client.",
     );
+  };
+
+  const sendLoginOtp = async () => {
+    const normalized = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      setMessage("Enter a valid email address");
+      return;
+    }
+    setLoginOtpLoading(true);
+    setMessage("");
+    setLoginOtp("");
+    setLoginOtpToken("");
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalized, mode: "login" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not send OTP");
+      setEmail(normalized);
+      setLoginOtpToken(String(data.otpToken ?? ""));
+      setMessage(data.message ?? "OTP sent. Check your email inbox.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not send OTP");
+    } finally {
+      setLoginOtpLoading(false);
+    }
   };
 
   const resetEmailOtp = (nextEmail: string) => {
@@ -662,10 +740,50 @@ function AuthPageClientInner({
                       placeholder="Username or email address*"
                       name="email"
                       value={email}
-                      onChange={(event) => resetEmailOtp(event.target.value)}
+                      onChange={(event) => {
+                        resetEmailOtp(event.target.value);
+                        if (isLogin) {
+                          setLoginOtp("");
+                          setLoginOtpToken("");
+                        }
+                      }}
                       required
                     />
                   </fieldset>
+                  {isLogin && !usePasswordLogin ? (
+                    <>
+                      <fieldset className="sarjan-otp-row">
+                        <input
+                          type="text"
+                          className="sarjan-otp-input"
+                          placeholder="Email OTP*"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          value={loginOtp}
+                          onChange={(event) =>
+                            setLoginOtp(
+                              event.target.value.replace(/\D/g, "").slice(0, 6),
+                            )
+                          }
+                          required
+                        />
+                        <div className="sarjan-otp-actions">
+                          <button
+                            type="button"
+                            className={withBtnIcon(
+                              sarjanButtonClass("sarjan-auth-btn"),
+                            )}
+                            onClick={sendLoginOtp}
+                            disabled={loginOtpLoading || !email.trim()}
+                          >
+                            <TfButtonIcon icon="icon-mail">
+                              {loginOtpLoading ? "Sending..." : "Send OTP"}
+                            </TfButtonIcon>
+                          </button>
+                        </div>
+                      </fieldset>
+                    </>
+                  ) : null}
                   {isRegister ? (
                     <>
                       <fieldset className="sarjan-otp-row">
@@ -748,7 +866,7 @@ function AuthPageClientInner({
                       ) : null}
                     </>
                   ) : null}
-                  {!isForgot ? (
+                  {!isForgot && (isRegister || usePasswordLogin) ? (
                     <fieldset className="position-relative password-item">
                       <input
                         className="input-password"
@@ -776,29 +894,62 @@ function AuthPageClientInner({
                       </span>
                     </fieldset>
                   ) : null}
-                  {!isRegister && !isForgot ? (
-                    <div className="sarjan-auth-form-meta d-flex align-items-center justify-content-between">
-                      <div className="tf-cart-checkbox">
-                        <div className="tf-checkbox-wrapp">
-                          <input
-                            defaultChecked
-                            type="checkbox"
-                            id="login-form_agree"
-                            name="agree_checkbox"
-                          />
-                          <div>
-                            <i className="icon-check" />
+                  {isLogin ? (
+                    <div className="sarjan-auth-form-meta d-flex align-items-center justify-content-between flex-wrap">
+                      {usePasswordLogin ? (
+                        <>
+                          <div className="tf-cart-checkbox">
+                            <div className="tf-checkbox-wrapp">
+                              <input
+                                defaultChecked
+                                type="checkbox"
+                                id="login-form_agree"
+                                name="agree_checkbox"
+                              />
+                              <div>
+                                <i className="icon-check" />
+                              </div>
+                            </div>
+                            <label htmlFor="login-form_agree">
+                              Remember me
+                            </label>
                           </div>
-                        </div>
-                        <label htmlFor="login-form_agree">Remember me</label>
-                      </div>
-                      <a
-                        href="/forgot-password"
-                        className="font-2 text-button forget-password link"
-                      >
-                        Forgot Your Password?
-                      </a>
+                          <a
+                            href="/forgot-password"
+                            className="font-2 text-button forget-password link"
+                          >
+                            Forgot Your Password?
+                          </a>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="font-2 text-button link border-0 bg-transparent p-0"
+                          onClick={() => {
+                            setUsePasswordLogin(true);
+                            setLoginOtp("");
+                            setLoginOtpToken("");
+                            setMessage("");
+                          }}
+                        >
+                          Use password instead
+                        </button>
+                      )}
                     </div>
+                  ) : null}
+                  {isLogin && usePasswordLogin ? (
+                    <p className="sarjan-auth-switch mt_8 mb_0">
+                      <button
+                        type="button"
+                        className="font-2 text-button link border-0 bg-transparent p-0"
+                        onClick={() => {
+                          setUsePasswordLogin(false);
+                          setMessage("");
+                        }}
+                      >
+                        Use email OTP instead
+                      </button>
+                    </p>
                   ) : null}
                   {isRegister ? (
                     <div className="sarjan-auth-form-meta d-flex align-items-center flex-wrap">
@@ -853,7 +1004,11 @@ function AuthPageClientInner({
                         ? "Please wait..."
                         : isForgot
                           ? "Reset Password"
-                          : title}
+                          : isLogin && !usePasswordLogin
+                            ? loginOtpToken
+                              ? "Verify & Login"
+                              : "Send OTP to login"
+                            : title}
                     </TfButtonIcon>
                   </button>
                 </div>

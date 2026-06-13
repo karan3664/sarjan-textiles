@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     return Response.json({
       ok: true,
       resetToken: nextToken,
-      message: "Email verified. Verify your mobile number next.",
+      message: "Email verified. Set your new password next.",
     });
   } catch (error) {
     return Response.json(

@@ -31,6 +31,12 @@ export function AdminPricingClient({
     level3: "",
   });
   const [message, setMessage] = useState("");
+
+  function normalizeCategoryPath(path: unknown): string[] {
+    if (!Array.isArray(path)) return [];
+    return path.map((item) => String(item ?? "").trim()).filter(Boolean);
+  }
+
   const categoryOptions = useMemo(() => {
     const masterPaths = categoryMaster
       .filter((category) => category.active !== false)
@@ -40,7 +46,7 @@ export function AdminPricingClient({
     );
     const byName = new Map<string, string[]>();
     [...masterPaths, ...productPaths].forEach((path) => {
-      const cleanPath = path.map((item) => item.trim()).filter(Boolean);
+      const cleanPath = normalizeCategoryPath(path);
       if (cleanPath.length) byName.set(cleanPath.join(" > "), cleanPath);
     });
     return Array.from(byName.entries())

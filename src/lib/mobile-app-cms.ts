@@ -432,8 +432,8 @@ export function defaultMobileAppConfig(
     },
     appIcon: {
       enabled: true,
-      enablePremiumIcon: true,
-      enableDealerIcon: true,
+      enablePremiumIcon: false,
+      enableDealerIcon: false,
       campaigns: [],
       festivalOverrides: [],
     },
@@ -1091,8 +1091,8 @@ export function buildMobileConfigResponse(
   const mergedAppIcon: MobileAppIconConfig = {
     ...(mobileApp.appIcon ?? {
       enabled: true,
-      enablePremiumIcon: true,
-      enableDealerIcon: true,
+      enablePremiumIcon: false,
+      enableDealerIcon: false,
       campaigns: [],
       festivalOverrides: [],
     }),
