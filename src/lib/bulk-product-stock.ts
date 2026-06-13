@@ -1,10 +1,10 @@
 import type { Product } from "@/data/mock";
 import {
-  SIZE_GROUPS,
   filterActiveSizes,
   isDeprecatedSize,
-  type SizeGroupId,
+  sizesInGroup,
 } from "@/lib/size-groups";
+import { totalPieceStockFromSetCounts } from "@/lib/set-stock";
 
 export type VariantStockEntry = {
   color: string;
@@ -18,7 +18,7 @@ function variantKey(color: string, size: string) {
   return `${color.trim().toLowerCase()}__${size.trim()}`;
 }
 
-/** `Indigo:S:10,Indigo:M:12,Maroon:3XL:5` */
+/** Optional per color+size set overrides: `Indigo:S:10,Maroon:3XL:5` (values are sets). */
 export function parseVariantStockList(value: string): VariantStockEntry[] {
   if (!value.trim()) return [];
   return value
@@ -35,107 +35,89 @@ export function parseVariantStockList(value: string): VariantStockEntry[] {
     .filter(Boolean) as VariantStockEntry[];
 }
 
-/** `S:10|M:12|3XL:5` or `S:10,M:12,3XL:5` — same qty for every color. */
-export function parseStockBySize(value: string): Record<string, number> {
-  if (!value.trim()) return {};
-  const out: Record<string, number> = {};
-  for (const part of value.split(/[|,]/)) {
-    const trimmed = part.trim();
-    if (!trimmed) continue;
-    const [size, qtyRaw] = trimmed.split(":").map((item) => item.trim());
-    const stock = Number(String(qtyRaw ?? "").replace(/[^\d.-]/g, ""));
-    if (!size || isDeprecatedSize(size) || !Number.isFinite(stock)) continue;
-    out[size] = Math.max(0, stock);
+function setCountForVariant(input: {
+  color: string;
+  size: string;
+  colors: string[];
+  sizes: string[];
+  stockRegularSets: number;
+  stockPlusSets: number;
+  variantStockText: string;
+  defaultSetStock: number;
+  totalStock: number;
+}): number {
+  const {
+    color,
+    size,
+    colors,
+    sizes,
+    stockRegularSets,
+    stockPlusSets,
+    variantStockText,
+    defaultSetStock,
+    totalStock,
+  } = input;
+
+  const override = parseVariantStockList(variantStockText).find(
+    (entry) =>
+      entry.color.toLowerCase() === color.toLowerCase() && entry.size === size,
+  );
+  if (override) return override.stock;
+
+  const regularSizes = sizesInGroup(sizes, "regular", sizes);
+  const plusSizes = sizesInGroup(sizes, "plus", sizes);
+  if (regularSizes.includes(size) && stockRegularSets > 0) {
+    return stockRegularSets;
   }
-  return out;
+  if (plusSizes.includes(size) && stockPlusSets > 0) {
+    return stockPlusSets;
+  }
+
+  if (defaultSetStock > 0) return defaultSetStock;
+
+  const activeSizes = filterActiveSizes(sizes);
+  const fallbackSets = Math.floor(
+    totalStock / Math.max(1, colors.length * activeSizes.length),
+  );
+  return Math.max(0, fallbackSets);
 }
 
-function sizesInGroupFromList(sizes: string[], group: SizeGroupId) {
-  const allowed = new Set<string>(SIZE_GROUPS[group]);
-  return filterActiveSizes(sizes).filter((size) => allowed.has(size.trim()));
-}
-
+/** Variant rows store **set count** (same number on every size in a group for each color). */
 export function buildVariantsFromBulkRow(input: {
   colors: string[];
   sizes: string[];
   sku: string;
   price: number;
   totalStock: number;
-  defaultVariantStock: number;
-  stockRegular: number;
-  stockPlus: number;
+  defaultSetStock: number;
+  stockRegularSets: number;
+  stockPlusSets: number;
   variantStockText: string;
-  stockBySizeText: string;
 }): NonNullable<Product["variants"]> {
-  const {
-    colors,
-    sizes,
-    sku,
-    price,
-    totalStock,
-    defaultVariantStock,
-    stockRegular,
-    stockPlus,
-    variantStockText,
-    stockBySizeText,
-  } = input;
-  const activeSizes = filterActiveSizes(sizes);
-  const stockMap = new Map<string, number>();
-  const stockBySize = parseStockBySize(stockBySizeText);
-  const regularSizes = sizesInGroupFromList(activeSizes, "regular");
-  const plusSizes = sizesInGroupFromList(activeSizes, "plus");
+  const activeSizes = filterActiveSizes(input.sizes);
 
-  for (const color of colors) {
-    for (const [size, stock] of Object.entries(stockBySize)) {
-      if (!activeSizes.includes(size)) continue;
-      stockMap.set(variantKey(color, size), stock);
-    }
-  }
-
-  for (const entry of parseVariantStockList(variantStockText)) {
-    if (!activeSizes.includes(entry.size)) continue;
-    stockMap.set(variantKey(entry.color, entry.size), entry.stock);
-  }
-
-  if (stockRegular > 0) {
-    for (const color of colors) {
-      for (const size of regularSizes) {
-        const key = variantKey(color, size);
-        if (!stockMap.has(key)) stockMap.set(key, stockRegular);
-      }
-    }
-  }
-
-  if (stockPlus > 0) {
-    for (const color of colors) {
-      for (const size of plusSizes) {
-        const key = variantKey(color, size);
-        if (!stockMap.has(key)) stockMap.set(key, stockPlus);
-      }
-    }
-  }
-
-  const perVariantFallback =
-    defaultVariantStock > 0
-      ? defaultVariantStock
-      : Math.floor(
-          totalStock / Math.max(1, colors.length * activeSizes.length),
-        );
-
-  const variants = colors.flatMap((color) =>
+  return input.colors.flatMap((color) =>
     activeSizes.map((size) => ({
-      sku: `${sku}-${color.slice(0, 3).toUpperCase()}-${size}`.replace(
+      sku: `${input.sku}-${color.slice(0, 3).toUpperCase()}-${size}`.replace(
         /\s+/g,
         "",
       ),
       color,
       size,
-      price,
-      stock: stockMap.get(variantKey(color, size)) ?? perVariantFallback,
+      price: input.price,
+      stock: setCountForVariant({
+        color,
+        size,
+        colors: input.colors,
+        sizes: input.sizes,
+        stockRegularSets: input.stockRegularSets,
+        stockPlusSets: input.stockPlusSets,
+        variantStockText: input.variantStockText,
+        defaultSetStock: input.defaultSetStock,
+        totalStock: input.totalStock,
+      }),
     })),
   );
-
-  return variants;
 }
 
 export function variantStockForSelection(
@@ -153,18 +135,48 @@ export function variantStockForSelection(
   return Number.isFinite(stock) ? Math.max(0, stock) : undefined;
 }
 
-/** Full sets limited by the lowest in-stock size for the selected color + size run. */
-export function productMaxSetsForSelection(
-  product: Pick<Product, "stock" | "reserved" | "variants">,
-  sizes: string[],
-  color?: string,
-): number | undefined {
-  if (!product.variants?.length || !color?.trim()) return undefined;
-  const stocks = sizes.map((size) =>
-    variantStockForSelection(product, color, size),
+export function buildSetStockFieldsFromBulk(input: {
+  colors: string[];
+  sizes: string[];
+  stockRegularSets: number;
+  stockPlusSets: number;
+  totalStock: number;
+}) {
+  const { colors, sizes, stockRegularSets, stockPlusSets, totalStock } = input;
+  const hasSetFields = stockRegularSets > 0 || stockPlusSets > 0;
+  return {
+    stockRegularSets: stockRegularSets > 0 ? stockRegularSets : undefined,
+    stockPlusSets: stockPlusSets > 0 ? stockPlusSets : undefined,
+    stock: hasSetFields
+      ? totalPieceStockFromSetCounts({
+          colors,
+          sizes,
+          stockRegularSets,
+          stockPlusSets,
+        })
+      : totalStock,
+  };
+}
+
+export function setStockForSizeInGroup(
+  size: string,
+  productSizes: string[],
+  stockRegularSets: number,
+  stockPlusSets: number,
+): number {
+  const regularSizes = sizesInGroup(productSizes, "regular", productSizes);
+  const plusSizes = sizesInGroup(productSizes, "plus", productSizes);
+  if (regularSizes.includes(size) && stockRegularSets > 0) {
+    return stockRegularSets;
+  }
+  if (plusSizes.includes(size) && stockPlusSets > 0) {
+    return stockPlusSets;
+  }
+  return 0;
+}
+
+export function isSizeInGroup(size: string, group: SizeGroupId) {
+  return SIZE_GROUPS[group].includes(
+    size.trim() as (typeof SIZE_GROUPS)[SizeGroupId][number],
   );
-  if (stocks.some((stock) => stock === undefined)) return undefined;
-  const normalized = stocks as number[];
-  if (!normalized.length) return 0;
-  return Math.min(...normalized);
 }

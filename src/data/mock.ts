@@ -20,6 +20,10 @@ export type Product = {
   damaged?: number;
   colors: string[];
   sizes: string[];
+  /** Available full sets for XS–XXL group (per color). */
+  stockRegularSets?: number;
+  /** Available full sets for 3XL–5XL group (per color). */
+  stockPlusSets?: number;
   images: string[];
   /** Ordered frames for drag-to-spin 360° view (8–36 images). */
   spin360Images?: string[];

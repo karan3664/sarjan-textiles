@@ -4,6 +4,7 @@ import type { Product } from "@/data/mock";
 import { PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/product-placeholder-image";
 import {
   buildVariantsFromBulkRow,
+  buildSetStockFieldsFromBulk,
   filterActiveSizes,
 } from "@/lib/bulk-product-stock";
 import { requireAdminRouteSession } from "@/lib/require-admin-session";
@@ -103,30 +104,34 @@ function productFromRow(row: SheetRow, index: number): Product {
   const colors = splitList(stringValue(row, "colors"));
   const sizes = productSizesFromRow(row);
   const price = numberValue(row, "price");
+  const stockRegularSets =
+    numberValue(row, "stock_regular") || numberValue(row, "stock_xs_xxl");
+  const stockPlusSets =
+    numberValue(row, "stock_plus") || numberValue(row, "stock_3xl_5xl");
   const variants = buildVariantsFromBulkRow({
     colors,
     sizes,
     sku: stringValue(row, "sku"),
     price,
     totalStock: numberValue(row, "stock"),
-    defaultVariantStock:
+    defaultSetStock:
       numberValue(row, "variant_stock_default") ||
       numberValue(row, "variant_stock_per_piece") ||
       numberValue(row, "variantStock"),
-    stockRegular:
-      numberValue(row, "stock_regular") || numberValue(row, "stock_xs_xxl"),
-    stockPlus:
-      numberValue(row, "stock_plus") || numberValue(row, "stock_3xl_5xl"),
+    stockRegularSets,
+    stockPlusSets,
     variantStockText: firstStringValue(row, [
       "variant_stock",
       "variant_stocks",
     ]),
-    stockBySizeText: firstStringValue(row, ["stock_by_size", "size_stock"]),
   });
-  const stock =
-    variants.length > 0
-      ? variants.reduce((sum, variant) => sum + (Number(variant.stock) || 0), 0)
-      : numberValue(row, "stock");
+  const setStockFields = buildSetStockFieldsFromBulk({
+    colors,
+    sizes,
+    stockRegularSets,
+    stockPlusSets,
+    totalStock: numberValue(row, "stock"),
+  });
 
   return {
     id:
@@ -145,11 +150,13 @@ function productFromRow(row: SheetRow, index: number): Product {
     fabric: stringValue(row, "fabric") || "Cotton",
     price: numberValue(row, "price"),
     moq: numberValue(row, "moq", 1),
-    stock,
+    stock: setStockFields.stock,
     reserved: numberValue(row, "reserved"),
     sold: numberValue(row, "sold"),
     colors,
     sizes,
+    stockRegularSets: setStockFields.stockRegularSets,
+    stockPlusSets: setStockFields.stockPlusSets,
     variants: variants.length ? variants : undefined,
     images: splitList(imageUrls).length
       ? splitList(imageUrls)

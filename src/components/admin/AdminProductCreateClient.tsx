@@ -5,6 +5,8 @@ import { useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
 import { SIZE_GROUPS } from "@/lib/cart-client";
+import { setStockForSizeInGroup } from "@/lib/bulk-product-stock";
+import { totalPieceStockFromSetCounts } from "@/lib/set-stock";
 import type { ProductCategoryMaster } from "@/lib/cms-store";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { buildSeoProductSlug, isWeakProductSlug } from "@/lib/product-seo-slug";
@@ -30,6 +32,8 @@ type ProductForm = {
   sizes: string;
   description: string;
   care: string;
+  stockRegularSets: string;
+  stockPlusSets: string;
   variantStock: string;
   pricingRules: string;
   images: string[];
@@ -105,6 +109,8 @@ const emptyForm: ProductForm = {
   sizes: "",
   description: "",
   care: "",
+  stockRegularSets: "",
+  stockPlusSets: "",
   variantStock: "",
   pricingRules: "",
   images: [],
@@ -162,10 +168,18 @@ function productFromForm(
     ? buildSeoProductSlug({ category, fabric, colors, name })
     : draftSlug;
   const sizes = splitList(form.sizes);
+  const stockRegularSets = Number(form.stockRegularSets) || 0;
+  const stockPlusSets = Number(form.stockPlusSets) || 0;
   const variants = splitList(form.colors).flatMap((color) =>
     sizes.map((size) => {
       const key = `${color}__${size}`;
       const override = variantOverrides[key] ?? {};
+      const overrideSets = Number(override.stock) || 0;
+      const setStock =
+        overrideSets ||
+        setStockForSizeInGroup(size, sizes, stockRegularSets, stockPlusSets) ||
+        Number(form.variantStock) ||
+        0;
       return {
         sku: (
           override.sku || `${sku}-${color.slice(0, 3).toUpperCase()}-${size}`
@@ -173,20 +187,23 @@ function productFromForm(
         color,
         size,
         price: Number(override.price) || Number(form.price) || 0,
-        stock:
-          Number(override.stock) ||
-          Number(form.variantStock) ||
-          Math.floor(
-            (Number(form.stock) || 0) /
-              Math.max(1, splitList(form.colors).length * sizes.length),
-          ),
+        stock: setStock,
       };
     }),
   );
   const stock =
-    variants.length > 0
-      ? variants.reduce((sum, variant) => sum + (Number(variant.stock) || 0), 0)
-      : Number(form.stock) || 0;
+    stockRegularSets > 0 || stockPlusSets > 0
+      ? totalPieceStockFromSetCounts({
+          colors,
+          sizes,
+          stockRegularSets,
+          stockPlusSets,
+        })
+      : Number(form.stock) ||
+        variants.reduce(
+          (sum, variant) => sum + (Number(variant.stock) || 0),
+          0,
+        );
 
   return {
     id: fallbackId,
@@ -206,6 +223,8 @@ function productFromForm(
     sold: Number(form.sold) || 0,
     colors,
     sizes,
+    stockRegularSets: stockRegularSets > 0 ? stockRegularSets : undefined,
+    stockPlusSets: stockPlusSets > 0 ? stockPlusSets : undefined,
     images: form.images.length
       ? form.images
       : ["/sarjan-assets/sarjan-logo.svg"],
@@ -278,6 +297,8 @@ function formFromProduct(product?: Product): ProductForm {
     sizes: product.sizes.join(", "),
     description: product.description,
     care: product.care,
+    stockRegularSets: String(product.stockRegularSets ?? ""),
+    stockPlusSets: String(product.stockPlusSets ?? ""),
     variantStock: String(product.variants?.[0]?.stock ?? ""),
     pricingRules:
       product.pricingRules
@@ -885,14 +906,11 @@ export function AdminProductCreateClient({
                 <div>
                   <h6 className="mb-4">Bulk Product Upload</h6>
                   <p className="text-secondary">
-                    Download sample Excel, fill data, upload same file. Sizes:
-                    use <code>sizes</code> or <code>sizes_regular</code> +{" "}
-                    <code>sizes_plus</code> (up to 5XL). Stock (pieces):{" "}
-                    <code>stock_by_size</code> as <code>S:10|M:12|3XL:5</code>{" "}
-                    for all colors, <code>stock_regular</code> /{" "}
-                    <code>stock_plus</code> for same qty per size in each group,
-                    or <code>variant_stock</code> as{" "}
-                    <code>Indigo:S:10,Maroon:3XL:5</code> per color+size.
+                    Download sample Excel, fill data, upload same file.{" "}
+                    <code>stock_regular</code> / <code>stock_plus</code> ={" "}
+                    <strong>full sets per color</strong> (10 = 10 complete sets,
+                    not 10 pieces). Use <code>sizes_regular</code> +{" "}
+                    <code>sizes_plus</code> for size groups up to 5XL.
                   </p>
                 </div>
                 <div className="sarjan-product-bulk-actions">
@@ -1253,15 +1271,44 @@ export function AdminProductCreateClient({
                 </fieldset>
                 <fieldset>
                   <div className="text-button font-instrument mb-8">
-                    Variant Stock Per Color/Size
+                    Regular sets (XS–XXL)
                   </div>
                   <input
                     type="number"
+                    min={0}
+                    value={form.stockRegularSets}
+                    onChange={(event) =>
+                      update("stockRegularSets", event.target.value)
+                    }
+                    placeholder="e.g. 10 = 10 full sets per color"
+                  />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument mb-8">
+                    Plus sets (3XL–5XL)
+                  </div>
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.stockPlusSets}
+                    onChange={(event) =>
+                      update("stockPlusSets", event.target.value)
+                    }
+                    placeholder="e.g. 5 = 5 full sets per color"
+                  />
+                </fieldset>
+                <fieldset>
+                  <div className="text-button font-instrument mb-8">
+                    Default sets (fallback)
+                  </div>
+                  <input
+                    type="number"
+                    min={0}
                     value={form.variantStock}
                     onChange={(event) =>
                       update("variantStock", event.target.value)
                     }
-                    placeholder="Auto split if blank"
+                    placeholder="When group fields are blank"
                   />
                 </fieldset>
                 <fieldset>
@@ -1483,7 +1530,7 @@ export function AdminProductCreateClient({
                           <th>Size</th>
                           <th>SKU</th>
                           <th>Price</th>
-                          <th>Stock</th>
+                          <th>Sets</th>
                         </tr>
                       </thead>
                       <tbody>

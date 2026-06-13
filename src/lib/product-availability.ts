@@ -1,6 +1,6 @@
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
-import { productMaxSetsForSelection } from "@/lib/bulk-product-stock";
+import { availableSetsForSizeRun } from "@/lib/set-stock";
 
 /**
  * Normalizes `product.stock` from CMS JSON (number or numeric string).
@@ -104,13 +104,22 @@ export function productWholesaleMinSets(
 
 /** How many full sets can be ordered from available inventory (0 when sold out). */
 export function productMaxSets(
-  product: Pick<Product, "stock" | "reserved" | "moq" | "sizes" | "variants">,
+  product: Pick<
+    Product,
+    | "stock"
+    | "reserved"
+    | "moq"
+    | "sizes"
+    | "variants"
+    | "stockRegularSets"
+    | "stockPlusSets"
+  >,
   sizes: string[] = productSizeRun(product),
   color?: string,
 ): number {
-  const variantLimited = productMaxSetsForSelection(product, sizes, color);
-  if (variantLimited !== undefined) {
-    return variantLimited;
+  const setLimited = availableSetsForSizeRun(product, sizes, color);
+  if (setLimited !== undefined) {
+    return setLimited;
   }
 
   const available = productAvailablePieces(product);

@@ -16,20 +16,18 @@ const headers = [
   "colors",
   "sizes_regular",
   "sizes_plus",
-  "stock_by_size",
   "stock_regular",
   "stock_plus",
   "variant_stock",
   "price",
   "moq",
-  "stock",
   "description",
   "care",
   "image_urls",
   "is_featured",
 ];
 
-/** One demo product — both size groups with per-size piece stock for all colors. */
+/** stock_regular=10 → 10 full sets (S–XXL) per color; stock_plus=5 → 5 full sets (3XL–5XL) per color. */
 const sampleRow = {
   name: "Ajrakh Printed Cotton Shirt (Sample)",
   sku: "STS-SAMPLE-01",
@@ -38,15 +36,13 @@ const sampleRow = {
   colors: "Indigo,Maroon,Black",
   sizes_regular: "S,M,L,XL,XXL",
   sizes_plus: "3XL,4XL,5XL",
-  stock_by_size: "S:20|M:25|L:30|XL:20|XXL:15|3XL:10|4XL:8|5XL:5",
-  stock_regular: "",
-  stock_plus: "",
+  stock_regular: 10,
+  stock_plus: 5,
   variant_stock: "",
   price: 120,
   moq: 12,
-  stock: "",
   description:
-    "Sample bulk row. Customer can order XS-XXL set or 3XL-5XL set separately.",
+    "Sample row: 10 regular sets + 5 plus sets per color. Customer qty 3 = 3 full sets.",
   care: "Gentle wash separately, Dry in shade",
   image_urls: "",
   is_featured: "no",
@@ -72,40 +68,31 @@ sheet.getRow(1).fill = {
 
 headers.forEach((header, index) => {
   const column = sheet.getColumn(index + 1);
-  column.width = Math.max(header.length + 4, 16);
+  column.width = Math.max(header.length + 4, 18);
 });
 
 const notes = workbook.addWorksheet("How to fill");
-notes.addRow(["Column", "Example", "Notes"]);
+notes.addRow(["Column", "Example", "Meaning"]);
 notes.addRow([
-  "sizes_regular",
-  "S,M,L,XL,XXL",
-  "XS to XXL group. Optional if sizes column has all sizes.",
+  "stock_regular",
+  "10",
+  "10 full sets per color for XS–XXL group. 1 set = one piece of each size in sizes_regular.",
 ]);
+notes.addRow(["stock_plus", "5", "5 full sets per color for 3XL–5XL group."]);
 notes.addRow([
-  "sizes_plus",
-  "3XL,4XL,5XL",
-  "Plus group up to 5XL only (no Free Size).",
-]);
-notes.addRow([
-  "stock_by_size",
-  "S:20|M:25|3XL:10",
-  "Same piece qty for every color. Use | or , between sizes.",
-]);
-notes.addRow([
-  "stock_regular / stock_plus",
-  "20 / 8",
-  "Same qty per size in that group for all colors.",
+  "Customer order qty",
+  "3 sets",
+  "3 complete sets — not 3 individual pieces.",
 ]);
 notes.addRow([
   "variant_stock",
-  "Indigo:S:20,Maroon:3XL:8",
-  "Per color+size pieces. Overrides stock_by_size for those cells.",
+  "Indigo:S:12,Maroon:3XL:6",
+  "Optional per-color override (values are still SET count).",
 ]);
 notes.getRow(1).font = { bold: true };
-notes.getColumn(1).width = 22;
-notes.getColumn(2).width = 28;
-notes.getColumn(3).width = 52;
+notes.getColumn(1).width = 18;
+notes.getColumn(2).width = 24;
+notes.getColumn(3).width = 56;
 
 await mkdir(outDir, { recursive: true });
 const buffer = await workbook.xlsx.writeBuffer();
