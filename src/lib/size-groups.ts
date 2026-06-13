@@ -6,13 +6,23 @@ export const SIZE_GROUP_ORDER: SizeGroupId[] = ["regular", "plus"];
 
 export const SIZE_GROUP_LABELS: Record<SizeGroupId, string> = {
   regular: "XS to XXL",
-  plus: "3XL to Free Size",
+  plus: "3XL to 5XL",
 };
 
 export const SIZE_GROUPS: Record<SizeGroupId, readonly string[]> = {
   regular: ["XS", "S", "M", "L", "XL", "XXL"],
-  plus: ["3XL", "4XL", "5XL", "Free Size"],
+  plus: ["3XL", "4XL", "5XL"],
 };
+
+const DEPRECATED_SIZES = new Set(["Free Size"]);
+
+export function isDeprecatedSize(size: string) {
+  return DEPRECATED_SIZES.has(size.trim());
+}
+
+export function filterActiveSizes(sizes: string[]) {
+  return sizes.filter((size) => !isDeprecatedSize(size));
+}
 
 export type ProductSizeGroups = {
   regular: string[];
@@ -32,7 +42,9 @@ export function sizesInGroup(
   group: SizeGroupId,
   fallbackWhenEmpty: string[] = FULL_SIZE_RUN,
 ): string[] {
-  const catalog = productSizes?.length ? productSizes : fallbackWhenEmpty;
+  const catalog = filterActiveSizes(
+    productSizes?.length ? productSizes : fallbackWhenEmpty,
+  );
   const catalogNorm = new Set(catalog.map(normalizeSize));
   const picked = SIZE_GROUPS[group].filter((size) =>
     catalogNorm.has(normalizeSize(size)),

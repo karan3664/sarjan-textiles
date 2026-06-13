@@ -88,18 +88,7 @@ const commonColors = [
   "White",
   "Green",
 ];
-const commonSizes = [
-  "XS",
-  "S",
-  "M",
-  "L",
-  "XL",
-  "XXL",
-  "3XL",
-  "4XL",
-  "5XL",
-  "Free Size",
-];
+const commonSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 
 const emptyForm: ProductForm = {
   name: "",
@@ -896,10 +885,14 @@ export function AdminProductCreateClient({
                 <div>
                   <h6 className="mb-4">Bulk Product Upload</h6>
                   <p className="text-secondary">
-                    Download sample Excel, fill data, upload same file. For size
-                    sets use the <code>sizes</code> column (all sizes comma
-                    separated) or optional <code>sizes_regular</code> (XS–XXL)
-                    and <code>sizes_plus</code> (3XL–Free Size) columns.
+                    Download sample Excel, fill data, upload same file. Sizes:
+                    use <code>sizes</code> or <code>sizes_regular</code> +{" "}
+                    <code>sizes_plus</code> (up to 5XL). Stock (pieces):{" "}
+                    <code>stock_by_size</code> as <code>S:10|M:12|3XL:5</code>{" "}
+                    for all colors, <code>stock_regular</code> /{" "}
+                    <code>stock_plus</code> for same qty per size in each group,
+                    or <code>variant_stock</code> as{" "}
+                    <code>Indigo:S:10,Maroon:3XL:5</code> per color+size.
                   </p>
                 </div>
                 <div className="sarjan-product-bulk-actions">

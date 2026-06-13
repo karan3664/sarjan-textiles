@@ -2,6 +2,10 @@ import ExcelJS from "exceljs";
 import { Readable } from "node:stream";
 import type { Product } from "@/data/mock";
 import { PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/product-placeholder-image";
+import {
+  buildVariantsFromBulkRow,
+  filterActiveSizes,
+} from "@/lib/bulk-product-stock";
 import { requireAdminRouteSession } from "@/lib/require-admin-session";
 
 const maxBulkBytes = 10 * 1024 * 1024;
@@ -69,7 +73,7 @@ function productSizesFromRow(row: SheetRow) {
     firstStringValue(row, ["sizes_plus", "sizes_3xl_5xl", "sizes_3xl_to_5xl"]),
   );
   const sizesAll = splitList(stringValue(row, "sizes"));
-  return mergeSizeLists(sizesRegular, sizesPlus, sizesAll);
+  return filterActiveSizes(mergeSizeLists(sizesRegular, sizesPlus, sizesAll));
 }
 
 function productFromRow(row: SheetRow, index: number): Product {
@@ -96,6 +100,33 @@ function productFromRow(row: SheetRow, index: number): Product {
     firstStringValue(row, ["category_path", "categories"]),
   );
   const finalCategoryPath = explicitPath.length ? explicitPath : categoryPath;
+  const colors = splitList(stringValue(row, "colors"));
+  const sizes = productSizesFromRow(row);
+  const price = numberValue(row, "price");
+  const variants = buildVariantsFromBulkRow({
+    colors,
+    sizes,
+    sku: stringValue(row, "sku"),
+    price,
+    totalStock: numberValue(row, "stock"),
+    defaultVariantStock:
+      numberValue(row, "variant_stock_default") ||
+      numberValue(row, "variant_stock_per_piece") ||
+      numberValue(row, "variantStock"),
+    stockRegular:
+      numberValue(row, "stock_regular") || numberValue(row, "stock_xs_xxl"),
+    stockPlus:
+      numberValue(row, "stock_plus") || numberValue(row, "stock_3xl_5xl"),
+    variantStockText: firstStringValue(row, [
+      "variant_stock",
+      "variant_stocks",
+    ]),
+    stockBySizeText: firstStringValue(row, ["stock_by_size", "size_stock"]),
+  });
+  const stock =
+    variants.length > 0
+      ? variants.reduce((sum, variant) => sum + (Number(variant.stock) || 0), 0)
+      : numberValue(row, "stock");
 
   return {
     id:
@@ -114,11 +145,12 @@ function productFromRow(row: SheetRow, index: number): Product {
     fabric: stringValue(row, "fabric") || "Cotton",
     price: numberValue(row, "price"),
     moq: numberValue(row, "moq", 1),
-    stock: numberValue(row, "stock"),
+    stock,
     reserved: numberValue(row, "reserved"),
     sold: numberValue(row, "sold"),
-    colors: splitList(stringValue(row, "colors")),
-    sizes: productSizesFromRow(row),
+    colors,
+    sizes,
+    variants: variants.length ? variants : undefined,
     images: splitList(imageUrls).length
       ? splitList(imageUrls)
       : [PRODUCT_PLACEHOLDER_IMAGE],

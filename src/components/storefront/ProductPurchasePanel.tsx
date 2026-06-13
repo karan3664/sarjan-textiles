@@ -91,7 +91,7 @@ export function ProductPurchasePanel({
   const unavailable = useShowProductUnavailable(product);
   const hasB2BSession = useClientHasB2BToken();
   const [setQuantity, setSetQuantity] = useState(1);
-  const availableSets = cartMaxSetQuantity(product, sizeRun, true);
+  const availableSets = cartMaxSetQuantity(product, sizeRun, true, activeColor);
   const exceedsStock =
     hasB2BSession && !unavailable && setQuantity > availableSets;
   const wishlistActive = wishlistActiveProp ?? localWishlisted;

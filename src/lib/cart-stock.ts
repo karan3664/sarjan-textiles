@@ -33,17 +33,19 @@ export function cartLineExceedsStock(
   sizes: string[],
   quantity: number,
   viewerLoggedIn: boolean,
+  color?: string,
 ): boolean {
   if (!viewerLoggedIn) return false;
-  const maxSets = cartMaxSetQuantity(product, sizes, true);
+  const maxSets = cartMaxSetQuantity(product, sizes, true, color);
   return maxSets > 0 && quantity > maxSets;
 }
 
 export function cartLineAvailableSets(
   product: Product,
   sizes: string[],
+  color?: string,
 ): number {
-  return cartMaxSetQuantity(product, sizes, true);
+  return cartMaxSetQuantity(product, sizes, true, color);
 }
 
 export type CartStockWarning = {
@@ -58,6 +60,7 @@ export function cartStockWarnings(
     product: Product;
     quantity: number;
     sizes: string[];
+    color?: string;
   }>,
   viewerLoggedIn: boolean,
 ): CartStockWarning[] {
@@ -69,13 +72,18 @@ export function cartStockWarnings(
         line.sizes,
         line.quantity,
         viewerLoggedIn,
+        line.color,
       ),
     )
     .map((line) => ({
       slug: line.product.slug,
       name: line.product.name,
       requestedSets: line.quantity,
-      availableSets: cartLineAvailableSets(line.product, line.sizes),
+      availableSets: cartLineAvailableSets(
+        line.product,
+        line.sizes,
+        line.color,
+      ),
     }));
 }
 

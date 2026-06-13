@@ -1,5 +1,6 @@
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { productMaxSetsForSelection } from "@/lib/bulk-product-stock";
 
 /**
  * Normalizes `product.stock` from CMS JSON (number or numeric string).
@@ -83,12 +84,13 @@ export function cartMaxSetQuantity(
   product: Pick<Product, "stock" | "reserved" | "moq" | "sizes" | "variants">,
   sizes: string[] = productSizeRun(product),
   capToAvailableStock = false,
+  color?: string,
 ): number {
   const minSets = productWholesaleMinSets(product, sizes);
   if (!capToAvailableStock) {
     return Math.max(minSets, B2B_CART_MAX_SETS);
   }
-  return Math.max(minSets, productMaxSets(product, sizes));
+  return Math.max(minSets, productMaxSets(product, sizes, color));
 }
 
 /** Minimum wholesale order quantity in full size sets (not pieces). */
@@ -102,9 +104,15 @@ export function productWholesaleMinSets(
 
 /** How many full sets can be ordered from available inventory (0 when sold out). */
 export function productMaxSets(
-  product: Pick<Product, "stock" | "reserved" | "moq" | "sizes">,
+  product: Pick<Product, "stock" | "reserved" | "moq" | "sizes" | "variants">,
   sizes: string[] = productSizeRun(product),
+  color?: string,
 ): number {
+  const variantLimited = productMaxSetsForSelection(product, sizes, color);
+  if (variantLimited !== undefined) {
+    return variantLimited;
+  }
+
   const available = productAvailablePieces(product);
   if (available === undefined) return 1;
   if (available <= 0) return 0;
