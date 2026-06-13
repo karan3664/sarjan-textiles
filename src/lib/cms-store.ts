@@ -758,6 +758,19 @@ const defaultCollectionPages: CollectionPage[] = COLLECTION_ROUTES.map(
   }),
 );
 
+let defaultMobileAppCache: MobileAppConfigStored | undefined;
+
+export function getDefaultMobileAppConfig(): MobileAppConfigStored {
+  if (!defaultMobileAppCache) {
+    defaultMobileAppCache = normalizeMobileAppConfig(
+      undefined,
+      defaultSiteSettings,
+      defaultHome,
+    );
+  }
+  return defaultMobileAppCache;
+}
+
 export const defaultCmsSnapshot: CmsSnapshot = {
   siteSettings: defaultSiteSettings,
   home: defaultHome,
@@ -780,11 +793,9 @@ export const defaultCmsSnapshot: CmsSnapshot = {
   seoPages: defaultSeoPages,
   inventoryLogs: [],
   auditLogs: [],
-  mobileApp: normalizeMobileAppConfig(
-    undefined,
-    defaultSiteSettings,
-    defaultHome,
-  ),
+  get mobileApp() {
+    return getDefaultMobileAppConfig();
+  },
   updatedAt: new Date(0).toISOString(),
 };
 

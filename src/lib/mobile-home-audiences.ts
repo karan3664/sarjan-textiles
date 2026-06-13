@@ -116,6 +116,13 @@ function toStoredTab(
   };
 }
 
+function defaultStoredHomeAudiences(): StoredHomeAudienceTab[] {
+  return defaultHomeAudiences()
+    .map((tab, index) => toStoredTab(tab, index))
+    .filter((tab): tab is StoredHomeAudienceTab => tab != null)
+    .map((tab, index) => ({ ...tab, order: index }));
+}
+
 export function defaultHomeAudiences(): MobileHomeAudienceTab[] {
   return [
     {
@@ -147,14 +154,14 @@ export function defaultHomeAudiences(): MobileHomeAudienceTab[] {
 export function normalizeHomeAudiences(
   input: Array<Partial<MobileHomeAudienceTab>> | undefined,
 ): StoredHomeAudienceTab[] {
-  const defaults = defaultHomeAudiences().map((tab, index) =>
-    toStoredTab(tab, index),
-  );
-  const source = Array.isArray(input) && input.length ? input : defaults;
+  if (!Array.isArray(input) || !input.length) {
+    return defaultStoredHomeAudiences();
+  }
+
   const seen = new Set<string>();
   const normalized: StoredHomeAudienceTab[] = [];
 
-  for (const [index, tab] of source.entries()) {
+  for (const [index, tab] of input.entries()) {
     const stored = toStoredTab(tab, index);
     if (!stored || seen.has(stored.id)) continue;
     seen.add(stored.id);
@@ -162,7 +169,8 @@ export function normalizeHomeAudiences(
   }
 
   if (!normalized.some((tab) => tab.id === "all")) {
-    normalized.unshift(toStoredTab(defaultHomeAudiences()[0], 0)!);
+    const allTab = toStoredTab(defaultHomeAudiences()[0], 0);
+    if (allTab) normalized.unshift(allTab);
   }
 
   return normalized
@@ -174,19 +182,23 @@ export function resolveHomeAudiences(
   stored: StoredHomeAudienceTab[] | undefined,
   locale: AppLocale,
 ): MobileHomeAudienceTab[] {
-  const pick = (text?: LocalizedText) =>
-    text ? pickLocalized(text, locale) : undefined;
+  const normalized = stored?.length
+    ? stored
+    : normalizeHomeAudiences(undefined);
 
-  return normalizeHomeAudiences(
-    (stored ?? []).map((tab) => ({
+  return normalized
+    .map((tab) => ({
       id: tab.id,
-      label: pick(tab.label) ?? tab.label.en,
+      label: pickLocalized(tab.label, locale) || tab.label.en || tab.id,
       enabled: tab.enabled,
-      searchPlaceholder: pick(tab.searchPlaceholder),
+      searchPlaceholder: tab.searchPlaceholder
+        ? pickLocalized(tab.searchPlaceholder, locale)
+        : undefined,
       keywords: tab.keywords,
       order: tab.order,
-    })),
-  ).filter((tab) => tab.enabled);
+    }))
+    .filter((tab) => tab.enabled)
+    .sort((a, b) => a.order - b.order);
 }
 
 export function flattenHomeAudiencesForAdmin(
