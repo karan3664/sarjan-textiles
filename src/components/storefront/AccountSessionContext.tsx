@@ -125,8 +125,13 @@ export function persistAccountClient(client: AccountClient) {
     ...client,
     avatarUrl: stripAvatarCacheQuery(client.avatarUrl),
   };
+  const previous = readClient();
+  const unchanged =
+    previous !== null && JSON.stringify(previous) === JSON.stringify(stored);
   localStorage.setItem("sarjan-client", JSON.stringify(stored));
-  window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+  if (!unchanged) {
+    window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
+  }
   return stored;
 }
 

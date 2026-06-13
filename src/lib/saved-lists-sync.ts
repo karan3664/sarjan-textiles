@@ -31,13 +31,34 @@ export function touchLocalSavedListsUpdatedAt(iso = new Date().toISOString()) {
   writeLocalSavedListsUpdatedAt(iso);
 }
 
+function normalizeSavedListsPayload(
+  payload: SavedListsPayload,
+): SavedListsPayload {
+  return {
+    wishlist: Array.from(new Set(payload.wishlist.filter(Boolean))).sort(),
+    compare: Array.from(new Set(payload.compare.filter(Boolean)))
+      .slice(0, 3)
+      .sort(),
+  };
+}
+
+function savedListsEqual(a: SavedListsPayload, b: SavedListsPayload) {
+  return (
+    JSON.stringify(normalizeSavedListsPayload(a)) ===
+    JSON.stringify(normalizeSavedListsPayload(b))
+  );
+}
+
 function isEmptySavedLists(value: SavedListsPayload) {
   return value.wishlist.length === 0 && value.compare.length === 0;
 }
 
 let pullInFlight: Promise<void> | null = null;
 let pushInFlight: Promise<void> | null = null;
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let sessionPullDone = false;
+let lastPushedPayload: SavedListsPayload | null = null;
+let authSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
 function notifySavedListsSynced() {
   if (typeof window === "undefined") return;
@@ -78,15 +99,21 @@ async function persistSavedListsToServer(
   const clientId = readStoredClientId();
   if (!clientId) return { ok: false, updatedAt: null };
 
+  const normalized = normalizeSavedListsPayload(payload);
+  if (lastPushedPayload && savedListsEqual(lastPushedPayload, normalized)) {
+    return { ok: true, updatedAt: readLocalSavedListsUpdatedAt() };
+  }
+
   try {
     const res = await fetch("/api/client/saved-lists", {
       method: "POST",
       headers: clientAuthJsonHeaders(),
       credentials: "include",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(normalized),
     });
     if (!res.ok) return { ok: false, updatedAt: null };
     const data = (await res.json()) as { updatedAt?: string };
+    lastPushedPayload = normalized;
     return {
       ok: true,
       updatedAt:
@@ -100,11 +127,27 @@ async function persistSavedListsToServer(
 }
 
 export function scheduleSavedListsSync() {
-  void pushSavedListsToServer();
+  if (typeof window === "undefined") return;
+  if (!readStoredClientId() || !isClientApproved()) return;
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    syncTimer = null;
+    void pushSavedListsToServer();
+  }, 600);
 }
 
 export function resetSavedListsSession() {
   sessionPullDone = false;
+}
+
+export function scheduleSavedListsAuthSync() {
+  if (typeof window === "undefined") return;
+  if (authSyncTimer) clearTimeout(authSyncTimer);
+  authSyncTimer = setTimeout(() => {
+    authSyncTimer = null;
+    resetSavedListsSession();
+    void pullSavedListsFromServer({ force: true });
+  }, 300);
 }
 
 export async function pullSavedListsFromServer(options?: { force?: boolean }) {
@@ -116,16 +159,20 @@ export async function pullSavedListsFromServer(options?: { force?: boolean }) {
     if (!clientId || !isClientApproved()) return;
     sessionPullDone = true;
 
-    const local: SavedListsPayload = {
+    const before: SavedListsPayload = normalizeSavedListsPayload({
       wishlist: readWishlist(),
       compare: readCompare(),
-    };
-    const server = await fetchServerSavedLists();
+    });
+    const serverRaw = await fetchServerSavedLists();
+    const server = normalizeSavedListsPayload({
+      wishlist: serverRaw.wishlist,
+      compare: serverRaw.compare,
+    });
     const resolved = resolveSyncedSnapshot(
-      local,
-      { wishlist: server.wishlist, compare: server.compare },
+      before,
+      server,
       readLocalSavedListsUpdatedAt(),
-      server.updatedAt,
+      serverRaw.updatedAt,
       isEmptySavedLists,
     );
 
@@ -137,12 +184,25 @@ export async function pullSavedListsFromServer(options?: { force?: boolean }) {
       }
     }
 
-    writeWishlist(resolved.items.wishlist, { syncApi: false });
-    writeCompare(resolved.items.compare, { syncApi: false });
+    writeWishlist(resolved.items.wishlist, {
+      syncApi: false,
+      touchUpdatedAt: false,
+    });
+    writeCompare(resolved.items.compare, {
+      syncApi: false,
+      touchUpdatedAt: false,
+    });
     if (adoptedAt) {
       writeLocalSavedListsUpdatedAt(adoptedAt);
     }
-    notifySavedListsSynced();
+
+    const after: SavedListsPayload = normalizeSavedListsPayload({
+      wishlist: readWishlist(),
+      compare: readCompare(),
+    });
+    if (!savedListsEqual(before, after)) {
+      notifySavedListsSynced();
+    }
   })().finally(() => {
     pullInFlight = null;
   });
@@ -157,10 +217,13 @@ export async function pushSavedListsToServer() {
   if (pushInFlight) return pushInFlight;
 
   pushInFlight = (async () => {
-    const payload: SavedListsPayload = {
+    const payload = normalizeSavedListsPayload({
       wishlist: readWishlist(),
       compare: readCompare(),
-    };
+    });
+    if (lastPushedPayload && savedListsEqual(lastPushedPayload, payload)) {
+      return;
+    }
     const saved = await persistSavedListsToServer(payload);
     if (saved.ok && saved.updatedAt) {
       writeLocalSavedListsUpdatedAt(saved.updatedAt);

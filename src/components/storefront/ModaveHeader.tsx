@@ -14,10 +14,7 @@ import {
 } from "@/lib/client-auth-browser";
 import { isClientPublicAuthPage } from "@/lib/auth-route-guards";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
-import {
-  pullSavedListsFromServer,
-  resetSavedListsSession,
-} from "@/lib/saved-lists-sync";
+import { scheduleSavedListsAuthSync } from "@/lib/saved-lists-sync";
 import { showBootstrapModal } from "@/lib/bootstrap-modal";
 import { multiLanguageEnabled } from "@/lib/commerce-config";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -209,6 +206,7 @@ export function ModaveHeader({
 
   useEffect(() => {
     let cancelled = false;
+    let authCountsTimer: ReturnType<typeof setTimeout> | null = null;
 
     const syncCounts = async () => {
       const validWishlist = await refreshWishlistFromCatalog();
@@ -226,10 +224,12 @@ export function ModaveHeader({
       setCartCount(cartItemCount(readCart()));
     };
     const onAuthUpdated = () => {
-      resetSavedListsSession();
-      void pullSavedListsFromServer({ force: true }).finally(() => {
+      scheduleSavedListsAuthSync();
+      if (authCountsTimer) clearTimeout(authCountsTimer);
+      authCountsTimer = setTimeout(() => {
+        authCountsTimer = null;
         void syncCounts();
-      });
+      }, 350);
     };
     const onVisible = () => {
       if (document.visibilityState === "visible") void syncCounts();
@@ -242,6 +242,7 @@ export function ModaveHeader({
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
+      if (authCountsTimer) clearTimeout(authCountsTimer);
       window.removeEventListener("sarjan-wishlist-updated", onWishlistUpdated);
       window.removeEventListener("sarjan-cart-updated", onCartUpdated);
       window.removeEventListener("sarjan-auth-updated", onAuthUpdated);

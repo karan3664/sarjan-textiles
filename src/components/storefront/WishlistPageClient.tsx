@@ -29,7 +29,7 @@ export function WishlistPageClient({ page = 1 }: { page?: number }) {
       if (!cancelled) setSlugs(readWishlist());
     };
 
-    void pullSavedListsFromServer({ force: true }).finally(() => {
+    void pullSavedListsFromServer().finally(() => {
       if (cancelled) return;
       setSyncReady(true);
       sync();

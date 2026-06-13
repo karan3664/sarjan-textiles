@@ -1205,6 +1205,172 @@ html[data-theme="dark"]
   opacity: 1 !important;
 }
 
+/* Product card overlay icons — white pills on photo; dark glyphs (Modave --main/--white invert in dark) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon {
+  background-color: #fff !important;
+  border-color: rgba(24, 24, 24, 0.1) !important;
+  color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon
+  :is(.icon, i.icon)::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon
+  :is(.icon, i.icon)::before {
+  color: #181818 !important;
+  -webkit-text-fill-color: #181818 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon.wishlist.active,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon.wishlist.added,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon.wishlist.active,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon.wishlist.added {
+  background-color: var(--primary, #c45a6a) !important;
+  border-color: var(--primary, #c45a6a) !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon.wishlist.active
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon.wishlist.added
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon.wishlist.active
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon.wishlist.added
+  :is(.icon, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon.wishlist.active
+  :is(.icon, i.icon)::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .list-product-btn
+  .box-icon.wishlist.added
+  :is(.icon, i.icon)::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon.wishlist.active
+  :is(.icon, i.icon)::before,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .card-product
+  .card-product-info
+  .list-product-btn
+  .box-icon.wishlist.added
+  :is(.icon, i.icon)::before {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)

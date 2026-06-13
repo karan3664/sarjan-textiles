@@ -109,14 +109,16 @@ function persistCartToApi(items: StoredCartItem[]) {
 
 export function writeCart(
   items: StoredCartItem[],
-  options: { syncApi?: boolean } = {},
+  options: { syncApi?: boolean; touchUpdatedAt?: boolean } = {},
 ) {
   const next = items.map(normalizeCartItem).filter(Boolean) as StoredCartItem[];
   const current = readCart();
   const unchanged = JSON.stringify(current) === JSON.stringify(next);
   if (!unchanged) {
     window.localStorage.setItem(CART_KEY, JSON.stringify(next));
-    writeLocalCartUpdatedAt(new Date().toISOString());
+    if (options.touchUpdatedAt !== false) {
+      writeLocalCartUpdatedAt(new Date().toISOString());
+    }
     window.dispatchEvent(new CustomEvent("sarjan-cart-updated"));
   }
   if (options.syncApi !== false) {
@@ -242,9 +244,15 @@ async function fetchProductsForCart(cart: StoredCartItem[]) {
 
 export async function reconcileCartWithCatalog(
   cart: StoredCartItem[] = readCart(),
+  options: { persist?: boolean; touchUpdatedAt?: boolean } = {},
 ): Promise<StoredCartItem[]> {
+  const persist = options.persist !== false;
+  const touchUpdatedAt = options.touchUpdatedAt !== false;
+
   if (!cart.length) {
-    writeCart([], { syncApi: false });
+    if (persist && readCart().length) {
+      writeCart([], { syncApi: false, touchUpdatedAt });
+    }
     return [];
   }
 
@@ -259,8 +267,8 @@ export async function reconcileCartWithCatalog(
     const quantity = reconcileCartLineQuantity(item, product);
     return quantity === item.quantity ? item : { ...item, quantity };
   });
-  if (JSON.stringify(clamped) !== JSON.stringify(cart)) {
-    writeCart(clamped, { syncApi: false });
+  if (persist && JSON.stringify(clamped) !== JSON.stringify(cart)) {
+    writeCart(clamped, { syncApi: false, touchUpdatedAt });
   }
   return clamped;
 }
@@ -310,25 +318,34 @@ export async function syncCartWithApi(): Promise<StoredCartItem[]> {
       server.updatedAt,
     );
 
-    const next = resolved.items;
-    let adoptedAt = resolved.adoptUpdatedAt;
+    const merged = resolved.items;
+    const reconciled = await reconcileCartWithCatalog(merged, {
+      persist: false,
+      touchUpdatedAt: false,
+    });
 
-    if (resolved.pushLocal) {
-      const saved = await persistCartToApiAwait(next);
+    let adoptedAt = resolved.adoptUpdatedAt;
+    const serverSnapshot = server.items.map(normalizeCartItem).filter(Boolean);
+    const shouldPush =
+      resolved.pushLocal ||
+      JSON.stringify(reconciled) !== JSON.stringify(serverSnapshot);
+
+    if (shouldPush) {
+      const saved = await persistCartToApiAwait(reconciled);
       if (saved.ok && saved.updatedAt) {
         adoptedAt = saved.updatedAt;
       }
     }
 
-    if (JSON.stringify(next) !== JSON.stringify(readCart())) {
-      writeCart(next, { syncApi: false });
+    if (JSON.stringify(reconciled) !== JSON.stringify(readCart())) {
+      writeCart(reconciled, { syncApi: false, touchUpdatedAt: false });
     }
 
     if (adoptedAt) {
       writeLocalCartUpdatedAt(adoptedAt);
     }
 
-    return reconcileCartWithCatalog(next);
+    return reconciled;
   })().finally(() => {
     cartSyncInFlight = null;
   });

@@ -32,14 +32,16 @@ export function readWishlist(): string[] {
 
 export function writeWishlist(
   slugs: string[],
-  options: { syncApi?: boolean } = {},
+  options: { syncApi?: boolean; touchUpdatedAt?: boolean } = {},
 ) {
   if (typeof window === "undefined") return;
   const next = Array.from(new Set(slugs.filter(Boolean)));
   const current = readWishlist();
   if (slugSetsEqual(current, next)) return;
   window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
-  touchLocalSavedListsUpdatedAt();
+  if (options.touchUpdatedAt !== false) {
+    touchLocalSavedListsUpdatedAt();
+  }
   window.dispatchEvent(new CustomEvent("sarjan-wishlist-updated"));
   if (options.syncApi !== false) {
     scheduleSavedListsSync();

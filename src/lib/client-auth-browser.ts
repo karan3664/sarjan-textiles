@@ -15,6 +15,7 @@ function stripClientForStorage(client: StoredClient): StoredClient {
     city: client.city,
     gst: client.gst,
     phone: client.phone,
+    address: client.address,
   };
 }
 
@@ -107,13 +108,21 @@ export function logoutClientSession(redirectTo = "/login") {
   window.location.assign(`/api/auth/logout?${params.toString()}`);
 }
 
-export function persistClientSession(_token: string, client: StoredClient) {
-  if (typeof window === "undefined") return;
+function applyClientSessionLocal(client: StoredClient): boolean {
+  if (typeof window === "undefined") return false;
   localStorage.removeItem(LEGACY_TOKEN_KEY);
-  localStorage.setItem(
-    "sarjan-client",
-    JSON.stringify(stripClientForStorage(client)),
-  );
+  const next = stripClientForStorage(client);
+  const previous = readStoredClientProfile();
+  const unchanged =
+    previous !== null && JSON.stringify(previous) === JSON.stringify(next);
+  localStorage.setItem("sarjan-client", JSON.stringify(next));
+  return !unchanged;
+}
+
+export function persistClientSession(_token: string, client: StoredClient) {
+  const changed = applyClientSessionLocal(client);
+  if (!changed) return;
+
   window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
   void import("@/lib/cart-client")
     .then(({ syncCartWithApi }) => syncCartWithApi())
@@ -128,26 +137,38 @@ export type ClientLoginResult =
   | { ok: false; error: string };
 
 export async function restoreClientSessionFromCookie(): Promise<ClientLoginResult> {
-  const res = await fetch("/api/auth/session", { credentials: "include" });
-  let data: { error?: string; client?: StoredClient } = {};
   try {
-    data = await res.json();
+    const res = await fetch("/api/auth/session", { credentials: "include" });
+    let data: { error?: string; client?: StoredClient } = {};
+    try {
+      data = await res.json();
+    } catch {
+      return { ok: false, error: "Session check failed" };
+    }
+    if (!res.ok) {
+      return { ok: false, error: data.error ?? "Not signed in" };
+    }
+    if (!data.client?.id) {
+      return { ok: false, error: "Session check failed" };
+    }
+    applyClientSessionLocal(data.client);
+    return { ok: true, client: data.client };
   } catch {
     return { ok: false, error: "Session check failed" };
   }
-  if (!res.ok) {
-    return { ok: false, error: data.error ?? "Not signed in" };
-  }
-  if (!data.client?.id) {
-    return { ok: false, error: "Session check failed" };
-  }
-  persistClientSession("", data.client);
-  return { ok: true, client: data.client };
 }
 
 export async function validateAndRefreshClientSession(): Promise<ClientLoginResult> {
   const restored = await restoreClientSessionFromCookie();
   if (restored.ok) return restored;
+
+  if (restored.error === "Session check failed") {
+    const cached = readStoredClientProfile();
+    if (cached?.id) {
+      return { ok: true, client: cached };
+    }
+    return restored;
+  }
 
   clearExpiredClientSession(
     restored.error === "Not signed in"

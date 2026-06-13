@@ -201,13 +201,7 @@ export function OrderBotWidget() {
     return () => document.body.classList.remove("sarjan-has-order-bot");
   }, []);
 
-  const syncAccess = useCallback(async () => {
-    if (hasLocalClientSession()) {
-      await validateAndRefreshClientSession();
-    } else {
-      await restoreClientSessionFromCookie();
-    }
-
+  const applyAccessFromLocal = useCallback(() => {
     const nextAccess = resolveBotAccess();
     setAccess(nextAccess);
 
@@ -233,12 +227,25 @@ export function OrderBotWidget() {
     setAuthReady(true);
   }, []);
 
+  const syncAccessFromServer = useCallback(async () => {
+    try {
+      if (hasLocalClientSession()) {
+        await validateAndRefreshClientSession();
+      } else {
+        await restoreClientSessionFromCookie();
+      }
+    } catch {
+      /* keep cached profile when network is unavailable */
+    }
+    applyAccessFromLocal();
+  }, [applyAccessFromLocal]);
+
   useEffect(() => {
     let cancelled = false;
     const fallback = window.setTimeout(() => {
       if (!cancelled) setAuthReady(true);
     }, 400);
-    void syncAccess().finally(() => {
+    void syncAccessFromServer().finally(() => {
       if (!cancelled) setAuthReady(true);
       window.clearTimeout(fallback);
     });
@@ -246,22 +253,28 @@ export function OrderBotWidget() {
       cancelled = true;
       window.clearTimeout(fallback);
     };
-  }, [syncAccess]);
+  }, [syncAccessFromServer]);
 
   useEffect(() => {
+    let authTimer: ReturnType<typeof setTimeout> | null = null;
     const onStorage = () => {
-      void syncAccess();
+      applyAccessFromLocal();
     };
     const onAuth = () => {
-      void syncAccess();
+      if (authTimer) clearTimeout(authTimer);
+      authTimer = setTimeout(() => {
+        authTimer = null;
+        applyAccessFromLocal();
+      }, 0);
     };
     window.addEventListener("storage", onStorage);
     window.addEventListener("sarjan-auth-updated", onAuth);
     return () => {
+      if (authTimer) clearTimeout(authTimer);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("sarjan-auth-updated", onAuth);
     };
-  }, [syncAccess]);
+  }, [applyAccessFromLocal]);
 
   const accessUi = authReady ? access : "guest";
 

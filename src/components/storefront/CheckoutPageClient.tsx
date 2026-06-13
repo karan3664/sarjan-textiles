@@ -153,15 +153,35 @@ export function CheckoutPageClient({
       const stored = readStoredClientProfile();
       setClient(stored as CheckoutClient | null);
     };
+    const refreshClientProfile = async () => {
+      const stored = readStoredClientProfile();
+      if (!stored?.id) {
+        setClient(null);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/clients/${encodeURIComponent(stored.id)}`,
+          { credentials: "include" },
+        );
+        const data = (await res.json()) as { client?: CheckoutClient };
+        if (res.ok && data.client?.id) {
+          setClient(data.client);
+          localStorage.setItem("sarjan-client", JSON.stringify(data.client));
+          return;
+        }
+      } catch {
+        /* fall back to cached profile */
+      }
+      setClient(stored as CheckoutClient | null);
+    };
     const onAuthUpdated = () => {
-      syncClient();
-      syncFromApi();
+      void refreshClientProfile().then(() => syncFromApi());
     };
 
     void validateAndRefreshClientSession().finally(() => {
-      syncClient();
+      void refreshClientProfile().finally(() => setLoading(false));
       syncFromApi();
-      setLoading(false);
     });
 
     const onCartUpdated = () => applyCart(readCart());
@@ -171,7 +191,9 @@ export function CheckoutPageClient({
     window.addEventListener("sarjan-auth-updated", onAuthUpdated);
     const onVisible = () => {
       if (document.visibilityState === "visible") {
-        void validateAndRefreshClientSession().finally(syncClient);
+        void validateAndRefreshClientSession().finally(() => {
+          void refreshClientProfile();
+        });
         syncFromApi();
       }
     };
@@ -192,11 +214,9 @@ export function CheckoutPageClient({
     return listSavedAddresses(client.address as ClientAddressBook);
   }, [client?.address]);
 
-  const hasMultipleSavedAddresses = savedAddressBook.saved.length > 1;
+  const hasSavedAddresses = savedAddressBook.saved.length > 0;
   const useSavedAddressPicker =
-    Boolean(client?.id) &&
-    hasMultipleSavedAddresses &&
-    addressEntryMode === "saved";
+    Boolean(client?.id) && hasSavedAddresses && addressEntryMode === "saved";
 
   const applyCheckoutFields = useCallback(
     (fields: ReturnType<typeof checkoutFieldsFromClient>) => {
@@ -217,7 +237,7 @@ export function CheckoutPageClient({
     if (!client) return;
 
     const { saved, defaultAddressId } = savedAddressBook;
-    if (saved.length > 1) {
+    if (saved.length > 0) {
       const pick =
         saved.find((item) => item.id === defaultAddressId) ?? saved[0];
       setSelectedAddressId(pick.id);
@@ -227,11 +247,7 @@ export function CheckoutPageClient({
     }
 
     setAddressEntryMode("manual");
-    setSelectedAddressId(saved[0]?.id ?? "");
-    if (saved.length === 1) {
-      applyCheckoutFields(checkoutFieldsFromSaved(saved[0], client));
-      return;
-    }
+    setSelectedAddressId("");
     applyCheckoutFields(checkoutFieldsFromClient(client));
   }, [client, savedAddressBook, applyCheckoutFields]);
 
@@ -578,7 +594,7 @@ export function CheckoutPageClient({
                     {labels.information ?? "Information"}
                   </h5>
                   <form className="info-box" key={client?.id ?? "guest"}>
-                    {hasMultipleSavedAddresses ? (
+                    {hasSavedAddresses ? (
                       <div className="sarjan-checkout-address-picker">
                         <p className="text-secondary text-caption-1 sarjan-checkout-address-picker__hint">
                           {labels.checkoutSavedAddressHint ??

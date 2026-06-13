@@ -22,7 +22,7 @@ export function readCompare(): string[] {
 
 export function writeCompare(
   slugs: string[],
-  options: { syncApi?: boolean } = {},
+  options: { syncApi?: boolean; touchUpdatedAt?: boolean } = {},
 ) {
   const unique = Array.from(new Set(slugs.filter(Boolean))).slice(
     0,
@@ -31,7 +31,9 @@ export function writeCompare(
   const current = readCompare();
   if (JSON.stringify(current) === JSON.stringify(unique)) return unique;
   window.localStorage.setItem(COMPARE_KEY, JSON.stringify(unique));
-  touchLocalSavedListsUpdatedAt();
+  if (options.touchUpdatedAt !== false) {
+    touchLocalSavedListsUpdatedAt();
+  }
   window.dispatchEvent(new CustomEvent("sarjan-compare-updated"));
   if (options.syncApi !== false) {
     scheduleSavedListsSync();

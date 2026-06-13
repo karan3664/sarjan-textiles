@@ -6926,12 +6926,13 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
 .wishlist.btn-icon-action.active,
 .wishlist.btn-icon-action.added {
   background: var(--primary);
-  color: var(--white);
+  color: #fff;
 }
 
 .wishlist.btn-icon-action.active .icon,
 .wishlist.btn-icon-action.added .icon {
-  color: var(--white);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
 }
 
 .nav-wishlist .nav-icon-item {
@@ -9309,6 +9310,57 @@ body.sarjan-storefront.modal-open .sarjan-order-bot {
   .list-product-btn
   .box-icon {
   pointer-events: auto;
+}
+
+/* Overlay icons sit on product photos — keep light pills + dark glyphs in every theme */
+.card-product .list-product-btn .box-icon {
+  background-color: #fff !important;
+  color: #181818 !important;
+  border: 1px solid rgba(24, 24, 24, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card-product .list-product-btn .box-icon .icon,
+.card-product .list-product-btn .box-icon .icon::before {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.card-product .list-product-btn .box-icon.wishlist.active,
+.card-product .list-product-btn .box-icon.wishlist.added {
+  background-color: var(--primary, #9b1c31) !important;
+  border-color: var(--primary, #9b1c31) !important;
+  color: #fff !important;
+}
+
+.card-product .list-product-btn .box-icon.wishlist.active .icon,
+.card-product .list-product-btn .box-icon.wishlist.added .icon,
+.card-product .list-product-btn .box-icon.wishlist.active .icon::before,
+.card-product .list-product-btn .box-icon.wishlist.added .icon::before {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-product
+    .list-product-btn
+    .box-icon:not(.wishlist.active):not(.wishlist.added):hover {
+    background-color: #181818 !important;
+    border-color: #181818 !important;
+    color: #fff !important;
+  }
+
+  .card-product
+    .list-product-btn
+    .box-icon:not(.wishlist.active):not(.wishlist.added):hover
+    .icon,
+  .card-product
+    .list-product-btn
+    .box-icon:not(.wishlist.active):not(.wishlist.added):hover
+    .icon::before {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+  }
 }
 
 .sarjan-oos-pill {
