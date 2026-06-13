@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/data/mock";
 import { B2B_ORDER_EXCEEDS_STOCK_NOTICE } from "@/lib/b2b-order-messages";
 import { PRODUCT_UNAVAILABLE_MESSAGE } from "@/lib/product-purchase-eligibility";
-import { cartMaxSetQuantity } from "@/lib/product-availability";
+import {
+  cartMaxSetQuantity,
+  productWholesaleMinSets,
+} from "@/lib/product-availability";
 import { useClientHasB2BToken, useShowProductUnavailable } from "./PriceGate";
 import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
@@ -13,6 +16,7 @@ import { ProductColorPicker } from "./ProductColorPicker";
 import { ProductSizeGroupPicker } from "./ProductSizeGroupPicker";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
 import { useProductSizeGroup } from "@/hooks/useProductSizeGroup";
+import type { SizeGroupId } from "@/lib/size-groups";
 import { isWishlisted } from "@/lib/wishlist-client";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
@@ -90,7 +94,11 @@ export function ProductPurchasePanel({
   const setPrice = productSetPrice(product, activeColor, sizeRun);
   const unavailable = useShowProductUnavailable(product);
   const hasB2BSession = useClientHasB2BToken();
-  const [setQuantity, setSetQuantity] = useState(1);
+  const [quantityByGroup, setQuantityByGroup] = useState<
+    Partial<Record<SizeGroupId, number>>
+  >({});
+  const wholesaleMinSets = productWholesaleMinSets(product, sizeRun);
+  const setQuantity = quantityByGroup[selectedGroup] ?? wholesaleMinSets;
   const availableSets = cartMaxSetQuantity(product, sizeRun, true, activeColor);
   const exceedsStock =
     hasB2BSession && !unavailable && setQuantity > availableSets;
@@ -103,13 +111,31 @@ export function ProductPurchasePanel({
   }, [product.slug, controlledIndex]);
 
   useEffect(() => {
+    setQuantityByGroup({});
+  }, [product.slug]);
+
+  useEffect(() => {
+    const minSets = productWholesaleMinSets(product, sizeRun);
+    setQuantityByGroup((prev) => {
+      const existing = prev[selectedGroup];
+      if (existing != null) {
+        const clamped = Math.max(minSets, existing);
+        return clamped === existing
+          ? prev
+          : { ...prev, [selectedGroup]: clamped };
+      }
+      return { ...prev, [selectedGroup]: minSets };
+    });
+  }, [product, selectedGroup, sizeRun]);
+
+  useEffect(() => {
     const readQty = () => {
       const input = document.querySelector<HTMLInputElement>(
         `.tf-product-info-choose-option .quantity-product[name="number"]`,
       );
       if (!input) return;
       const next = Math.max(1, Number(input.value.replace(/\D/g, "")) || 1);
-      setSetQuantity(next);
+      setQuantityByGroup((prev) => ({ ...prev, [selectedGroup]: next }));
     };
     const onClick = (event: Event) => {
       if (
@@ -127,7 +153,15 @@ export function ProductPurchasePanel({
       document.removeEventListener("input", readQty);
       document.removeEventListener("click", onClick);
     };
-  }, [product.slug]);
+  }, [product.slug, selectedGroup]);
+
+  useEffect(() => {
+    const input = document.querySelector<HTMLInputElement>(
+      `.tf-product-info-choose-option .quantity-product[name="number"]`,
+    );
+    if (!input) return;
+    input.value = String(setQuantity);
+  }, [selectedGroup, setQuantity, product.slug]);
 
   useEffect(() => {
     const sync = () => setLocalWishlisted(isWishlisted(product.slug));
@@ -160,13 +194,17 @@ export function ProductPurchasePanel({
             className="quantity-product"
             type="text"
             name="number"
-            defaultValue="1"
+            value={setQuantity}
             onChange={(event) => {
               const next = Math.max(
-                1,
-                Number(event.currentTarget.value.replace(/\D/g, "")) || 1,
+                wholesaleMinSets,
+                Number(event.currentTarget.value.replace(/\D/g, "")) ||
+                  wholesaleMinSets,
               );
-              setSetQuantity(next);
+              setQuantityByGroup((prev) => ({
+                ...prev,
+                [selectedGroup]: next,
+              }));
             }}
           />
           <span className="btn-quantity btn-increase">+</span>

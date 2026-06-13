@@ -1,4 +1,5 @@
 import { createHmac, randomUUID } from "crypto";
+import { requireEnvSecret } from "@/lib/require-env-secret";
 
 /**
  * Signed captcha session tokens bind our session id to the GST portal Cookie
@@ -15,11 +16,7 @@ type CaptchaSessionPayload = {
 };
 
 function secret() {
-  return (
-    process.env.CLIENT_JWT_SECRET ||
-    process.env.ADMIN_SESSION_SECRET ||
-    "sarjan-demo-client-secret-change-before-production"
-  );
+  return requireEnvSecret("CLIENT_JWT_SECRET");
 }
 
 function encode(value: CaptchaSessionPayload) {

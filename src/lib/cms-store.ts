@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { isPostgresEnabled, pgQuery } from "@/lib/postgres";
+import { isPostgresEnabled, pgQuery, pgWithTransaction } from "@/lib/postgres";
 import {
   blogs as defaultBlogs,
   home as defaultHome,
@@ -1080,6 +1080,73 @@ export async function saveCmsSnapshot(
   await writeFile(cmsPath, JSON.stringify(snapshotForStorage(next), null, 2));
   revalidateCmsCache();
   return next;
+}
+
+let cmsProductsMutationLock: Promise<void> = Promise.resolve();
+
+function withCmsProductsMutationLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = cmsProductsMutationLock.then(fn, fn);
+  cmsProductsMutationLock = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+/** Serializes product stock mutations so concurrent order approvals cannot oversell. */
+export async function updateCmsProductsAtomically(
+  mutator: (products: Product[]) => Product[],
+): Promise<CmsSnapshot> {
+  if (isPostgresCmsPrimary()) {
+    const next = await pgWithTransaction(async (client) => {
+      const locked = await client.query<{
+        data: CmsSnapshot;
+        updated_at: string;
+      }>("select data, updated_at from cms_snapshots where id = 1 for update");
+      const row = locked.rows[0];
+      const base = row?.data
+        ? ({
+            ...defaultCmsSnapshot,
+            ...(row.data as Partial<CmsSnapshot>),
+            updatedAt: row.updated_at ?? defaultCmsSnapshot.updatedAt,
+          } as CmsSnapshot)
+        : defaultCmsSnapshot;
+      const nextProducts = mutator([...base.products]);
+      const updatedAt = new Date().toISOString();
+      const stored = snapshotForStorage({
+        ...base,
+        products: nextProducts,
+        updatedAt,
+      });
+
+      if (row) {
+        await client.query(
+          `update cms_snapshots
+           set data = jsonb_set(data, '{products}', $1::jsonb, false),
+               updated_at = $2::timestamptz
+           where id = 1`,
+          [JSON.stringify(nextProducts), updatedAt],
+        );
+      } else {
+        await client.query(
+          `insert into cms_snapshots (id, data, updated_at)
+           values (1, $1::jsonb, $2::timestamptz)`,
+          [JSON.stringify(stored), updatedAt],
+        );
+      }
+
+      return stored;
+    });
+    void mirrorCmsSnapshotToFile(next);
+    revalidateCmsCache();
+    return next;
+  }
+
+  return withCmsProductsMutationLock(async () => {
+    const base = await getCmsSnapshotForPatch();
+    const nextProducts = mutator([...base.products]);
+    return saveCmsSnapshot({ products: nextProducts }, base, { light: true });
+  });
 }
 
 export async function upsertCmsProduct(

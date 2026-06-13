@@ -38,73 +38,88 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireApprovedClientRequest(request);
-  if (auth instanceof Response) return auth;
-  const { client } = auth;
+  try {
+    const auth = await requireApprovedClientRequest(request);
+    if (auth instanceof Response) return auth;
+    const { client } = auth;
 
-  const limit = await rateLimit(
-    rateLimitKey(request, "testimonials", client.email),
-    3,
-    24 * 60 * 60_000,
-  );
-  if (!limit.allowed) return rateLimitResponse(limit.resetAt);
+    const limit = await rateLimit(
+      rateLimitKey(request, "testimonials", client.email),
+      3,
+      24 * 60 * 60_000,
+    );
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
-  const body = (await request.json()) as Partial<CmsTestimonial>;
-  const cms = await getCmsSnapshot();
+    const body = (await request
+      .json()
+      .catch(() => null)) as Partial<CmsTestimonial> | null;
+    if (!body) {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const cms = await getCmsSnapshot();
 
-  const authorCheck = validateUserText(
-    String(body.author ?? client.companyName ?? "").trim(),
-    {
+    const authorCheck = validateUserText(
+      String(body.author ?? client.companyName ?? "").trim(),
+      {
+        min: 1,
+        max: USER_TEXT_LIMITS.testimonialAuthor,
+        label: "Author",
+      },
+    );
+    const quoteCheck = validateUserText(String(body.quote ?? ""), {
       min: 1,
-      max: USER_TEXT_LIMITS.testimonialAuthor,
-      label: "Author",
-    },
-  );
-  const quoteCheck = validateUserText(String(body.quote ?? ""), {
-    min: 1,
-    max: USER_TEXT_LIMITS.testimonialQuote,
-    label: "Testimonial",
-  });
-  if (!authorCheck.ok) {
-    return Response.json({ error: authorCheck.error }, { status: 400 });
-  }
-  if (!quoteCheck.ok) {
-    return Response.json({ error: quoteCheck.error }, { status: 400 });
-  }
+      max: USER_TEXT_LIMITS.testimonialQuote,
+      label: "Testimonial",
+    });
+    if (!authorCheck.ok) {
+      return Response.json({ error: authorCheck.error }, { status: 400 });
+    }
+    if (!quoteCheck.ok) {
+      return Response.json({ error: quoteCheck.error }, { status: 400 });
+    }
 
-  const rating = Math.round(Number(body.rating));
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    const rating = Math.round(Number(body.rating));
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+      return Response.json(
+        { error: "Rating required (1–5 stars)" },
+        { status: 400 },
+      );
+    }
+
+    const product = sanitizeUserText(String(body.product ?? "Sarjan Textiles"));
+    const testimonial: CmsTestimonial = {
+      id: `TST-${Date.now()}`,
+      author: authorCheck.value,
+      quote: quoteCheck.value,
+      product: product || "Sarjan Textiles",
+      price: formatTestimonialPrice(body.price ?? ""),
+      rating,
+      image: sanitizeSameOriginAssetUrl(
+        String(body.image ?? ""),
+        "/sarjan-assets/banner-textiles-studio.webp",
+      ),
+      avatar: sanitizeSameOriginAssetUrl(
+        String(body.avatar ?? ""),
+        defaultAvatar,
+      ),
+      status: "pending",
+      submittedAt: new Date().toISOString(),
+    };
+
+    const next = await saveCmsSnapshot({
+      testimonials: [testimonial, ...cms.testimonials],
+    });
     return Response.json(
-      { error: "Rating required (1–5 stars)" },
-      { status: 400 },
+      { testimonial, count: next.testimonials.length },
+      { status: 201 },
+    );
+  } catch (error) {
+    return Response.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Testimonial submit failed",
+      },
+      { status: 500 },
     );
   }
-
-  const product = sanitizeUserText(String(body.product ?? "Sarjan Textiles"));
-  const testimonial: CmsTestimonial = {
-    id: `TST-${Date.now()}`,
-    author: authorCheck.value,
-    quote: quoteCheck.value,
-    product: product || "Sarjan Textiles",
-    price: formatTestimonialPrice(body.price ?? ""),
-    rating,
-    image: sanitizeSameOriginAssetUrl(
-      String(body.image ?? ""),
-      "/sarjan-assets/banner-textiles-studio.webp",
-    ),
-    avatar: sanitizeSameOriginAssetUrl(
-      String(body.avatar ?? ""),
-      defaultAvatar,
-    ),
-    status: "pending",
-    submittedAt: new Date().toISOString(),
-  };
-
-  const next = await saveCmsSnapshot({
-    testimonials: [testimonial, ...cms.testimonials],
-  });
-  return Response.json(
-    { testimonial, count: next.testimonials.length },
-    { status: 201 },
-  );
 }

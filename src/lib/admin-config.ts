@@ -13,34 +13,16 @@ export function configuredAdmins(): ConfiguredAdmin[] {
   }
 
   const email = process.env.ADMIN_EMAIL?.trim() || "admin@sarjantextiles.com";
-  const rawPass = process.env.ADMIN_PASSWORD;
   const rawHash = process.env.ADMIN_PASSWORD_HASH?.trim();
-  const trimmedPass = rawPass?.trim();
-  const password =
-    trimmedPass && trimmedPass.length > 0
-      ? trimmedPass
-      : rawHash
-        ? undefined
-        : "admin123";
-
-  if (process.env.NODE_ENV === "production" && !raw) {
-    const hasHash = Boolean(rawHash);
-    const hasStrongPassword =
-      typeof trimmedPass === "string" &&
-      trimmedPass.length > 0 &&
-      trimmedPass !== "admin123" &&
-      trimmedPass.length >= 12;
-    if (!hasHash && !hasStrongPassword) {
-      throw new Error(
-        "Set ADMIN_PASSWORD_HASH or a strong ADMIN_PASSWORD in production",
-      );
-    }
+  if (!rawHash) {
+    throw new Error(
+      "ADMIN_PASSWORD_HASH is required. Generate a bcrypt hash and set it in environment variables (do not store plaintext ADMIN_PASSWORD).",
+    );
   }
 
   return [
     {
       email,
-      password,
       passwordHash: rawHash,
       name: "Super Admin",
       role: "super_admin" as const,

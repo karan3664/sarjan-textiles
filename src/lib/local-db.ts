@@ -21,13 +21,14 @@ import {
   isPostgresEnabled,
   pgInsertReturning,
   pgQuery,
+  pgUpdateReturning,
   pgUpsertReturning,
-  serializePgValue,
 } from "@/lib/postgres";
 import {
   normalizeOrderPlacedVia,
   type OrderPlacedVia,
 } from "@/lib/order-placed-via";
+import { assertMinClientPassword } from "@/lib/password-policy";
 import {
   abandonedCartFirstReminderHours,
   abandonedCartSecondReminderHours,
@@ -238,23 +239,6 @@ const defaultDb: LocalDb = {
   resetRequests: [],
   feedbacks: [],
 };
-
-async function pgUpdateReturning(
-  table: string,
-  idColumn: string,
-  id: string,
-  patch: Record<string, unknown>,
-) {
-  const keys = Object.keys(patch);
-  if (!keys.length) return null;
-  const sets = keys.map((key, index) => `${key} = $${index + 1}`);
-  const params = [...keys.map((key) => serializePgValue(patch[key])), id];
-  const { rows } = await pgQuery(
-    `update ${table} set ${sets.join(", ")} where ${idColumn} = $${keys.length + 1} returning *`,
-    params,
-  );
-  return rows[0] ?? null;
-}
 
 function mapClient(row: Record<string, unknown>): LocalClient {
   return {
@@ -513,6 +497,7 @@ export async function createClient(input: {
   /** GST legal / proprietor name (lgnm); stored in address JSON. */
   ownerLegalName?: string;
 }) {
+  assertMinClientPassword(input.password);
   await ensureClientFieldsUnique({
     email: input.email,
     gst: input.gst,
@@ -943,6 +928,7 @@ export async function updateClientPassword(
   if (!client) throw new Error("Client not found");
   if (!verifyPassword(currentPassword, client.passwordHash))
     throw new Error("Current password is incorrect");
+  assertMinClientPassword(newPassword);
 
   if (isPostgresEnabled()) {
     const data = await pgUpdateReturning("clients", "id", id, {
@@ -962,9 +948,7 @@ export async function updateClientPassword(
 
 /** Self-service forgot password after email + mobile verification. */
 export async function resetClientPasswordById(id: string, newPassword: string) {
-  if (newPassword.length < 8) {
-    throw new Error("Password must be at least 8 characters");
-  }
+  assertMinClientPassword(newPassword);
 
   if (isPostgresEnabled()) {
     const data = await pgUpdateReturning("clients", "id", id, {
@@ -1187,7 +1171,12 @@ export async function createOrder(
       ],
       createdAt,
     });
-    void recordOrderPlacementAnalytics(order).catch(() => null);
+    void recordOrderPlacementAnalytics(order).catch((error) => {
+      console.warn(
+        "[local-db] order placement analytics failed:",
+        error instanceof Error ? error.message : error,
+      );
+    });
     let mapped: LocalOrder;
     try {
       const data = await pgInsertReturning("orders", {
@@ -1246,7 +1235,12 @@ export async function createOrder(
     ],
     createdAt: new Date().toISOString(),
   });
-  void recordOrderPlacementAnalytics(order).catch(() => null);
+  void recordOrderPlacementAnalytics(order).catch((error) => {
+    console.warn(
+      "[local-db] order placement analytics failed:",
+      error instanceof Error ? error.message : error,
+    );
+  });
 
   db.orders.push(order);
   await writeLocalDb(db);

@@ -1,7 +1,6 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import {
   findClientNotification,
-  isBroadcastNotification,
   markClientNotificationRead,
 } from "@/lib/client-notifications";
 
@@ -11,23 +10,17 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await verifyClientToken(bearerToken(request));
+  if (!session) {
+    return Response.json({ error: "Login required" }, { status: 401 });
+  }
+
   const { id } = await params;
   const existing = await findClientNotification(id);
   if (!existing) {
     return Response.json({ error: "Notification not found" }, { status: 404 });
   }
 
-  if (!session && !isBroadcastNotification(existing)) {
-    return Response.json(
-      { error: "Login required for account notifications" },
-      { status: 401 },
-    );
-  }
-
-  const ownerId = isBroadcastNotification(existing)
-    ? existing.clientId
-    : session!.clientId;
-  const notification = await markClientNotificationRead(ownerId, id);
+  const notification = await markClientNotificationRead(session.clientId, id);
   if (!notification) {
     return Response.json({ error: "Notification not found" }, { status: 404 });
   }

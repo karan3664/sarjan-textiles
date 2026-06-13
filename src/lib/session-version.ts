@@ -3,6 +3,11 @@ import path from "path";
 import { isPostgresEnabled, pgQuery } from "@/lib/postgres";
 
 const localDbPath = path.join(process.cwd(), "data", "local-db.json");
+const adminSessionVersionPath = path.join(
+  process.cwd(),
+  "data",
+  "admin-session-versions.json",
+);
 
 async function readJsonClientSessionVersion(clientId: string) {
   try {
@@ -84,6 +89,36 @@ async function ensureAdminVersionTable() {
   `);
 }
 
+async function readJsonAdminSessionVersion(email: string) {
+  try {
+    const raw = await readFile(adminSessionVersionPath, "utf8");
+    const versions = JSON.parse(raw) as Record<string, number>;
+    return Number(versions[email.trim().toLowerCase()] ?? 0) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function bumpJsonAdminSessionVersion(email: string) {
+  const normalized = email.trim().toLowerCase();
+  try {
+    const raw = await readFile(adminSessionVersionPath, "utf8");
+    const versions = JSON.parse(raw) as Record<string, number>;
+    versions[normalized] = (Number(versions[normalized]) || 0) + 1;
+    await writeFile(
+      adminSessionVersionPath,
+      `${JSON.stringify(versions, null, 2)}\n`,
+      "utf8",
+    );
+  } catch {
+    await writeFile(
+      adminSessionVersionPath,
+      `${JSON.stringify({ [normalized]: 1 }, null, 2)}\n`,
+      "utf8",
+    );
+  }
+}
+
 export async function getAdminSessionVersion(email: string) {
   const normalized = email.trim().toLowerCase();
   if (isPostgresEnabled()) {
@@ -98,7 +133,7 @@ export async function getAdminSessionVersion(email: string) {
       /* fall through */
     }
   }
-  return 0;
+  return readJsonAdminSessionVersion(normalized);
 }
 
 export async function bumpAdminSessionVersion(email: string) {
@@ -113,8 +148,10 @@ export async function bumpAdminSessionVersion(email: string) {
          DO UPDATE SET version = admin_session_versions.version + 1`,
         [normalized],
       );
+      return;
     } catch {
-      /* best effort */
+      /* fall through */
     }
   }
+  await bumpJsonAdminSessionVersion(normalized);
 }

@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "id": "d8d20e4b-7375-4d1c-bd65-0fe0606cb4ac",
+      "productSlug": "gagan-ajrakh-block-print-shirt-cotton",
+      "orderId": "ST-1781188027374",
+      "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+      "clientName": "Sarjan",
+      "rating": 5,
+      "title": "Awsome Product",
+      "body": "Baoj Mast Che Bhaiyo Jarur lejo badha....",
+      "images": [
+        "/sarjan-assets/review-uploads/7c5cec2b-ec60-4916-a2b0-86ce150563b9-1781362016247.webp"
+      ],
+      "videos": [],
+      "status": "approved",
+      "helpfulCount": 1,
+      "createdAt": "2026-06-13T14:47:02.765Z",
+      "updatedAt": "2026-06-13T14:49:03.613Z",
+      "approvedBy": "admin@sarjantextiles.com",
+      "approvedAt": "2026-06-13T14:47:49.561Z"
+    }
+  ]
+}

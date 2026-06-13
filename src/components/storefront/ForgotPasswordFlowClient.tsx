@@ -43,9 +43,17 @@ export function ForgotPasswordFlowClient({
       setMessage(data.error ?? "Could not start password reset");
       return;
     }
-    setResetToken(String(data.resetToken ?? ""));
+    const token = String(data.resetToken ?? "");
+    if (!token) {
+      setMessage(
+        data.message ??
+          "If an account exists with this email, password reset instructions have been sent.",
+      );
+      return;
+    }
+    setResetToken(token);
     setStep("email");
-    setMessage("Account found. Verify your email next.");
+    setMessage(data.message ?? "Verify your email next.");
   };
 
   const sendEmailOtp = async () => {
@@ -65,8 +73,15 @@ export function ForgotPasswordFlowClient({
       setMessage(data.error ?? "Could not send email OTP");
       return;
     }
-    setEmailOtpToken(String(data.otpToken ?? ""));
-    setMessage(data.message ?? "OTP sent to your email");
+    if (data.otpToken) {
+      setEmailOtpToken(String(data.otpToken));
+    } else {
+      setEmailOtpToken("");
+    }
+    setMessage(
+      data.message ??
+        "If an account exists with this email, a verification code has been sent.",
+    );
   };
 
   const verifyEmailOtp = async () => {

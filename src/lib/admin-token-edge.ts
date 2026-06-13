@@ -6,12 +6,10 @@
 import { configuredAdmins } from "@/lib/admin-config";
 import { roleAccess, type AdminSession } from "@/lib/admin-rbac";
 
+import { requireEnvSecret } from "@/lib/require-env-secret";
+
 function secret() {
-  const value = process.env.ADMIN_SESSION_SECRET?.trim();
-  if (!value && process.env.NODE_ENV === "production") {
-    throw new Error("ADMIN_SESSION_SECRET is required in production");
-  }
-  return value || "sarjan-demo-admin-secret-change-before-production";
+  return requireEnvSecret("ADMIN_SESSION_SECRET");
 }
 
 function base64UrlDecode(value: string) {
@@ -54,7 +52,7 @@ async function hmac(value: string) {
   return base64UrlEncode(String.fromCharCode(...bytes));
 }
 
-/** Signature + expiry only — session_version checked on API routes (Node runtime). */
+/** Signature + expiry; middleware also re-validates session_version via /api/admin/auth/edge-verify when Postgres is enabled. */
 export async function verifyAdminTokenForMiddleware(
   token?: string,
 ): Promise<AdminSession | null> {

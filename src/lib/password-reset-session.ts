@@ -15,12 +15,10 @@ export type PasswordResetSession = {
   nonce: string;
 };
 
+import { requireEnvSecret } from "@/lib/require-env-secret";
+
 function secret() {
-  return (
-    process.env.CLIENT_JWT_SECRET ||
-    process.env.ADMIN_SESSION_SECRET ||
-    "sarjan-demo-client-secret-change-before-production"
-  );
+  return requireEnvSecret("CLIENT_JWT_SECRET");
 }
 
 function encode(value: unknown) {

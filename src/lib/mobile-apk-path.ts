@@ -1,5 +1,6 @@
 import { access, mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { assertSafeRemoteFetchUrl } from "@/lib/safe-fetch-url";
 import { readMobileReleaseManifest } from "@/lib/mobile-release-manifest";
 
 function apkVersionSidecarPath(apkPath: string): string {
@@ -76,7 +77,14 @@ async function cacheApkFromUrl(
     path.join(process.cwd(), "public", "downloads"),
   ].filter((dir): dir is string => Boolean(dir));
 
-  const response = await fetch(sourceUrl, { cache: "no-store" });
+  let safeUrl: URL;
+  try {
+    safeUrl = assertSafeRemoteFetchUrl(sourceUrl);
+  } catch {
+    return null;
+  }
+
+  const response = await fetch(safeUrl.toString(), { cache: "no-store" });
   if (!response.ok) return null;
 
   const bytes = Buffer.from(await response.arrayBuffer());

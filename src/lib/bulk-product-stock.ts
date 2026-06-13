@@ -2,7 +2,9 @@ import type { Product } from "@/data/mock";
 import {
   filterActiveSizes,
   isDeprecatedSize,
+  SIZE_GROUPS,
   sizesInGroup,
+  type SizeGroupId,
 } from "@/lib/size-groups";
 import { totalPieceStockFromSetCounts } from "@/lib/set-stock";
 

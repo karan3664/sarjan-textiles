@@ -11,14 +11,10 @@ export type ClientSession = {
   exp: number;
 };
 
+import { requireEnvSecret } from "@/lib/require-env-secret";
+
 function secret() {
-  const value =
-    process.env.CLIENT_JWT_SECRET?.trim() ||
-    process.env.ADMIN_SESSION_SECRET?.trim();
-  if (!value && process.env.NODE_ENV === "production") {
-    throw new Error("CLIENT_JWT_SECRET is required in production");
-  }
-  return value || "sarjan-demo-client-secret-change-before-production";
+  return requireEnvSecret("CLIENT_JWT_SECRET");
 }
 
 function base64UrlEncode(value: string) {

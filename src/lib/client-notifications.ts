@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto";
 import { isPostgresEnabled, pgInsertReturning, pgQuery } from "@/lib/postgres";
 import {
+  getBroadcastReadIdsForClient,
+  markBroadcastReadForClient,
+} from "@/lib/client-broadcast-reads";
+import {
   createLocalClientNotification,
   deleteLocalClientNotification,
   findLocalClientNotification,
@@ -105,15 +109,26 @@ export async function listBroadcastNotifications() {
 
 /** Logged-in inbox: personal order updates + marketing broadcasts. */
 export async function listInboxForClient(clientId: string) {
+  const broadcastReadIds = await getBroadcastReadIdsForClient(clientId);
   if (isPostgresEnabled()) {
     const { rows } = await pgQuery(
       "select * from client_notifications where client_id = any($1::text[]) order by created_at desc",
       [[clientId, BROADCAST_CLIENT_ID]],
     );
-    return rows.map((row) => rowToRecord(row as DbRow));
+    return rows.map((row) => {
+      const record = rowToRecord(row as DbRow);
+      if (!isBroadcastNotification(record)) return record;
+      return {
+        ...record,
+        read: broadcastReadIds.has(record.id) || record.read,
+      };
+    });
   }
   const personal = await listClientNotifications(clientId);
-  const broadcast = await listBroadcastNotifications();
+  const broadcast = (await listBroadcastNotifications()).map((item) => ({
+    ...item,
+    read: broadcastReadIds.has(item.id) || item.read,
+  }));
   return [...personal, ...broadcast].sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt),
   );
@@ -190,15 +205,15 @@ export async function markClientNotificationRead(
   clientId: string,
   notificationId: string,
 ) {
+  const existing = await findClientNotification(notificationId);
+  if (!existing) return null;
+  if (isBroadcastNotification(existing)) {
+    await markBroadcastReadForClient(clientId, notificationId);
+    return { ...existing, read: true };
+  }
+  if (existing.clientId !== clientId) return null;
+
   if (isPostgresEnabled()) {
-    const existing = await findClientNotification(notificationId);
-    if (!existing) return null;
-    if (
-      existing.clientId !== clientId &&
-      existing.clientId !== BROADCAST_CLIENT_ID
-    ) {
-      return null;
-    }
     const { rows } = await pgQuery(
       "update client_notifications set read = true where id = $1 returning *",
       [notificationId],
@@ -217,15 +232,12 @@ export async function deleteClientNotification(
   clientId: string,
   notificationId: string,
 ) {
+  const existing = await findClientNotification(notificationId);
+  if (!existing) return false;
+  if (isBroadcastNotification(existing)) return false;
+  if (existing.clientId !== clientId) return false;
+
   if (isPostgresEnabled()) {
-    const existing = await findClientNotification(notificationId);
-    if (!existing) return false;
-    if (
-      existing.clientId !== clientId &&
-      existing.clientId !== BROADCAST_CLIENT_ID
-    ) {
-      return false;
-    }
     await pgQuery("delete from client_notifications where id = $1", [
       notificationId,
     ]);

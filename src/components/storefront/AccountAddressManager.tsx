@@ -336,8 +336,8 @@ export function AccountAddressManager({
                   </label>
                   <div className="sarjan-saved-address-card__body">
                     {savedAddressSummary(item).map((line) => (
-                      <p key={line} className="mb_6">
-                        {line}
+                      <p key={line.key} className="mb_6">
+                        {line.text}
                       </p>
                     ))}
                     {item.transport ? (

@@ -434,16 +434,24 @@ body.sarjan-storefront
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions
-  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled),
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered),
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions--stack
-  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled),
-body.sarjan-storefront .sarjan-auth-page .sarjan-auth-submit:not(:disabled),
+  :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):not(
+    :hover
+  ):not(:focus-visible):not(.is-hovered),
+body.sarjan-storefront
+  .sarjan-auth-page
+  .sarjan-auth-submit:not(:disabled):not(:hover):not(:focus-visible):not(
+    .is-hovered
+  ),
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-gst-captcha-panel
-  .tf-btn:not(:disabled) {
+  .tf-btn:not(:disabled):not(:hover):not(:focus-visible):not(.is-hovered) {
   border-radius: var(--sarjan-btn-radius) !important;
   background-color: var(--sarjan-btn-bg) !important;
   color: var(--sarjan-btn-color) !important;
@@ -456,22 +464,24 @@ body.sarjan-storefront
   .sarjan-otp-actions
   :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
     :hover,
-    :focus-visible
+    :focus-visible,
+    .is-hovered
   ),
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-otp-actions--stack
   :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
     :hover,
-    :focus-visible
+    :focus-visible,
+    .is-hovered
   ),
 body.sarjan-storefront
   .sarjan-auth-page
-  .sarjan-auth-submit:not(:disabled):hover,
+  .sarjan-auth-submit:not(:disabled):is(:hover, :focus-visible, .is-hovered),
 body.sarjan-storefront
   .sarjan-auth-page
   .sarjan-gst-captcha-panel
-  .tf-btn:not(:disabled):hover {
+  .tf-btn:not(:disabled):is(:hover, :focus-visible, .is-hovered) {
   background-color: var(--sarjan-btn-hover-bg) !important;
   color: var(--sarjan-btn-hover-color) !important;
   border-color: var(--sarjan-btn-hover-border) !important;
@@ -483,7 +493,8 @@ body.sarjan-storefront
   .sarjan-otp-actions
   :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
     :hover,
-    :focus-visible
+    :focus-visible,
+    .is-hovered
   )
   :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
 body.sarjan-storefront
@@ -491,7 +502,8 @@ body.sarjan-storefront
   .sarjan-otp-actions--stack
   :is(.tf-btn, .sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
     :hover,
-    :focus-visible
+    :focus-visible,
+    .is-hovered
   )
   :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
   color: var(--sarjan-btn-hover-color) !important;

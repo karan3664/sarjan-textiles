@@ -5,6 +5,12 @@ import {
 import { resetClientPasswordById } from "@/lib/local-db";
 import { sendPasswordResetCompleteEmail } from "@/lib/password-emails";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
+import { consumeSingleUseToken } from "@/lib/single-use-token";
+import { bumpClientSessionVersion } from "@/lib/session-version";
+import {
+  assertMinClientPassword,
+  minClientPasswordMessage,
+} from "@/lib/password-policy";
 
 export async function POST(request: Request) {
   try {
@@ -13,9 +19,14 @@ export async function POST(request: Request) {
     const newPassword = String(body.newPassword ?? "");
     const confirmPassword = String(body.confirmPassword ?? newPassword);
 
-    if (newPassword.length < 8) {
+    try {
+      assertMinClientPassword(newPassword);
+    } catch (error) {
       return Response.json(
-        { error: "Password must be at least 8 characters" },
+        {
+          error:
+            error instanceof Error ? error.message : minClientPasswordMessage(),
+        },
         { status: 400 },
       );
     }
@@ -37,6 +48,15 @@ export async function POST(request: Request) {
       );
     }
 
+    const resetKey = `password-reset:${parsed.session.nonce}`;
+    const firstUse = await consumeSingleUseToken(resetKey, parsed.session.exp);
+    if (!firstUse) {
+      return Response.json(
+        { error: "Reset link already used. Start again." },
+        { status: 400 },
+      );
+    }
+
     const limit = await rateLimit(
       rateLimitKey(request, "forgot-complete", parsed.session.clientId),
       5,
@@ -45,6 +65,7 @@ export async function POST(request: Request) {
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
     await resetClientPasswordById(parsed.session.clientId, newPassword);
+    await bumpClientSessionVersion(parsed.session.clientId).catch(() => null);
     await sendPasswordResetCompleteEmail(parsed.session.email).catch(
       () => undefined,
     );

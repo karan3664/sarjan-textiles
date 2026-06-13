@@ -5,6 +5,9 @@ import {
 import { readLocalDb } from "@/lib/local-db";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
+const GENERIC_RESET_MESSAGE =
+  "If an account exists with this email, password reset instructions have been sent.";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -26,13 +29,10 @@ export async function POST(request: Request) {
     const db = await readLocalDb();
     const client = findClientByEmail(db.clients, email);
     if (!client) {
-      return Response.json(
-        {
-          error:
-            "No account matches this email. Check your details or register.",
-        },
-        { status: 404 },
-      );
+      return Response.json({
+        ok: true,
+        message: GENERIC_RESET_MESSAGE,
+      });
     }
 
     const resetToken = issuePasswordResetSession({
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     return Response.json({
       ok: true,
       resetToken,
-      message: "Verify your email to set a new password.",
+      message: GENERIC_RESET_MESSAGE,
     });
   } catch (error) {
     return Response.json(

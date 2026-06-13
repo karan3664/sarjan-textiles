@@ -13,6 +13,7 @@ import {
   localizeProductsOnSaveFast,
 } from "@/lib/product-localize";
 import { asStoredProducts } from "@/lib/cms-admin-view";
+import { assertProductPriceValid } from "@/lib/product-pricing";
 import { cookies } from "next/headers";
 
 export const maxDuration = 60;
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     if (Array.isArray(product.products)) {
       const localized = localizeProductsOnSaveFast(product.products);
       const stored = asStoredProducts(localized);
+      for (const item of stored) assertProductPriceValid(item);
       await upsertCmsProducts(stored, cms);
       void appendAuditLog({
         actor: session.email,
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
     );
     const localized = await localizeProductOnSave(product, previous);
     const stored = asStoredProducts([localized])[0]!;
+    assertProductPriceValid(stored);
     await upsertCmsProduct(stored, cms);
     void appendAuditLog({
       actor: session.email,

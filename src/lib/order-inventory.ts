@@ -1,4 +1,4 @@
-import { getCmsSnapshot, saveCmsSnapshot } from "@/lib/cms-store";
+import { updateCmsProductsAtomically } from "@/lib/cms-store";
 import type { Product } from "@/data/mock";
 import type { LocalOrder } from "@/lib/local-db";
 import {
@@ -46,27 +46,23 @@ function restorePiecesToStock(
 }
 
 async function mutateInventoryForApproval(order: LocalOrder) {
-  const cms = await getCmsSnapshot();
-  const products = [...cms.products];
-
-  for (const item of order.items) {
-    const pieces = approvedPiecesForItem(item);
-    deductPiecesFromStock(products, item.slug, pieces);
-  }
-
-  await saveCmsSnapshot({ products });
+  await updateCmsProductsAtomically((products) => {
+    for (const item of order.items) {
+      const pieces = approvedPiecesForItem(item);
+      deductPiecesFromStock(products, item.slug, pieces);
+    }
+    return products;
+  });
 }
 
 async function mutateInventoryForRestore(order: LocalOrder) {
-  const cms = await getCmsSnapshot();
-  const products = [...cms.products];
-
-  for (const item of order.items) {
-    const pieces = approvedPiecesForItem(item);
-    restorePiecesToStock(products, item.slug, pieces);
-  }
-
-  await saveCmsSnapshot({ products });
+  await updateCmsProductsAtomically((products) => {
+    for (const item of order.items) {
+      const pieces = approvedPiecesForItem(item);
+      restorePiecesToStock(products, item.slug, pieces);
+    }
+    return products;
+  });
 }
 
 /** B2B: orders may exceed stock — placement never blocks or reserves inventory. */

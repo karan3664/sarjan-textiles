@@ -258,6 +258,7 @@ export async function middleware(request: NextRequest) {
       key === "Content-Security-Policy" &&
       process.env.NODE_ENV === "development"
     ) {
+      // Next.js dev/HMR requires unsafe-eval; production CSP stays strict (nosniff + no eval).
       response.headers.set(
         key,
         value.replace(

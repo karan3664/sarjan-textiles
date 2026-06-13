@@ -7,9 +7,7 @@ function passwordMatches(admin: ConfiguredAdmin, password: string) {
   if (hash && isPlausiblePasswordHash(hash)) {
     return verifyPassword(password, hash);
   }
-  // No valid hash — compare env-configured password (allowed in production when
-  // configuredAdmins() already enforced a strong ADMIN_PASSWORD).
-  return admin.password === password;
+  return false;
 }
 
 export async function authenticateAdmin(

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const stream = getProductFileStream(relativePath);
+    const stream = await getProductFileStream(relativePath);
 
     return new Response(Readable.toWeb(stream) as ReadableStream, {
       headers: {

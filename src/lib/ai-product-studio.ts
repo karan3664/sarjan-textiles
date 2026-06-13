@@ -2,6 +2,7 @@ import {
   mkdir,
   readdir,
   readFile,
+  realpath,
   rm,
   stat,
   writeFile,
@@ -338,17 +339,27 @@ function promptForStyle(_style: StudioShootStyle, currentPrompt: string) {
   return currentPrompt || productStudioPrompt;
 }
 
-function absoluteFromProducts(relativePath: string) {
+async function absoluteFromProducts(relativePath: string) {
+  const root = resolveAiStudioProductsRoot();
+  const realRoot = await realpath(root);
+  const rootPrefix = realRoot.endsWith(path.sep)
+    ? realRoot
+    : `${realRoot}${path.sep}`;
   const normalized = path
     .normalize(relativePath)
     .replace(/^(\.\.(\/|\\|$))+/, "");
-  const absolute = path.join(resolveAiStudioProductsRoot(), normalized);
+  const candidate = path.resolve(realRoot, normalized);
 
-  if (!absolute.startsWith(resolveAiStudioProductsRoot())) {
+  if (candidate !== realRoot && !candidate.startsWith(rootPrefix)) {
     throw new Error("Invalid product file path");
   }
 
-  return absolute;
+  const realAbsolute = await realpath(candidate);
+  if (realAbsolute !== realRoot && !realAbsolute.startsWith(rootPrefix)) {
+    throw new Error("Invalid product file path");
+  }
+
+  return realAbsolute;
 }
 
 function inferPattern(collection: string) {
@@ -1658,7 +1669,7 @@ async function generateLocalCatalogShoot(inputPath: string) {
 async function processRecord(
   record: StudioImageRecord,
 ): Promise<StudioImageRecord> {
-  const inputPath = absoluteFromProducts(record.rawPath);
+  const inputPath = await absoluteFromProducts(record.rawPath);
   const currentTime = now();
 
   try {
@@ -1752,8 +1763,8 @@ async function removeRecordFiles(record: StudioImageRecord) {
   ].filter(Boolean);
 
   await Promise.all(
-    paths.map((item) =>
-      rm(absoluteFromProducts(item!), { force: true }).catch(() => null),
+    paths.map(async (item) =>
+      rm(await absoluteFromProducts(item!), { force: true }).catch(() => null),
     ),
   );
 
@@ -1878,15 +1889,15 @@ export async function updateStudioRecord(input: {
     await mkdir(path.dirname(finalPath), { recursive: true });
     await mkdir(path.dirname(publicPath), { recursive: true });
     if (record.finalPath)
-      await rm(absoluteFromProducts(record.finalPath), { force: true }).catch(
-        () => null,
-      );
+      await rm(await absoluteFromProducts(record.finalPath), {
+        force: true,
+      }).catch(() => null);
     if (record.finalPublicPath)
       await rm(path.join(resolveAiStudioPublicRoot(), record.finalPublicPath), {
         force: true,
       }).catch(() => null);
 
-    await sharp(absoluteFromProducts(record.outputs.webReady))
+    await sharp(await absoluteFromProducts(record.outputs.webReady))
       .resize({
         width: 2000,
         height: 2500,
@@ -1896,7 +1907,10 @@ export async function updateStudioRecord(input: {
       .jpeg({ quality: 86, mozjpeg: true })
       .toFile(finalPath)
       .catch(async () =>
-        copyFile(absoluteFromProducts(record.outputs!.webReady), finalPath),
+        copyFile(
+          await absoluteFromProducts(record.outputs!.webReady),
+          finalPath,
+        ),
       );
 
     await copyFile(finalPath, publicPath);
@@ -1928,7 +1942,7 @@ export async function replaceStudioRawImage(id: string, file: File) {
   if (!isAllowedImage(file.name) && !file.type.startsWith("image/"))
     throw new Error("Only JPG, PNG, or WEBP allowed");
 
-  const rawDir = path.dirname(absoluteFromProducts(record.rawPath));
+  const rawDir = path.dirname(await absoluteFromProducts(record.rawPath));
   await removeRecordFiles(record).catch(() => null);
   await mkdir(rawDir, { recursive: true });
 
@@ -1962,8 +1976,8 @@ export async function replaceStudioRawImage(id: string, file: File) {
   return withUrls(nextRecord);
 }
 
-export function getProductFileStream(relativePath: string) {
-  const absolute = absoluteFromProducts(relativePath);
+export async function getProductFileStream(relativePath: string) {
+  const absolute = await absoluteFromProducts(relativePath);
   return createReadStream(absolute);
 }
 

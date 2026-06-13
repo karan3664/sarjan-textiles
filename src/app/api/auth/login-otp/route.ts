@@ -4,10 +4,10 @@ import { setClientSessionCookie } from "@/lib/client-session-cookie";
 import { createClientToken } from "@/lib/client-token";
 import { isNativeClientRequest } from "@/lib/native-client-detect";
 import { normalizeClientEmail } from "@/lib/client-duplicate-check";
-import { normalizeEmail, verifyEmailOtpToken } from "@/lib/email-otp";
+import { normalizeEmail, verifyEmailOtpGuarded } from "@/lib/email-otp";
 import { recordClientLogin } from "@/lib/client-activity";
 import { publicClient, readLocalDb } from "@/lib/local-db";
-import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/rate-limit";
 
 /**
  * Login via email one-time password.
@@ -30,16 +30,15 @@ export async function POST(request: Request) {
       return Response.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const limit = await rateLimit(
-      rateLimitKey(request, "email-otp-login", email),
-      10,
-      60_000,
-    );
-    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
-
-    const verified = verifyEmailOtpToken(otpToken, email, otp);
+    const verified = await verifyEmailOtpGuarded(request, otpToken, email, otp);
     if (!verified.ok) {
-      return Response.json({ error: verified.error }, { status: 400 });
+      if (verified.status === 429 && verified.resetAt) {
+        return rateLimitResponse(verified.resetAt);
+      }
+      return Response.json(
+        { error: verified.error },
+        { status: verified.status },
+      );
     }
 
     const db = await readLocalDb();

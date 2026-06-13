@@ -9,10 +9,14 @@ import { clientStatusAuthError } from "@/lib/client-status-auth";
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const session = await verifyClientToken(bearerToken(request));
+  if (!session || session.clientId !== id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const client = await getClient(id);
   if (!client)
     return Response.json({ error: "Client not found" }, { status: 404 });

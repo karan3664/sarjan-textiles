@@ -52,9 +52,17 @@ export async function buildValidatedOrderPayload(
     assertProductPurchasableForOrder(product, clientTier);
     const sizes = line.sizes?.length ? line.sizes : product.sizes;
     const setPrice = productSetPrice(product, line.color, sizes);
+    if (!Number.isFinite(setPrice) || setPrice <= 0) {
+      throw new Error(`Product "${line.slug}" has invalid pricing`);
+    }
     const setQuantity = Math.max(1, Number(line.setQuantity) || 1);
     const piecesPerSet = Math.max(1, sizes.length);
     const lineTotal = setPrice * setQuantity;
+    if (!Number.isFinite(lineTotal) || lineTotal <= 0) {
+      throw new Error(
+        `Order line for "${line.slug}" must total more than zero`,
+      );
+    }
     items.push({
       slug: line.slug,
       name: product.name,

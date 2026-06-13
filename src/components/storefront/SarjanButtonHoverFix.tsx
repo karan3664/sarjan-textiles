@@ -28,6 +28,8 @@ const CTA_SELECTOR = [
   ".modal a.tf-btn",
   ".offcanvas .sarjan-btn",
   ".offcanvas .tf-btn",
+  ".sarjan-auth-page button.sarjan-auth-btn",
+  ".sarjan-auth-page button.sarjan-btn.sarjan-auth-btn",
 ].join(",");
 
 const SKIP_SELECTOR =

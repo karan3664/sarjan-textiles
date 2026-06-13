@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/local-db";
-import { verifyEmailOtpToken } from "@/lib/email-otp";
+import { verifyEmailOtpGuarded } from "@/lib/email-otp";
 import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
+import {
+  assertMinClientPassword,
+  minClientPasswordMessage,
+} from "@/lib/password-policy";
 
 export async function POST(request: Request) {
   try {
@@ -21,19 +25,32 @@ export async function POST(request: Request) {
       );
     }
     const password = String(body.password);
-    if (password.length < 10) {
+    try {
+      assertMinClientPassword(password);
+    } catch (error) {
       return Response.json(
-        { error: "Password must be at least 10 characters" },
+        {
+          error:
+            error instanceof Error ? error.message : minClientPasswordMessage(),
+        },
         { status: 400 },
       );
     }
-    const emailOtp = verifyEmailOtpToken(
+    const emailOtp = await verifyEmailOtpGuarded(
+      request,
       String(body.emailOtpToken ?? ""),
       String(body.email ?? ""),
       String(body.emailOtp ?? ""),
     );
-    if (!emailOtp.ok)
-      return Response.json({ error: emailOtp.error }, { status: 400 });
+    if (!emailOtp.ok) {
+      if (emailOtp.status === 429 && emailOtp.resetAt) {
+        return rateLimitResponse(emailOtp.resetAt);
+      }
+      return Response.json(
+        { error: emailOtp.error },
+        { status: emailOtp.status },
+      );
+    }
 
     const companyName = String(body.companyName ?? "").trim();
     const ownerLegalName = String(body.ownerLegalName ?? "").trim();

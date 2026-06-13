@@ -121,6 +121,8 @@ function AuthPageClientInner({
   const [registerState, setRegisterState] = useState("");
   const [registerCity, setRegisterCity] = useState("");
   const [usePasswordLogin, setUsePasswordLogin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginOtp, setLoginOtp] = useState("");
   const [loginOtpToken, setLoginOtpToken] = useState("");
   const [loginOtpLoading, setLoginOtpLoading] = useState(false);
@@ -365,8 +367,16 @@ function AuthPageClientInner({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not send OTP");
       setEmail(normalized);
-      setLoginOtpToken(String(data.otpToken ?? ""));
-      setMessage(data.message ?? "OTP sent. Check your email inbox.");
+      if (data.otpToken) {
+        setLoginOtpToken(String(data.otpToken));
+        setMessage(data.message ?? "OTP sent. Check your email inbox.");
+      } else {
+        setLoginOtpToken("");
+        setMessage(
+          data.message ??
+            "If an account exists with this email, a verification code has been sent.",
+        );
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not send OTP");
     } finally {
@@ -870,28 +880,46 @@ function AuthPageClientInner({
                     <fieldset className="position-relative password-item">
                       <input
                         className="input-password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Password*"
                         name="password"
                         required
                       />
-                      <span className="toggle-password unshow">
+                      <button
+                        type="button"
+                        className={`toggle-password ${showPassword ? "" : "unshow"}`}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        onClick={() => setShowPassword((visible) => !visible)}
+                      >
                         <i className="icon-eye-hide-line" />
-                      </span>
+                      </button>
                     </fieldset>
                   ) : null}
                   {isRegister ? (
                     <fieldset className="position-relative password-item">
                       <input
                         className="input-password"
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm Password*"
                         name="confirmPassword"
                         required
                       />
-                      <span className="toggle-password unshow">
+                      <button
+                        type="button"
+                        className={`toggle-password ${showConfirmPassword ? "" : "unshow"}`}
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide password"
+                            : "Show password"
+                        }
+                        onClick={() =>
+                          setShowConfirmPassword((visible) => !visible)
+                        }
+                      >
                         <i className="icon-eye-hide-line" />
-                      </span>
+                      </button>
                     </fieldset>
                   ) : null}
                   {isLogin ? (
@@ -927,6 +955,7 @@ function AuthPageClientInner({
                           className="font-2 text-button link border-0 bg-transparent p-0"
                           onClick={() => {
                             setUsePasswordLogin(true);
+                            setShowPassword(false);
                             setLoginOtp("");
                             setLoginOtpToken("");
                             setMessage("");
@@ -944,6 +973,7 @@ function AuthPageClientInner({
                         className="font-2 text-button link border-0 bg-transparent p-0"
                         onClick={() => {
                           setUsePasswordLogin(false);
+                          setShowPassword(false);
                           setMessage("");
                         }}
                       >

@@ -4486,6 +4486,206 @@ html[data-theme="dark"]
   color: var(--sarjan-text) !important;
 }
 
+/* Auth OTP/send buttons — dark theme default + hover (after storefront.css) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered) {
+  background-color: var(--sarjan-btn-bg) !important;
+  background-image: none !important;
+  color: var(--sarjan-btn-color) !important;
+  border-color: var(--sarjan-btn-border) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):not(:hover):not(
+    :focus-visible
+  ):not(.is-hovered)
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-auth-submit-wrap
+  button.sarjan-auth-submit:not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  ) {
+  background-color: var(--sarjan-btn-hover-bg) !important;
+  background-image: none !important;
+  border-color: var(--sarjan-btn-hover-border) !important;
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  )
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  )
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-auth-submit-wrap
+  button.sarjan-auth-submit:not(:disabled):is(
+    :hover,
+    :focus-visible,
+    .is-hovered
+  )
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-btn-hover-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled:hover {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled:hover
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-auth-page
+  .sarjan-otp-actions--stack
+  :is(button.sarjan-btn, button.sarjan-auth-btn):disabled:hover
+  :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="dark"] body.sarjan-storefront,
   html[data-theme="light"] body.sarjan-storefront {

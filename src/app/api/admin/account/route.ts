@@ -15,6 +15,10 @@ import {
   isPlausiblePasswordHash,
   verifyPassword,
 } from "@/lib/local-db";
+import {
+  assertAdminPassword,
+  minAdminPasswordMessage,
+} from "@/lib/password-policy";
 
 export const runtime = "nodejs";
 
@@ -26,7 +30,7 @@ function passwordMatches(
   if (hash && isPlausiblePasswordHash(hash)) {
     return verifyPassword(password, hash);
   }
-  return admin.password === password;
+  return false;
 }
 
 async function session() {
@@ -97,9 +101,16 @@ export async function POST(request: Request) {
   if (action === "password") {
     const currentPassword = String(rec.currentPassword ?? "");
     const newPassword = String(rec.newPassword ?? "").trim();
-    if (newPassword.length < 8) {
+    try {
+      assertAdminPassword(newPassword, "New password");
+    } catch (error) {
       return Response.json(
-        { error: "New password must be at least 8 characters." },
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : minAdminPasswordMessage("New password"),
+        },
         { status: 400 },
       );
     }

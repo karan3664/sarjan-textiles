@@ -5,14 +5,10 @@ export type { ClientSession } from "@/lib/client-token-edge";
 /** Client JWT lifetime — B2B buyers often return after several days. */
 export const CLIENT_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 
+import { requireEnvSecret } from "@/lib/require-env-secret";
+
 function secret() {
-  const value =
-    process.env.CLIENT_JWT_SECRET?.trim() ||
-    process.env.ADMIN_SESSION_SECRET?.trim();
-  if (!value && process.env.NODE_ENV === "production") {
-    throw new Error("CLIENT_JWT_SECRET is required in production");
-  }
-  return value || "sarjan-demo-client-secret-change-before-production";
+  return requireEnvSecret("CLIENT_JWT_SECRET");
 }
 
 function tokenFromCookieHeader(cookieHeader: string | null) {

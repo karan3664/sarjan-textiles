@@ -41,14 +41,34 @@ function pickAddressFields(
   };
 }
 
-export function savedAddressSummary(address: SavedClientAddress) {
-  const lines = [
-    address.contactName,
-    address.line1,
-    address.line2,
-    [address.city, address.state, address.pincode].filter(Boolean).join(", "),
-    address.phone || "Phone not saved",
-  ].filter(Boolean);
+export type SavedAddressSummaryLine = {
+  key: string;
+  text: string;
+};
+
+export function savedAddressSummary(
+  address: SavedClientAddress,
+): SavedAddressSummaryLine[] {
+  const lines: SavedAddressSummaryLine[] = [];
+  if (address.contactName?.trim()) {
+    lines.push({ key: "contact", text: address.contactName.trim() });
+  }
+  if (address.line1?.trim()) {
+    lines.push({ key: "line1", text: address.line1.trim() });
+  }
+  if (address.line2?.trim()) {
+    lines.push({ key: "line2", text: address.line2.trim() });
+  }
+  const locality = [address.city, address.state, address.pincode]
+    .filter(Boolean)
+    .join(", ");
+  if (locality) {
+    lines.push({ key: "locality", text: locality });
+  }
+  lines.push({
+    key: "phone",
+    text: address.phone?.trim() || "Phone not saved",
+  });
   return lines;
 }
 

@@ -12,6 +12,9 @@ import { readLocalDb } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
+const GENERIC_OTP_MESSAGE =
+  "If an account exists with this email, a verification code has been sent.";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -35,19 +38,14 @@ export async function POST(request: Request) {
 
     const db = await readLocalDb();
     if (mode === "login" || mode === "reset") {
-      // Login / reset OTP: the email MUST belong to an existing account.
       const exists = db.clients.some(
         (client) =>
           normalizeClientEmail(client.email) === normalizeClientEmail(email),
       );
       if (!exists) {
-        return Response.json(
-          {
-            error: "No account found with this email. Please register first.",
-            code: "NOT_REGISTERED",
-          },
-          { status: 404 },
-        );
+        return Response.json({
+          message: GENERIC_OTP_MESSAGE,
+        });
       }
     } else {
       // Registration OTP: the email must NOT already be registered.
