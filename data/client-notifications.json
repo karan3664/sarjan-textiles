@@ -1,5 +1,35 @@
 [
   {
+    "id": "ae7d5e9d-848c-4b84-9a00-0342f84d82f9",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order delivered 🎉",
+    "body": "Order ST-1781257579088 has been delivered. Please rate your purchase when you have a moment.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781257579088",
+      "orderId": "ST-1781257579088",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-13T15:11:41.019Z"
+  },
+  {
+    "id": "16f58b3b-7e55-477e-bc00-8c7f347c61e6",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order delivered 🎉",
+    "body": "Order ST-1781317592316 has been delivered. Please rate your purchase when you have a moment.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781317592316",
+      "orderId": "ST-1781317592316",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-13T15:11:37.634Z"
+  },
+  {
     "id": "4f758752-127d-42fc-9505-b7f78fb79e36",
     "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
     "title": "Order placed 🎉",

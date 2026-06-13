@@ -82,7 +82,8 @@ DATABASE_URL=postgresql://sarjan:PASSWORD@sarjan-postgres:5432/sarjan_textiles
 ADMIN_SESSION_SECRET=<64+ random chars>
 CLIENT_JWT_SECRET=<64+ random chars>
 ADMIN_EMAIL=admin@sarjantextiles.com
-ADMIN_PASSWORD=<strong>
+# Coolify expands `$` in env — use base64 (no dollar signs). Remove ADMIN_PASSWORD_HASH if set.
+ADMIN_PASSWORD_HASH_B64=JDJiJDEwJFVHYUROQm90NlczVzV5YWJINlA2bk91RXo4a2xiWXcwUEplWERtcGFmQ3poUWZ1OEd1LzhX
 CRON_SECRET=<random>
 # Runtime env (Configuration → Environment Variables). Redeploy after adding/changing.
 SITE_LAUNCH_AT=2026-06-17T12:39:00+05:30
