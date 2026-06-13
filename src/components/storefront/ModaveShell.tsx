@@ -18,6 +18,7 @@ import { getStorefrontHeaderData } from "@/lib/storefront-header-data";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { StorefrontScrollChrome } from "./StorefrontScrollChrome";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
+import { StorefrontThemeProvider } from "./StorefrontThemeProvider";
 
 export async function ModaveShell({ children }: { children: React.ReactNode }) {
   const locale = getCacheableStorefrontLocale();
@@ -52,14 +53,16 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
         <StorefrontScrollChrome />
         <BootstrapDismissBridge />
         <OffcanvasRouteGuard />
-        <ModaveHeader
-          key={locale}
-          initialLocale={header.locale}
-          initialLogo={brandLogo}
-          initialNavItems={header.items}
-          initialCategories={header.categories}
-          initialHubs={header.hubs}
-        />
+        <StorefrontThemeProvider>
+          <ModaveHeader
+            key={locale}
+            initialLocale={header.locale}
+            initialLogo={brandLogo}
+            initialNavItems={header.items}
+            initialCategories={header.categories}
+            initialHubs={header.hubs}
+          />
+        </StorefrontThemeProvider>
         <AbandonedCartResumeBanner />
         <SavedListsSync />
         <ClientSessionBootstrap />
