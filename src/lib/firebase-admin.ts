@@ -1,12 +1,7 @@
-import {
-  cert,
-  getApps,
-  initializeApp,
-  type App,
-  type ServiceAccount,
-} from "firebase-admin/app";
+import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getMessaging, type Messaging } from "firebase-admin/messaging";
 import { getAuth, type Auth } from "firebase-admin/auth";
+import { parseFirebaseServiceAccountFromEnv } from "@/lib/firebase-service-account";
 
 /**
  * Lazily-initialised Firebase Admin messaging client.
@@ -19,49 +14,29 @@ import { getAuth, type Auth } from "firebase-admin/auth";
 let cached: Messaging | null | undefined;
 let cachedAuth: Auth | null | undefined;
 
-function loadServiceAccount(): ServiceAccount | null {
-  const raw =
-    process.env.FIREBASE_SERVICE_ACCOUNT ||
-    process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (raw && raw.trim()) {
-    try {
-      const text = raw.trim().startsWith("{")
-        ? raw
-        : Buffer.from(raw, "base64").toString("utf8");
-      const json = JSON.parse(text) as {
-        project_id?: string;
-        client_email?: string;
-        private_key?: string;
-      };
-      if (json.project_id && json.client_email && json.private_key) {
-        return {
-          projectId: json.project_id,
-          clientEmail: json.client_email,
-          privateKey: json.private_key.replace(/\\n/g, "\n"),
-        };
-      }
-    } catch {
-      return null;
-    }
-  }
-
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  if (projectId && clientEmail && privateKey) {
-    return { projectId, clientEmail, privateKey };
-  }
-  return null;
+function loadServiceAccount() {
+  return parseFirebaseServiceAccountFromEnv();
 }
 
 /** Initialises (or reuses) the shared Firebase Admin app, or `null`. */
 function getAdminApp(): App | null {
   const serviceAccount = loadServiceAccount();
   if (!serviceAccount) return null;
-  return (
-    getApps().find((existing) => existing.name === "fcm") ??
-    initializeApp({ credential: cert(serviceAccount) }, "fcm")
-  );
+  try {
+    return (
+      getApps().find((existing) => existing.name === "fcm") ??
+      initializeApp({ credential: cert(serviceAccount) }, "fcm")
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown Firebase init error";
+    console.error("[firebase-admin] Invalid credentials:", message);
+    throw new Error(
+      message.includes("private key")
+        ? "Firebase private key is invalid. Re-encode FIREBASE_SERVICE_ACCOUNT as base64 in Coolify and redeploy."
+        : `Firebase admin init failed: ${message}`,
+    );
+  }
 }
 
 /** Returns the Admin Messaging client, or `null` when push is not configured. */

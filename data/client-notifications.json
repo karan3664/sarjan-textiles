@@ -1,5 +1,20 @@
 [
   {
+    "id": "4f758752-127d-42fc-9505-b7f78fb79e36",
+    "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
+    "title": "Order placed 🎉",
+    "body": "Order ST-1781317592316 placed for ₹49,500. We'll review it shortly.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781317592316",
+      "orderId": "ST-1781317592316",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-13T02:26:32.326Z"
+  },
+  {
     "id": "903fcbae-4605-4c09-9260-f2ea5edd4a3c",
     "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
     "title": "Order received",

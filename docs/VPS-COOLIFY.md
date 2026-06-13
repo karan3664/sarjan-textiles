@@ -93,7 +93,7 @@ SMTP_USER=...
 SMTP_PASS=...
 SMTP_FROM="Sarjan Textiles <info@sarjantextiles.com>"
 
-FIREBASE_SERVICE_ACCOUNT=<one-line JSON>
+FIREBASE_SERVICE_ACCOUNT=<base64 of full service-account JSON — use scripts/encode-firebase-service-account.mjs>
 
 # Optional — normally leave UNSET. Version is read from public/downloads/mobile-release.json.
 # Remove MOBILE_APP_LATEST_VERSION / MOBILE_APP_VERSION_CODE from Coolify if already set (they block new APK releases).
