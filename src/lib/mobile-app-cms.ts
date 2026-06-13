@@ -18,6 +18,16 @@ import {
 } from "@/lib/home-banners";
 import { translateEnglishBatch } from "@/lib/auto-translate";
 import {
+  applyHomeAudienceTranslations,
+  collectHomeAudienceTranslationJobs,
+  defaultHomeAudiences,
+  flattenHomeAudiencesForAdmin,
+  normalizeHomeAudiences,
+  resolveHomeAudiences,
+  type MobileHomeAudienceTab,
+  type StoredHomeAudienceTab,
+} from "@/lib/mobile-home-audiences";
+import {
   applyProfileMenuTranslations,
   collectProfileMenuTranslationJobs,
   flattenMobileProfileMenusForAdmin,
@@ -37,6 +47,8 @@ import {
 } from "@/lib/localized-text";
 
 /** English-only shape used in admin UI and app API responses. */
+export type { MobileHomeAudienceTab } from "@/lib/mobile-home-audiences";
+
 export type MobileOnboardingSlide = {
   id: string;
   title: string;
@@ -151,6 +163,7 @@ export type MobileAppConfig = {
     slides: MobileOnboardingSlide[];
   };
   homeHeader: MobileHomeHeaderConfig;
+  homeAudiences: MobileHomeAudienceTab[];
   homeSections: MobileHomeSection[];
   profileMenus: MobileProfileMenus;
   footerCredit: string;
@@ -202,6 +215,7 @@ export type MobileAppConfigStored = {
     searchPlaceholder: LocalizedText;
     showVisualSearch: boolean;
   };
+  homeAudiences: StoredHomeAudienceTab[];
   homeSections: StoredSection[];
   profileMenus: MobileProfileMenusStored;
   footerCredit: LocalizedText;
@@ -328,6 +342,7 @@ export function defaultMobileAppConfig(
       searchPlaceholder: "Search kurtas, ajrakh, SKU…",
       showVisualSearch: true,
     },
+    homeAudiences: defaultHomeAudiences(),
     homeSections: [
       { id: "banner", type: "banner", enabled: true },
       {
@@ -747,6 +762,10 @@ export function normalizeMobileAppConfig(
       showVisualSearch:
         (headerInput as MobileHomeHeaderConfig).showVisualSearch !== false,
     },
+    homeAudiences: normalizeHomeAudiences(
+      (base as MobileAppConfig).homeAudiences ??
+        (base as MobileAppConfigStored).homeAudiences,
+    ),
     homeSections: sections.length
       ? sections
       : defaults.homeSections
@@ -849,6 +868,10 @@ function applyTranslations(
         stored.homeHeader.searchPlaceholder,
       ),
     },
+    homeAudiences: applyHomeAudienceTranslations(
+      stored.homeAudiences,
+      translations,
+    ),
     homeSections: stored.homeSections.map((section, index) => ({
       ...section,
       title: section.title
@@ -901,6 +924,7 @@ function collectTranslationJobs(stored: MobileAppConfigStored) {
     "homeHeader.searchPlaceholder",
     stored.homeHeader.searchPlaceholder,
   );
+  Object.assign(jobs, collectHomeAudienceTranslationJobs(stored.homeAudiences));
   queueText(jobs, "footerCredit", stored.footerCredit);
 
   stored.onboarding.slides.forEach((slide, index) => {
@@ -987,6 +1011,7 @@ export function flattenMobileAppForAdmin(
   return {
     ...resolved,
     profileMenus: flattenMobileProfileMenusForAdmin(stored.profileMenus),
+    homeAudiences: flattenHomeAudiencesForAdmin(stored.homeAudiences),
     branding: flattenMobileBrandingForAdmin(
       stored.branding ?? defaultMobileBrandingConfig(),
     ),
@@ -1025,6 +1050,7 @@ export function resolveMobileAppConfig(
       searchPlaceholder: pick(stored.homeHeader.searchPlaceholder) ?? "",
       showVisualSearch: stored.homeHeader.showVisualSearch,
     },
+    homeAudiences: resolveHomeAudiences(stored.homeAudiences, locale),
     homeSections: stored.homeSections.map((section) => ({
       id: section.id,
       type: section.type,

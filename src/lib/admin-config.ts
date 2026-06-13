@@ -14,16 +14,22 @@ export function configuredAdmins(): ConfiguredAdmin[] {
 
   const email = process.env.ADMIN_EMAIL?.trim() || "admin@sarjantextiles.com";
   const rawPass = process.env.ADMIN_PASSWORD;
-  const password =
-    rawPass === undefined ? "admin123" : rawPass.trim() || "admin123";
   const rawHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+  const trimmedPass = rawPass?.trim();
+  const password =
+    trimmedPass && trimmedPass.length > 0
+      ? trimmedPass
+      : rawHash
+        ? undefined
+        : "admin123";
 
   if (process.env.NODE_ENV === "production" && !raw) {
     const hasHash = Boolean(rawHash);
     const hasStrongPassword =
-      Boolean(rawPass?.trim()) &&
-      rawPass!.trim() !== "admin123" &&
-      rawPass!.trim().length >= 12;
+      typeof trimmedPass === "string" &&
+      trimmedPass.length > 0 &&
+      trimmedPass !== "admin123" &&
+      trimmedPass.length >= 12;
     if (!hasHash && !hasStrongPassword) {
       throw new Error(
         "Set ADMIN_PASSWORD_HASH or a strong ADMIN_PASSWORD in production",

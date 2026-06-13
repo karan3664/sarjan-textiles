@@ -12,6 +12,7 @@ import {
   mobileAppIconOptions,
   mobileHomeSectionOptions,
 } from "@/lib/mobile-app-cms";
+import { AdminHomeAudiencesEditor } from "@/components/admin/AdminHomeAudiencesEditor";
 
 type Props = {
   initialConfig: MobileAppConfig;
@@ -21,6 +22,7 @@ const SECTION_NAV = [
   { id: "mobile-splash", label: "Splash" },
   { id: "mobile-onboarding", label: "Onboarding" },
   { id: "mobile-header", label: "Home header" },
+  { id: "mobile-audiences", label: "Audience tabs" },
   { id: "mobile-sections", label: "Home sections" },
   { id: "mobile-app-icon", label: "App icon" },
   { id: "mobile-support", label: "Support & footer" },
@@ -470,6 +472,13 @@ export function AdminMobileAppClient({ initialConfig }: Props) {
           </fieldset>
         </div>
       </section>
+
+      <AdminHomeAudiencesEditor
+        audiences={config.homeAudiences ?? []}
+        onChange={(homeAudiences) =>
+          setConfig((c) => ({ ...c, homeAudiences }))
+        }
+      />
 
       <section
         id="mobile-sections"
