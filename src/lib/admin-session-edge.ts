@@ -9,26 +9,43 @@ function bearerToken(request: Request): string | undefined {
   return token || undefined;
 }
 
+function edgeVerifyFetchUrl(request: NextRequest): URL {
+  const configured = process.env["INTERNAL_MIDDLEWARE_VERIFY_URL"]?.trim();
+  if (configured) {
+    return new URL("/api/admin/auth/edge-verify", configured);
+  }
+  // Docker/Coolify: loopback avoids middleware subrequests via the public URL failing.
+  const port = process.env["PORT"]?.trim() || "3000";
+  return new URL(`http://127.0.0.1:${port}/api/admin/auth/edge-verify`);
+}
+
 async function verifyAdminSessionVersionOnNode(
   request: NextRequest,
 ): Promise<AdminSession | null> {
-  try {
-    const url = new URL("/api/admin/auth/edge-verify", request.url);
-    const headers = new Headers();
-    const cookie = request.headers.get("cookie");
-    if (cookie) headers.set("cookie", cookie);
-    const authorization = request.headers.get("authorization");
-    if (authorization) headers.set("authorization", authorization);
+  const headers = new Headers();
+  const cookie = request.headers.get("cookie");
+  if (cookie) headers.set("cookie", cookie);
+  const authorization = request.headers.get("authorization");
+  if (authorization) headers.set("authorization", authorization);
 
-    const response = await fetch(url, {
-      headers,
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as AdminSession;
-  } catch {
-    return null;
+  const urls = [
+    edgeVerifyFetchUrl(request),
+    new URL("/api/admin/auth/edge-verify", request.url),
+  ];
+
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        headers,
+        cache: "no-store",
+      });
+      if (!response.ok) continue;
+      return (await response.json()) as AdminSession;
+    } catch {
+      /* try next origin */
+    }
   }
+  return null;
 }
 
 /** Middleware-only admin session — signature check, plus session_version when Postgres is enabled. */
@@ -38,20 +55,12 @@ export async function verifyAdminFromRequestEdge(
 ): Promise<AdminSession | null> {
   const fromBearer = bearerToken(request);
   const token = fromBearer ?? cookieToken;
-  const basic = await verifyAdminTokenForMiddleware(token);
-  if (!basic) return null;
 
-  if (process.env.DATABASE_URL?.trim()) {
-    const verified = await verifyAdminSessionVersionOnNode(request);
-    if (!verified) return null;
-    if (
-      verified.email.toLowerCase() !== basic.email.toLowerCase() ||
-      verified.role !== basic.role
-    ) {
-      return null;
-    }
-    return { ...basic, ...verified };
+  // Production uses Postgres — full JWT + session_version validation on Node only.
+  // Edge HMAC often lacks runtime ADMIN_SESSION_SECRET in Docker/Coolify middleware.
+  if (process.env["DATABASE_URL"]?.trim()) {
+    return verifyAdminSessionVersionOnNode(request);
   }
 
-  return basic;
+  return verifyAdminTokenForMiddleware(token);
 }

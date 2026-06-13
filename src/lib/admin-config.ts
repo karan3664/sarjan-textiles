@@ -2,7 +2,7 @@ import type { ConfiguredAdmin } from "@/lib/admin-rbac";
 
 /** Decode bcrypt hash from base64 — avoids `$` truncation in Coolify/Docker env. */
 function adminPasswordHashFromEnv(): string {
-  const b64 = process.env.ADMIN_PASSWORD_HASH_B64?.trim();
+  const b64 = process.env["ADMIN_PASSWORD_HASH_B64"]?.trim();
   if (b64) {
     try {
       const decoded = atob(b64).trim();
@@ -15,7 +15,7 @@ function adminPasswordHashFromEnv(): string {
     );
   }
 
-  const rawHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+  const rawHash = process.env["ADMIN_PASSWORD_HASH"]?.trim();
   if (rawHash?.startsWith("$2") && rawHash.length >= 60) return rawHash;
 
   if (rawHash) {
@@ -31,7 +31,7 @@ function adminPasswordHashFromEnv(): string {
 
 /** Env-based admin list — safe for Edge (no fs/Postgres). */
 export function configuredAdmins(): ConfiguredAdmin[] {
-  const raw = process.env.ADMIN_USERS_JSON?.trim();
+  const raw = process.env["ADMIN_USERS_JSON"]?.trim();
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as ConfiguredAdmin[];
@@ -41,7 +41,8 @@ export function configuredAdmins(): ConfiguredAdmin[] {
     }
   }
 
-  const email = process.env.ADMIN_EMAIL?.trim() || "admin@sarjantextiles.com";
+  const email =
+    process.env["ADMIN_EMAIL"]?.trim() || "admin@sarjantextiles.com";
   const rawHash = adminPasswordHashFromEnv();
 
   return [

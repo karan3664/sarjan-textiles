@@ -33,46 +33,50 @@ function loginRedirect(request: Request, query: Record<string, string>) {
 }
 
 export async function POST(request: Request) {
-  const form = await request.formData();
-  const email = String(form.get("email") ?? "")
-    .trim()
-    .toLowerCase();
-  const password = String(form.get("password") ?? "");
-  const next = safeAdminNextPath(String(form.get("next") ?? ""));
+  try {
+    const form = await request.formData();
+    const email = String(form.get("email") ?? "")
+      .trim()
+      .toLowerCase();
+    const password = String(form.get("password") ?? "");
+    const next = safeAdminNextPath(String(form.get("next") ?? ""));
 
-  if (!email || !password) {
-    return loginRedirect(request, {
-      error: "missing",
-      ...(next !== "/admin" ? { next } : {}),
+    if (!email || !password) {
+      return loginRedirect(request, {
+        error: "missing",
+        ...(next !== "/admin" ? { next } : {}),
+      });
+    }
+
+    const limit = await rateLimit(
+      rateLimitKey(request, "admin-login-form", email),
+      6,
+      60_000,
+    );
+    if (!limit.allowed) return rateLimitResponse(limit.resetAt);
+
+    const admin = await authenticateAdmin(email, password);
+    if (!admin) {
+      return loginRedirect(request, {
+        error: "invalid",
+        ...(next !== "/admin" ? { next } : {}),
+      });
+    }
+
+    const token = await createAdminToken({
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+      iat: Date.now(),
     });
+
+    const response = NextResponse.redirect(
+      redirectAbsoluteUrl(request, next),
+      303,
+    );
+    setAdminSessionCookie(response, token);
+    return response;
+  } catch {
+    return loginRedirect(request, { error: "invalid" });
   }
-
-  const limit = await rateLimit(
-    rateLimitKey(request, "admin-login-form", email),
-    6,
-    60_000,
-  );
-  if (!limit.allowed) return rateLimitResponse(limit.resetAt);
-
-  const admin = await authenticateAdmin(email, password);
-  if (!admin) {
-    return loginRedirect(request, {
-      error: "invalid",
-      ...(next !== "/admin" ? { next } : {}),
-    });
-  }
-
-  const token = await createAdminToken({
-    email: admin.email,
-    name: admin.name,
-    role: admin.role,
-    iat: Date.now(),
-  });
-
-  const response = NextResponse.redirect(
-    redirectAbsoluteUrl(request, next),
-    303,
-  );
-  setAdminSessionCookie(response, token);
-  return response;
 }
