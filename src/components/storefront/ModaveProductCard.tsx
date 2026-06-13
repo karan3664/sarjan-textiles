@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react";
 import type { Product } from "@/data/mock";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { defaultProductSizeRun } from "@/lib/size-groups";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { useShowProductUnavailable } from "./PriceGate";
 import { PRODUCT_UNAVAILABLE_SHORT } from "@/lib/product-purchase-eligibility";
@@ -35,7 +36,7 @@ export function ModaveProductCard({
   priceCompact?: boolean;
 }) {
   const [colorIndex, setColorIndex] = useState(0);
-  const sizeRun = product.sizes.length ? product.sizes : ["M", "L", "XL"];
+  const sizeRun = defaultProductSizeRun(product.sizes, ["M", "L", "XL"]);
   const altText = buildProductImageAlt(product);
   const unavailable = useShowProductUnavailable(product);
   const colors = product.colors.length ? product.colors : ["Default"];

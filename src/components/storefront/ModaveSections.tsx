@@ -17,6 +17,7 @@ import { PromoBannerCarousel } from "@/components/storefront/PromoBannerCarousel
 import { InternalPromotionStrip } from "@/components/storefront/InternalPromotionStrip";
 import { resolveProducts } from "@/lib/product-localize";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { defaultProductSizeRun } from "@/lib/size-groups";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
@@ -33,11 +34,11 @@ import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { ProductSoldOutRibbon } from "./ProductSoldOutRibbon";
 import {
   ProductDetailBuyNowBlock,
-  ProductDetailStickyAtcButton,
   ProductDetailStockLine,
   ProductFeatureBuyActions,
   ProductFeatureStockCaption,
 } from "./ProductDetailBuySection";
+import { ProductDetailStickyAtcClient } from "./ProductDetailStickyAtcClient";
 import { ProductListCard } from "./ProductListCard";
 import { getCartItems } from "@/lib/mock-api";
 import { ModaveProductCard } from "./ModaveProductCard";
@@ -180,7 +181,7 @@ function MarqueeBand({
 
 function ProductFeature({ product }: { product: Product }) {
   const images = productGalleryImages(product.images);
-  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+  const sizeRun = defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
   const altText = buildProductImageAlt(product);
 
   return (
@@ -1018,7 +1019,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
       : (products[1] ?? products[0]);
 
   const galleryImages = productGalleryImages(product.images);
-  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+  const sizeRun = defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = buildProductImageAlt(product);
 
@@ -1142,10 +1143,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       </div>
                     </div>
                     <ProductPurchasePanel product={product} />
-                    <ProductDetailBuyNowBlock
-                      product={product}
-                      sizeRun={sizeRun}
-                    />
+                    <ProductDetailBuyNowBlock product={product} />
                     <ul className="tf-product-info-sku">
                       <li>
                         <p className="text-caption-1">SKU:</p>
@@ -1206,32 +1204,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                       />
                     </div>
                   </div>
-                  <div className="tf-sticky-atc-infos">
-                    <div className="tf-sticky-atc-size d-flex gap-12 align-items-center">
-                      <div className="tf-sticky-atc-infos-title text-title">
-                        Set:
-                      </div>
-                      <div className="text-caption-1 text-secondary">
-                        {sizeRun.join(" / ")}
-                      </div>
-                    </div>
-                    <div className="tf-sticky-atc-quantity d-flex gap-12 align-items-center">
-                      <div className="tf-sticky-atc-infos-title text-title">
-                        Sets:
-                      </div>
-                      <div className="wg-quantity style-1">
-                        <span className="btn-quantity minus-btn">-</span>
-                        <input type="text" name="number" defaultValue={1} />
-                        <span className="btn-quantity plus-btn">+</span>
-                      </div>
-                    </div>
-                    <div className="tf-sticky-atc-btns">
-                      <ProductDetailStickyAtcButton
-                        product={product}
-                        sizeRun={sizeRun}
-                      />
-                    </div>
-                  </div>
+                  <ProductDetailStickyAtcClient product={product} />
                 </form>
               </div>
             </div>

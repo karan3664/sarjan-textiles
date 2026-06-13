@@ -8,6 +8,7 @@ import {
 } from "@/lib/product-availability";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
+import { defaultProductSizeRun } from "@/lib/size-groups";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
 import { PageTitle } from "./PageTitle";
@@ -15,7 +16,7 @@ import { PriceGate, useClientHasB2BToken } from "./PriceGate";
 import { StorefrontProductImage } from "./StorefrontProductImage";
 
 function sizeRun(product: Product) {
-  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+  return defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
 }
 
 function StarRow() {

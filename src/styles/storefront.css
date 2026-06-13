@@ -2962,9 +2962,15 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   color: #181818;
 }
 
-.sarjan-size-group-actions .tf-button:hover {
+.sarjan-size-group-actions .tf-button.is-active {
   border-color: #9b1c31;
+  background: #fff5f6;
   color: #9b1c31;
+  font-weight: 700;
+}
+
+.sarjan-pdp-size-group {
+  margin-bottom: 8px;
 }
 
 .sarjan-pill {

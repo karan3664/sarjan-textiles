@@ -2,7 +2,7 @@
 
 import type { Product } from "@/data/mock";
 import { siteSettings } from "@/data/mock";
-import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { defaultProductSizeRun } from "@/lib/size-groups";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import {
   isProductPlaceholderImage,
@@ -27,7 +27,7 @@ export function ProductListCard({ product }: { product: Product }) {
     Boolean(hover && hover !== primary) &&
     !isProductPlaceholderImage(primary) &&
     !isProductPlaceholderImage(hover);
-  const sizeRun = product.sizes.length ? product.sizes : FULL_SIZE_RUN;
+  const sizeRun = defaultProductSizeRun(product.sizes);
   const altText = buildProductImageAlt(product);
   const unavailable = useShowProductUnavailable(product);
 

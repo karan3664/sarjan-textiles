@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Product } from "@/data/mock";
-import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { B2B_ORDER_EXCEEDS_STOCK_NOTICE } from "@/lib/b2b-order-messages";
 import { PRODUCT_UNAVAILABLE_MESSAGE } from "@/lib/product-purchase-eligibility";
 import { cartMaxSetQuantity } from "@/lib/product-availability";
@@ -10,7 +10,9 @@ import { useClientHasB2BToken, useShowProductUnavailable } from "./PriceGate";
 import { productColorList } from "@/lib/product-colors";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
+import { ProductSizeGroupPicker } from "./ProductSizeGroupPicker";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import { useProductSizeGroup } from "@/hooks/useProductSizeGroup";
 import { isWishlisted } from "@/lib/wishlist-client";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
@@ -21,10 +23,6 @@ type ProductPurchasePanelProps = {
   colorIndex?: number;
   onColorIndexChange?: (index: number) => void;
 };
-
-function productSizeRun(product: Product) {
-  return product.sizes.length ? product.sizes : FULL_SIZE_RUN;
-}
 
 function ProductWishlistCompareIcons({
   product,
@@ -87,7 +85,8 @@ export function ProductPurchasePanel({
   const setColorIndex = onColorIndexChange ?? setInternalIndex;
   const colors = productColorList(product);
   const activeColor = colors[colorIndex] ?? colors[0];
-  const sizeRun = productSizeRun(product);
+  const { groups, selectedGroup, setSelectedGroup, sizeRun } =
+    useProductSizeGroup(product);
   const setPrice = productSetPrice(product, activeColor, sizeRun);
   const unavailable = useShowProductUnavailable(product);
   const hasB2BSession = useClientHasB2BToken();
@@ -147,6 +146,11 @@ export function ProductPurchasePanel({
         colors={colors}
         selectedIndex={colorIndex}
         onSelect={setColorIndex}
+      />
+      <ProductSizeGroupPicker
+        groups={groups}
+        selectedGroup={selectedGroup}
+        onSelect={setSelectedGroup}
       />
       <div className="tf-product-info-quantity">
         <div className="title mb_12">Sets:</div>

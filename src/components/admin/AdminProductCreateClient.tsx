@@ -481,7 +481,7 @@ export function AdminProductCreateClient({
     });
   };
 
-  const toggleSizeGroup = (sizes: string[]) => {
+  const toggleSizeGroup = (sizes: readonly string[]) => {
     setForm((current) => {
       const values = splitList(current.sizes);
       const allSelected = sizes.every((size) => values.includes(size));
@@ -896,7 +896,10 @@ export function AdminProductCreateClient({
                 <div>
                   <h6 className="mb-4">Bulk Product Upload</h6>
                   <p className="text-secondary">
-                    Download sample Excel, fill data, upload same file.
+                    Download sample Excel, fill data, upload same file. For size
+                    sets use the <code>sizes</code> column (all sizes comma
+                    separated) or optional <code>sizes_regular</code> (XS–XXL)
+                    and <code>sizes_plus</code> (3XL–Free Size) columns.
                   </p>
                 </div>
                 <div className="sarjan-product-bulk-actions">

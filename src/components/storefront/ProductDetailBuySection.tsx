@@ -5,6 +5,7 @@ import type { Product } from "@/data/mock";
 import { useShowProductUnavailable } from "./PriceGate";
 import { PRODUCT_UNAVAILABLE_MESSAGE } from "@/lib/product-purchase-eligibility";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
+import { useProductSizeGroup } from "@/hooks/useProductSizeGroup";
 import {
   B2B_STOCK_INDICATIVE_PDP,
   formatAvailablePieces,
@@ -40,14 +41,9 @@ export function ProductDetailStockLine({
   );
 }
 
-export function ProductDetailBuyNowBlock({
-  product,
-  sizeRun,
-}: {
-  product: Product;
-  sizeRun: string[];
-}) {
+export function ProductDetailBuyNowBlock({ product }: { product: Product }) {
   const unavailable = useShowProductUnavailable(product);
+  const { sizeRun } = useProductSizeGroup(product);
 
   if (unavailable) {
     return (

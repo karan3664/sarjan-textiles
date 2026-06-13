@@ -47,6 +47,31 @@ function boolValue(value: unknown) {
   );
 }
 
+function mergeSizeLists(...lists: string[][]) {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+  for (const list of lists) {
+    for (const size of list) {
+      const trimmed = size.trim();
+      if (!trimmed || seen.has(trimmed)) continue;
+      seen.add(trimmed);
+      merged.push(trimmed);
+    }
+  }
+  return merged;
+}
+
+function productSizesFromRow(row: SheetRow) {
+  const sizesRegular = splitList(
+    firstStringValue(row, ["sizes_regular", "sizes_xs_xxl", "sizes_xs_to_xxl"]),
+  );
+  const sizesPlus = splitList(
+    firstStringValue(row, ["sizes_plus", "sizes_3xl_5xl", "sizes_3xl_to_5xl"]),
+  );
+  const sizesAll = splitList(stringValue(row, "sizes"));
+  return mergeSizeLists(sizesRegular, sizesPlus, sizesAll);
+}
+
 function productFromRow(row: SheetRow, index: number): Product {
   const name = stringValue(row, "name");
   const sku = stringValue(row, "sku");
@@ -93,7 +118,7 @@ function productFromRow(row: SheetRow, index: number): Product {
     reserved: numberValue(row, "reserved"),
     sold: numberValue(row, "sold"),
     colors: splitList(stringValue(row, "colors")),
-    sizes: splitList(stringValue(row, "sizes")),
+    sizes: productSizesFromRow(row),
     images: splitList(imageUrls).length
       ? splitList(imageUrls)
       : [PRODUCT_PLACEHOLDER_IMAGE],
