@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.77",
-  "versionCode": 78,
-  "releaseNotes": "Register and reset passwords now require at least 10 characters (matches website). Compare page color swatches and star ratings fixed on web.",
+  "latestVersion": "1.0.78",
+  "versionCode": 79,
+  "releaseNotes": "Fix Android cart: wait for local hydration before server sync, prevent empty storage read from wiping items, and separate product-card add button from navigation tap.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-14T18:07:16.000Z"
+  "updatedAt": "2026-06-14T18:16:00.000Z"
 }
