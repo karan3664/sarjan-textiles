@@ -49,6 +49,16 @@ export function ProductSizeGroupPicker({
             {SIZE_GROUP_LABELS.plus}
           </button>
         ) : null}
+        {groups.hasFree ? (
+          <button
+            type="button"
+            className={`tf-button style-1${selectedGroup === "free" ? " is-active" : ""}`}
+            aria-pressed={selectedGroup === "free"}
+            onClick={() => onSelect("free")}
+          >
+            {SIZE_GROUP_LABELS.free}
+          </button>
+        ) : null}
       </div>
     </div>
   );

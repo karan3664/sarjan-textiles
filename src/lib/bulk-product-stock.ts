@@ -68,11 +68,15 @@ function setCountForVariant(input: {
 
   const regularSizes = sizesInGroup(sizes, "regular", sizes);
   const plusSizes = sizesInGroup(sizes, "plus", sizes);
+  const freeSizes = sizesInGroup(sizes, "free", sizes);
   if (regularSizes.includes(size) && stockRegularSets > 0) {
     return stockRegularSets;
   }
   if (plusSizes.includes(size) && stockPlusSets > 0) {
     return stockPlusSets;
+  }
+  if (freeSizes.includes(size) && defaultSetStock > 0) {
+    return defaultSetStock;
   }
 
   if (defaultSetStock > 0) return defaultSetStock;
@@ -168,11 +172,15 @@ export function setStockForSizeInGroup(
 ): number {
   const regularSizes = sizesInGroup(productSizes, "regular", productSizes);
   const plusSizes = sizesInGroup(productSizes, "plus", productSizes);
+  const freeSizes = sizesInGroup(productSizes, "free", productSizes);
   if (regularSizes.includes(size) && stockRegularSets > 0) {
     return stockRegularSets;
   }
   if (plusSizes.includes(size) && stockPlusSets > 0) {
     return stockPlusSets;
+  }
+  if (freeSizes.includes(size)) {
+    return 0;
   }
   return 0;
 }

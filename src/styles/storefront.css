@@ -7694,6 +7694,40 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   width: 100%;
 }
 
+.sarjan-password-modal .password-item button.toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-height: unset !important;
+  padding: 4px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--secondary-2) !important;
+  -webkit-text-fill-color: var(--secondary-2) !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+.sarjan-password-modal .password-item button.toggle-password i {
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.sarjan-password-modal
+  .password-item
+  button.toggle-password:not(.unshow)
+  i::before {
+  content: "\e938";
+}
+
 .sarjan-backup-name {
   min-width: 220px;
   height: 44px;

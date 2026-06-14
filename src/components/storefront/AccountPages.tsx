@@ -282,6 +282,9 @@ function AccountDashboardContent() {
     confirmPassword: "",
   });
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -404,6 +407,14 @@ function AccountDashboardContent() {
     }
   };
 
+  const closePasswordModal = () => {
+    setPasswordModalOpen(false);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setPasswordMessage("");
+  };
+
   const savePassword = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!client?.id) {
@@ -442,8 +453,7 @@ function AccountDashboardContent() {
     setPassword({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setPasswordMessage("Password updated.");
     setTimeout(() => {
-      setPasswordModalOpen(false);
-      setPasswordMessage("");
+      closePasswordModal();
     }, 700);
   };
 
@@ -864,6 +874,9 @@ function AccountDashboardContent() {
                   onClick={() => {
                     setPasswordModalOpen(true);
                     setPasswordMessage("");
+                    setShowCurrentPassword(false);
+                    setShowNewPassword(false);
+                    setShowConfirmPassword(false);
                   }}
                 >
                   <TfButtonIcon
@@ -886,7 +899,7 @@ function AccountDashboardContent() {
               <button
                 type="button"
                 className="sarjan-password-modal-backdrop"
-                onClick={() => setPasswordModalOpen(false)}
+                onClick={closePasswordModal}
                 aria-label="Close password modal"
               />
               <form
@@ -903,52 +916,82 @@ function AccountDashboardContent() {
                   <button
                     type="button"
                     className="icon-close icon-close-popup sarjan-password-modal-close"
-                    onClick={() => setPasswordModalOpen(false)}
+                    onClick={closePasswordModal}
                     aria-label="Close change password"
                   />
                 </div>
                 <fieldset className="position-relative password-item mb_20">
                   <input
                     className="input-password"
-                    type="password"
+                    type={showCurrentPassword ? "text" : "password"}
                     placeholder="Current Password*"
                     value={password.currentPassword}
                     onChange={(e) =>
                       updatePassword("currentPassword", e.target.value)
                     }
                   />
-                  <span className="toggle-password unshow">
+                  <button
+                    type="button"
+                    className={`toggle-password ${showCurrentPassword ? "" : "unshow"}`}
+                    aria-label={
+                      showCurrentPassword ? "Hide password" : "Show password"
+                    }
+                    onClick={() =>
+                      setShowCurrentPassword((visible) => !visible)
+                    }
+                  >
                     <i className="icon-eye-hide-line" />
-                  </span>
+                  </button>
                 </fieldset>
                 <fieldset className="position-relative password-item mb_20">
                   <input
                     className="input-password"
-                    type="password"
+                    type={showNewPassword ? "text" : "password"}
                     placeholder="New Password*"
                     value={password.newPassword}
+                    minLength={MIN_CLIENT_PASSWORD_LENGTH}
                     onChange={(e) =>
                       updatePassword("newPassword", e.target.value)
                     }
                   />
-                  <span className="toggle-password unshow">
+                  <button
+                    type="button"
+                    className={`toggle-password ${showNewPassword ? "" : "unshow"}`}
+                    aria-label={
+                      showNewPassword ? "Hide password" : "Show password"
+                    }
+                    onClick={() => setShowNewPassword((visible) => !visible)}
+                  >
                     <i className="icon-eye-hide-line" />
-                  </span>
+                  </button>
                 </fieldset>
                 <fieldset className="position-relative password-item">
                   <input
                     className="input-password"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password*"
                     value={password.confirmPassword}
+                    minLength={MIN_CLIENT_PASSWORD_LENGTH}
                     onChange={(e) =>
                       updatePassword("confirmPassword", e.target.value)
                     }
                   />
-                  <span className="toggle-password unshow">
+                  <button
+                    type="button"
+                    className={`toggle-password ${showConfirmPassword ? "" : "unshow"}`}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                    onClick={() =>
+                      setShowConfirmPassword((visible) => !visible)
+                    }
+                  >
                     <i className="icon-eye-hide-line" />
-                  </span>
+                  </button>
                 </fieldset>
+                <p className="text-caption-1 text-secondary mt_12">
+                  {minClientPasswordMessage("New password")}
+                </p>
                 {passwordMessage ? (
                   <p
                     className={
@@ -978,7 +1021,7 @@ function AccountDashboardContent() {
                   <button
                     className={withBtnIcon("tf-btn btn-white has-border")}
                     type="button"
-                    onClick={() => setPasswordModalOpen(false)}
+                    onClick={closePasswordModal}
                   >
                     <TfButtonIcon
                       icon="icon-close"

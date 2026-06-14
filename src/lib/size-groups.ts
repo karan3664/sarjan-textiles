@@ -1,20 +1,25 @@
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
 
-export type SizeGroupId = "regular" | "plus";
+export type SizeGroupId = "regular" | "plus" | "free";
 
-export const SIZE_GROUP_ORDER: SizeGroupId[] = ["regular", "plus"];
+export const FREE_SIZE = "Free Size";
+export const FREE_SIZE_RUN = [FREE_SIZE] as const;
+
+export const SIZE_GROUP_ORDER: SizeGroupId[] = ["regular", "plus", "free"];
 
 export const SIZE_GROUP_LABELS: Record<SizeGroupId, string> = {
   regular: "S to XXL",
   plus: "3XL to 5XL",
+  free: "Free Size",
 };
 
 export const SIZE_GROUPS: Record<SizeGroupId, readonly string[]> = {
   regular: ["S", "M", "L", "XL", "XXL"],
   plus: ["3XL", "4XL", "5XL"],
+  free: FREE_SIZE_RUN,
 };
 
-const DEPRECATED_SIZES = new Set(["Free Size", "XS"]);
+const DEPRECATED_SIZES = new Set(["XS"]);
 
 export function isDeprecatedSize(size: string) {
   return DEPRECATED_SIZES.has(size.trim());
@@ -27,8 +32,10 @@ export function filterActiveSizes(sizes: string[]) {
 export type ProductSizeGroups = {
   regular: string[];
   plus: string[];
+  free: string[];
   hasRegular: boolean;
   hasPlus: boolean;
+  hasFree: boolean;
   showPicker: boolean;
   defaultGroup: SizeGroupId;
 };
@@ -64,16 +71,32 @@ export function resolveProductSizeGroups(
 ): ProductSizeGroups {
   const regular = sizesInGroup(productSizes, "regular", fallbackWhenEmpty);
   const plus = sizesInGroup(productSizes, "plus", fallbackWhenEmpty);
+  const free = sizesInGroup(productSizes, "free", fallbackWhenEmpty);
   const hasRegular = regular.length > 0;
   const hasPlus = plus.length > 0;
-  const defaultGroup: SizeGroupId = hasRegular ? "regular" : "plus";
+  const hasFree = free.length > 0;
+  const activeGroupCount = [hasRegular, hasPlus, hasFree].filter(
+    Boolean,
+  ).length;
+  const defaultGroup: SizeGroupId =
+    hasFree && !hasRegular && !hasPlus
+      ? "free"
+      : hasRegular
+        ? "regular"
+        : hasPlus
+          ? "plus"
+          : hasFree
+            ? "free"
+            : "regular";
 
   return {
     regular,
     plus,
+    free,
     hasRegular,
     hasPlus,
-    showPicker: hasRegular && hasPlus,
+    hasFree,
+    showPicker: activeGroupCount > 1,
     defaultGroup,
   };
 }
@@ -84,10 +107,25 @@ export function productSizeRunForGroup(
   fallbackWhenEmpty: string[] = FULL_SIZE_RUN,
 ): string[] {
   const resolved = resolveProductSizeGroups(productSizes, fallbackWhenEmpty);
-  if (group === "regular") {
-    return resolved.regular.length ? resolved.regular : resolved.plus;
+  if (group === "free") {
+    return resolved.free.length
+      ? resolved.free
+      : resolved.regular.length
+        ? resolved.regular
+        : resolved.plus;
   }
-  return resolved.plus.length ? resolved.plus : resolved.regular;
+  if (group === "regular") {
+    return resolved.regular.length
+      ? resolved.regular
+      : resolved.free.length
+        ? resolved.free
+        : resolved.plus;
+  }
+  return resolved.plus.length
+    ? resolved.plus
+    : resolved.regular.length
+      ? resolved.regular
+      : resolved.free;
 }
 
 /** Default set for catalog cards / quick add when the customer has not picked a group yet. */

@@ -1,5 +1,6 @@
 import type { Product } from "@/data/mock";
 import { FULL_SIZE_RUN } from "@/lib/cart-client";
+import { defaultProductSizeRun } from "@/lib/size-groups";
 import { availableSetsForSizeRun } from "@/lib/set-stock";
 
 /**
@@ -40,7 +41,7 @@ export function productInventoryOnHand(
 }
 
 export function productSizeRun(product: Pick<Product, "sizes">): string[] {
-  return product.sizes?.length ? product.sizes : FULL_SIZE_RUN;
+  return defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
 }
 
 export function productReservedPieces(

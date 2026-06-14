@@ -92,7 +92,17 @@ const commonColors = [
   "White",
   "Green",
 ];
-const commonSizes = ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+const commonSizes = [
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "3XL",
+  "4XL",
+  "5XL",
+  "Free Size",
+];
 
 const emptyForm: ProductForm = {
   name: "",
@@ -1238,6 +1248,13 @@ export function AdminProductCreateClient({
                     onClick={() => toggleSizeGroup(SIZE_GROUPS.plus)}
                   >
                     3XL to 5XL
+                  </button>
+                  <button
+                    type="button"
+                    className="tf-button style-1"
+                    onClick={() => toggleSizeGroup(SIZE_GROUPS.free)}
+                  >
+                    {SIZE_GROUP_LABELS.free}
                   </button>
                 </div>
                 <div className="sarjan-product-check-grid sarjan-product-size-grid">

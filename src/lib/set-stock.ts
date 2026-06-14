@@ -10,7 +10,7 @@ function sizeRunKey(sizes: string[]) {
   return filterActiveSizes(sizes).join("|");
 }
 
-/** Which size group (regular / plus) a cart size run belongs to. */
+/** Which size group (regular / plus / free) a cart size run belongs to. */
 export function detectSizeRunGroup(
   sizes: string[],
   productSizes?: string[],
@@ -26,11 +26,16 @@ export function detectSizeRunGroup(
   if (groups.plus.length && runKey === sizeRunKey(groups.plus)) {
     return "plus";
   }
+  if (groups.free.length && runKey === sizeRunKey(groups.free)) {
+    return "free";
+  }
 
   const regularOnly = active.every((size) => groups.regular.includes(size));
   const plusOnly = active.every((size) => groups.plus.includes(size));
-  if (regularOnly && !plusOnly) return "regular";
-  if (plusOnly && !regularOnly) return "plus";
+  const freeOnly = active.every((size) => groups.free.includes(size));
+  if (regularOnly && !plusOnly && !freeOnly) return "regular";
+  if (plusOnly && !regularOnly && !freeOnly) return "plus";
+  if (freeOnly && !regularOnly && !plusOnly) return "free";
   return null;
 }
 
