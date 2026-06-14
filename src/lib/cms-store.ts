@@ -1326,7 +1326,7 @@ export async function listActiveCategoryHubPages() {
   const cms = await getCachedCmsSnapshot();
   return cms.categoryHubPages
     .filter((page) => page.enabled !== false)
-    .sort((a, b) => a.title.localeCompare(b.title));
+    .sort((a, b) => readEnglish(a.title).localeCompare(readEnglish(b.title)));
 }
 
 export async function getCollectionPageBySlug(slug: string) {
@@ -1346,7 +1346,7 @@ export async function listActiveCollectionPages() {
       const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
       const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
       if (orderA !== orderB) return orderA - orderB;
-      return a.title.localeCompare(b.title);
+      return readEnglish(a.title).localeCompare(readEnglish(b.title));
     });
 }
 

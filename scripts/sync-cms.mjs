@@ -77,7 +77,10 @@ async function adminLogin() {
   }
   const res = await fetch(`${LIVE_URL}/api/admin/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-sarjan-native-admin": "1",
+    },
     body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
   });
   const data = await res.json().catch(() => ({}));
@@ -87,8 +90,20 @@ async function adminLogin() {
         `Admin login failed (${res.status}). Check live admin password.`,
     );
   }
-  const token = data.token;
-  if (!token) throw new Error("Login OK but no token returned.");
+  const token =
+    data.token ??
+    res.headers
+      .getSetCookie?.()
+      ?.map((c) => c.split(";")[0])
+      .find((c) => c.startsWith("sarjan-admin-session="))
+      ?.slice("sarjan-admin-session=".length) ??
+    res.headers
+      .get("set-cookie")
+      ?.split(",")
+      .map((c) => c.trim().split(";")[0])
+      .find((c) => c.startsWith("sarjan-admin-session="))
+      ?.slice("sarjan-admin-session=".length);
+  if (!token) throw new Error("Login OK but no session token returned.");
   return token;
 }
 
