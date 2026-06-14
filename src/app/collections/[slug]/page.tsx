@@ -1,13 +1,15 @@
 import { ProductSeoListingPage } from "@/components/storefront/ProductSeoListingPage";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCollectionPageBySlug } from "@/lib/cms-store";
+import { getCatalogProducts } from "@/lib/catalog";
 import { resolveCollection } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
-  JsonLd,
+  collectionPageJsonLd,
+  JsonLdGraph,
   listingBreadcrumbJsonLd,
   pageMetadata,
-  siteUrl,
+  productCatalogItemListJsonLd,
   splitKeywords,
 } from "@/lib/seo";
 import { notFound } from "next/navigation";
@@ -66,23 +68,48 @@ export default async function CollectionDetailPage({
     maxPrice,
   } = await searchParams;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
+  const jsonLd = collectionPageJsonLd({
     name: page.title,
     description: page.description,
-    url: new URL(`/collections/${page.slug}`, siteUrl).toString(),
-  };
+    path: `/collections/${page.slug}`,
+    image: page.heroImage,
+  });
+  const locale = getCacheableStorefrontLocale();
+  const catalog = await getCatalogProducts({
+    page: Number(pageNum ?? 1),
+    sort,
+    filters: {
+      ...page.filters,
+      category,
+      fabric,
+      color,
+      size,
+      stock,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    },
+    q: page.q,
+    locale,
+    limit: 24,
+  });
+  const itemList = productCatalogItemListJsonLd({
+    name: page.title,
+    path: `/collections/${page.slug}`,
+    products: catalog.items,
+  });
 
   return (
     <ModaveShell>
-      <JsonLd data={jsonLd} />
-      <JsonLd
-        data={listingBreadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Collections", path: "/collections" },
-          { name: page.title, path: `/collections/${page.slug}` },
-        ])}
+      <JsonLdGraph
+        items={[
+          jsonLd,
+          itemList,
+          listingBreadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Collections", path: "/collections" },
+            { name: page.title, path: `/collections/${page.slug}` },
+          ]),
+        ]}
       />
       <ProductSeoListingPage
         title={page.title}

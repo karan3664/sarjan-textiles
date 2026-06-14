@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getMobileAppRelease } from "@/lib/mobile-app-release";
+import { JsonLdGraph, mobileApplicationJsonLd } from "@/lib/seo";
 import { DownloadProductActions } from "./DownloadProductActions";
 
 export const metadata = {
@@ -24,6 +25,7 @@ export default async function DownloadAppPage({ searchParams }: Props) {
 
   return (
     <ModaveShell>
+      <JsonLdGraph items={[mobileApplicationJsonLd(release)]} />
       <section className="flat-spacing sarjan-download-app">
         <div className="container">
           <div className="row justify-content-center">

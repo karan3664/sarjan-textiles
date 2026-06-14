@@ -4,6 +4,50 @@ import type { Product } from "@/data/mock";
 import type { CmsBlog, CmsPages, CmsSeoPage } from "@/lib/cms-store";
 import { readEnglish } from "@/lib/cms-localize";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import {
+  absoluteUrl,
+  articleJsonLd,
+  blogJsonLd,
+  contactPageJsonLd,
+  listingBreadcrumbJsonLd,
+  organizationJsonLd,
+  productBreadcrumbJsonLd,
+  productJsonLd,
+  productReviewJsonLd,
+  seoPageJsonLd,
+  siteUrl,
+  jsonLdGraph,
+  type AggregateRatingInput,
+  type ReviewSchemaInput,
+} from "@/lib/structured-data";
+
+export {
+  absoluteUrl,
+  articleJsonLd,
+  blogJsonLd,
+  collectionPageJsonLd,
+  contactPageJsonLd,
+  categoryHubDetailJsonLd,
+  categoryHubIndexJsonLd,
+  faqPageJsonLd,
+  globalStructuredDataGraph,
+  itemListJsonLd,
+  listingBreadcrumbJsonLd,
+  localBusinessJsonLd,
+  mobileApplicationJsonLd,
+  organizationJsonLd,
+  productBreadcrumbJsonLd,
+  productCatalogItemListJsonLd,
+  productJsonLd,
+  productReviewJsonLd,
+  seoPageJsonLd,
+  siteUrl,
+  webPageJsonLd,
+  websiteJsonLd,
+  jsonLdGraph,
+  type AggregateRatingInput,
+  type ReviewSchemaInput,
+} from "@/lib/structured-data";
 
 type SeoInput = {
   title: string;
@@ -36,13 +80,6 @@ type SeoPage = CmsPages[keyof CmsPages] & {
   keywords?: string;
   imageAlt?: string;
 };
-
-export const siteUrl = `https://${siteSettings.domain}`;
-
-function absoluteUrl(path = "/") {
-  if (/^https?:\/\//i.test(path)) return path;
-  return new URL(path.startsWith("/") ? path : `/${path}`, siteUrl).toString();
-}
 
 function imageUrl(image?: string) {
   return absoluteUrl(image || "/sarjan-assets/banner-textiles-studio.webp");
@@ -90,14 +127,6 @@ export function pageMetadata(input: SeoInput): Metadata {
       images: [image],
     },
   };
-}
-
-function categoryListingPath(categoryName: string) {
-  const hay = categoryName.toLowerCase();
-  if (hay.includes("kurta")) return "/products/kurtas";
-  if (hay.includes("shirt")) return "/products/shirts";
-  if (hay.includes("jacket")) return "/products/jackets";
-  return "/products";
 }
 
 export function productMetadata(product: Product): Metadata {
@@ -205,188 +234,19 @@ export function seoPageMetadata(page: CmsSeoPage) {
   });
 }
 
-export function seoPageJsonLd(page: CmsSeoPage) {
-  const metaTitle = readEnglish(page.metaTitle);
-  const label = readEnglish(page.label);
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: metaTitle || label,
-    description: readEnglish(page.metaDescription),
-    url: absoluteUrl(page.path),
-    primaryImageOfPage: {
-      "@type": "ImageObject",
-      url: imageUrl(page.image),
-      caption: readEnglish(page.imageAlt) || label,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: siteSettings.brandName,
-      logo: { "@type": "ImageObject", url: imageUrl(siteSettings.logoIcon) },
-    },
-  };
-}
-
-export function listingBreadcrumbJsonLd(
-  crumbs: Array<{ name: string; path: string }>,
-) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: crumbs.map((crumb, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: crumb.name,
-      item: absoluteUrl(crumb.path),
-    })),
-  };
-}
-
-export function productBreadcrumbJsonLd(product: Product) {
-  const categoryName = product.category || "Catalog";
-  return listingBreadcrumbJsonLd([
-    { name: "Home", path: "/" },
-    { name: "Products", path: "/products" },
-    { name: categoryName, path: categoryListingPath(categoryName) },
-    { name: product.name, path: `/products/${product.slug}` },
-  ]);
-}
-
-export function productReviewJsonLd(
-  product: Product,
-  reviews: Array<{
-    author: string;
-    rating: number;
-    title: string;
-    body: string;
-    datePublished: string;
-  }>,
-  aggregate?: { ratingValue: number; reviewCount: number },
-) {
-  if (!aggregate?.reviewCount) return null;
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: aggregate.ratingValue,
-      reviewCount: aggregate.reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    },
-    review: reviews.map((review) => ({
-      "@type": "Review",
-      author: { "@type": "Person", name: review.author },
-      datePublished: review.datePublished,
-      name: review.title,
-      reviewBody: review.body,
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: review.rating,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    })),
-  };
-}
-
-export function productJsonLd(product: Product) {
-  const returnPolicyUrl = absoluteUrl("/refund-policy");
-  const productUrl = absoluteUrl(`/products/${product.slug}`);
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "@id": productUrl,
-    name: product.name,
-    url: productUrl,
-    description: product.description,
-    sku: product.sku,
-    category: product.category,
-    material: product.fabric,
-    color: product.colors?.length ? product.colors : undefined,
-    image: product.images.filter(Boolean).map((src, index) => ({
-      "@type": "ImageObject",
-      url: imageUrl(src),
-      caption: buildProductImageAlt(product, { index }),
-    })),
-    brand: { "@type": "Brand", name: siteSettings.brandName },
-    manufacturer: {
-      "@type": "Organization",
-      name: siteSettings.legalName,
-      url: siteUrl,
-    },
-    seller: {
-      "@type": "Organization",
-      name: siteSettings.brandName,
-      url: siteUrl,
-    },
-    offers: {
-      "@type": "Offer",
-      url: productUrl,
-      priceCurrency: "INR",
-      price: product.price,
-      availability:
-        product.stock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: siteSettings.brandName },
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "IN",
-        returnPolicyUrl,
-      },
-    },
-    ...(product.ratingCount && product.rating
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: product.rating,
-            reviewCount: product.ratingCount,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
-  };
-}
-
-export function blogJsonLd(blog: CmsBlog) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: blog.title,
-    description: blog.excerpt,
-    image: imageUrl(blog.image),
-    datePublished: blog.date,
-    author: { "@type": "Organization", name: siteSettings.brandName },
-    publisher: {
-      "@type": "Organization",
-      name: siteSettings.brandName,
-      logo: { "@type": "ImageObject", url: imageUrl(siteSettings.logoIcon) },
-    },
-    mainEntityOfPage: absoluteUrl(`/blog/${blog.slug}`),
-  };
-}
-
-export function organizationJsonLd() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: siteSettings.legalName,
-    url: siteUrl,
-    logo: imageUrl(siteSettings.logoIcon),
-    email: siteSettings.email,
-    telephone: siteSettings.phone,
-    address: siteSettings.address,
-  };
-}
-
 export function JsonLd({ data }: { data: unknown }) {
+  if (!data) return null;
   return (
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />
   );
+}
+
+/** Single JSON-LD block with @graph — avoids duplicate entities per page. */
+export function JsonLdGraph({ items }: { items: unknown[] }) {
+  const graph = jsonLdGraph(items);
+  if (!graph) return null;
+  return <JsonLd data={graph} />;
 }

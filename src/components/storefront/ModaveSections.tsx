@@ -7,6 +7,10 @@ import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { translateStorefrontUi } from "@/lib/storefront-ui";
 import { resolveProductFilters } from "@/lib/pages-localize";
 import {
+  enrichProductFilters,
+  productMatchesCategoryFilter,
+} from "@/lib/product-category-filter";
+import {
   resolveBlogs,
   resolveHomeForLocale,
   resolveStaticCmsPage,
@@ -30,6 +34,7 @@ import {
   isProductSoldOut,
   productStockOnHand,
 } from "@/lib/product-availability";
+import { formatMoqSets } from "@/lib/b2b-order-messages";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { ProductSoldOutRibbon } from "./ProductSoldOutRibbon";
 import {
@@ -49,10 +54,11 @@ import {
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { CmsHtml } from "@/components/shared/CmsHtml";
-import { isCmsHtmlContent, splitCmsTextParagraphs } from "@/lib/cms-html";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
 import { AboutMainContent } from "./AboutPages";
+import { PageFaqSection } from "./PageFaqSection";
+import { CmsPlainTextBody } from "@/components/shared/CmsPlainTextBody";
 import { HomeBannerStack } from "./HomeBannerStack";
 import { HomeHeroRotator } from "./HomeHeroRotator";
 import { ContactInquiryForm } from "./ContactInquiryForm";
@@ -400,23 +406,11 @@ function renderCustomBlock(
           </h4>
         ) : null}
         {hasBody ? (
-          isCmsHtmlContent(block.body!) ? (
-            <CmsHtml
-              html={block.body!}
-              as="div"
-              className="sarjan-custom-text-body text-secondary"
-            />
-          ) : (
-            <div className="sarjan-custom-text-body text-secondary">
-              {splitCmsTextParagraphs(block.body!).map((paragraph, index) => (
-                <CmsHtml
-                  key={`${block.id}-p-${index}`}
-                  html={paragraph}
-                  as="p"
-                />
-              ))}
-            </div>
-          )
+          <CmsHtml
+            html={block.body!}
+            as="div"
+            className="sarjan-custom-text-body text-secondary"
+          />
         ) : null}
       </div>
     );
@@ -996,6 +990,7 @@ export async function HomeDynamic() {
 
         return <div key={`${section.id}-${index}`}>{content}</div>;
       })}
+      <PageFaqSection page="home" />
     </div>
   );
 }
@@ -1250,7 +1245,9 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                           <li className="font-2">
                             Designed in Bhuj, Kutch, Gujarat
                           </li>
-                          <li className="font-2">MOQ: {product.moq} pieces</li>
+                          <li className="font-2">
+                            MOQ: {formatMoqSets(product.moq)}
+                          </li>
                           {product.care ? (
                             <li className="font-2">Care: {product.care}</li>
                           ) : null}
@@ -1695,7 +1692,7 @@ function productValueCount(
 ) {
   return productsList.filter((product) => {
     if (group.type === "category")
-      return filterSlugValue(product.category) === value;
+      return productMatchesCategoryFilter(product, value);
     if (group.type === "fabric")
       return filterSlugValue(product.fabric) === value;
     if (group.type === "color")
@@ -1891,12 +1888,13 @@ export async function ProductsListingDynamic({
   const currentPage = catalog.page;
   const start = (currentPage - 1) * perPage;
   const visibleProducts = catalog.items;
-  const productFilters = resolveProductFilters(
-    cms.productFilters ?? [],
-    locale,
-  );
   const allProductsForFilters = applyProductDeals(
     resolveProducts(cms.products, locale),
+  );
+  const productFilters = enrichProductFilters(
+    resolveProductFilters(cms.productFilters ?? [], locale),
+    allProductsForFilters,
+    locale,
   );
   const activeFilterCount = Object.values(filters).filter(
     (value) => value !== undefined && value !== "",
@@ -2443,7 +2441,6 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
     history?: string;
     mission?: string;
     vision?: string;
-    infrastructure?: string;
     imageAlt?: string;
     sections?: CmsCustomSection[];
   };
@@ -2464,7 +2461,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
                 <div className="wrap-map">
                   <div className="sarjan-contact-intro">
                     <h3 className="mb_12">Sarjan Textiles</h3>
-                    <p className="text-secondary mb_0">{page.body}</p>
+                    <CmsPlainTextBody text={page.body ?? ""} />
                   </div>
                 </div>
                 <div className="right">
@@ -2597,6 +2594,7 @@ export async function CmsPageDynamic({ type }: { type: "about" | "contact" }) {
             sections={pageSections}
             products={cms.products}
           />
+          <PageFaqSection page="contact" />
         </>
       ) : (
         <>

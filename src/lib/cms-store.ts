@@ -564,17 +564,6 @@ export const defaultSeoPages: CmsSeoPage[] = [
     imageAlt: "Sarjan Textiles process",
   },
   {
-    id: "infrastructure",
-    label: "Infrastructure",
-    path: "/infrastructure",
-    metaTitle: "Infrastructure",
-    metaDescription:
-      "Sarjan Textiles platform infrastructure connects catalog, inventory, dispatch, CMS, and ERP-ready data workflows.",
-    keywords: "textile ERP, inventory management, dispatch tracking, B2B CMS",
-    image: "/sarjan-assets/banner-textiles-studio.webp",
-    imageAlt: "Sarjan Textiles infrastructure",
-  },
-  {
     id: "certifications",
     label: "Certifications",
     path: "/certifications",

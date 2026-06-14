@@ -14,6 +14,7 @@ import { readCompare } from "@/lib/compare-client";
 import { PageTitle } from "./PageTitle";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
 import { StorefrontProductImage } from "./StorefrontProductImage";
+import { formatMoqSets } from "@/lib/b2b-order-messages";
 
 function sizeRun(product: Product) {
   return defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
@@ -111,7 +112,7 @@ export function ComparePageClient({
       "Material",
       (product: Product) => <span className="size">{product.fabric}</span>,
     ],
-    ["MOQ", (product: Product) => <span>{product.moq} pcs</span>],
+    ["MOQ", (product: Product) => <span>{formatMoqSets(product.moq)}</span>],
     [
       "Stock",
       (product: Product) => {

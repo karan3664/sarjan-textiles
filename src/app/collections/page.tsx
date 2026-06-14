@@ -6,7 +6,7 @@ import { resolveCollection } from "@/lib/pages-localize";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
 import { SarjanButton } from "@/components/storefront/SarjanButton";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
-import { JsonLd } from "@/lib/seo";
+import { itemListJsonLd, JsonLdGraph } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -20,10 +20,20 @@ export default async function CollectionsPage() {
     resolveCollection(page, locale),
   );
   const jsonLd = await cmsSeoJsonLd("collections");
+  const itemList = itemListJsonLd({
+    name: "Sarjan Textiles collections",
+    path: "/collections",
+    items: collections.map((collection) => ({
+      name: collection.title,
+      path: `/collections/${collection.slug}`,
+      description: collection.description,
+      image: collection.heroImage,
+    })),
+  });
 
   return (
     <ModaveShell>
-      <JsonLd data={jsonLd} />
+      <JsonLdGraph items={[jsonLd, itemList]} />
       <PageTitle title="Collections" crumbs={["Home", "Collections"]} />
       <section className="flat-spacing-2">
         <div className="container">

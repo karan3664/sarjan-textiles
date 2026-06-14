@@ -1,17 +1,6 @@
 import { AboutSectionContent } from "@/components/storefront/AboutPages";
-import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
-import { JsonLd } from "@/lib/seo";
+import { redirect } from "next/navigation";
 
-export async function generateMetadata() {
-  return cmsSeoMetadata("about");
-}
-
-export default async function AboutInfrastructurePage() {
-  return (
-    <ModaveShell>
-      <JsonLd data={await cmsSeoJsonLd("about")} />
-      <AboutSectionContent section="infrastructure" />
-    </ModaveShell>
-  );
+export default function AboutInfrastructurePage() {
+  redirect("/about");
 }

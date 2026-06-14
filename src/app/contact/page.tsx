@@ -1,7 +1,7 @@
 import { CmsPageDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
-import { JsonLd } from "@/lib/seo";
+import { cmsSeoMetadata } from "@/lib/page-seo";
+import { contactPageJsonLd, JsonLdGraph } from "@/lib/seo";
 
 export async function generateMetadata() {
   return cmsSeoMetadata("contact");
@@ -10,7 +10,7 @@ export async function generateMetadata() {
 export default async function ContactPage() {
   return (
     <ModaveShell>
-      <JsonLd data={await cmsSeoJsonLd("contact")} />
+      <JsonLdGraph items={[contactPageJsonLd()]} />
       <CmsPageDynamic type="contact" />
     </ModaveShell>
   );

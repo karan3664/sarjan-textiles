@@ -1,9 +1,13 @@
 import { CategoryHubIndexContent } from "@/components/storefront/CategoryHubPages";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { getCachedCmsSnapshot } from "@/lib/cms-store";
+import {
+  getCachedCmsSnapshot,
+  listActiveCategoryHubPages,
+} from "@/lib/cms-store";
+import { resolveCategoryHub } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { translateStorefrontUi } from "@/lib/storefront-ui";
-import { JsonLd, pageMetadata, siteUrl } from "@/lib/seo";
+import { categoryHubIndexJsonLd, JsonLdGraph, pageMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -32,16 +36,14 @@ export async function generateMetadata() {
 }
 
 export default async function CategoriesIndexPage() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: "Shop by category",
-    url: `${siteUrl}/categories`,
-  };
+  const locale = getCacheableStorefrontLocale();
+  const hubs = (await listActiveCategoryHubPages()).map((hub) =>
+    resolveCategoryHub(hub, locale),
+  );
 
   return (
     <ModaveShell>
-      <JsonLd data={jsonLd} />
+      <JsonLdGraph items={categoryHubIndexJsonLd(hubs)} />
       <CategoryHubIndexContent />
     </ModaveShell>
   );

@@ -9,8 +9,10 @@ type Props = {
 export function CmsHtml({ html, className, as: Tag = "span" }: Props) {
   const clean = sanitizeCmsHtml(html);
   if (!clean) return null;
+  // Avoid <p><p>...</p></p> — invalid HTML that browsers rewrite before hydration.
+  const TagName = Tag === "p" && /<p[\s>]/i.test(clean) ? "div" : Tag;
   return (
-    <Tag
+    <TagName
       className={
         className ? `cms-html-content ${className}` : "cms-html-content"
       }

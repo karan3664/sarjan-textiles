@@ -4,6 +4,7 @@ import type { CategoryHubPage } from "@/lib/cms-store";
 import { listActiveCategoryHubPages } from "@/lib/cms-store";
 import { resolveCategoryHub } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
+import { PageFaqSection } from "./PageFaqSection";
 
 export async function CategoryHubIndexContent() {
   const locale = getCacheableStorefrontLocale();
@@ -61,6 +62,7 @@ export async function CategoryHubIndexContent() {
           ))}
         </div>
       </div>
+      <PageFaqSection page="categories" />
     </section>
   );
 }

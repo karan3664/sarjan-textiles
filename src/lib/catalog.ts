@@ -3,12 +3,13 @@ import { applyProductDeals } from "@/lib/product-deal";
 import { resolveProducts } from "@/lib/product-localize";
 import { readEnglish } from "@/lib/cms-localize";
 import type { AppLocale } from "@/lib/localized-text";
+import { productMatchesCategoryFilter } from "@/lib/product-category-filter";
+import type { Product } from "@/data/mock";
+import { getClient } from "@/lib/local-db";
 import {
   productStockOnHand,
   showProductSoldOutToViewer,
 } from "@/lib/product-availability";
-import type { Product } from "@/data/mock";
-import { getClient } from "@/lib/local-db";
 import {
   normalizeClientTier,
   productCatalogActive,
@@ -113,7 +114,7 @@ function matchesFilters(
   if (!filters) return true;
   if (
     filters.category &&
-    slugValue(readEnglish(product.category as string)) !== filters.category
+    !productMatchesCategoryFilter(product, filters.category)
   )
     return false;
   if (

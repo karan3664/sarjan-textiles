@@ -1,5 +1,6 @@
 import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { applyProductDeals } from "@/lib/product-deal";
+import { withProductFeedFlags } from "@/lib/product-feed-flags";
 import { resolveProducts } from "@/lib/product-localize";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 import { verifyAdminToken } from "@/lib/admin-token";
@@ -9,7 +10,9 @@ export async function GET(request: Request) {
   const locale = localeFromRequest(request);
   const cms = await getLocalizedCmsSnapshot();
 
-  const liveProducts = applyProductDeals(resolveProducts(cms.products, locale));
+  const liveProducts = applyProductDeals(
+    withProductFeedFlags(resolveProducts(cms.products, locale)),
+  );
   const session = await verifyAdminToken(
     (await cookies()).get("sarjan-admin-session")?.value,
   );

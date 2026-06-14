@@ -96,10 +96,9 @@ export function cartMaxSetQuantity(
 /** Minimum wholesale order quantity in full size sets (not pieces). */
 export function productWholesaleMinSets(
   product: Pick<Product, "moq" | "sizes">,
-  sizes: string[] = productSizeRun(product),
+  _sizes: string[] = productSizeRun(product),
 ): number {
-  const piecesPerSet = Math.max(1, sizes.length);
-  return Math.max(1, Math.ceil(product.moq / piecesPerSet));
+  return Math.max(1, Math.floor(Number(product.moq)) || 1);
 }
 
 /** How many full sets can be ordered from available inventory (0 when sold out). */

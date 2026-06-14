@@ -4,17 +4,14 @@ import { resolveStaticCmsPage } from "@/lib/content-localize";
 import type { AppLocale } from "@/lib/localized-text";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { translateStorefrontUi } from "@/lib/storefront-ui";
-import { isCmsHtmlContent } from "@/lib/cms-html";
+import { isCmsHtmlContent, splitCmsTextParagraphs } from "@/lib/cms-html";
 import { CmsHtml } from "@/components/shared/CmsHtml";
 import { PageTitle } from "./PageTitle";
+import { PageFaqSection } from "./PageFaqSection";
 
-export type AboutSectionKey = "history" | "mission" | "infrastructure";
+export type AboutSectionKey = "history" | "mission";
 
-const ABOUT_SECTION_LINKS: AboutSectionKey[] = [
-  "history",
-  "mission",
-  "infrastructure",
-];
+const ABOUT_SECTION_LINKS: AboutSectionKey[] = ["history", "mission"];
 
 async function loadAboutCms() {
   const cms = await getCachedCmsSnapshot();
@@ -24,7 +21,7 @@ async function loadAboutCms() {
     history?: string;
     mission?: string;
     vision?: string;
-    infrastructure?: string;
+    imageAlt?: string;
     sections?: unknown[];
   };
   return { cms, locale, page, about };
@@ -38,7 +35,19 @@ function AboutBody({ html }: { html: string }) {
       </div>
     );
   }
-  return <p className="sarjan-about-body text-secondary mb_0">{html}</p>;
+  const paragraphs = splitCmsTextParagraphs(html);
+  if (paragraphs.length <= 1) {
+    return <p className="sarjan-about-body text-secondary mb_0">{html}</p>;
+  }
+  return (
+    <div className="sarjan-about-body cms-html-content">
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="text-secondary">
+          {paragraph}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 function sectionHref(key: AboutSectionKey) {
@@ -61,11 +70,7 @@ function sectionContent(
       "Build a clean B2B ordering system for wholesale buyers with reliable catalog, dispatch, inventory, and credit visibility."
     );
   }
-  return (
-    about.infrastructure?.trim() ||
-    about.vision?.trim() ||
-    "ERP-ready and AI-ready architecture keeps the system prepared for future integrations."
-  );
+  return about.vision?.trim() || "";
 }
 
 function AboutSectionNav({
@@ -115,6 +120,7 @@ export async function AboutMainContent() {
           </div>
         </div>
       </div>
+      <PageFaqSection page="about" />
     </section>
   );
 }

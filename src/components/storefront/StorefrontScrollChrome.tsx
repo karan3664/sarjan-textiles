@@ -22,7 +22,6 @@ export function StorefrontScrollChrome() {
         "sarjan-chrome-hidden",
         "sarjan-chrome-elevated",
       );
-      document.documentElement.style.removeProperty("--sarjan-header-height");
       return;
     }
 
@@ -35,7 +34,6 @@ export function StorefrontScrollChrome() {
         "sarjan-chrome-hidden",
         "sarjan-chrome-elevated",
       );
-      document.documentElement.style.removeProperty("--sarjan-header-height");
     };
   }, [enabled]);
 
@@ -48,12 +46,9 @@ export function StorefrontScrollChrome() {
   }, [enabled, chromeHidden, elevated]);
 
   useEffect(() => {
-    if (!enabled) return;
-
     const header = document.getElementById("header");
     if (!header) return;
 
-    header.classList.add("sarjan-sticky-header");
     syncHeaderOffset();
 
     const onResize = () => syncHeaderOffset();
@@ -61,6 +56,21 @@ export function StorefrontScrollChrome() {
 
     const observer = new ResizeObserver(() => syncHeaderOffset());
     observer.observe(header);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--sarjan-header-height");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const header = document.getElementById("header");
+    if (!header) return;
+
+    header.classList.add("sarjan-sticky-header");
 
     const styleGuard = new MutationObserver(() => {
       if (header.style.top) {
@@ -73,8 +83,6 @@ export function StorefrontScrollChrome() {
     });
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      observer.disconnect();
       styleGuard.disconnect();
       header.classList.remove("sarjan-sticky-header");
     };

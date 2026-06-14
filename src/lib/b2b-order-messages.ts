@@ -31,3 +31,13 @@ export const B2B_ORDER_SUCCESS_BODY = [
 export function formatAvailablePieces(pieces: number) {
   return `${pieces.toLocaleString("en-IN")} Piece${pieces === 1 ? "" : "s"}`;
 }
+
+/** MOQ is stored as minimum wholesale sets (not individual pieces). */
+export function formatMoqSets(moq: number) {
+  const sets = Math.max(1, Math.floor(Number(moq)) || 1);
+  return `${sets} set${sets === 1 ? "" : "s"}`;
+}
+
+export function formatMoqSetsLabel(moq: number) {
+  return `MOQ: ${formatMoqSets(moq)}`;
+}

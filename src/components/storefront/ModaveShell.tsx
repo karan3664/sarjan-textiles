@@ -19,6 +19,7 @@ import { MobileBottomNav } from "./MobileBottomNav";
 import { StorefrontScrollChrome } from "./StorefrontScrollChrome";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
 import { StorefrontThemeProvider } from "./StorefrontThemeProvider";
+import { StorefrontGlobalJsonLd } from "./StorefrontGlobalJsonLd";
 
 export async function ModaveShell({ children }: { children: React.ReactNode }) {
   const locale = getCacheableStorefrontLocale();
@@ -28,6 +29,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <StorefrontGlobalJsonLd />
       <button id="scroll-top" aria-label="Scroll to top">
         <svg
           width="24"

@@ -427,8 +427,14 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   position: relative;
   overflow: visible !important;
   background: #141414;
-  min-height: calc(100vh - var(--sarjan-storefront-header));
-  min-height: calc(100svh - var(--sarjan-storefront-header));
+  min-height: calc(
+    100vh - var(--sarjan-storefront-header) -
+      var(--sarjan-cart-banner-height, 0px)
+  );
+  min-height: calc(
+    100svh - var(--sarjan-storefront-header) -
+      var(--sarjan-cart-banner-height, 0px)
+  );
 }
 
 .sarjan-hero-rotator-stage {
@@ -602,8 +608,14 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 .sarjan-hero-rotator .sarjan-hero-copy-layer {
   position: relative;
   z-index: 2;
-  min-height: calc(100vh - var(--sarjan-storefront-header));
-  min-height: calc(100svh - var(--sarjan-storefront-header));
+  min-height: calc(
+    100vh - var(--sarjan-storefront-header) -
+      var(--sarjan-cart-banner-height, 0px)
+  );
+  min-height: calc(
+    100svh - var(--sarjan-storefront-header) -
+      var(--sarjan-cart-banner-height, 0px)
+  );
   background: transparent !important;
   background-image: none !important;
   pointer-events: none;
@@ -753,14 +765,26 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 /* Modave fixed heights — desktop/tablet landscape uses full viewport hero */
 @media (max-width: 1399px) {
   .tf-slideshow.sarjan-hero-rotator {
-    min-height: calc(100vh - var(--sarjan-storefront-header)) !important;
-    min-height: calc(100svh - var(--sarjan-storefront-header)) !important;
+    min-height: calc(
+      100vh - var(--sarjan-storefront-header) -
+        var(--sarjan-cart-banner-height, 0px)
+    ) !important;
+    min-height: calc(
+      100svh - var(--sarjan-storefront-header) -
+        var(--sarjan-cart-banner-height, 0px)
+    ) !important;
     height: auto !important;
   }
 
   .sarjan-hero-rotator-stage {
-    min-height: calc(100vh - var(--sarjan-storefront-header));
-    min-height: calc(100svh - var(--sarjan-storefront-header));
+    min-height: calc(
+      100vh - var(--sarjan-storefront-header) -
+        var(--sarjan-cart-banner-height, 0px)
+    );
+    min-height: calc(
+      100svh - var(--sarjan-storefront-header) -
+        var(--sarjan-cart-banner-height, 0px)
+    );
   }
 }
 
@@ -5562,6 +5586,16 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   }
 }
 
+/* Modave sets all bare <header> sticky — must not float over cart banner */
+.sarjan-account-page .sarjan-account-dashboard__header {
+  position: static;
+  z-index: auto;
+  background: transparent;
+  box-shadow: none;
+  left: auto;
+  right: auto;
+}
+
 .sarjan-account-dashboard__header {
   display: flex;
   align-items: flex-start;
@@ -5570,6 +5604,7 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   margin-bottom: 24px;
   padding: 4px 2px 20px;
   border-bottom: 1px solid var(--sarjan-border, #e8e2d9);
+  flex-wrap: wrap;
 }
 
 .sarjan-account-dashboard__header > div:first-child {
@@ -5817,6 +5852,25 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   .sarjan-account-dashboard__header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .sarjan-account-dashboard__header .sarjan-account-status-pill {
+    align-self: flex-start;
+  }
+
+  .sarjan-cart-resume-banner__inner {
+    align-items: flex-start;
+  }
+
+  .sarjan-cart-resume-banner__actions {
+    width: 100%;
+  }
+
+  .sarjan-cart-resume-banner .tf-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
   }
 
   .sarjan-account-stat-grid {
@@ -12284,9 +12338,9 @@ body.sarjan-storefront
 }
 
 .sarjan-cart-resume-banner {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 120;
+  overflow: visible;
   background: linear-gradient(90deg, #6b1228 0%, #8b1e3f 100%);
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
@@ -12298,8 +12352,14 @@ body.sarjan-storefront
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 0;
+  padding: 14px 0;
   flex-wrap: wrap;
+  min-height: 52px;
+}
+
+.sarjan-cart-resume-banner__inner > p {
+  margin: 0;
+  line-height: 1.45;
 }
 
 .sarjan-cart-resume-banner__actions {
@@ -12307,6 +12367,16 @@ body.sarjan-storefront
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.sarjan-cart-resume-banner .tf-btn {
+  padding: 10px 20px !important;
+  min-height: 40px;
+  line-height: 1.25 !important;
+  font-size: 14px !important;
+  overflow: visible !important;
+  white-space: nowrap;
 }
 
 .sarjan-cart-resume-banner__dismiss {
@@ -12720,6 +12790,7 @@ body.sarjan-storefront
 :root {
   --sarjan-mobile-nav-clearance: 0px;
   --sarjan-header-height: 64px;
+  --sarjan-cart-banner-height: 0px;
 }
 
 @media (max-width: 1199.98px) {

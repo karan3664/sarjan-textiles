@@ -317,14 +317,19 @@ const COMMON_UI: Record<string, Record<AppLocale, string>> = {
     hi: "सर्वाधिकार सुरक्षित।",
     gu: "સર્વાધિકાર સુરક્ષિત.",
   },
-  contactUs: { en: "Contact Us", hi: "संपर्क करें", gu: "અમારો સંપર્ક કરો" },
+  menFilter: { en: "Men", hi: "पुरुष", gu: "પુરુષ" },
+  womenFilter: { en: "Women", hi: "महिला", gu: "મહિલા" },
   aboutOurStore: {
     en: "About Our Store",
     hi: "हमारे स्टोर के बारे में",
     gu: "અમારા સ્ટોર વિશે",
   },
   introduction: { en: "Introduction", hi: "परिचय", gu: "પરિચય" },
-  history: { en: "History", hi: "इतिहास", gu: "ઇતિહાસ" },
+  history: {
+    en: "Our History and Legacy",
+    hi: "हमारा इतिहास और विरासत",
+    gu: "અમારો ઇતિહાસ અને વારસો",
+  },
   mission: { en: "Mission", hi: "मिशन", gu: "મિશન" },
   infrastructure: {
     en: "Infrastructure",
@@ -415,93 +420,180 @@ export function getStorefrontCommerceLabels(
   return labels;
 }
 
-const FAQ_ITEMS: Array<Record<AppLocale, [string, string]>> = [
-  {
-    en: [
-      "How do I get my account approved?",
-      "Submit GST and business details during registration. Our team reviews within 1–2 business days.",
-    ],
-    hi: [
-      "मेरा खाता कैसे स्वीकृत होगा?",
-      "पंजीकरण के दौरान GST और व्यवसाय विवरण जमा करें। हमारी टीम 1–2 कार्य दिवसों में समीक्षा करती है।",
-    ],
-    gu: [
-      "મારું એકાઉન્ટ કેવી રીતે મંજૂર થશે?",
-      "નોંધણી દરમિયાન GST અને વ્યવસાય વિગતો સબમિટ કરો. અમારી ટીમ 1–2 કાર્ય દિવસમાં સમીક્ષા કરે છે.",
-    ],
-  },
-  {
-    en: [
-      "What is MOQ?",
-      "Minimum Order Quantity — the smallest number of sets you can order. Shown on every product.",
-    ],
-    hi: [
-      "MOQ क्या है?",
-      "न्यूनतम ऑर्डर मात्रा — आप कितने सेट ऑर्डर कर सकते हैं। हर उत्पाद पर दिखता है।",
-    ],
-    gu: [
-      "MOQ શું છે?",
-      "ન્યૂનતમ ઓર્ડર જથ્થો — તમે કેટલા સેટ ઓર્ડર કરી શકો. દરેક ઉત્પાદન પર દર્શાવેલ.",
-    ],
-  },
-  {
-    en: [
-      "How do I track my order?",
-      "Open Orders in your account or use Track Order with your order ID.",
-    ],
-    hi: [
-      "ऑर्डर कैसे ट्रैक करूं?",
-      "अपने खाते में Orders खोलें या ऑर्डर ID से Track Order का उपयोग करें।",
-    ],
-    gu: [
-      "ઓર્ડર કેવી રીતે ટ્રેક કરું?",
-      "તમારા એકાઉન્ટમાં Orders ખોલો અથવા ઓર્ડર ID સાથે Track Order વાપરો.",
-    ],
-  },
-  {
-    en: [
-      "What payment methods are supported?",
-      "Online payment, bank transfer, and credit orders for approved accounts.",
-    ],
-    hi: [
-      "कौन से भुगतान तरीके हैं?",
-      "ऑनलाइन भुगतान, बैंक ट्रांसफर, और स्वीकृत खातों के लिए क्रेडिड ऑर्डर।",
-    ],
-    gu: [
-      "કયા ચુકવણીના માધ્યમો છે?",
-      "ઑનલાઇન ચુકવણી, બેંક ટ્રાન્સફર, અને મંજૂર એકાઉન્ટ માટે ક્રેડિટ ઓર્ડર.",
-    ],
-  },
-  {
-    en: [
-      "Can clients order single pieces?",
-      "No. Sarjan B2B uses set-wise ordering by size run and color.",
-    ],
-    hi: [
-      "क्या एक-एक पीस ऑर्डर कर सकते हैं?",
-      "नहीं। Sarjan B2B साइज रन और रंग के अनुसार सेट में ऑर्डर लेता है।",
-    ],
-    gu: [
-      "શું એક-એક પીસ ઓર્ડર કરી શકાય?",
-      "ના. Sarjan B2B સાઇઝ રન અને રંગ પ્રમાણે સેટમાં ઓર્ડર લે છે.",
-    ],
-  },
-  {
-    en: [
-      "Can ERP sync later?",
-      "Yes. Order and invoice data are structured for Tally/AWS migration later.",
-    ],
-    hi: [
-      "क्या ERP बाद में जुड़ सकता है?",
-      "हाँ। ऑर्डर और इnvoice डेटा Tally/AWS के लिए तैयार है।",
-    ],
-    gu: [
-      "શું ERP પછી જોડાઈ શકે?",
-      "હા. ઓર્ડર અને ઇન્વૉઇસ ડેટા Tally/AWS માટે તૈયાર છે.",
-    ],
-  },
+const FAQ_PAIR = (
+  en: [string, string],
+): Record<AppLocale, [string, string]> => ({
+  en,
+  hi: en,
+  gu: en,
+});
+
+export type PageFaqKey =
+  | "home"
+  | "about"
+  | "essence-of-craft"
+  | "categories"
+  | "simplifying-craft-manufacturing"
+  | "contact"
+  | "all";
+
+const HOMEPAGE_FAQS: Array<Record<AppLocale, [string, string]>> = [
+  FAQ_PAIR([
+    "What does Sarjan Textiles do?",
+    "Sarjan Textiles is a craft-based garment manufacturer, wholesale supplier, and private label apparel partner specializing in Ajrakh, Bandhani, Batik, handicraft-based apparel, menswear, modern womenswear, and fusion wear for brands, retailers, boutiques, and fashion businesses.",
+  ]),
+  FAQ_PAIR([
+    "Are you manufacturers or wholesalers?",
+    "We are both manufacturers and wholesale suppliers. We offer end-to-end apparel solutions including sourcing, product development, garment manufacturing, finishing, private label production, and wholesale supply.",
+  ]),
+  FAQ_PAIR([
+    "What types of apparel do you manufacture?",
+    "We manufacture menswear, modern womenswear, fusion wear, ethnic-inspired contemporary apparel, and craft-based garments using traditional Indian textile techniques and handcrafted processes.",
+  ]),
+  FAQ_PAIR([
+    "Do you work with traditional Indian crafts?",
+    "Yes. We work with Ajrakh, Bandhani, Batik, handcrafted textiles, artisan-led techniques, and other traditional Indian crafts while adapting them for modern fashion and retail markets.",
+  ]),
+  FAQ_PAIR([
+    "Do you provide private label manufacturing?",
+    "Yes. We offer private label and white label garment manufacturing services for fashion brands, boutiques, retailers, and startups.",
+  ]),
+  FAQ_PAIR([
+    "Do you support sustainable fashion?",
+    "We focus on craftsmanship, artisan collaboration, responsible production practices, durable garments, and preserving traditional textile heritage through thoughtful manufacturing.",
+  ]),
 ];
 
+const ABOUT_FAQS: Array<Record<AppLocale, [string, string]>> = [
+  FAQ_PAIR([
+    "What makes Sarjan Textiles different from other garment manufacturers?",
+    "Sarjan Textiles combines generations of textile knowledge, artisan networks, design understanding, garment manufacturing expertise, and wholesale capabilities under one roof.",
+  ]),
+  FAQ_PAIR([
+    "Where is Sarjan Textiles based?",
+    "Sarjan Textiles is based in Bhuj, Gujarat, a region globally recognized for its rich textile heritage, handicrafts, Ajrakh printing, Bandhani, and artisan traditions.",
+  ]),
+  FAQ_PAIR([
+    "Do you work directly with artisans?",
+    "Yes. We work closely with artisan communities and skilled craftspeople to preserve traditional techniques while developing contemporary garments.",
+  ]),
+  FAQ_PAIR([
+    "Is Sarjan Textiles a family business?",
+    "Our roots are deeply connected to a generational textile business, while our apparel manufacturing division brings a modern approach to craft-based garment production.",
+  ]),
+];
+
+const ESSENCE_FAQS: Array<Record<AppLocale, [string, string]>> = [
+  FAQ_PAIR([
+    "What crafts do you specialize in?",
+    "We specialize in Ajrakh, Bandhani, Batik, handcrafted textiles, heritage-inspired techniques, and artisan-led craft development.",
+  ]),
+  FAQ_PAIR([
+    "What is Ajrakh?",
+    "Ajrakh is a traditional hand block printing craft known for its intricate patterns, natural dye processes, and deep cultural heritage, particularly associated with Kutch, Gujarat.",
+  ]),
+  FAQ_PAIR([
+    "What is Bandhani?",
+    "Bandhani is a traditional tie-dye textile craft created through intricate hand-tied resist dyeing techniques that produce distinctive patterns and textures.",
+  ]),
+  FAQ_PAIR([
+    "What is Batik?",
+    "Batik is a wax-resist dyeing technique used to create detailed patterns and artistic textile surfaces.",
+  ]),
+  FAQ_PAIR([
+    "Why are handicrafts important in modern fashion?",
+    "Handicrafts preserve cultural heritage, support artisan communities, create unique products, and bring authenticity and craftsmanship into contemporary apparel.",
+  ]),
+];
+
+const CATEGORY_FAQS: Array<Record<AppLocale, [string, string]>> = [
+  FAQ_PAIR([
+    "What products does Sarjan Textiles manufacture?",
+    "We manufacture Ajrakh shirts, Ajrakh kurtas, Bandhani apparel, Batik garments, craft-based menswear, contemporary womenswear, fusion wear, co-ord sets, kaftans, dresses, and private label collections.",
+  ]),
+  FAQ_PAIR([
+    "Do you manufacture custom designs?",
+    "Yes. We develop custom collections according to brand requirements, design concepts, fabric preferences, and market positioning.",
+  ]),
+  FAQ_PAIR([
+    "Can retailers buy wholesale?",
+    "Yes. We supply wholesale apparel collections to boutiques, retailers, multi-brand stores, and fashion businesses.",
+  ]),
+  FAQ_PAIR([
+    "Do you manufacture sustainable clothing?",
+    "We develop sustainable clothing solutions using artisan techniques, handcrafted textiles, natural processes where applicable, and long-lasting garment construction.",
+  ]),
+];
+
+const MANUFACTURING_FAQS: Array<Record<AppLocale, [string, string]>> = [
+  FAQ_PAIR([
+    "Do you provide end-to-end garment manufacturing?",
+    "Yes. We handle sourcing, craft development, sampling, pattern making, production, finishing, quality control, and wholesale supply.",
+  ]),
+  FAQ_PAIR([
+    "Can I manufacture my own clothing brand with Sarjan Textiles?",
+    "Yes. We provide private label and white label garment manufacturing services for emerging and established brands.",
+  ]),
+  FAQ_PAIR([
+    "Do you provide sampling services?",
+    "Yes. We assist clients with sample development before bulk production.",
+  ]),
+  FAQ_PAIR([
+    "What is your production capability?",
+    "At Sarjan Textiles, our integrated manufacturing system and artisan network enable us to manage both small-scale development and larger production requirements.",
+  ]),
+  FAQ_PAIR([
+    "Do I need separate vendors for fabric, stitching, and finishing?",
+    "No. At Sarjan Textiles, we provide a complete solution under one roof, reducing complexity and improving consistency.",
+  ]),
+];
+
+const CONTACT_FAQS: Array<Record<AppLocale, [string, string]>> = [
+  FAQ_PAIR([
+    "Who can work with Sarjan Textiles?",
+    "Fashion brands, retailers, boutiques, wholesalers, exporters, private labels, startups, and sourcing agencies - all can work with Sarjan Textiles.",
+  ]),
+  FAQ_PAIR([
+    "Do you export internationally?",
+    "Currently, we do limited exports to some countries.",
+  ]),
+  FAQ_PAIR([
+    "How can I start manufacturing with Sarjan Textiles?",
+    "Simply contact our team with your requirements, product ideas, or sourcing needs. We will guide you through development and production.",
+  ]),
+  FAQ_PAIR([
+    "Can I request a wholesale catalog?",
+    "Yes. Contact us to receive our latest wholesale collections and product offerings.",
+  ]),
+];
+
+const PAGE_FAQS: Record<
+  PageFaqKey,
+  Array<Record<AppLocale, [string, string]>>
+> = {
+  home: HOMEPAGE_FAQS,
+  about: ABOUT_FAQS,
+  "essence-of-craft": ESSENCE_FAQS,
+  categories: CATEGORY_FAQS,
+  "simplifying-craft-manufacturing": MANUFACTURING_FAQS,
+  contact: CONTACT_FAQS,
+  all: [
+    ...HOMEPAGE_FAQS,
+    ...ABOUT_FAQS,
+    ...ESSENCE_FAQS,
+    ...CATEGORY_FAQS,
+    ...MANUFACTURING_FAQS,
+    ...CONTACT_FAQS,
+  ],
+};
+
+export function faqItemsForPage(
+  page: PageFaqKey,
+  locale: AppLocale,
+): Array<[string, string]> {
+  return (PAGE_FAQS[page] ?? []).map((item) => item[locale] ?? item.en);
+}
+
 export function faqItemsForLocale(locale: AppLocale): Array<[string, string]> {
-  return FAQ_ITEMS.map((item) => item[locale] ?? item.en);
+  return faqItemsForPage("all", locale);
 }

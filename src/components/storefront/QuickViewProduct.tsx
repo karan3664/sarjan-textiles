@@ -9,6 +9,7 @@ import { productImageForColorIndex } from "@/lib/product-colors";
 import { PriceGate } from "./PriceGate";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { StorefrontProductImage } from "./StorefrontProductImage";
+import { formatMoqSets } from "@/lib/b2b-order-messages";
 
 type QuickViewProductProps = {
   product: Product;
@@ -60,7 +61,7 @@ export function QuickViewProduct({
             <div className="text text-btn-uppercase">{product.category}</div>
             <h3 className="name">{product.name}</h3>
             <div className="text-caption-1 text-secondary">
-              MOQ {product.moq}.{" "}
+              MOQ {formatMoqSets(product.moq)}.{" "}
               <span
                 className={unavailable ? "sarjan-stock-unavailable" : undefined}
               >

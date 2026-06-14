@@ -4,7 +4,12 @@ import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { resolveCategoryHub } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
-import { JsonLd, pageMetadata, splitKeywords } from "@/lib/seo";
+import {
+  categoryHubDetailJsonLd,
+  JsonLdGraph,
+  pageMetadata,
+  splitKeywords,
+} from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -49,16 +54,11 @@ export default async function CategoryHubPage({
   if (!hubRaw) notFound();
   const hub = resolveCategoryHub(hubRaw, getCacheableStorefrontLocale());
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: hub.title,
-    description: hub.intro || hub.subtitle,
-  };
+  const jsonLd = categoryHubDetailJsonLd(hub);
 
   return (
     <ModaveShell>
-      <JsonLd data={jsonLd} />
+      <JsonLdGraph items={jsonLd} />
       <CategoryHubDetailContent hub={hub} />
     </ModaveShell>
   );

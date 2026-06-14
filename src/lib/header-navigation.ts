@@ -33,7 +33,6 @@ export const HEADER_NAV_PAGE_OPTIONS: { label: string; href: string }[] = [
   { label: "FAQs", href: "/faqs" },
   { label: "Inquiry", href: "/inquiry" },
   { label: "Certifications", href: "/certifications" },
-  { label: "Infrastructure", href: "/infrastructure" },
   { label: "Login", href: "/login" },
   { label: "Register", href: "/register" },
   { label: "Cart", href: "/cart" },

@@ -15,7 +15,7 @@ function edgeVerifyFetchUrl(request: NextRequest): URL {
     return new URL("/api/admin/auth/edge-verify", configured);
   }
   // Docker/Coolify: loopback avoids middleware subrequests via the public URL failing.
-  const port = process.env["PORT"]?.trim() || "3000";
+  const port = process.env["PORT"]?.trim() || request.nextUrl.port || "3000";
   return new URL(`http://127.0.0.1:${port}/api/admin/auth/edge-verify`);
 }
 
@@ -56,10 +56,13 @@ export async function verifyAdminFromRequestEdge(
   const fromBearer = bearerToken(request);
   const token = fromBearer ?? cookieToken;
 
-  // Production uses Postgres — full JWT + session_version validation on Node only.
-  // Edge HMAC often lacks runtime ADMIN_SESSION_SECRET in Docker/Coolify middleware.
-  if (process.env["DATABASE_URL"]?.trim()) {
-    return verifyAdminSessionVersionOnNode(request);
+  // Production Postgres + local dev: validate on Node (Edge lacks bcrypt admin env reliably).
+  if (
+    process.env["DATABASE_URL"]?.trim() ||
+    process.env.NODE_ENV === "development"
+  ) {
+    const nodeSession = await verifyAdminSessionVersionOnNode(request);
+    if (nodeSession) return nodeSession;
   }
 
   return verifyAdminTokenForMiddleware(token);

@@ -48,6 +48,10 @@ export type Product = {
   pricingSource?: "public" | "client_custom" | "client_discount";
   clientDiscountPercentage?: number;
   isFeatured?: boolean;
+  /** Highlight in new-arrivals rails (app + storefront). */
+  isNewArrival?: boolean;
+  /** Highlight in best-seller rails (app + storefront). */
+  isBestSeller?: boolean;
   /** Admin: timed wholesale deal — original price stays in `price` until deal ends. */
   dealEnabled?: boolean;
   /** ISO datetime when deal expires. */
@@ -160,7 +164,6 @@ export const footerInformationLinks = [
   { label: "FAQs", href: "/faqs" },
   { label: "Inquiry", href: "/inquiry" },
   { label: "Certifications", href: "/certifications" },
-  { label: "Infrastructure", href: "/infrastructure" },
   { label: "Process", href: "/process" },
   { label: "Blog", href: "/blog" },
 ];

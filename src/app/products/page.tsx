@@ -5,7 +5,7 @@ import {
   productsListingCanonical,
   type ProductListingSearch,
 } from "@/lib/products-canonical";
-import { JsonLd } from "@/lib/seo";
+import { JsonLdGraph } from "@/lib/seo";
 
 /** ISR catalog listing — inventory refreshes on revalidate + client OOS ribbons. */
 export const revalidate = 60;
@@ -77,7 +77,7 @@ export default async function ProductsPage({
 
   return (
     <ModaveShell>
-      <JsonLd data={jsonLd} />
+      <JsonLdGraph items={[jsonLd]} />
       <ProductsListingDynamic
         page={Number(page ?? 1)}
         sort={sort}

@@ -7,14 +7,14 @@ import { resolveProduct } from "@/lib/product-localize";
 import { getProductCategoryRoute } from "@/lib/product-seo-slug";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
-  JsonLd,
+  JsonLdGraph,
+  collectionPageJsonLd,
   listingBreadcrumbJsonLd,
   pageMetadata,
   productBreadcrumbJsonLd,
+  productCatalogItemListJsonLd,
   productJsonLd,
   productMetadata,
-  productReviewJsonLd,
-  siteUrl,
 } from "@/lib/seo";
 import { listApprovedProductReviews } from "@/lib/reviews-store";
 import { notFound, redirect } from "next/navigation";
@@ -87,7 +87,7 @@ export default async function ProductSlugPage({
       page: 1,
       limit: 8,
     });
-    const reviewSchema = productReviewJsonLd(
+    const reviewSchema = productJsonLd(
       product,
       reviewPayload.items.map((review) => ({
         author: review.clientName,
@@ -96,17 +96,17 @@ export default async function ProductSlugPage({
         body: review.body,
         datePublished: review.createdAt,
       })),
-      {
-        ratingValue: reviewPayload.stats.averageRating,
-        reviewCount: reviewPayload.stats.totalReviews,
-      },
+      reviewPayload.stats.totalReviews
+        ? {
+            ratingValue: reviewPayload.stats.averageRating,
+            reviewCount: reviewPayload.stats.totalReviews,
+          }
+        : undefined,
     );
 
     return (
       <ModaveShell>
-        <JsonLd data={productJsonLd(product)} />
-        <JsonLd data={productBreadcrumbJsonLd(product)} />
-        {reviewSchema ? <JsonLd data={reviewSchema} /> : null}
+        <JsonLdGraph items={[reviewSchema, productBreadcrumbJsonLd(product)]} />
         <ProductDetailDynamic product={product} />
       </ModaveShell>
     );
@@ -125,25 +125,49 @@ export default async function ProductSlugPage({
       minPrice,
       maxPrice,
     } = await searchParams;
-    const jsonLd = {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
+    const locale = getCacheableStorefrontLocale();
+    const catalog = await getCatalogProducts({
+      page: Number(page ?? 1),
+      sort,
+      filters: {
+        ...categoryRoute.filters,
+        category,
+        fabric,
+        color,
+        size,
+        stock,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      },
+      q: categoryRoute.q,
+      locale,
+      limit: 24,
+    });
+    const jsonLd = collectionPageJsonLd({
       name: categoryRoute.title,
       description: categoryRoute.description,
-      url: new URL(`/products/${categoryRoute.slug}`, siteUrl).toString(),
-    };
+      path: `/products/${categoryRoute.slug}`,
+    });
+    const itemList = productCatalogItemListJsonLd({
+      name: categoryRoute.title,
+      path: `/products/${categoryRoute.slug}`,
+      products: catalog.items,
+    });
     return (
       <ModaveShell>
-        <JsonLd data={jsonLd} />
-        <JsonLd
-          data={listingBreadcrumbJsonLd([
-            { name: "Home", path: "/" },
-            { name: "Products", path: "/products" },
-            {
-              name: categoryRoute.title,
-              path: `/products/${categoryRoute.slug}`,
-            },
-          ])}
+        <JsonLdGraph
+          items={[
+            jsonLd,
+            itemList,
+            listingBreadcrumbJsonLd([
+              { name: "Home", path: "/" },
+              { name: "Products", path: "/products" },
+              {
+                name: categoryRoute.title,
+                path: `/products/${categoryRoute.slug}`,
+              },
+            ]),
+          ]}
         />
         <ProductSeoListingPage
           title={categoryRoute.title}

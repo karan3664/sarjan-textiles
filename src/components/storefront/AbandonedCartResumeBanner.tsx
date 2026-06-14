@@ -1,13 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cartItemCount, readCart, syncCartWithApi } from "@/lib/cart-client";
 import { readStoredClientId } from "@/lib/client-auth-browser";
 
 const DISMISS_KEY = "sarjan-cart-resume-dismissed";
+const BODY_CLASS = "sarjan-cart-banner-visible";
+
+function syncCartBannerOffset(height: number) {
+  document.documentElement.style.setProperty(
+    "--sarjan-cart-banner-height",
+    `${height}px`,
+  );
+}
 
 export function AbandonedCartResumeBanner() {
+  const bannerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [count, setCount] = useState(0);
 
@@ -49,6 +58,33 @@ export function AbandonedCartResumeBanner() {
     };
   }, []);
 
+  useEffect(() => {
+    const body = document.body;
+    const root = bannerRef.current;
+
+    if (!visible || !root) {
+      body.classList.remove(BODY_CLASS);
+      syncCartBannerOffset(0);
+      return;
+    }
+
+    body.classList.add(BODY_CLASS);
+
+    const measure = () => syncCartBannerOffset(root.offsetHeight);
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(root);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      body.classList.remove(BODY_CLASS);
+      syncCartBannerOffset(0);
+    };
+  }, [visible]);
+
   if (!visible) return null;
 
   const dismiss = () => {
@@ -60,7 +96,7 @@ export function AbandonedCartResumeBanner() {
   };
 
   return (
-    <div className="sarjan-cart-resume-banner" role="status">
+    <div ref={bannerRef} className="sarjan-cart-resume-banner" role="status">
       <div className="container">
         <div className="sarjan-cart-resume-banner__inner">
           <p className="mb_0">

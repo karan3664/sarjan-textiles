@@ -9,6 +9,7 @@ import { useProductSizeGroup } from "@/hooks/useProductSizeGroup";
 import {
   B2B_STOCK_INDICATIVE_PDP,
   formatAvailablePieces,
+  formatMoqSetsLabel,
 } from "@/lib/b2b-order-messages";
 import { productAvailablePieces } from "@/lib/product-availability";
 
@@ -135,7 +136,7 @@ export function ProductFeatureStockCaption({
   const available = productAvailablePieces(product);
   return (
     <div className="text-caption-1 text-secondary">
-      MOQ {product.moq}.{" "}
+      {formatMoqSetsLabel(product.moq)}{" "}
       {unavailable ? (
         <span className="sarjan-stock-unavailable">
           {PRODUCT_UNAVAILABLE_MESSAGE}

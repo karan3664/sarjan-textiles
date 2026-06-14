@@ -6,23 +6,25 @@ import {
   resolveTestimonials,
 } from "@/lib/content-localize";
 import { resolveProducts } from "@/lib/product-localize";
+import { withProductFeedFlags } from "@/lib/product-feed-flags";
+import { productCatalogActive } from "@/lib/product-purchase-eligibility";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 
 export async function GET(request: Request) {
   const locale = localeFromRequest(request);
   const cms = await getLocalizedCmsSnapshot();
 
-  const featured = applyProductDeals(
-    resolveProducts(cms.products, locale)
-      .filter((product) => product.isFeatured)
-      .slice(0, 12),
+  const products = applyProductDeals(
+    withProductFeedFlags(
+      resolveProducts(cms.products, locale).filter(productCatalogActive),
+    ),
   );
 
   return jsonLocalized(
     {
       siteSettings: cms.siteSettings,
       home: resolveHomeForLocale(cms.home, locale),
-      products: featured,
+      products,
       blogs: resolveBlogs(cms.blogs, locale).slice(0, 6),
       testimonials: resolveTestimonials(
         cms.testimonials.filter(

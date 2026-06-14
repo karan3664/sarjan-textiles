@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { PublicCustomSitePage } from "@/lib/pages-localize";
+import type { PageFaqKey } from "@/lib/storefront-ui";
 import { CustomContentSections } from "@/components/storefront/ModaveSections";
 import type { Product } from "@/data/mock";
 import {
@@ -7,6 +8,15 @@ import {
   visibleCustomSections,
 } from "@/lib/cms-custom-section-utils";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
+import { PageFaqSection } from "./PageFaqSection";
+
+function customPageFaqKey(slug: string): PageFaqKey | null {
+  if (slug === "essence-of-craft") return "essence-of-craft";
+  if (slug === "simplifying-craft-manufacturing") {
+    return "simplifying-craft-manufacturing";
+  }
+  return null;
+}
 
 export async function CustomSitePageView({
   page,
@@ -18,6 +28,7 @@ export async function CustomSitePageView({
   const hasSubtitle = hasVisibleCmsText(page.heroSubtitle);
   const hasHeroImage = Boolean(page.heroImage?.trim());
   const sections = visibleCustomSections(page.sections);
+  const faqKey = customPageFaqKey(page.slug);
 
   return (
     <div className="sarjan-custom-site-page">
@@ -47,6 +58,7 @@ export async function CustomSitePageView({
         </div>
       </section>
       <CustomContentSections sections={sections} products={products} />
+      {faqKey ? <PageFaqSection page={faqKey} /> : null}
     </div>
   );
 }

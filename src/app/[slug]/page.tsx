@@ -6,7 +6,12 @@ import {
   RESERVED_CUSTOM_SITE_SLUGS,
 } from "@/lib/custom-site-page-route";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
-import { JsonLd, pageMetadata, splitKeywords } from "@/lib/seo";
+import {
+  JsonLdGraph,
+  pageMetadata,
+  splitKeywords,
+  webPageJsonLd,
+} from "@/lib/seo";
 import { resolveCustomSitePage } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 
@@ -60,16 +65,17 @@ export default async function CustomSiteRootSlugPage({
   const { slug } = await params;
   const { page, products } = await loadCustomSitePage(slug);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
+  const jsonLd = webPageJsonLd({
     name: page.title,
     description: page.metaDescription || page.heroSubtitle,
-  };
+    path: customSitePagePath(page.slug),
+    image: page.heroImage,
+    imageAlt: page.title,
+  });
 
   return (
     <ModaveShell>
-      <JsonLd data={jsonLd} />
+      <JsonLdGraph items={[jsonLd]} />
       <CustomSitePageView page={page} products={products} />
     </ModaveShell>
   );

@@ -3,7 +3,7 @@ import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCmsBlogBySlug } from "@/lib/cms-store";
 import { resolveBlog } from "@/lib/content-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
-import { blogJsonLd, blogMetadata, JsonLd } from "@/lib/seo";
+import { articleJsonLd, blogMetadata, JsonLdGraph } from "@/lib/seo";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function BlogDetailPage({
 
   return (
     <ModaveShell>
-      <JsonLd data={blogJsonLd(blog)} />
+      <JsonLdGraph items={[articleJsonLd(blog)]} />
       <BlogDetailDynamic slug={slug} />
     </ModaveShell>
   );

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Fabric AR preview</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+      }
+      video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .overlay {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        top: 22%;
+        height: 42%;
+        opacity: 0.72;
+        background-size: 120px 120px;
+        background-repeat: repeat;
+        mix-blend-mode: multiply;
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+      }
+      .err {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        text-align: center;
+        color: #fff;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+        background: rgba(0, 0, 0, 0.75);
+      }
+    </style>
+  </head>
+  <body>
+    <video id="v" playsinline muted autoplay></video>
+    <div class="overlay" id="o"></div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var texture = params.get("texture") || "";
+        var overlay = document.getElementById("o");
+        var video = document.getElementById("v");
+
+        function fail(code) {
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(code);
+          }
+          document.body.innerHTML =
+            '<div class="err">Camera permission needed to preview fabric on a surface.</div>';
+        }
+
+        if (texture) {
+          overlay.style.backgroundImage = "url(" + texture + ")";
+        }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage("camera-unavailable");
+          }
+          document.body.innerHTML =
+            '<div class="err">Camera is not available in this view. Update the app and try again.</div>';
+          return;
+        }
+
+        navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: "environment" }, audio: false })
+          .then(function (stream) {
+            video.srcObject = stream;
+            return video.play();
+          })
+          .catch(function () {
+            fail("camera-denied");
+          });
+      })();
+    </script>
+  </body>
+</html>
