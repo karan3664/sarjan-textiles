@@ -1,7 +1,8 @@
 {
-  "latestVersion": "1.0.74",
-  "versionCode": 75,
+  "latestVersion": "1.0.75",
+  "versionCode": 76,
+  "releaseNotes": "Update Available modal no longer appears half-cut on Android when opening the app. Place Order now works on the first tap \u2014 fixed keyboard and loading issues at checkout. Saved address loads correctly; checkout is faster when your profile address is unchanged. Cart shows a clear message when checkout is blocked (MOQ or approval pending). Home screen loads more smoothly without a white flash after the skeleton loader. Release notes in the update popup now change with each new APK build.Update modal layout fix on Android. Place Order works on first tap. Checkout and cart improvements. Home screen stability fixes.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-14T16:56:49.000Z"
+  "updatedAt": "2026-06-14T17:11:02.000Z"
 }
