@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.78",
-  "versionCode": 79,
-  "releaseNotes": "Fix Android cart: wait for local hydration before server sync, prevent empty storage read from wiping items, and separate product-card add button from navigation tap.",
+  "latestVersion": "1.0.79",
+  "versionCode": 80,
+  "releaseNotes": "Free Size support for women's wear \u2014 products now add to cart correctly. B2B cart fixes for best sellers and stock display. Password show/hide on register and change password screens.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-14T18:16:00.000Z"
+  "updatedAt": "2026-06-14T18:36:29.000Z"
 }
