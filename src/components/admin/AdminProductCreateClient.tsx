@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
-import { SIZE_GROUPS } from "@/lib/cart-client";
+import { SIZE_GROUPS, SIZE_GROUP_LABELS } from "@/lib/cart-client";
 import { setStockForSizeInGroup } from "@/lib/bulk-product-stock";
 import { totalPieceStockFromSetCounts } from "@/lib/set-stock";
 import type { ProductCategoryMaster } from "@/lib/cms-store";
@@ -92,7 +92,7 @@ const commonColors = [
   "White",
   "Green",
 ];
-const commonSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
+const commonSizes = ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
 
 const emptyForm: ProductForm = {
   name: "",
@@ -1230,7 +1230,7 @@ export function AdminProductCreateClient({
                     className="tf-button style-1"
                     onClick={() => toggleSizeGroup(SIZE_GROUPS.regular)}
                   >
-                    XS to XXL
+                    {SIZE_GROUP_LABELS.regular}
                   </button>
                   <button
                     type="button"
@@ -1271,7 +1271,7 @@ export function AdminProductCreateClient({
                 </fieldset>
                 <fieldset>
                   <div className="text-button font-instrument mb-8">
-                    Regular sets (XS–XXL)
+                    Regular sets (S–XXL)
                   </div>
                   <input
                     type="number"

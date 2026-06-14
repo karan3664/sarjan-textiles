@@ -10,7 +10,7 @@ import { resolveSyncedSnapshot } from "@/lib/client-sync-timestamp";
 export const CART_KEY = "sarjan-cart";
 export const CART_UPDATED_AT_KEY = "sarjan-cart-updated-at";
 export const FULL_SIZE_RUN = ["S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"];
-export { SIZE_GROUPS } from "@/lib/size-groups";
+export { SIZE_GROUPS, SIZE_GROUP_LABELS } from "@/lib/size-groups";
 
 export type StoredCartItem = {
   slug: string;

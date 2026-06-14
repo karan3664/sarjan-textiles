@@ -5,16 +5,16 @@ export type SizeGroupId = "regular" | "plus";
 export const SIZE_GROUP_ORDER: SizeGroupId[] = ["regular", "plus"];
 
 export const SIZE_GROUP_LABELS: Record<SizeGroupId, string> = {
-  regular: "XS to XXL",
+  regular: "S to XXL",
   plus: "3XL to 5XL",
 };
 
 export const SIZE_GROUPS: Record<SizeGroupId, readonly string[]> = {
-  regular: ["XS", "S", "M", "L", "XL", "XXL"],
+  regular: ["S", "M", "L", "XL", "XXL"],
   plus: ["3XL", "4XL", "5XL"],
 };
 
-const DEPRECATED_SIZES = new Set(["Free Size"]);
+const DEPRECATED_SIZES = new Set(["Free Size", "XS"]);
 
 export function isDeprecatedSize(size: string) {
   return DEPRECATED_SIZES.has(size.trim());

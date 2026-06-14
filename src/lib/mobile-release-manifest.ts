@@ -5,6 +5,8 @@ export type MobileReleaseManifest = {
   latestVersion: string;
   versionCode: number;
   apkFile: string;
+  /** Shown in app update modal and /download — written by `npm run release:apk`. */
+  releaseNotes?: string;
   /** Remote fallback when APK is not on the VPS volume (GitHub raw / release asset). */
   apkSourceUrl?: string;
   updatedAt?: string;
@@ -47,11 +49,13 @@ export async function readMobileReleaseManifest(): Promise<MobileReleaseManifest
     }
 
     const apkSourceUrl = data.apkSourceUrl?.trim() || undefined;
+    const releaseNotes = data.releaseNotes?.trim() || undefined;
 
     return {
       latestVersion,
       versionCode,
       apkFile,
+      releaseNotes,
       apkSourceUrl,
       updatedAt: data.updatedAt,
     };

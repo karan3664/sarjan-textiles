@@ -20,7 +20,7 @@ export type Product = {
   damaged?: number;
   colors: string[];
   sizes: string[];
-  /** Available full sets for XS–XXL group (per color). */
+  /** Available full sets for S–XXL group (per color). */
   stockRegularSets?: number;
   /** Available full sets for 3XL–5XL group (per color). */
   stockPlusSets?: number;

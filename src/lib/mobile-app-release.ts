@@ -54,12 +54,9 @@ export async function getMobileAppRelease(): Promise<MobileAppRelease> {
     process.env.MOBILE_APP_FORCE_UPDATE === "1" ||
     process.env.MOBILE_APP_FORCE_UPDATE === "true";
   const releaseNotes =
+    manifest?.releaseNotes?.trim() ||
     process.env.MOBILE_APP_RELEASE_NOTES?.trim() ||
-    [
-      "Production backend on sarjantextiles.com (VPS) with improved OTP and GST registration.",
-      "Home feed sections, reorder strip, and notification deep links.",
-      "Stability fixes for profile navigation and login.",
-    ].join(" ");
+    `Sarjan Textiles v${latestVersion} — performance and stability improvements.`;
 
   return {
     latestVersion,
