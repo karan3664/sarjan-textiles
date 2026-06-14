@@ -10,6 +10,10 @@ import type { AuthBanners } from "@/lib/auth-banner-types";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import { clientPostLoginPath } from "@/lib/auth-route-guards";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import {
+  MIN_CLIENT_PASSWORD_LENGTH,
+  minClientPasswordMessage,
+} from "@/lib/password-policy";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type AuthMode = "login" | "register" | "forgot";
@@ -248,6 +252,14 @@ function AuthPageClientInner({
     if (isRegister && payload.password !== payload.confirmPassword) {
       setLoading(false);
       setMessage("Passwords do not match");
+      return;
+    }
+    if (
+      isRegister &&
+      String(payload.password ?? "").length < MIN_CLIENT_PASSWORD_LENGTH
+    ) {
+      setLoading(false);
+      setMessage(minClientPasswordMessage());
       return;
     }
     if (isRegister && !emailVerified) {
@@ -877,25 +889,35 @@ function AuthPageClientInner({
                     </>
                   ) : null}
                   {!isForgot && (isRegister || usePasswordLogin) ? (
-                    <fieldset className="position-relative password-item">
-                      <input
-                        className="input-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Password*"
-                        name="password"
-                        required
-                      />
-                      <button
-                        type="button"
-                        className={`toggle-password ${showPassword ? "" : "unshow"}`}
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                        onClick={() => setShowPassword((visible) => !visible)}
-                      >
-                        <i className="icon-eye-hide-line" />
-                      </button>
-                    </fieldset>
+                    <>
+                      {isRegister ? (
+                        <p className="text-caption-1 mb_8">
+                          {minClientPasswordMessage()}
+                        </p>
+                      ) : null}
+                      <fieldset className="position-relative password-item">
+                        <input
+                          className="input-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password*"
+                          name="password"
+                          minLength={
+                            isRegister ? MIN_CLIENT_PASSWORD_LENGTH : undefined
+                          }
+                          required
+                        />
+                        <button
+                          type="button"
+                          className={`toggle-password ${showPassword ? "" : "unshow"}`}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          onClick={() => setShowPassword((visible) => !visible)}
+                        >
+                          <i className="icon-eye-hide-line" />
+                        </button>
+                      </fieldset>
+                    </>
                   ) : null}
                   {isRegister ? (
                     <fieldset className="position-relative password-item">
@@ -904,6 +926,7 @@ function AuthPageClientInner({
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm Password*"
                         name="confirmPassword"
+                        minLength={MIN_CLIENT_PASSWORD_LENGTH}
                         required
                       />
                       <button

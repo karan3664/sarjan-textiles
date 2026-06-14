@@ -7,6 +7,10 @@ import { OtpCodeInput } from "@/components/storefront/OtpCodeInput";
 import type { AuthBanners } from "@/lib/auth-banner-types";
 import { persistClientSession } from "@/lib/client-auth-browser";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import {
+  MIN_CLIENT_PASSWORD_LENGTH,
+  minClientPasswordMessage,
+} from "@/lib/password-policy";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 type Step = "account" | "email" | "password" | "done";
@@ -112,6 +116,10 @@ export function ForgotPasswordFlowClient({
     event.preventDefault();
     if (newPassword !== confirmPassword) {
       setMessage("Passwords do not match");
+      return;
+    }
+    if (newPassword.length < MIN_CLIENT_PASSWORD_LENGTH) {
+      setMessage(minClientPasswordMessage("New password"));
       return;
     }
     setLoading(true);
@@ -242,12 +250,15 @@ export function ForgotPasswordFlowClient({
 
               {step === "password" ? (
                 <form onSubmit={completeReset}>
+                  <p className="text-caption-1 mb_8">
+                    {minClientPasswordMessage("New password")}
+                  </p>
                   <fieldset className="position-relative password-item">
                     <input
                       type="password"
                       placeholder="New password*"
                       value={newPassword}
-                      minLength={8}
+                      minLength={MIN_CLIENT_PASSWORD_LENGTH}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                     />
@@ -257,7 +268,7 @@ export function ForgotPasswordFlowClient({
                       type="password"
                       placeholder="Confirm new password*"
                       value={confirmPassword}
-                      minLength={8}
+                      minLength={MIN_CLIENT_PASSWORD_LENGTH}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                     />

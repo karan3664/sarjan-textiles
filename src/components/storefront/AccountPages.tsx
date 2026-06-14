@@ -49,6 +49,10 @@ import {
 import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import { enrichOrderPricing, formatInrPricingLine } from "@/lib/gst-display";
+import {
+  MIN_CLIENT_PASSWORD_LENGTH,
+  minClientPasswordMessage,
+} from "@/lib/password-policy";
 import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
 import { AccountAddressManager } from "@/components/storefront/AccountAddressManager";
 import { OrderLineReviewCta } from "@/components/storefront/OrderLineReviewCta";
@@ -412,6 +416,10 @@ function AccountDashboardContent() {
     }
     if (password.newPassword !== password.confirmPassword) {
       setPasswordMessage("New password and confirm password do not match.");
+      return;
+    }
+    if (password.newPassword.length < MIN_CLIENT_PASSWORD_LENGTH) {
+      setPasswordMessage(minClientPasswordMessage("New password"));
       return;
     }
 

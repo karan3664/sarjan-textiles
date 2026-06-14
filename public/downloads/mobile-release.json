@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.76",
-  "versionCode": 77,
-  "releaseNotes": "Banner text displays fully without clipping. NEW and Best seller badges stack cleanly on product cards. Size sets show S to XXL only (XS removed). Checkout and update modal fixes from prior release.",
+  "latestVersion": "1.0.77",
+  "versionCode": 78,
+  "releaseNotes": "Register and reset passwords now require at least 10 characters (matches website). Compare page color swatches and star ratings fixed on web.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-14T17:38:32.000Z"
+  "updatedAt": "2026-06-14T18:07:16.000Z"
 }
