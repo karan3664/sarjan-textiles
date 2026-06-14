@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { LaunchPageAnalytics } from "@/components/storefront/LaunchPageAnalytics";
+
 export const metadata: Metadata = {
   title: "Launching Soon | Sarjan Textiles",
   description:
@@ -12,5 +14,10 @@ export default function LaunchLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <LaunchPageAnalytics />
+      {children}
+    </>
+  );
 }

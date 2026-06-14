@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import {
@@ -13,21 +14,13 @@ import { FULL_SIZE_RUN } from "@/lib/cart-client";
 import { readCompare } from "@/lib/compare-client";
 import { PageTitle } from "./PageTitle";
 import { PriceGate, useClientHasB2BToken } from "./PriceGate";
+import { ProductCardRating } from "./ProductCardRating";
 import { StorefrontProductImage } from "./StorefrontProductImage";
 import { formatMoqSets } from "@/lib/b2b-order-messages";
+import { productColorHex } from "@/lib/product-color-swatch";
 
 function sizeRun(product: Product) {
   return defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
-}
-
-function StarRow() {
-  return (
-    <div className="list-star">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <span className="icon icon-star" key={index} />
-      ))}
-    </div>
-  );
 }
 
 export function ComparePageClient({
@@ -70,12 +63,19 @@ export function ComparePageClient({
   const rows = [
     [
       "Rating",
-      (product: Product) => (
-        <>
-          <StarRow />
-          <span>({product.sold.toLocaleString("en-IN")})</span>
-        </>
-      ),
+      (product: Product) => {
+        const reviewCount = product.ratingCount ?? 0;
+        const displayRating = reviewCount > 0 ? product.rating : 0;
+        return (
+          <div className="tf-compare-rate">
+            <ProductCardRating
+              rating={displayRating}
+              className="sarjan-compare-rating"
+            />
+            <span>({reviewCount.toLocaleString("en-IN")})</span>
+          </div>
+        );
+      },
     ],
     [
       "Price",
@@ -101,8 +101,14 @@ export function ComparePageClient({
           {product.colors.slice(0, 5).map((color, index) => (
             <span
               className={`item ${index === 0 ? "active" : ""}`}
-              style={{ background: color.toLowerCase() }}
+              style={
+                {
+                  "--sarjan-swatch": productColorHex(color),
+                  backgroundColor: "var(--sarjan-swatch)",
+                } as CSSProperties
+              }
               key={color}
+              title={color}
             />
           ))}
         </div>

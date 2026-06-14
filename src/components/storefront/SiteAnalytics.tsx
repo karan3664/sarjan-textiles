@@ -1,9 +1,11 @@
 "use client";
 
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { cookieConsentRequired } from "@/lib/cookie-consent-client";
+import { GOOGLE_ANALYTICS_MEASUREMENT_ID } from "@/lib/google-analytics";
 
 const CONSENT_KEY = "sarjan-cookie-consent";
 
@@ -20,10 +22,8 @@ function hasConsent() {
   }
 }
 
-const googleAnalyticsId =
-  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || "";
-
 export function SiteAnalytics() {
+  const pathname = usePathname();
   const [gaOn, setGaOn] = useState(false);
 
   const sync = useCallback(() => {
@@ -40,12 +40,16 @@ export function SiteAnalytics() {
     };
   }, [sync]);
 
-  if (!gaOn || !googleAnalyticsId) return null;
+  if (pathname === "/launch" || !gaOn || !GOOGLE_ANALYTICS_MEASUREMENT_ID) {
+    return null;
+  }
+
+  const id = GOOGLE_ANALYTICS_MEASUREMENT_ID;
 
   return (
     <>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${id}`}
         strategy="afterInteractive"
       />
       <Script id="sarjan-google-analytics" strategy="afterInteractive">
@@ -53,7 +57,7 @@ export function SiteAnalytics() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${googleAnalyticsId}');
+            gtag('config', '${id}');
           `}
       </Script>
     </>

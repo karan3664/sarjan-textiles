@@ -5047,8 +5047,25 @@ button.accordion-button:not(.collapsed),
   justify-content: center;
 }
 
+.tf-compare-field .tf-compare-rate {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tf-compare-field .sarjan-compare-rating.sarjan-product-card-rating {
+  position: static;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  pointer-events: auto;
+}
+
 .tf-compare-field .list-compare-color .item {
   border: 1px solid #e4e4e4;
+  background-color: var(--sarjan-swatch, #cccccc);
 }
 
 .sarjan-logout-btn {
