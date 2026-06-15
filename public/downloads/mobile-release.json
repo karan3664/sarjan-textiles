@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.85",
-  "versionCode": 86,
-  "releaseNotes": "Show approved review photos on product pages and add play-video links. Includes review submit fixes and reliable photo upload from the app.",
+  "latestVersion": "1.0.86",
+  "versionCode": 87,
+  "releaseNotes": "Fix video upload on reviews (binary upload instead of JSON). Show approved review photos and play-video links on product pages.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-15T12:50:00.000Z"
+  "updatedAt": "2026-06-15T14:44:19.000Z"
 }
