@@ -13495,6 +13495,35 @@ html[data-theme="dark"] .sarjan-review-notice {
   font-size: 14px;
 }
 
+.sarjan-review-media-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sarjan-review-media-gallery__photo-link {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--sarjan-border, #e8e2d9);
+}
+
+.sarjan-review-media-gallery__photo {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+}
+
+.sarjan-review-media-gallery__video {
+  display: block;
+  width: min(280px, 100%);
+  max-height: 200px;
+  border-radius: 10px;
+  background: #111;
+}
+
 html[data-theme="dark"] .sarjan-order-review-cta.tf-btn.btn-line {
   color: var(--sarjan-text, #f4efe8) !important;
   border-color: rgba(232, 180, 180, 0.45) !important;

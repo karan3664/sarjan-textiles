@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ProductReview, ProductReviewStatus } from "@/lib/reviews-store";
+import { ReviewMediaGallery } from "@/components/shared/ReviewMediaGallery";
 
 type Metrics = {
   totalReviews: number;
@@ -234,16 +235,11 @@ export function AdminProductReviewsClient({
                     <div className="body-text text-secondary">
                       {review.body}
                     </div>
-                    {review.images.length ? (
-                      <div className="text-caption-1 text-muted">
-                        {review.images.length} photo(s)
-                      </div>
-                    ) : null}
-                    {review.videos.length ? (
-                      <div className="text-caption-1 text-muted">
-                        {review.videos.length} video(s)
-                      </div>
-                    ) : null}
+                    <ReviewMediaGallery
+                      images={review.images}
+                      videos={review.videos}
+                      variant="admin"
+                    />
                   </td>
                   <td>
                     <span className={statusBadge(review.status)}>

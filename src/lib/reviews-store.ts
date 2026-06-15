@@ -273,11 +273,13 @@ export async function listApprovedProductReviews(
   const sort = options.sort ?? "newest";
   const page = Math.max(1, Number(options.page ?? 1));
   const limit = Math.min(50, Math.max(1, Number(options.limit ?? 10)));
-  const slug = productSlug.trim();
+  const slug = normalizeReviewProductSlug(productSlug);
 
   const all = await readAll();
   const approved = all.filter(
-    (item) => item.productSlug === slug && item.status === "approved",
+    (item) =>
+      normalizeReviewProductSlug(item.productSlug) === slug &&
+      item.status === "approved",
   );
   const stats = computeReviewStats(approved);
   const sorted = sortReviews(approved, sort);

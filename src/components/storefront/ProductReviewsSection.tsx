@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductCardRating } from "@/components/storefront/ProductCardRating";
+import { ReviewMediaGallery } from "@/components/shared/ReviewMediaGallery";
 import { clientAuthJsonHeaders } from "@/lib/client-auth-browser";
 
 type PublicReview = {
@@ -572,20 +573,11 @@ function ProductReviewsSectionInner({
               </div>
               <h5 className="mb-2">{review.title}</h5>
               <p className="mb-3">{review.body}</p>
-              {review.images.length ? (
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                  {review.images.map((src) => (
-                    <img
-                      key={src}
-                      src={src}
-                      alt=""
-                      width={88}
-                      height={88}
-                      style={{ objectFit: "cover", borderRadius: 8 }}
-                    />
-                  ))}
-                </div>
-              ) : null}
+              <ReviewMediaGallery
+                images={review.images}
+                videos={review.videos}
+                variant="storefront"
+              />
               <button
                 type="button"
                 className="btn btn-link p-0"
