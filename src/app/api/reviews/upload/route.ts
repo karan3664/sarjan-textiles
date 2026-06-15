@@ -3,32 +3,18 @@ import path from "path";
 import sharp from "sharp";
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
 import { validateReviewVideoBuffer } from "@/lib/file-magic";
+import { readReviewUploadBody } from "@/lib/review-upload-body";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const imageMaxBytes = 6 * 1024 * 1024;
-const videoMaxBytes = 40 * 1024 * 1024;
 const uploadDir = path.join(
   process.cwd(),
   "public",
   "sarjan-assets",
   "review-uploads",
 );
-
-function isImage(file: File) {
-  return (
-    file.type.startsWith("image/") ||
-    /\.(jpe?g|png|webp|gif|avif)$/i.test(file.name)
-  );
-}
-
-function isVideo(file: File) {
-  return (
-    file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v)$/i.test(file.name)
-  );
-}
 
 export async function POST(request: Request) {
   const auth = await requireApprovedClientRequest(request);
@@ -42,22 +28,14 @@ export async function POST(request: Request) {
   );
   if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
-  const formData = await request.formData();
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    return Response.json({ error: "File required" }, { status: 400 });
+  const upload = await readReviewUploadBody(request);
+  if (upload instanceof Response) {
+    return upload;
   }
 
-  const kind = String(formData.get("kind") ?? "image");
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const { buffer, kind } = upload;
 
-  if (kind === "video" || isVideo(file)) {
-    if (buffer.byteLength > videoMaxBytes) {
-      return Response.json(
-        { error: "Video must be under 40 MB." },
-        { status: 400 },
-      );
-    }
+  if (kind === "video") {
     if (!validateReviewVideoBuffer(buffer)) {
       return Response.json({ error: "Invalid video file." }, { status: 400 });
     }
@@ -68,19 +46,6 @@ export async function POST(request: Request) {
       url: `/sarjan-assets/review-uploads/${filename}`,
       kind: "video",
     });
-  }
-
-  if (!isImage(file)) {
-    return Response.json(
-      { error: "Image or video file required." },
-      { status: 400 },
-    );
-  }
-  if (buffer.byteLength > imageMaxBytes) {
-    return Response.json(
-      { error: "Image must be under 6 MB." },
-      { status: 400 },
-    );
   }
 
   await mkdir(uploadDir, { recursive: true });

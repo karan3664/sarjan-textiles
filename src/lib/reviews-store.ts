@@ -47,6 +47,28 @@ export type ProductReview = {
   updatedAt: string;
 };
 
+/** Map Postgres / insert failures to client-safe review submit messages. */
+export function formatReviewSaveError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const code = (error as { code?: string })?.code;
+  if (
+    code === "42P01" ||
+    /relation ["']?product_reviews["']? does not exist/i.test(message)
+  ) {
+    return "Reviews are not set up on the server yet. Please try again in a few minutes.";
+  }
+  if (
+    code === "23505" ||
+    /duplicate key value violates unique constraint/i.test(message)
+  ) {
+    if (/product_reviews_unique_order_client/i.test(message)) {
+      return "This order already has a review on file. The server needs a quick database update — please try again shortly.";
+    }
+    return "You have already reviewed this product for this order.";
+  }
+  return message.trim() || "Could not save review.";
+}
+
 export type ProductReviewInput = {
   productSlug: string;
   orderId: string;

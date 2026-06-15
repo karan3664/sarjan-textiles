@@ -6,7 +6,10 @@ import {
 } from "@/lib/review-eligibility";
 import { normalizeReviewProductSlug } from "@/lib/review-lookup";
 import { trackReviewEvent } from "@/lib/review-analytics";
-import { createProductReview } from "@/lib/reviews-store";
+import {
+  createProductReview,
+  formatReviewSaveError,
+} from "@/lib/reviews-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import { USER_TEXT_LIMITS, validateUserText } from "@/lib/user-text";
 
@@ -126,8 +129,9 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Could not save review.";
-    return Response.json({ error: message }, { status: 500 });
+    return Response.json(
+      { error: formatReviewSaveError(error) },
+      { status: 500 },
+    );
   }
 }
