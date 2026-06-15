@@ -85,6 +85,13 @@ export function isNextImageOptimizable(src: string): boolean {
   const normalized = normalizeStorefrontImageSrc(src);
   if (!normalized) return false;
   if (isDataImage(normalized)) return false;
+  // Runtime upload routes — serve via <img> (optimizer returns 400 for /api/* paths).
+  if (
+    normalized.startsWith("/api/public/ai-products/") ||
+    normalized.startsWith("/uploads/ai-products/")
+  ) {
+    return false;
+  }
   return isApprovedRemoteImage(normalized);
 }
 
