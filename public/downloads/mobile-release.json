@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.82",
-  "versionCode": 83,
-  "releaseNotes": "Firebase Analytics + GA4, cart/notification badge fix for 10+ counts, per-product reviews per order, PDP color gallery sync, cart stock warnings, review helpful button, logout loader, splash and promotion tracking. Pair with latest website deploy for B2B wholesale ordering.",
+  "latestVersion": "1.0.83",
+  "versionCode": 84,
+  "releaseNotes": "Badge counts 10+ display correctly without hiding bell/cart icons. Includes Firebase Analytics, per-product reviews, PDP color gallery sync, and cart/review UX fixes.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-15T11:00:03.000Z"
+  "updatedAt": "2026-06-15T11:24:35.000Z"
 }
