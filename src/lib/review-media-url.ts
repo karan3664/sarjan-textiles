@@ -12,7 +12,7 @@ export function resolveReviewMediaUrl(src: string): string {
     /\/sarjan-assets\/review-uploads\/([^/?#]+)/i,
   )?.[1];
   if (legacy) {
-    return `/api/public/review-media/${encodeURIComponent(legacy)}`;
+    return `/uploads/review-media/${legacy}`;
   }
 
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
