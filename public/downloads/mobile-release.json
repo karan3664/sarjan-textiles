@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.80",
-  "versionCode": 81,
-  "releaseNotes": "Free Size support for women's wear \u2014 products now add to cart correctly. B2B cart fixes for best sellers and stock display. Password show/hide on register and change password screens.",
+  "latestVersion": "1.0.81",
+  "versionCode": 82,
+  "releaseNotes": "Production launch build: PDP color gallery sync, app tour with notifications demo, logout clears session and cart, cart sync fixes. Pair with website v1.0.81 for B2B wholesale ordering.",
   "apkFile": "sarjan-textiles.apk",
-  "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-15T05:09:27.000Z"
+  "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
+  "updatedAt": "2026-06-15T07:35:01.000Z"
 }
