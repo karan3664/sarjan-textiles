@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.83",
-  "versionCode": 84,
-  "releaseNotes": "Badge counts 10+ display correctly without hiding bell/cart icons. Includes Firebase Analytics, per-product reviews, PDP color gallery sync, and cart/review UX fixes.",
+  "latestVersion": "1.0.84",
+  "versionCode": 85,
+  "releaseNotes": "Fix review submit and photo/video upload. Reviews now send order data correctly; media uploads use reliable JSON transfer on Android and iOS.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-15T11:24:35.000Z"
+  "updatedAt": "2026-06-15T12:16:19.000Z"
 }
