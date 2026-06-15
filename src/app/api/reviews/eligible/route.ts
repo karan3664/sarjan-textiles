@@ -1,6 +1,7 @@
 import { requireApprovedClientRequest } from "@/lib/client-approved-session";
 import { listPendingReviewItems } from "@/lib/review-eligibility";
 import { findClientOrder } from "@/lib/local-db";
+import { normalizeReviewProductSlug } from "@/lib/review-lookup";
 import { findReviewByOrderProductClient } from "@/lib/reviews-store";
 
 export const runtime = "nodejs";
@@ -12,7 +13,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const orderId = searchParams.get("orderId")?.trim();
-  const productSlug = searchParams.get("productSlug")?.trim();
+  const productSlug = normalizeReviewProductSlug(
+    searchParams.get("productSlug")?.trim() ?? "",
+  );
 
   if (orderId && productSlug) {
     const order = await findClientOrder(client.id, orderId);

@@ -179,8 +179,8 @@ function ProductReviewsSectionInner({
         if (data.hasReview && !data.canEdit) {
           setMessage(
             data.reviewStatus === "pending"
-              ? "Your review is pending moderation."
-              : "You already submitted a review for this order.",
+              ? "Your review for this product is pending moderation."
+              : "You already submitted a review for this product.",
           );
         }
       } catch {
@@ -437,7 +437,11 @@ function ProductReviewsSectionInner({
           ) : null}
         </div>
 
-        {message ? <p className="text-secondary">{message}</p> : null}
+        {message ? (
+          <div className="sarjan-review-notice" role="status">
+            {message}
+          </div>
+        ) : null}
 
         {showForm ? (
           <div className="sarjan-review-form p-4 rounded-3 mb-30">
@@ -488,22 +492,37 @@ function ProductReviewsSectionInner({
               />
             </div>
             <div className="mb-3">
-              <label className="form-label" htmlFor="review-photos">
+              <span className="form-label d-block" id="review-photos-label">
                 Photos
+              </span>
+              <label
+                className="sarjan-review-file-upload"
+                htmlFor="review-photos"
+              >
+                <input
+                  id="review-photos"
+                  type="file"
+                  accept="image/*"
+                  className="sarjan-review-file-upload__input"
+                  aria-labelledby="review-photos-label"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file)
+                      void uploadImage(file).catch(() =>
+                        setMessage("Upload failed."),
+                      );
+                    e.target.value = "";
+                  }}
+                />
+                <span className="sarjan-review-file-upload__btn tf-btn btn-fill btn-sm">
+                  Choose file
+                </span>
+                <span className="sarjan-review-file-upload__hint text-secondary">
+                  {images.length
+                    ? `${images.length} photo(s) selected`
+                    : "No file chosen"}
+                </span>
               </label>
-              <input
-                id="review-photos"
-                type="file"
-                accept="image/*"
-                className="form-control"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file)
-                    void uploadImage(file).catch(() =>
-                      setMessage("Upload failed."),
-                    );
-                }}
-              />
             </div>
             <button
               type="button"

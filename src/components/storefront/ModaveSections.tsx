@@ -25,8 +25,8 @@ import { defaultProductSizeRun } from "@/lib/size-groups";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { productColorGalleryForProduct } from "@/lib/product-colors";
 import {
-  productColorGalleryImages,
   productGalleryImages,
   productImageClassName,
 } from "@/lib/product-placeholder-image";
@@ -1019,10 +1019,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         : catalogProducts[idx + 1]
       : (products[1] ?? products[0]);
 
-  const galleryImages = productColorGalleryImages(
-    product.images,
-    product.colors?.length ?? 0,
-  );
+  const galleryImages = productColorGalleryForProduct(product);
   const sizeRun = defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = buildProductImageAlt(product);

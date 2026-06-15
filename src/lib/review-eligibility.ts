@@ -1,4 +1,5 @@
 import { findClientOrder, type LocalOrder } from "@/lib/local-db";
+import { normalizeReviewProductSlug } from "@/lib/review-lookup";
 import {
   findReviewByOrderProductClient,
   type ProductReview,
@@ -9,12 +10,9 @@ export type ReviewEligibilityResult =
   | { ok: false; error: string };
 
 export function orderContainsProduct(order: LocalOrder, productSlug: string) {
-  const slug = productSlug.trim().toLowerCase();
+  const slug = normalizeReviewProductSlug(productSlug);
   return order.items.some(
-    (item) =>
-      String(item.slug ?? "")
-        .trim()
-        .toLowerCase() === slug,
+    (item) => normalizeReviewProductSlug(String(item.slug ?? "")) === slug,
   );
 }
 
@@ -68,23 +66,27 @@ export async function listPendingReviewItems(
   const pending: PendingReviewItem[] = [];
 
   for (const order of delivered) {
+    const seen = new Set<string>();
     for (const item of order.items) {
-      const slug = String(item.slug ?? "").trim();
+      const slug = normalizeReviewProductSlug(String(item.slug ?? ""));
       if (!slug) continue;
+      const key = `${order.id}::${slug}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       const existing = await findReviewByOrderProductClient(
         clientId,
         order.id,
         slug,
       );
+      if (existing) continue;
       pending.push({
         orderId: order.id,
         productSlug: slug,
         productName: item.name,
         deliveredAt: order.dispatchDate ?? order.createdAt,
-        reviewId: existing?.id,
       });
     }
   }
 
-  return pending.filter((item) => !item.reviewId);
+  return pending;
 }

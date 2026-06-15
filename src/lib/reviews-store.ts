@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import {
+  normalizeReviewProductSlug,
+  orderIdsEquivalent,
+} from "@/lib/review-lookup";
 import { isPostgresEnabled, pgInsertReturning, pgQuery } from "@/lib/postgres";
 import { sanitizeUserText } from "@/lib/user-text";
 
@@ -203,23 +207,31 @@ export async function findReviewByOrderProductClient(
   orderId: string,
   productSlug: string,
 ): Promise<ProductReview | null> {
+  const slug = normalizeReviewProductSlug(productSlug);
+  if (!slug) {
+    return null;
+  }
+
   if (isPostgresEnabled()) {
     const { rows } = await pgQuery(
       `select * from product_reviews
-       where client_id = $1 and order_id = $2 and product_slug = $3
-       limit 1`,
-      [clientId, orderId, productSlug.trim()],
+       where client_id = $1
+         and lower(trim(product_slug)) = $2`,
+      [clientId, slug],
     );
-    const row = rows[0];
+    const row = rows.find((item) =>
+      orderIdsEquivalent(orderId, String(item.order_id ?? "")),
+    );
     return row ? mapFromRow(row as Record<string, unknown>) : null;
   }
+
   const all = await readAllFromFile();
   return (
     all.find(
       (item) =>
         item.clientId === clientId &&
-        item.orderId === orderId &&
-        item.productSlug === productSlug.trim(),
+        normalizeReviewProductSlug(item.productSlug) === slug &&
+        orderIdsEquivalent(orderId, item.orderId),
     ) ?? null
   );
 }
@@ -323,7 +335,7 @@ export async function createProductReview(
   const now = new Date().toISOString();
   const row: ProductReview = {
     id: randomUUID(),
-    productSlug: input.productSlug.trim(),
+    productSlug: normalizeReviewProductSlug(input.productSlug),
     orderId: input.orderId.trim(),
     clientId: input.clientId,
     clientName: sanitizeUserText(input.clientName),
@@ -339,6 +351,14 @@ export async function createProductReview(
   };
 
   if (isPostgresEnabled()) {
+    const existing = await findReviewByOrderProductClient(
+      row.clientId,
+      row.orderId,
+      row.productSlug,
+    );
+    if (existing) {
+      throw new Error("You have already reviewed this product for this order.");
+    }
     const data = await pgInsertReturning("product_reviews", {
       product_slug: row.productSlug,
       order_id: row.orderId,
@@ -360,8 +380,8 @@ export async function createProductReview(
   const duplicate = all.find(
     (item) =>
       item.clientId === row.clientId &&
-      item.orderId === row.orderId &&
-      item.productSlug === row.productSlug,
+      normalizeReviewProductSlug(item.productSlug) === row.productSlug &&
+      orderIdsEquivalent(row.orderId, item.orderId),
   );
   if (duplicate) {
     throw new Error("You have already reviewed this product for this order.");

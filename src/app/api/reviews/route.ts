@@ -4,6 +4,7 @@ import {
   assertReviewEligible,
   findExistingReview,
 } from "@/lib/review-eligibility";
+import { normalizeReviewProductSlug } from "@/lib/review-lookup";
 import { trackReviewEvent } from "@/lib/review-analytics";
 import { createProductReview } from "@/lib/reviews-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
@@ -32,7 +33,9 @@ export async function POST(request: Request) {
   if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
   const body = (await request.json()) as Record<string, unknown>;
-  const productSlug = String(body.productSlug ?? body.productId ?? "").trim();
+  const productSlug = normalizeReviewProductSlug(
+    String(body.productSlug ?? body.productId ?? ""),
+  );
   const orderId = String(body.orderId ?? "").trim();
   const rating = Math.round(Number(body.rating));
 
@@ -86,7 +89,7 @@ export async function POST(request: Request) {
   try {
     const created = await createProductReview({
       productSlug,
-      orderId,
+      orderId: eligibility.order.id,
       clientId: client.id,
       clientName: client.companyName,
       rating,

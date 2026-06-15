@@ -50,7 +50,21 @@ export function OrderLineReviewCta({
     };
   }, [orderId, productSlug, orderStatus]);
 
-  if (!eligibility?.canReview && !eligibility?.canEdit) {
+  if (!eligibility) {
+    return null;
+  }
+
+  if (eligibility.hasReview && !eligibility.canReview && !eligibility.canEdit) {
+    return (
+      <p className="sarjan-review-submitted-note mt_8 mb_0">
+        {eligibility.reviewStatus === "pending"
+          ? "Review pending approval"
+          : "Review submitted"}
+      </p>
+    );
+  }
+
+  if (!eligibility.canReview && !eligibility.canEdit) {
     return null;
   }
 

@@ -1353,15 +1353,13 @@ const CLIENT_CANCELLABLE_STATUSES: LocalOrder["status"][] = [
   "Approved",
 ];
 
-function matchesOrderLookupId(orderId: string, candidate: string) {
-  const requested = orderId.toLowerCase().trim();
-  const fullId = candidate.toLowerCase();
-  const numericId = fullId.replace(/^st-/, "");
-  return (
-    fullId === requested ||
-    numericId === requested ||
-    fullId.endsWith(requested)
-  );
+import {
+  normalizeReviewProductSlug,
+  orderIdsEquivalent,
+} from "@/lib/review-lookup";
+
+export function matchesOrderLookupId(orderId: string, candidate: string) {
+  return orderIdsEquivalent(orderId, candidate);
 }
 
 /** Resolve an order belonging to `clientId` (supports ST- prefix / numeric id aliases). */
