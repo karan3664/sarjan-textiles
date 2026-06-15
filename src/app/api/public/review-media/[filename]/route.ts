@@ -1,49 +1,46 @@
 import { createReadStream } from "fs";
 import { stat } from "fs/promises";
-import path from "path";
 import { Readable } from "stream";
+import {
+  contentTypeForReviewMedia,
+  legacyReviewMediaFilePath,
+  reviewMediaFilePath,
+} from "@/lib/review-media-path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const UPLOAD_ROOT = path.join(
-  process.cwd(),
-  "public",
-  "sarjan-assets",
-  "review-uploads",
-);
-
-function contentType(filename: string) {
-  if (/\.webp$/i.test(filename)) return "image/webp";
-  if (/\.jpe?g$/i.test(filename)) return "image/jpeg";
-  if (/\.png$/i.test(filename)) return "image/png";
-  if (/\.mp4$/i.test(filename)) return "video/mp4";
-  if (/\.mov$/i.test(filename)) return "video/quicktime";
-  if (/\.webm$/i.test(filename)) return "video/webm";
-  return "application/octet-stream";
-}
-
+/** Fallback for reviews saved before the persistent uploads path (pre-v1.0.86). */
 export async function GET(
   _request: Request,
   context: { params: Promise<{ filename: string }> },
 ) {
   const { filename } = await context.params;
-  const safe = path.basename(filename ?? "");
-  if (!safe || safe !== filename) {
+  const safe = (filename ?? "").trim();
+  if (!safe || safe.includes("/") || safe.includes("..")) {
     return new Response("Not found", { status: 404 });
   }
 
-  const candidate = path.join(UPLOAD_ROOT, safe);
-  try {
-    await stat(candidate);
-    const stream = createReadStream(candidate);
-    return new Response(Readable.toWeb(stream) as ReadableStream, {
-      headers: {
-        "Content-Type": contentType(safe),
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
-  } catch {
-    return new Response("Not found", { status: 404 });
+  const candidates = [
+    reviewMediaFilePath(safe),
+    legacyReviewMediaFilePath(safe),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const info = await stat(candidate);
+      if (!info.isFile()) continue;
+      const stream = createReadStream(candidate);
+      return new Response(Readable.toWeb(stream) as ReadableStream, {
+        headers: {
+          "Content-Type": contentTypeForReviewMedia(safe),
+          "Cache-Control": "public, max-age=86400",
+        },
+      });
+    } catch {
+      /* try next root */
+    }
   }
+
+  return new Response("Not found", { status: 404 });
 }

@@ -11,6 +11,7 @@ import {
 } from "@/lib/reviews-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import { USER_TEXT_LIMITS, validateUserText } from "@/lib/user-text";
+import { isAllowedReviewMediaUrl } from "@/lib/review-media-path";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ function parseMediaUrls(value: unknown, max = 6) {
   if (!Array.isArray(value)) return undefined;
   return value
     .map((entry) => String(entry ?? "").trim())
-    .filter((entry) => entry.startsWith("/sarjan-assets/review-uploads/"))
+    .filter((entry) => isAllowedReviewMediaUrl(entry))
     .slice(0, max);
 }
 

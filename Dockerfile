@@ -44,8 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p data data/downloads public/downloads public/uploads/cms \
-    public/uploads/client-avatars public/sarjan-assets/client-avatars \
-    public/sarjan-assets/review-uploads
+    public/uploads/client-avatars public/uploads/review-media \
+    public/sarjan-assets/client-avatars \
 
 EXPOSE 3000
 CMD ["npm", "start"]
