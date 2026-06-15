@@ -92,6 +92,65 @@ async function readNativeJsonUpload(
   return { buffer, mime, filename, kind };
 }
 
+/** Large videos cannot be JSON base64-encoded reliably from React Native. */
+async function readNativeBinaryUpload(
+  request: Request,
+): Promise<ReviewUploadPayload | Response> {
+  const kindHeader = request.headers.get("x-review-kind") ?? "video";
+  const kind: ReviewUploadPayload["kind"] =
+    kindHeader === "video" ? "video" : "image";
+  const mime =
+    String(request.headers.get("x-review-mime") ?? "video/mp4").trim() ||
+    "video/mp4";
+  const filename =
+    String(request.headers.get("x-review-filename") ?? "review.mp4").trim() ||
+    "review.mp4";
+
+  let arrayBuffer: ArrayBuffer;
+  try {
+    arrayBuffer = await request.arrayBuffer();
+  } catch {
+    return Response.json(
+      { error: "Could not read upload body" },
+      { status: 400 },
+    );
+  }
+
+  const buffer = Buffer.from(arrayBuffer);
+  if (!buffer.byteLength) {
+    return Response.json({ error: "File required" }, { status: 400 });
+  }
+
+  if (kind === "video") {
+    if (!isVideo(mime, filename)) {
+      return Response.json(
+        { error: "Image or video file required." },
+        { status: 400 },
+      );
+    }
+  } else if (!isImage(mime, filename)) {
+    return Response.json(
+      { error: "Image or video file required." },
+      { status: 400 },
+    );
+  }
+
+  const maxBytes = kind === "video" ? videoMaxBytes : imageMaxBytes;
+  if (buffer.byteLength > maxBytes) {
+    return Response.json(
+      {
+        error:
+          kind === "video"
+            ? "Video must be under 40 MB."
+            : "Image must be under 6 MB.",
+      },
+      { status: 400 },
+    );
+  }
+
+  return { buffer, mime, filename, kind };
+}
+
 async function readMultipartUpload(
   request: Request,
 ): Promise<ReviewUploadPayload | Response> {
@@ -152,8 +211,13 @@ export async function readReviewUploadBody(
   request: Request,
 ): Promise<ReviewUploadPayload | Response> {
   const contentType = request.headers.get("content-type") ?? "";
-  if (isNativeClient(request) && contentType.includes("application/json")) {
-    return readNativeJsonUpload(request);
+  if (isNativeClient(request)) {
+    if (request.headers.get("x-review-upload-mode") === "binary") {
+      return readNativeBinaryUpload(request);
+    }
+    if (contentType.includes("application/json")) {
+      return readNativeJsonUpload(request);
+    }
   }
   return readMultipartUpload(request);
 }
