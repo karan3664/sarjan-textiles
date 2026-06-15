@@ -44,7 +44,8 @@ export async function wasLaunchNewsletterSent() {
   return campaigns.some(
     (campaign) =>
       campaign.templateId === LAUNCH_NEWSLETTER_TEMPLATE_ID &&
-      campaign.sentCount > 0,
+      campaign.sentCount > 0 &&
+      campaign.sentBy === "cron:launch",
   );
 }
 

@@ -10,6 +10,7 @@ import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner
 import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
 import { StorefrontOriginGuard } from "@/components/storefront/StorefrontOriginGuard";
 import { StorefrontPwaRegistration } from "@/components/storefront/StorefrontPwaRegistration";
+import { StorefrontSessionFlash } from "@/components/storefront/StorefrontSessionFlash";
 
 export function StorefrontRootProviders({
   children,
@@ -23,6 +24,7 @@ export function StorefrontRootProviders({
       <CookieConsentBanner />
       <StorefrontOriginGuard />
       <StorefrontPwaRegistration />
+      <StorefrontSessionFlash />
       {children}
     </StorefrontThemeProvider>
   );

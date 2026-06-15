@@ -77,12 +77,13 @@ export function StorefrontImage(props: StorefrontImageProps) {
   };
 
   if (fill) {
-    return <Image {...common} fill sizes={sizes ?? "100vw"} />;
+    return <Image {...common} alt={alt} fill sizes={sizes ?? "100vw"} />;
   }
 
   return (
     <Image
       {...common}
+      alt={alt}
       width={props.width}
       height={props.height}
       sizes={sizes}

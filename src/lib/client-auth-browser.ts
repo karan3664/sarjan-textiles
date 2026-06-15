@@ -1,9 +1,12 @@
 /** Browser-only helpers — HttpOnly cookie auth; JWT never stored in localStorage. */
 
 import type { StoredClient } from "@/lib/client-session";
+import { resetSavedListsSession } from "@/lib/saved-lists-sync";
 
 const SESSION_FLASH_KEY = "sarjan-login-flash";
+const LOGOUT_FLASH_KEY = "sarjan-logout-flash";
 const LEGACY_TOKEN_KEY = "sarjan-client-token";
+const AVATAR_CACHE_KEY = "sarjan-avatar-cache";
 
 function stripClientForStorage(client: StoredClient): StoredClient {
   return {
@@ -99,10 +102,25 @@ export function clearClientSessionLocal() {
   window.dispatchEvent(new CustomEvent("sarjan-auth-updated"));
 }
 
-export function logoutClientSession(redirectTo = "/login") {
+/** Wipe client profile, permissions (status), and in-browser API sync state. */
+export function clearClientProtectedBrowserState() {
   clearClientSessionLocal();
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(AVATAR_CACHE_KEY);
+  resetSavedListsSession();
+}
+
+export function logoutClientSession(redirectTo = "/") {
+  clearClientProtectedBrowserState();
+  if (redirectTo === "/") {
+    try {
+      sessionStorage.setItem(LOGOUT_FLASH_KEY, "Logged out successfully.");
+    } catch {
+      /* ignore */
+    }
+  }
   const params = new URLSearchParams({ redirect: "1" });
-  if (redirectTo && redirectTo !== "/login") {
+  if (redirectTo && redirectTo !== "/") {
     params.set("next", redirectTo);
   }
   window.location.assign(`/api/auth/logout?${params.toString()}`);

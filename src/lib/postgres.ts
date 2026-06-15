@@ -6,7 +6,7 @@ import {
 } from "@/lib/pg-sql-identifiers";
 
 declare global {
-  // eslint-disable-next-line no-var
+   
   var __sarjanPgPool: pg.Pool | undefined;
 }
 

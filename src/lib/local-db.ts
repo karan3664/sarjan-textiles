@@ -37,6 +37,7 @@ import {
   abandonedCartSecondReminderHours,
   abandonedCartRepeatReminderHours,
 } from "@/lib/abandoned-cart-config";
+import { cartLinesFingerprint } from "@/lib/cart-fingerprint";
 import { enrichOrderPricing } from "@/lib/gst-display";
 import { computeOrderPricing } from "@/lib/order-pricing-breakdown";
 import { resolvePlatformFeeConfig } from "@/lib/platform-fee-config";
@@ -1740,7 +1741,8 @@ export async function listAbandonedCartCandidates(): Promise<
 
 export async function saveCart(clientId: string, items: CartLine[]) {
   const previous = await readCartRecord(clientId);
-  const unchanged = JSON.stringify(previous.items) === JSON.stringify(items);
+  const unchanged =
+    cartLinesFingerprint(previous.items) === cartLinesFingerprint(items);
   if (unchanged) {
     return previous.items;
   }

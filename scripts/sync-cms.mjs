@@ -62,8 +62,14 @@ const dryRun = process.argv.includes("--dry-run");
 
 function usage() {
   console.log(`Usage:
-  node scripts/sync-cms.mjs push [--dry-run]   Upload local CMS to live
-  node scripts/sync-cms.mjs pull [--dry-run]   Download live CMS to local
+  node scripts/sync-cms.mjs push [--dry-run]              Upload local CMS to live
+  node scripts/sync-cms.mjs pull [--dry-run]              Download live CMS to local
+  node scripts/sync-cms.mjs push-product-images [--dry-run]
+      Merge only product image fields from local → live (safe for photos)
+  node scripts/sync-cms.mjs list-backups
+      List backups stored on live (Admin → DB Backup)
+  node scripts/sync-cms.mjs restore-backup <id> [--dry-run]
+      Restore live CMS from a backup id (UNDO a bad cms:push)
 
 Env: LIVE_SITE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
      (optional LIVE_ADMIN_EMAIL / LIVE_ADMIN_PASSWORD for production login)`);
@@ -129,12 +135,120 @@ function cmsForStorage(snapshot) {
   return { ...snapshot, auditLogs: [] };
 }
 
+function productKey(product) {
+  return String(product?.id ?? product?.sku ?? product?.slug ?? "");
+}
+
+async function fetchLiveCms(token) {
+  const res = await fetch(`${LIVE_URL}/api/admin/cms`, {
+    headers: adminHeaders(token),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `CMS fetch failed (${res.status})`);
+  }
+  return data;
+}
+
+async function saveLiveCms(token, snapshot) {
+  const res = await fetch(`${LIVE_URL}/api/admin/cms`, {
+    method: "PUT",
+    headers: adminHeaders(token),
+    body: JSON.stringify(snapshot),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `CMS save failed (${res.status})`);
+  }
+  return data;
+}
+
+/** Merge only product image fields from local JSON into live CMS. */
+async function pushProductImages() {
+  const local = await readLocalCms();
+  const localByKey = new Map(
+    (local.products ?? [])
+      .map((product) => [productKey(product), product])
+      .filter(([key]) => key),
+  );
+
+  if (dryRun) {
+    console.log(
+      `[dry-run] Would merge images for ${localByKey.size} local products into live CMS`,
+    );
+    return;
+  }
+
+  const token = await adminLogin();
+  console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  const live = await fetchLiveCms(token);
+  let updated = 0;
+
+  live.products = (live.products ?? []).map((product) => {
+    const fromLocal = localByKey.get(productKey(product));
+    if (!fromLocal?.images?.length) return product;
+    updated += 1;
+    return {
+      ...product,
+      images: fromLocal.images,
+      imageAlt: fromLocal.imageAlt ?? product.imageAlt,
+      spin360Images: fromLocal.spin360Images ?? product.spin360Images,
+      fabricSwatchImage:
+        fromLocal.fabricSwatchImage ?? product.fabricSwatchImage,
+    };
+  });
+
+  await saveLiveCms(token, live);
+  console.log(`Live product images updated for ${updated} products.`);
+  console.log("Image files are separate — run: npm run cms:sync-uploads");
+}
+
+async function createLiveBackup(token, name) {
+  const res = await fetch(`${LIVE_URL}/api/admin/backups`, {
+    method: "POST",
+    headers: adminHeaders(token),
+    body: JSON.stringify({ name }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `Live backup failed (${res.status})`);
+  }
+  return data.createdId ?? data.id;
+}
+
+async function restoreLiveBackup(token, id) {
+  const res = await fetch(`${LIVE_URL}/api/admin/backups`, {
+    method: "POST",
+    headers: adminHeaders(token),
+    body: JSON.stringify({ action: "restore-id", id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `Live restore failed (${res.status})`);
+  }
+  return data;
+}
+
+async function listLiveBackups(token) {
+  const res = await fetch(`${LIVE_URL}/api/admin/backups`, {
+    headers: adminHeaders(token),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `List backups failed (${res.status})`);
+  }
+  return data.backups ?? [];
+}
+
 async function push() {
   const local = await readLocalCms();
   const keys = Object.keys(local).filter((k) => k !== "updatedAt");
   console.log(`Local CMS: ${CMS_PATH}`);
   console.log(
     `  products=${local.products?.length ?? 0}, blogs=${local.blogs?.length ?? 0}, custom pages=${local.customSitePages?.length ?? 0}`,
+  );
+  console.warn(
+    "WARNING: cms:push overwrites the ENTIRE live CMS (including home/hero). Run cms:pull first or edit on live admin. For product images only: npm run cms:push-product-images",
   );
   if (dryRun) {
     console.log(
@@ -144,6 +258,17 @@ async function push() {
   }
   const token = await adminLogin();
   console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  try {
+    const backupId = await createLiveBackup(
+      token,
+      `Auto backup before cms:push ${new Date().toISOString()}`,
+    );
+    console.log(`Live backup created: ${backupId}`);
+  } catch (error) {
+    console.warn(
+      `Warning: could not create live backup (${error instanceof Error ? error.message : error}). Continuing push.`,
+    );
+  }
   const res = await fetch(`${LIVE_URL}/api/admin/cms`, {
     method: "PUT",
     headers: adminHeaders(token),
@@ -158,6 +283,38 @@ async function push() {
     `  products=${data.products?.length ?? "?"}, blogs=${data.blogs?.length ?? "?"}, custom pages=${data.customSitePages?.length ?? "?"}`,
   );
   console.log("\nImages are separate — run: npm run cms:sync-uploads");
+}
+
+async function restoreBackup(backupId) {
+  if (!backupId) {
+    throw new Error(
+      "Backup id required. Run: node scripts/sync-cms.mjs list-backups",
+    );
+  }
+  if (dryRun) {
+    console.log(`[dry-run] Would restore live backup id=${backupId}`);
+    return;
+  }
+  const token = await adminLogin();
+  console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  await restoreLiveBackup(token, backupId);
+  console.log(`Live CMS restored from backup ${backupId}`);
+  console.log("Run: npm run cms:pull  (to refresh local cms-db.json)");
+}
+
+async function listBackups() {
+  const token = await adminLogin();
+  const backups = await listLiveBackups(token);
+  if (!backups.length) {
+    console.log("No live backups found.");
+    console.log("Create one: Admin → DB Backup / Restore → Create backup");
+    return;
+  }
+  for (const item of backups) {
+    console.log(
+      `${item.id}  ${item.createdAt}  ${item.source}  ${item.name}  (${item.sizeBytes} bytes)`,
+    );
+  }
 }
 
 async function pull() {
@@ -190,6 +347,9 @@ async function main() {
   }
   if (cmd === "push") await push();
   else if (cmd === "pull") await pull();
+  else if (cmd === "push-product-images") await pushProductImages();
+  else if (cmd === "list-backups") await listBackups();
+  else if (cmd === "restore-backup") await restoreBackup(process.argv[3]);
   else {
     usage();
     process.exit(1);

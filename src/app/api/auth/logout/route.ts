@@ -20,7 +20,7 @@ function safeLogoutRedirect(request: NextRequest) {
     !next.includes("\\") &&
     !next.startsWith("/admin")
       ? next
-      : "/login";
+      : "/";
   const response = NextResponse.redirect(redirectAbsoluteUrl(request, dest), {
     status: 303,
   });

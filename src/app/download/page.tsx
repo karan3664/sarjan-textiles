@@ -58,7 +58,7 @@ export default async function DownloadAppPage({ searchParams }: Props) {
                 ) : null}
 
                 <div className="sarjan-download-qr-wrap mx-auto mb-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img
                     src={qrSrc}
                     alt={`QR code to download Sarjan Textiles app v${release.latestVersion}`}

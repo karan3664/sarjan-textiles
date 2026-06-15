@@ -64,7 +64,7 @@ Production par alag password ho to `.env.local` me add karo:
 
 ```env
 LIVE_ADMIN_EMAIL=admin@sarjantextiles.com
-LIVE_ADMIN_PASSWORD=Sarjantex@2024
+LIVE_ADMIN_PASSWORD=<your-production-admin-password>
 ```
 
 Dry run:

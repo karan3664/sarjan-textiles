@@ -252,7 +252,6 @@ export function AdminNewsletterClient({
       void loadPreview();
     }, 400);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounced preview on editor change
   }, [templateId, subject, fields]);
 
   return (

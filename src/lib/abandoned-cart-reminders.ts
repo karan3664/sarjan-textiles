@@ -6,6 +6,7 @@ import {
   type AbandonedCartCandidate,
   type CartReminderStage,
 } from "@/lib/local-db";
+import { buildSarjanEmailHtml, escapeHtml } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
 import { sendAbandonedCartPush } from "@/lib/push-notifications";
 import { siteUrl } from "@/lib/seo";
@@ -74,12 +75,16 @@ async function resolveCartLineLabels(items: AbandonedCartCandidate["items"]) {
   });
 }
 
-function buildCartEmailHtml(input: {
+function cartEmailHeading(stage: CartReminderStage) {
+  if (stage === 2) return "Items still in your cart";
+  return "Your cart is saved";
+}
+
+function buildCartEmailInnerHtml(input: {
   companyName: string;
   stage: CartReminderStage;
   lines: string[];
   checkoutUrl: string;
-  brandName: string;
 }) {
   const intro =
     input.stage === 1 || input.stage === "daily"
@@ -89,29 +94,32 @@ function buildCartEmailHtml(input: {
   const lineItems = input.lines
     .map(
       (line) =>
-        `<li style="margin:0 0 8px;padding:0;color:#333;font-size:15px;line-height:1.5;">${line}</li>`,
+        `<li style="margin:0 0 8px;padding:0;color:#4d4843;font-size:15px;line-height:1.5;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(line)}</li>`,
     )
     .join("");
 
-  return `<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#f7f2ea;font-family:Georgia,'Times New Roman',serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f2ea;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #eadfce;">
-        <tr><td style="background:#6b1228;padding:24px 28px;">
-          <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">${input.brandName}</h1>
-        </td></tr>
-        <tr><td style="padding:28px;">
-          <p style="margin:0 0 12px;color:#333;font-size:16px;line-height:1.6;">Hi ${input.companyName},</p>
-          <p style="margin:0 0 18px;color:#555;font-size:15px;line-height:1.6;">${intro}</p>
-          <ul style="margin:0 0 24px;padding-left:20px;">${lineItems}</ul>
-          <a href="${input.checkoutUrl}" style="display:inline-block;background:#6b1228;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:8px;font-size:15px;font-weight:700;">Open cart</a>
-          <p style="margin:24px 0 0;color:#888;font-size:13px;line-height:1.5;">Your cart is synced on web and mobile when you're signed in.</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
+  return `
+    <p style="margin:0 0 14px;color:#4d4843;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">
+      Hi <strong style="color:#141414;">${escapeHtml(input.companyName)}</strong>,
+    </p>
+    <p style="margin:0 0 18px;color:#4d4843;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">
+      ${escapeHtml(intro)}
+    </p>
+    <ul style="margin:0 0 22px;padding-left:20px;">${lineItems}</ul>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 8px;">
+      <tr>
+        <td style="border-radius:10px;background:#141414;">
+          <a href="${escapeHtml(input.checkoutUrl)}"
+            style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;">
+            Open cart
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:16px 0 0;font-size:13px;color:#6f6a64;line-height:1.5;font-family:Arial,Helvetica,sans-serif;">
+      Your cart is synced on web and mobile when you&rsquo;re signed in.
+    </p>
+  `;
 }
 
 async function sendAbandonedCartEmail(
@@ -125,7 +133,6 @@ async function sendAbandonedCartEmail(
   const setCount = cartSetCount(candidate.items);
   const copy = REMINDER_COPY[candidate.stage];
   const checkoutUrl = `${siteUrl}/shopping-cart?resume=cart`;
-  const cms = await getCachedCmsSnapshot();
   const text = [
     `Hi ${client.companyName},`,
     "",
@@ -140,12 +147,16 @@ async function sendAbandonedCartEmail(
     to: client.email,
     subject: copy.emailSubject,
     text,
-    html: buildCartEmailHtml({
-      companyName: client.companyName,
-      stage: candidate.stage,
-      lines,
-      checkoutUrl,
-      brandName: cms.siteSettings.brandName,
+    html: buildSarjanEmailHtml({
+      preheader: copy.pushBody(setCount),
+      eyebrow: "Cart reminder",
+      heading: cartEmailHeading(candidate.stage),
+      innerHtml: buildCartEmailInnerHtml({
+        companyName: client.companyName,
+        stage: candidate.stage,
+        lines,
+        checkoutUrl,
+      }),
     }),
   });
 

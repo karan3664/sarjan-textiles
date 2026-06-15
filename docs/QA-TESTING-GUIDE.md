@@ -85,9 +85,9 @@ You should receive a table like this. **Do not commit passwords to bug trackers 
 
 #### Admin panel — primary test account
 
-| Role            | Email                      | Password         | Can access (summary) |
-| --------------- | -------------------------- | ---------------- | -------------------- |
-| **Super Admin** | `admin@sarjantextiles.com` | `Sarjantex@2024` | Full admin panel     |
+| Role            | Email                      | Password                       | Can access (summary) |
+| --------------- | -------------------------- | ------------------------------ | -------------------- |
+| **Super Admin** | `admin@sarjantextiles.com` | _(request from project owner)_ | Full admin panel     |
 
 Additional role accounts (sales, dispatch, content, etc.) — provide separately if needed for RBAC testing.
 

@@ -10,8 +10,8 @@ const outPath = path.join(root, "public/qa-testing-guide.html");
 
 const FRONTEND = "https://sarjantextiles.com/";
 const ADMIN = "https://sarjantextiles.com/admin/";
-const ADMIN_EMAIL = "admin@sarjantextiles.com";
-const ADMIN_PASS = "Sarjantex@2024";
+const ADMIN_EMAIL = process.env.QA_ADMIN_EMAIL ?? "admin@sarjantextiles.com";
+const ADMIN_PASS = process.env.QA_ADMIN_PASSWORD ?? "(request from project owner)";
 
 function slug(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

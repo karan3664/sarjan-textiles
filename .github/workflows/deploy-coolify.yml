@@ -3,7 +3,7 @@ name: Deploy to Coolify
 
 on:
   push:
-    branches: [main]
+    branches: [prod]
   workflow_dispatch:
 
 concurrency:
@@ -44,7 +44,7 @@ jobs:
           script: |
             set -euo pipefail
             curl -fsSL \
-              "https://raw.githubusercontent.com/karan3664/sarjan-textiles/main/scripts/vps/sync-mobile-apk.sh" \
+              "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/scripts/vps/sync-mobile-apk.sh" \
               -o /tmp/sync-mobile-apk.sh
             chmod +x /tmp/sync-mobile-apk.sh
             /tmp/sync-mobile-apk.sh

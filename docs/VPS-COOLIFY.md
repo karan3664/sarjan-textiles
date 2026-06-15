@@ -51,7 +51,7 @@ Output includes `DATABASE_URL` and saves `/root/sarjan-db-credentials.env`.
 
 1. **+ New Project** → `Sarjan Textiles`
 2. **+ New Resource → Application → GitHub** → `sarjan-textiles`
-3. Branch: `development` or `main`
+3. Branch: `prod` (production deploys only)
 4. **Build pack**: **Dockerfile** (repo root `Dockerfile`) — do **not** use Nixpacks auto-detect (smaller image, fewer export failures).
 5. **Port**: `3000`
 6. **Domains**: add **both** `sarjantextiles.com` and `www.sarjantextiles.com` → enable Let's Encrypt on each. The app permanently redirects `www` → apex (`next.config.ts` + middleware); without `www` in Coolify, `https://www.sarjantextiles.com` returns 503.
@@ -83,7 +83,7 @@ ADMIN_SESSION_SECRET=<64+ random chars>
 CLIENT_JWT_SECRET=<64+ random chars>
 ADMIN_EMAIL=admin@sarjantextiles.com
 # Coolify expands `$` in env — use base64 (no dollar signs). Remove ADMIN_PASSWORD_HASH if set.
-ADMIN_PASSWORD_HASH_B64=JDJiJDEwJFVHYUROQm90NlczVzV5YWJINlA2bk91RXo4a2xiWXcwUEplWERtcGFmQ3poUWZ1OEd1LzhX
+ADMIN_PASSWORD_HASH_B64=<generate-with-node-bcrypt-base64>
 CRON_SECRET=<random>
 # Runtime env (Configuration → Environment Variables). Redeploy after adding/changing.
 SITE_LAUNCH_AT=2026-06-17T12:39:00+05:30
@@ -127,7 +127,7 @@ Port **8000** (Coolify UI) is **not open** on the public internet — `http://69
    | `COOLIFY_DEPLOY_WEBHOOK` | `http://127.0.0.1:8000/api/v1/deploy?uuid=YOUR_APP_UUID&force=false` |
    | `COOLIFY_API_TOKEN`      | token from step 1 (**required**)                                     |
 
-4. Push to `main` → **Actions** tab shows deploy → Coolify **Deployments** starts automatically.
+4. Push to `prod` → **Actions** tab shows deploy → Coolify **Deployments** starts automatically.
 
 Manual **Redeploy** in Coolify UI only when debugging or retrying a failed build.
 
@@ -195,7 +195,7 @@ npm run release:apk
 # In sarjan-textiles — commit manifest only (APK is excluded from Docker image)
 git add public/downloads/mobile-release.json
 git commit -m "release: mobile APK 1.0.30"
-git push origin main
+git push origin prod
 
 # Copy APK to VPS persistent volume (once per release; survives redeploys)
 scp public/downloads/sarjan-textiles.apk root@69.62.77.149:/data/coolify/applications/<app-id>/public/downloads/

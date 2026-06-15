@@ -21,6 +21,9 @@
     "test:e2e:ui": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --ui",
     "cms:push": "node scripts/sync-cms.mjs push",
     "cms:pull": "node scripts/sync-cms.mjs pull",
+    "cms:push-product-images": "node scripts/sync-cms.mjs push-product-images",
+    "cms:list-backups": "node scripts/sync-cms.mjs list-backups",
+    "cms:restore-backup": "node scripts/sync-cms.mjs restore-backup",
     "cms:sync-uploads": "bash scripts/vps/sync-uploads.sh"
   },
   "dependencies": {

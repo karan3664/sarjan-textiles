@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# After sarjan-textiles-app `npm run release:apk` — commit + push to main.
+# After sarjan-textiles-app `npm run release:apk` — commit + push to prod.
 # GitHub Actions (deploy-coolify.yml) then syncs APK to the VPS volume automatically.
 # Mac SCP is NOT required.
 set -euo pipefail
@@ -28,8 +28,8 @@ else
   git commit -m "chore: publish mobile APK v${VERSION} (versionCode ${CODE})"
 fi
 
-echo "Pushing to origin main (triggers Coolify deploy + VPS APK sync)…"
-git push origin HEAD:main
+echo "Pushing to origin prod (triggers Coolify deploy + VPS APK sync)…"
+git push origin HEAD:prod
 
 echo ""
 echo "Done. GitHub Actions will:"
