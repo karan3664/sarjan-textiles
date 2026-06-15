@@ -26,6 +26,26 @@ export function productGalleryImages(images?: string[] | null): string[] {
   return unique;
 }
 
+/**
+ * One gallery slide per color index — keeps images[i] aligned with colors[i]
+ * (do not dedupe; duplicate URLs are valid when several colors share one photo).
+ */
+export function productColorGalleryImages(
+  images?: string[] | null,
+  colorCount = 0,
+): string[] {
+  const list = (images ?? []).filter(Boolean);
+  if (!productHasRealImages(list)) {
+    return [PRODUCT_PLACEHOLDER_IMAGE];
+  }
+  const slots = Math.max(colorCount, list.length);
+  if (!slots) return list.length ? list : [PRODUCT_PLACEHOLDER_IMAGE];
+
+  return Array.from({ length: slots }, (_, index) => {
+    return list[index] ?? list[0] ?? PRODUCT_PLACEHOLDER_IMAGE;
+  });
+}
+
 export function productImageClassName(url?: string | null, extra = ""): string {
   const classes = extra.trim();
   if (!isProductPlaceholderImage(url)) return classes;

@@ -22,6 +22,19 @@ export function productImageForColorIndex(
   return product.images[colorIndex] ?? product.images[0] ?? "";
 }
 
+/**
+ * Ajrakh zip shoots are ordered Indigo, Maroon, Yellow, Cream, Black.
+ * CSV colors are Indigo, Maroon, Black, Yellow, Cream — remap indices.
+ */
+export const AJRAKH_FIVE_COLOR_IMAGE_ORDER = [0, 1, 4, 2, 3] as const;
+
+export function alignZipImagesToCsvColors(images: string[]): string[] {
+  if (images.length !== AJRAKH_FIVE_COLOR_IMAGE_ORDER.length) return images;
+  return AJRAKH_FIVE_COLOR_IMAGE_ORDER.map(
+    (zipIndex) => images[zipIndex] ?? images[0],
+  );
+}
+
 /** Read the active color from a product / quick-view block in the DOM. */
 export function resolveSelectedColorInScope(
   scope: HTMLElement | null,

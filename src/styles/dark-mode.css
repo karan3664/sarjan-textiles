@@ -2933,7 +2933,7 @@ html[data-theme="dark"]
   color: #ef9a9a !important;
 }
 
-/* PDP — white CTA pills need dark ink (storefront-buttons resets bg after dark tokens) */
+/* PDP — match storefront-buttons tokens (dark surface + light ink) */
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
@@ -2972,10 +2972,10 @@ html[data-theme="dark"]
     .sarjan-add-set-btn,
     .sarjan-all-colors-btn
   ):not(:hover):not(:focus-visible):not(.is-hovered) {
-  background-color: #ffffff !important;
-  border-color: #181818 !important;
-  color: #181818 !important;
-  -webkit-text-fill-color: #181818 !important;
+  background-color: var(--sarjan-btn-bg) !important;
+  border-color: var(--sarjan-btn-border) !important;
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
 html[data-theme="dark"]
@@ -3015,8 +3015,8 @@ html[data-theme="dark"]
     .text-button,
     span
   ) {
-  color: #181818 !important;
-  -webkit-text-fill-color: #181818 !important;
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
 html[data-theme="dark"]
@@ -3178,7 +3178,7 @@ html[data-theme="dark"]
   border-color: var(--sarjan-text) !important;
 }
 
-/* Quick view — white PDP pills + icon glyphs (modal sits outside #wrapper) */
+/* Quick view — PDP pills use button tokens (modal sits outside #wrapper) */
 html[data-theme="dark"]
   body.sarjan-storefront.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
@@ -3197,11 +3197,11 @@ html[data-theme="dark"]
   > a.sarjan-btn:is(.sarjan-add-set-btn, .sarjan-all-colors-btn):not(
     :hover
   ):not(:focus-visible):not(.is-hovered) {
-  background-color: #ffffff !important;
+  background-color: var(--sarjan-btn-bg) !important;
   background-image: none !important;
-  border-color: #181818 !important;
-  color: #181818 !important;
-  -webkit-text-fill-color: #181818 !important;
+  border-color: var(--sarjan-btn-border) !important;
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
 html[data-theme="dark"]
@@ -3220,8 +3220,8 @@ html[data-theme="dark"]
     .text-button,
     span
   ) {
-  color: #181818 !important;
-  -webkit-text-fill-color: #181818 !important;
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
 html[data-theme="dark"]
@@ -4684,6 +4684,36 @@ html[data-theme="dark"]
   :is(.text, .text-button, .sarjan-tf-btn-icon, span, i.icon) {
   color: var(--sarjan-muted) !important;
   -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+/* LAST — PDP Add set / All colors labels (beats hardcoded #181818 child rules above) */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  :is(#wrapper, .modal-quick-view.sarjan-quick-view-modal)
+  .sarjan-product-action-buttons
+  :is(a.sarjan-btn, button.sarjan-btn):is(
+    .sarjan-add-set-btn,
+    .sarjan-all-colors-btn,
+    .sarjan-pdp-cta-btn
+  ):not(:hover):not(:focus-visible):not(.is-hovered)
+  :is(
+    .sarjan-add-set-label,
+    .sarjan-add-set-price,
+    .sarjan-all-colors-label,
+    .sarjan-all-colors-label--long,
+    .sarjan-all-colors-label--short,
+    .sarjan-pdp-cta-btn__body,
+    .sarjan-add-set-btn__inner,
+    .sarjan-all-colors-btn__inner,
+    .text,
+    .text-button,
+    .text-btn-uppercase,
+    span
+  ) {
+  color: var(--sarjan-btn-color) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

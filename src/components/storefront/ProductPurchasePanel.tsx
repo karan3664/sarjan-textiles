@@ -11,6 +11,7 @@ import {
 } from "@/lib/product-availability";
 import { useClientHasB2BToken, useShowProductUnavailable } from "./PriceGate";
 import { productColorList } from "@/lib/product-colors";
+import { useProductDetailColor } from "./ProductDetailColorContext";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
 import { ProductSizeGroupPicker } from "./ProductSizeGroupPicker";
@@ -83,10 +84,13 @@ export function ProductPurchasePanel({
   colorIndex: controlledIndex,
   onColorIndexChange,
 }: ProductPurchasePanelProps) {
+  const detailColor = useProductDetailColor();
   const [internalIndex, setInternalIndex] = useState(0);
   const [localWishlisted, setLocalWishlisted] = useState(false);
-  const colorIndex = controlledIndex ?? internalIndex;
-  const setColorIndex = onColorIndexChange ?? setInternalIndex;
+  const colorIndex =
+    detailColor?.colorIndex ?? controlledIndex ?? internalIndex;
+  const setColorIndex =
+    detailColor?.setColorIndex ?? onColorIndexChange ?? setInternalIndex;
   const colors = productColorList(product);
   const activeColor = colors[colorIndex] ?? colors[0];
   const { groups, selectedGroup, setSelectedGroup, sizeRun } =

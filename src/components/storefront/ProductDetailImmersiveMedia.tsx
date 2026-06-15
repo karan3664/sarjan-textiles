@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { initProductDetailGallerySwiper } from "@/lib/product-gallery-swiper";
 import {
   hasFabricSwatch,
   hasSpin360,
   immersiveMediaModes,
 } from "@/lib/product-immersive-media";
 import type { Product } from "@/data/mock";
+import { productColorList } from "@/lib/product-colors";
 import { productImageClassName } from "@/lib/product-placeholder-image";
 import { FabricSwatchViewer } from "./FabricSwatchViewer";
 import { ProductSpin360Viewer } from "./ProductSpin360Viewer";
@@ -24,14 +26,10 @@ type Props = {
   product: Pick<Product, "stock" | "reserved" | "colors" | "id" | "slug">;
 };
 
-function colorDataAttr(
-  colors: Product["colors"],
-  index: number,
-): string | undefined {
-  const color = colors[index % Math.max(colors.length, 1)];
-  if (color == null) return undefined;
-  const text = typeof color === "string" ? color : String(color);
-  return text.toLowerCase();
+function colorDataAttr(colors: string[], index: number): string | undefined {
+  const color = colors[index];
+  if (!color) return undefined;
+  return color.trim().toLowerCase();
 }
 
 function ProductDetailGallery({
@@ -43,6 +41,24 @@ function ProductDetailGallery({
   altText: string;
   product: Pick<Product, "colors" | "id" | "slug">;
 }) {
+  const colors = productColorList(product);
+
+  useEffect(() => {
+    let cancelled = false;
+    const boot = () => {
+      if (cancelled) return;
+      initProductDetailGallerySwiper();
+    };
+    boot();
+    const timer = window.setTimeout(boot, 120);
+    window.addEventListener("load", boot);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      window.removeEventListener("load", boot);
+    };
+  }, [galleryImages, product.slug]);
+
   return (
     <div className="thumbs-slider" key="product-gallery">
       <div
@@ -55,7 +71,7 @@ function ProductDetailGallery({
           {galleryImages.map((image, index) => (
             <div
               className="swiper-slide stagger-item"
-              data-color={colorDataAttr(product.colors, index)}
+              data-color={colorDataAttr(colors, index)}
               key={`${product.slug || product.id}-thumb-${index}-${image}`}
             >
               <div className="item">
@@ -80,7 +96,7 @@ function ProductDetailGallery({
           {galleryImages.map((image, index) => (
             <div
               className="swiper-slide"
-              data-color={colorDataAttr(product.colors, index)}
+              data-color={colorDataAttr(colors, index)}
               key={`${product.slug || product.id}-main-${index}-${image}`}
             >
               <a

@@ -435,6 +435,14 @@
 .sarjan-home-services-strip .tf-icon-box .icon-box .icon,
 .sarjan-home-services .tf-icon-box .icon-box .icon {
   color: var(--sarjan-home-wine);
+  display: inline-block;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.sarjan-home-services-strip .tf-icon-box .icon-box .icon::before,
+.sarjan-home-services .tf-icon-box .icon-box .icon::before {
+  font-family: "icomoon" !important;
 }
 
 /* Partner CTA — full-width banner height */

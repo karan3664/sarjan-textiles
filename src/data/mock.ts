@@ -521,8 +521,8 @@ export const home = {
     "Browse wholesale-ready Sarjan prints loved by retail buyers.",
   services: [
     {
-      icon: "icon-return",
-      title: "90-Day Credit",
+      icon: "icon-ShoppingBagOpen",
+      title: "Easy Ordering",
       body: "Manual cheque collection after approved credit cycle.",
     },
     {

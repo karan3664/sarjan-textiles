@@ -79,6 +79,7 @@ body.sarjan-admin .sarjan-admin-shell .icon-return::before,
 body.sarjan-admin .sarjan-admin-shell .icon-shipping::before,
 body.sarjan-admin .sarjan-admin-shell .icon-headset::before,
 body.sarjan-admin .sarjan-admin-shell .icon-sealCheck::before,
+body.sarjan-admin .sarjan-admin-shell .icon-ShoppingBagOpen::before,
 body.sarjan-admin .sarjan-admin-shell .icon-user::before,
 body.sarjan-admin .sarjan-admin-shell .icon-smartphone::before,
 body.sarjan-admin .sarjan-admin-shell .icon-camera::before,
@@ -101,6 +102,9 @@ body.sarjan-admin .sarjan-admin-shell .icon-headset::before {
 }
 body.sarjan-admin .sarjan-admin-shell .icon-sealCheck::before {
   content: "\e926";
+}
+body.sarjan-admin .sarjan-admin-shell .icon-ShoppingBagOpen::before {
+  content: "\e920";
 }
 body.sarjan-admin .sarjan-admin-shell .icon-user::before {
   content: "\e903";
@@ -160,6 +164,15 @@ body.sarjan-admin .sarjan-admin-shell .icon-truck::before {
 body.sarjan-admin .sarjan-admin-shell .icon-image::before {
   font-family: "icomoon-sf" !important;
   content: "\e914";
+}
+
+body.sarjan-admin .sarjan-admin-shell .sarjan-service-icon [class*="icon-"],
+body.sarjan-admin
+  .sarjan-admin-shell
+  .sarjan-service-icon
+  [class*="icon-"]::before {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
 }
 
 /* Modave form fields — inputs without explicit type="text" skipped by theme CSS */

@@ -23,6 +23,7 @@ import {
   hasMarqueeCustomIcon,
   marqueeIconClassName,
   normalizeMarqueeIconClass,
+  serviceIconClassName,
 } from "@/lib/marquee-icon";
 import { AdminCmsImageDisplayFields } from "@/components/admin/AdminCmsImageDisplayFields";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
@@ -2249,7 +2250,10 @@ export function AdminHomePageClient({
             >
               <div className="sarjan-service-preview">
                 <div className="sarjan-service-icon">
-                  <i className={service.icon} />
+                  <span
+                    className={serviceIconClassName(service.icon)}
+                    aria-hidden
+                  />
                 </div>
                 <h6>
                   <HtmlPreviewText html={service.title} fallback="Service" />

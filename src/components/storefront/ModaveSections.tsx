@@ -26,6 +26,7 @@ import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import {
+  productColorGalleryImages,
   productGalleryImages,
   productImageClassName,
 } from "@/lib/product-placeholder-image";
@@ -55,7 +56,11 @@ import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { TestimonialStarsDisplay } from "./TestimonialStarRating";
 import { CmsHtml } from "@/components/shared/CmsHtml";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
-import { hasMarqueeCustomIcon, marqueeIconClassName } from "@/lib/marquee-icon";
+import {
+  hasMarqueeCustomIcon,
+  marqueeIconClassName,
+  serviceIconClassName,
+} from "@/lib/marquee-icon";
 import { AboutMainContent } from "./AboutPages";
 import { PageFaqSection } from "./PageFaqSection";
 import { CmsPlainTextBody } from "@/components/shared/CmsPlainTextBody";
@@ -65,6 +70,7 @@ import { ContactInquiryForm } from "./ContactInquiryForm";
 import { ProductDetailRecommendations } from "./ProductDetailRecommendations";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductDetailImmersiveMedia } from "./ProductDetailImmersiveMedia";
+import { ProductDetailColorProvider } from "./ProductDetailColorContext";
 import { ProductRecentlyViewedTracker } from "./ProductRecentlyViewedTracker";
 import { ProductSortSelect } from "./ProductSortSelect";
 import { StorefrontEmptyState } from "./StorefrontEmptyState";
@@ -362,7 +368,7 @@ function ServiceIconBox({
               <div className="swiper-slide" key={service.title}>
                 <div className="tf-icon-box">
                   <div className="icon-box">
-                    <span className={`icon ${service.icon}`} />
+                    <span className={serviceIconClassName(service.icon)} />
                   </div>
                   <div className="content text-center">
                     <h6>
@@ -1013,7 +1019,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         : catalogProducts[idx + 1]
       : (products[1] ?? products[0]);
 
-  const galleryImages = productGalleryImages(product.images);
+  const galleryImages = productColorGalleryImages(
+    product.images,
+    product.colors?.length ?? 0,
+  );
   const sizeRun = defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
   const setPrice = productSetPrice(product, product.colors[0], sizeRun);
   const altText = buildProductImageAlt(product);
@@ -1091,80 +1100,82 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
       <section className="flat-spacing">
         <div className="tf-main-product section-image-zoom">
           <div className="container">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="tf-product-media-wrap sticky-top position-relative">
-                  <ProductDetailImmersiveMedia
-                    galleryImages={galleryImages}
-                    spin360Images={product.spin360Images}
-                    fabricSwatchImage={product.fabricSwatchImage}
-                    altText={altText}
-                    fabricLabel={product.fabric}
-                    product={product}
-                  />
+            <ProductDetailColorProvider productSlug={product.slug}>
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="tf-product-media-wrap sticky-top position-relative">
+                    <ProductDetailImmersiveMedia
+                      galleryImages={galleryImages}
+                      spin360Images={product.spin360Images}
+                      fabricSwatchImage={product.fabricSwatchImage}
+                      altText={altText}
+                      fabricLabel={product.fabric}
+                      product={product}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="col-md-6">
-                <div className="tf-product-info-wrap position-relative">
-                  <div className="tf-zoom-main" />
-                  <div className="tf-product-info-list other-image-zoom">
-                    <div className="tf-product-info-heading">
-                      <div className="tf-product-info-name">
-                        <div className="text text-btn-uppercase">
-                          {product.category}
-                        </div>
-                        <h3 className="name">{product.name}</h3>
-                      </div>
-                      <div className="tf-product-info-desc">
-                        <ProductDealCountdown
-                          product={product}
-                          variant="detail"
-                        />
-                        <div className="tf-product-info-price">
-                          <span
-                            className="d-none price-on-sale"
-                            aria-hidden
-                            data-base-price={product.price}
-                          />
-                          <h5 className="font-2 sarjan-deal-price-row">
-                            <PriceGate
-                              amount={product.price}
-                              suffix=" / piece"
-                            />
-                            <ProductDealOriginalPrice product={product} />
-                          </h5>
-                        </div>
-                        <p>{product.description}</p>
-                      </div>
-                    </div>
-                    <ProductPurchasePanel product={product} />
-                    <ProductDetailBuyNowBlock product={product} />
-                    <ul className="tf-product-info-sku">
-                      <li>
-                        <p className="text-caption-1">SKU:</p>
-                        <p className="text-caption-1 text-1">{product.sku}</p>
-                      </li>
-                      <li>
-                        <p className="text-caption-1">Available:</p>
-                        <ProductDetailStockLine product={product} />
-                      </li>
-                      <li>
-                        <p className="text-caption-1">Categories:</p>
-                        <p className="text-caption-1">
-                          <a href="/contact" className="text-1 link">
+                <div className="col-md-6">
+                  <div className="tf-product-info-wrap position-relative">
+                    <div className="tf-zoom-main" />
+                    <div className="tf-product-info-list other-image-zoom">
+                      <div className="tf-product-info-heading">
+                        <div className="tf-product-info-name">
+                          <div className="text text-btn-uppercase">
                             {product.category}
-                          </a>
-                          ,{" "}
-                          <a href="/contact" className="text-1 link">
-                            {product.fabric}
-                          </a>
-                        </p>
-                      </li>
-                    </ul>
+                          </div>
+                          <h3 className="name">{product.name}</h3>
+                        </div>
+                        <div className="tf-product-info-desc">
+                          <ProductDealCountdown
+                            product={product}
+                            variant="detail"
+                          />
+                          <div className="tf-product-info-price">
+                            <span
+                              className="d-none price-on-sale"
+                              aria-hidden
+                              data-base-price={product.price}
+                            />
+                            <h5 className="font-2 sarjan-deal-price-row">
+                              <PriceGate
+                                amount={product.price}
+                                suffix=" / piece"
+                              />
+                              <ProductDealOriginalPrice product={product} />
+                            </h5>
+                          </div>
+                          <p>{product.description}</p>
+                        </div>
+                      </div>
+                      <ProductPurchasePanel product={product} />
+                      <ProductDetailBuyNowBlock product={product} />
+                      <ul className="tf-product-info-sku">
+                        <li>
+                          <p className="text-caption-1">SKU:</p>
+                          <p className="text-caption-1 text-1">{product.sku}</p>
+                        </li>
+                        <li>
+                          <p className="text-caption-1">Available:</p>
+                          <ProductDetailStockLine product={product} />
+                        </li>
+                        <li>
+                          <p className="text-caption-1">Categories:</p>
+                          <p className="text-caption-1">
+                            <a href="/contact" className="text-1 link">
+                              {product.category}
+                            </a>
+                            ,{" "}
+                            <a href="/contact" className="text-1 link">
+                              {product.fabric}
+                            </a>
+                          </p>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </ProductDetailColorProvider>
           </div>
         </div>
         <div className="tf-sticky-btn-atc">
