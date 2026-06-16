@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.86",
-  "versionCode": 87,
-  "releaseNotes": "Fix video upload on reviews (binary upload instead of JSON). Show approved review photos and play-video links on product pages.",
+  "latestVersion": "1.0.87",
+  "versionCode": 88,
+  "releaseNotes": "OTP login fix for unregistered emails, saved addresses screen, Men/Women category filters, single-photo color display, and logged-in-only notifications.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-15T14:44:19.000Z"
+  "updatedAt": "2026-06-16T02:57:43.000Z"
 }
