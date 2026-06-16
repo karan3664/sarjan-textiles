@@ -31,7 +31,9 @@ type ProductPurchasePanelProps = {
   showViewDetailsLink?: boolean;
   colorIndex?: number;
   onColorIndexChange?: (index: number) => void;
-  /** Mini product photos as color swatches (Mashru assorted). */
+  /** Photo-detected picker labels (PDP). Falls back to product.colors alignment. */
+  pickerColors?: string[];
+  /** @deprecated Photo swatches replaced by detected color names. */
   swatchImages?: string[];
 };
 
@@ -89,6 +91,7 @@ export function ProductPurchasePanel({
   showViewDetailsLink = false,
   colorIndex: controlledIndex,
   onColorIndexChange,
+  pickerColors,
   swatchImages,
 }: ProductPurchasePanelProps) {
   const detailColor = useProductDetailColor();
@@ -98,7 +101,7 @@ export function ProductPurchasePanel({
     detailColor?.colorIndex ?? controlledIndex ?? internalIndex;
   const setColorIndex =
     detailColor?.setColorIndex ?? onColorIndexChange ?? setInternalIndex;
-  const colors = productDetailPickerColors(product);
+  const colors = pickerColors ?? productDetailPickerColors(product);
   const activeColor = cartColorForPickerIndex(product, colorIndex);
   const { groups, selectedGroup, setSelectedGroup, sizeRun } =
     useProductSizeGroup(product);
@@ -191,7 +194,6 @@ export function ProductPurchasePanel({
         colors={colors}
         selectedIndex={colorIndex}
         onSelect={setColorIndex}
-        swatchImages={swatchImages}
       />
       <ProductSizeGroupPicker
         groups={groups}

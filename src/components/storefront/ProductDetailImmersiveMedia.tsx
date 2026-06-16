@@ -27,6 +27,8 @@ type Props = {
   fabricSwatchImage?: string;
   altText: string;
   fabricLabel?: string;
+  /** Photo-detected color labels aligned to galleryImages. */
+  pickerColors?: string[];
   product: Pick<
     Product,
     | "stock"
@@ -52,9 +54,11 @@ function ProductDetailGallery({
   galleryImages,
   altText,
   product,
+  pickerColors,
 }: {
   galleryImages: string[];
   altText: string;
+  pickerColors?: string[];
   product: Pick<
     Product,
     | "colors"
@@ -67,7 +71,7 @@ function ProductDetailGallery({
     | "category"
   >;
 }) {
-  const colors = productDetailPickerColors(product);
+  const colors = pickerColors ?? productDetailPickerColors(product);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,6 +164,7 @@ export function ProductDetailImmersiveMedia({
   fabricSwatchImage,
   altText,
   fabricLabel,
+  pickerColors,
   product,
 }: Props) {
   const soldOut = useShowProductSoldOut(product);
@@ -229,6 +234,7 @@ export function ProductDetailImmersiveMedia({
         <ProductDetailGallery
           galleryImages={galleryImages}
           altText={altText}
+          pickerColors={pickerColors}
           product={product}
         />
       ) : null}

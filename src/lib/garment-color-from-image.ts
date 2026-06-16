@@ -2,10 +2,15 @@ import path from "node:path";
 
 export const GARMENT_COLOR_LABELS = [
   "Black",
+  "Blue",
+  "Brown",
   "Cream",
+  "Green",
   "Indigo",
   "Maroon",
+  "Olive",
   "Red",
+  "Teal",
   "Yellow",
 ] as const;
 
@@ -16,10 +21,15 @@ const COLOR_SAMPLES: Array<{
   rgb: [number, number, number];
 }> = [
   { label: "Black", rgb: [28, 28, 32] },
+  { label: "Blue", rgb: [52, 92, 148] },
+  { label: "Brown", rgb: [118, 78, 48] },
   { label: "Cream", rgb: [232, 220, 196] },
+  { label: "Green", rgb: [42, 98, 58] },
   { label: "Indigo", rgb: [36, 52, 96] },
   { label: "Maroon", rgb: [108, 28, 42] },
+  { label: "Olive", rgb: [98, 102, 52] },
   { label: "Red", rgb: [168, 36, 48] },
+  { label: "Teal", rgb: [32, 118, 118] },
   { label: "Yellow", rgb: [212, 176, 52] },
 ];
 
@@ -55,6 +65,16 @@ function classifyGarmentRgb(rgb: [number, number, number]): GarmentColorLabel {
   if (r > 130 && g > 120 && b < 95 && r - b > 70 && g - b > 35) return "Yellow";
   if (r > 95 && g > 70 && b < 95 && r > g && r - b > 25 && g - b > 5) {
     return r > 150 ? "Red" : "Maroon";
+  }
+  if (g > r + 12 && g > b + 8 && g > 70) {
+    if (b > r + 6 && bright < 145) return "Teal";
+    if (bright < 125 && r > 70) return "Olive";
+    return "Green";
+  }
+  if (g > 70 && b > 70 && Math.abs(g - b) < 28 && r < g - 8) return "Teal";
+  if (r > 85 && g > 55 && b < 72 && r > g && bright < 150) return "Brown";
+  if (b > r + 14 && b > g + 6 && b > 72) {
+    return bright > 118 ? "Blue" : "Indigo";
   }
   if (b > r + 8 && b > g && b > 55) return "Indigo";
   if (bright > 105 && spread < 55 && r > 115 && g > 105 && b > 85)
@@ -318,6 +338,8 @@ const TEXTILE_COLOR_POOL = [
   "Blue",
   "Brown",
   "Red",
+  "Green",
+  "Olive",
 ];
 
 export function isGenericMultiPhotoProduct(product: {
@@ -339,7 +361,7 @@ export function isGenericMultiPhotoProduct(product: {
   return false;
 }
 
-/** Mashru / assorted — one distinct color name per photo (no "Indigo 2" duplicates). */
+/** One color label per product photo — ignores CMS/sheet color columns. */
 export async function inferGarmentColorLabelsFromImages(
   product: { images?: string[] },
   options?: { publicDir?: string; sharp?: SharpModule },
@@ -361,5 +383,10 @@ export async function inferGarmentColorLabelsFromImages(
     }
   }
 
-  return assignDistinctColorsFromPool(rgbs, TEXTILE_COLOR_POOL);
+  const direct = rgbs.map((rgb) => nearestGarmentColorLabel(rgb));
+  if (new Set(direct).size === direct.length) {
+    return direct;
+  }
+
+  return assignDistinctColorsFromPool(rgbs, TEXTILE_COLOR_POOL) ?? direct;
 }

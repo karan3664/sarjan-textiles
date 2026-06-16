@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Detect garment color in each CMS product image and align colors[] to images[].
+ * Detect garment color in each CMS product image and rewrite colors[] from photos.
+ * Ignores sheet/CMS color columns — one label per image.
  *
  *   node scripts/align-cms-colors-from-images.mjs [--dry-run]
  */
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
-import { inferImageColorLabelsForProduct } from "../src/lib/garment-color-from-image.ts";
+import { inferGarmentColorLabelsFromImages } from "../src/lib/garment-color-from-image.ts";
 
 const ROOT = process.cwd();
 const CMS_PATH = path.join(ROOT, "data", "cms-db.json");
@@ -53,7 +54,7 @@ function reorderVariants(variants, orderedLabels) {
 }
 
 async function labelsForProduct(product) {
-  return inferImageColorLabelsForProduct(product, {
+  return inferGarmentColorLabelsFromImages(product, {
     publicDir: PUBLIC_DIR,
     sharp,
   });
@@ -66,12 +67,12 @@ async function main() {
 
   for (const product of cms.products ?? []) {
     const images = (product.images ?? []).filter(Boolean);
-    if (images.length < 2) continue;
+    if (!images.length) continue;
 
     const before = (product.colors ?? []).map((color) => readEnglish(color));
     const detected = await labelsForProduct(product);
-    if (!detected) {
-      console.log(`  skip ${product.sku}: could not detect all image colors`);
+    if (!detected || detected.length !== images.length) {
+      console.log(`  skip ${product.sku}: could not detect image colors`);
       continue;
     }
 
@@ -80,12 +81,18 @@ async function main() {
     const nextColors = detected.map((label, index) =>
       setLocalizedColor(product.colors?.[index], label),
     );
-    const nextVariants = product.variants?.length
-      ? reorderVariants(product.variants, detected)
-      : product.variants;
+    const variantColors = new Set(
+      (product.variants ?? []).map((variant) =>
+        readEnglish(variant.color).toLowerCase(),
+      ),
+    );
+    const nextVariants =
+      product.variants?.length && variantColors.size > 1
+        ? reorderVariants(product.variants, detected)
+        : product.variants;
 
     console.log(
-      `  ${product.sku}: ${before.join(", ")} → ${detected.join(", ")}`,
+      `  ${product.sku}: ${before.join(", ") || "(none)"} → ${detected.join(", ")}`,
     );
     product.colors = nextColors;
     product.variants = nextVariants;

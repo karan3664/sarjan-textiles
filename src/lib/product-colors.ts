@@ -211,6 +211,17 @@ export function cartColorForPickerIndex(
   colorIndex: number,
 ): string {
   const catalog = productColorList(product);
+  const variantColors = [
+    ...new Set(
+      (product.variants ?? [])
+        .map((variant) => readEnglish(variant.color as string))
+        .filter(Boolean),
+    ),
+  ];
+  if (variantColors.length === 1) {
+    return variantColors[0];
+  }
+
   if (catalog.length === 1) return catalog[0];
 
   const picker = productDetailPickerColors(product);
@@ -453,6 +464,10 @@ export function productColorGalleryForProduct(
   }
 
   if (usesCmsCatalogImages(images) && images.length > colors.length) {
+    return images;
+  }
+
+  if (usesCmsCatalogImages(images) && images.length === colors.length) {
     return images;
   }
 

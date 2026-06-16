@@ -25,11 +25,7 @@ import { defaultProductSizeRun } from "@/lib/size-groups";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
-import { isGenericMultiPhotoProduct } from "@/lib/garment-color-from-image";
-import {
-  productForDetailGallery,
-  resolveProductGallerySlots,
-} from "@/lib/product-gallery-server";
+import { resolveProductGallerySlots } from "@/lib/product-gallery-server";
 import { productCategoryHref } from "@/lib/storefront-category-links";
 import {
   productGalleryImages,
@@ -1024,18 +1020,17 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         : catalogProducts[idx + 1]
       : (products[1] ?? products[0]);
 
-  const displayProduct = await productForDetailGallery(product);
   const gallerySlots = await resolveProductGallerySlots(product);
   const galleryImages = gallerySlots.map((slot) => slot.image);
-  const photoSwatches = isGenericMultiPhotoProduct(product);
-  const sizeRun = defaultProductSizeRun(displayProduct.sizes, FULL_SIZE_RUN);
+  const pickerColors = gallerySlots.map((slot) => slot.color);
+  const sizeRun = defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
   const setPrice = productSetPrice(
-    displayProduct,
-    displayProduct.colors[0],
+    product,
+    pickerColors[0] ?? product.colors[0],
     sizeRun,
   );
-  const altText = buildProductImageAlt(displayProduct);
-  const categoryHref = productCategoryHref(displayProduct.category);
+  const altText = buildProductImageAlt(product);
+  const categoryHref = productCategoryHref(product.category);
 
   return (
     <>
@@ -1116,11 +1111,12 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                   <div className="tf-product-media-wrap sticky-top position-relative">
                     <ProductDetailImmersiveMedia
                       galleryImages={galleryImages}
-                      spin360Images={displayProduct.spin360Images}
-                      fabricSwatchImage={displayProduct.fabricSwatchImage}
+                      pickerColors={pickerColors}
+                      spin360Images={product.spin360Images}
+                      fabricSwatchImage={product.fabricSwatchImage}
                       altText={altText}
-                      fabricLabel={displayProduct.fabric}
-                      product={displayProduct}
+                      fabricLabel={product.fabric}
+                      product={product}
                     />
                   </div>
                 </div>
@@ -1158,8 +1154,8 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         </div>
                       </div>
                       <ProductPurchasePanel
-                        product={displayProduct}
-                        swatchImages={photoSwatches ? galleryImages : undefined}
+                        product={product}
+                        pickerColors={pickerColors}
                       />
                       <ProductDetailBuyNowBlock product={product} />
                       <ul className="tf-product-info-sku">
