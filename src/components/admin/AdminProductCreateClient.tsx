@@ -351,10 +351,12 @@ export function AdminProductCreateClient({
   initialProducts,
   editProduct,
   categoryMaster = [],
+  colorMaster = commonColors,
 }: {
   initialProducts: Product[];
   editProduct?: Product;
   categoryMaster?: ProductCategoryMaster[];
+  colorMaster?: string[];
 }) {
   const isEdit = Boolean(editProduct);
   const [form, setForm] = useState<ProductForm>(() =>
@@ -406,6 +408,10 @@ export function AdminProductCreateClient({
   );
   const selectedCare = splitList(form.care);
   const selectedColors = splitList(form.colors);
+  const paletteColors = useMemo(() => {
+    const fromMaster = colorMaster.map((color) => color.trim()).filter(Boolean);
+    return [...new Set([...fromMaster, ...selectedColors])];
+  }, [colorMaster, selectedColors]);
   const selectedSizes = splitList(form.sizes);
   const dealPreview = useMemo(() => {
     if (!form.dealEnabled || !form.dealEndsAt) return null;
@@ -1218,7 +1224,7 @@ export function AdminProductCreateClient({
                   Colors<span className="text-primary">*</span>
                 </div>
                 <div className="sarjan-product-check-grid">
-                  {commonColors.map((color) => (
+                  {paletteColors.map((color) => (
                     <label className="sarjan-product-check" key={color}>
                       <input
                         type="checkbox"

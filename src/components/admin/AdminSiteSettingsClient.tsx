@@ -318,6 +318,31 @@ export function AdminSiteSettingsClient({
             />
           </fieldset>
           <fieldset>
+            <div className="body-title mb-10">Product color master</div>
+            <p className="text-caption-1 text-secondary mb_10">
+              One color per line (or comma-separated). Used as quick picks on
+              Add / Edit Product.
+            </p>
+            <textarea
+              rows={6}
+              value={(settings.productColorMaster ?? []).join("\n")}
+              onChange={(event) => {
+                const colors = event.target.value
+                  .split(/[\n,]+/)
+                  .map((item) => item.trim())
+                  .filter(Boolean);
+                setSaveState("idle");
+                setCms((current) => ({
+                  ...current,
+                  siteSettings: {
+                    ...current.siteSettings,
+                    productColorMaster: colors,
+                  },
+                }));
+              }}
+            />
+          </fieldset>
+          <fieldset>
             <div className="body-title mb-10">Footer Credit</div>
             <input
               value={settings.footerCredit ?? ""}

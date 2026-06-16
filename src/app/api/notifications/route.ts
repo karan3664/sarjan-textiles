@@ -1,14 +1,13 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import {
   isBroadcastNotification,
-  listBroadcastNotifications,
   listInboxForClient,
 } from "@/lib/client-notifications";
 import { localizeNotificationRecord } from "@/lib/notification-localize";
 import { localeFromRequest } from "@/lib/request-locale";
 
 function toPublicNotification(
-  item: Awaited<ReturnType<typeof listBroadcastNotifications>>[number],
+  item: Awaited<ReturnType<typeof listInboxForClient>>[number],
 ) {
   const { clientId: _clientId, ...rest } = item;
   return {
@@ -22,23 +21,16 @@ export async function GET(request: Request) {
   const locale = localeFromRequest(request);
   const session = await verifyClientToken(bearerToken(request));
 
-  if (session) {
-    const notifications = await listInboxForClient(session.clientId);
-    return Response.json({
-      notifications: notifications
-        .map(toPublicNotification)
-        .map((item) => localizeNotificationRecord(item, locale)),
-      mode: "authenticated",
-      locale,
-    });
-  }
-
-  const notifications = await listBroadcastNotifications();
+  const notifications = session
+    ? await listInboxForClient(session.clientId)
+    : [];
   return Response.json({
-    notifications: notifications
-      .map(toPublicNotification)
-      .map((item) => localizeNotificationRecord(item, locale)),
-    mode: "guest",
+    notifications: session
+      ? notifications
+          .map(toPublicNotification)
+          .map((item) => localizeNotificationRecord(item, locale))
+      : [],
+    mode: session ? "authenticated" : "guest",
     locale,
   });
 }

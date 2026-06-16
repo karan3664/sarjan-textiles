@@ -149,6 +149,22 @@ export const siteSettings = {
   headerNavigation: defaultHeaderNavigation,
   /** Account dropdown + sidebar links (Admin → Account menu). */
   accountNavigation: defaultAccountNavigation,
+  /** Admin-managed palette for product create/edit color chips. */
+  productColorMaster: [
+    "Black",
+    "Indigo",
+    "Ivory",
+    "Mustard",
+    "Maroon",
+    "Blue",
+    "Peach",
+    "Teal",
+    "Red",
+    "Brown",
+    "Beige",
+    "White",
+    "Green",
+  ],
 };
 
 export const navigation = legacyNavigation;

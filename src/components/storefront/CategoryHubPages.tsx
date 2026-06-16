@@ -32,6 +32,23 @@ export async function CategoryHubIndexContent() {
             Main textile families. Open a hub to see sub-lines and jump into the
             catalog.
           </p>
+          <div className="d-flex justify-content-center gap-10 flex-wrap mt_20">
+            <Link
+              href="/products?category=men"
+              className="tf-btn btn-white has-border radius-4"
+            >
+              Men
+            </Link>
+            <Link
+              href="/products?category=women"
+              className="tf-btn btn-white has-border radius-4"
+            >
+              Women
+            </Link>
+            <Link href="/products" className="tf-btn btn-fill radius-4">
+              All products
+            </Link>
+          </div>
         </div>
         <div className="tf-grid-layout md-col-3 sm-col-2 sarjan-hub-main-grid">
           {hubs.map((hub) => (
@@ -90,6 +107,20 @@ export async function CategoryHubDetailContent({
             {hub.subtitle ? (
               <p className="subheading text-secondary">{hub.subtitle}</p>
             ) : null}
+            <div className="d-flex justify-content-center gap-10 flex-wrap mt_16">
+              <Link
+                href={`/products?category=men`}
+                className="tf-btn btn-white has-border radius-4"
+              >
+                Men
+              </Link>
+              <Link
+                href={`/products?category=women`}
+                className="tf-btn btn-white has-border radius-4"
+              >
+                Women
+              </Link>
+            </div>
           </div>
           {hub.heroImage ? (
             <div className="sarjan-hub-hero-banner hover-img mb_32">

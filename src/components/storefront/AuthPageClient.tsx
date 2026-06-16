@@ -774,36 +774,44 @@ function AuthPageClientInner({
                   </fieldset>
                   {isLogin && !usePasswordLogin ? (
                     <>
-                      <fieldset className="sarjan-otp-row">
-                        <input
-                          type="text"
-                          className="sarjan-otp-input"
-                          placeholder="Email OTP*"
-                          inputMode="numeric"
-                          autoComplete="one-time-code"
-                          value={loginOtp}
-                          onChange={(event) =>
-                            setLoginOtp(
-                              event.target.value.replace(/\D/g, "").slice(0, 6),
-                            )
-                          }
-                          required
-                        />
-                        <div className="sarjan-otp-actions">
-                          <button
-                            type="button"
-                            className={withBtnIcon(
-                              sarjanButtonClass("sarjan-auth-btn"),
-                            )}
-                            onClick={sendLoginOtp}
-                            disabled={loginOtpLoading || !email.trim()}
-                          >
-                            <TfButtonIcon icon="icon-mail">
-                              {loginOtpLoading ? "Sending..." : "Send OTP"}
-                            </TfButtonIcon>
-                          </button>
-                        </div>
-                      </fieldset>
+                      {loginOtpToken ? (
+                        <fieldset className="sarjan-otp-row">
+                          <input
+                            type="text"
+                            className="sarjan-otp-input"
+                            placeholder="Email OTP*"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            value={loginOtp}
+                            onChange={(event) =>
+                              setLoginOtp(
+                                event.target.value
+                                  .replace(/\D/g, "")
+                                  .slice(0, 6),
+                              )
+                            }
+                            required
+                          />
+                        </fieldset>
+                      ) : null}
+                      <div className="sarjan-otp-actions mb_16">
+                        <button
+                          type="button"
+                          className={withBtnIcon(
+                            sarjanButtonClass("sarjan-auth-btn"),
+                          )}
+                          onClick={sendLoginOtp}
+                          disabled={loginOtpLoading || !email.trim()}
+                        >
+                          <TfButtonIcon icon="icon-mail">
+                            {loginOtpLoading
+                              ? "Sending..."
+                              : loginOtpToken
+                                ? "Resend OTP"
+                                : "Send OTP"}
+                          </TfButtonIcon>
+                        </button>
+                      </div>
                     </>
                   ) : null}
                   {isRegister ? (

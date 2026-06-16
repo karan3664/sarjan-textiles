@@ -237,3 +237,27 @@ export async function processAbandonedCartReminders() {
     results,
   };
 }
+
+/** Browser preview for dev/email-preview — sample cart reminder mail. */
+export function previewAbandonedCartEmailHtml(
+  stage: CartReminderStage = 1,
+  sample?: { companyName?: string; lines?: string[] },
+): string {
+  const setCount = sample?.lines?.length ?? 2;
+  const copy = REMINDER_COPY[stage];
+  const checkoutUrl = `${siteUrl}/shopping-cart?resume=cart`;
+  return buildSarjanEmailHtml({
+    preheader: copy.pushBody(setCount),
+    eyebrow: "Cart reminder",
+    heading: cartEmailHeading(stage),
+    innerHtml: buildCartEmailInnerHtml({
+      companyName: sample?.companyName ?? "Demo Boutique Pvt Ltd",
+      stage,
+      lines: sample?.lines ?? [
+        "Banarasi Silk Saree · Maroon · 2 sets",
+        "Cotton Kurti Set · Navy · 1 set",
+      ],
+      checkoutUrl,
+    }),
+  });
+}

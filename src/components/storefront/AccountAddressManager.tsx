@@ -362,7 +362,12 @@ export function AccountAddressManager({
                       className={withBtnIcon(
                         "tf-btn radius-4 btn-white has-border justify-content-center",
                       )}
-                      disabled={saving}
+                      disabled={saving || savedAddresses.length <= 1}
+                      title={
+                        savedAddresses.length <= 1
+                          ? "Add another address before deleting this one"
+                          : undefined
+                      }
                       onClick={() => void deleteAddress(item.id)}
                     >
                       <TfButtonIcon icon="icon-close">Delete</TfButtonIcon>

@@ -725,10 +725,12 @@ export async function updateClient(
 
   let normalizedAddress = input.address;
   if (input.address !== undefined) {
-    normalizedAddress = applyFlatAddressPatch(
-      existing.address ?? {},
-      input.address,
-    );
+    normalizedAddress = Array.isArray(input.address.saved)
+      ? syncAddressBookFlatFields({
+          ...(existing.address ?? {}),
+          ...input.address,
+        })
+      : applyFlatAddressPatch(existing.address ?? {}, input.address);
     if (input.address.gst !== undefined) {
       const gst = input.address.gst.trim();
       normalizedAddress = {

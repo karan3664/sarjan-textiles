@@ -827,6 +827,13 @@ function migrateSiteSettings(merged: CmsSiteSettings): CmsSiteSettings {
   }
 
   if (
+    !Array.isArray(merged.productColorMaster) ||
+    !merged.productColorMaster.length
+  ) {
+    next.productColorMaster = defaultSiteSettings.productColorMaster;
+  }
+
+  if (
     merged.ordersEmail?.trim().toLowerCase() === "orders@sarjantextiles.com"
   ) {
     next.ordersEmail = defaultSiteSettings.ordersEmail;

@@ -1,7 +1,23 @@
 import type { Product } from "@/data/mock";
+import { isProductPlaceholderImage } from "@/lib/product-placeholder-image";
 
 export function productColorList(product: Pick<Product, "colors">): string[] {
   return product.colors?.length ? product.colors : ["Default"];
+}
+
+/** When only one real product photo exists, show a single color swatch. */
+export function visibleProductColors(
+  product: Pick<Product, "images" | "colors" | "sku" | "slug">,
+): string[] {
+  const colors = productColorList(product);
+  const realImages = (product.images ?? []).filter(
+    (url) => url?.trim() && !isProductPlaceholderImage(url),
+  );
+  const uniqueImages = [...new Set(realImages)];
+  if (uniqueImages.length <= 1) {
+    return colors.slice(0, 1);
+  }
+  return colors;
 }
 
 function colorMatchToken(color: string): string {

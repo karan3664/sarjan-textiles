@@ -28,6 +28,7 @@ export default async function AdminProductsCreatePage({
           editProduct ? flattenProductForAdmin(editProduct) : undefined
         }
         categoryMaster={cms.categoryMaster}
+        colorMaster={cms.siteSettings.productColorMaster ?? []}
       />
     </AdminTemplateChrome>
   );

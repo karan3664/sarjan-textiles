@@ -10,7 +10,7 @@ import {
   productWholesaleMinSets,
 } from "@/lib/product-availability";
 import { useClientHasB2BToken, useShowProductUnavailable } from "./PriceGate";
-import { productColorList } from "@/lib/product-colors";
+import { productColorList, visibleProductColors } from "@/lib/product-colors";
 import { useProductDetailColor } from "./ProductDetailColorContext";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
@@ -91,7 +91,7 @@ export function ProductPurchasePanel({
     detailColor?.colorIndex ?? controlledIndex ?? internalIndex;
   const setColorIndex =
     detailColor?.setColorIndex ?? onColorIndexChange ?? setInternalIndex;
-  const colors = productColorList(product);
+  const colors = visibleProductColors(product);
   const activeColor = colors[colorIndex] ?? colors[0];
   const { groups, selectedGroup, setSelectedGroup, sizeRun } =
     useProductSizeGroup(product);

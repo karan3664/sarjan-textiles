@@ -84,6 +84,10 @@ export function listSavedAddresses(
       )
     : [];
 
+  if (Array.isArray(book?.saved) && book.saved.length === 0) {
+    return { saved: [], defaultAddressId: "" };
+  }
+
   if (stored.length > 0) {
     const defaultAddressId =
       book?.defaultAddressId &&
@@ -130,6 +134,20 @@ export function syncAddressBookFlatFields(
 
   if (fallback) {
     Object.assign(next, pickAddressFields(fallback));
+  } else {
+    for (const key of [
+      "contactName",
+      "phone",
+      "line1",
+      "line2",
+      "city",
+      "state",
+      "pincode",
+      "transport",
+      "ownerLegalName",
+    ] as const) {
+      delete next[key];
+    }
   }
 
   return next;
@@ -138,8 +156,12 @@ export function syncAddressBookFlatFields(
 /** Apply flat address field updates onto the saved-address book (mobile profile PATCH). */
 export function applyFlatAddressPatch(
   book: ClientAddressBook,
-  patch: Partial<ClientAddressFields>,
+  patch: Partial<ClientAddressFields> &
+    Partial<Pick<ClientAddressBook, "saved" | "defaultAddressId">>,
 ): ClientAddressBook {
+  if (Array.isArray(patch.saved)) {
+    return syncAddressBookFlatFields({ ...book, ...patch });
+  }
   const merged: ClientAddressBook = { ...book, ...patch };
   const fields = pickAddressFields(merged);
   if (!hasSavedAddressContent(fields)) {
