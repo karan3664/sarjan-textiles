@@ -84,7 +84,7 @@ export function ProductListCard({ product }: { product: Product }) {
             {product.colors.slice(0, 3).map((color, index) => (
               <li
                 className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`}
-                key={color}
+                key={`${color}-${index}`}
               >
                 <span className="d-none text-capitalize color-filter">
                   {color}

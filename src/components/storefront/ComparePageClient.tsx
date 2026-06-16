@@ -107,7 +107,7 @@ export function ComparePageClient({
                   backgroundColor: "var(--sarjan-swatch)",
                 } as CSSProperties
               }
-              key={color}
+              key={`${color}-${index}`}
               title={color}
             />
           ))}

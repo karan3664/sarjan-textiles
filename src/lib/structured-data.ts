@@ -3,6 +3,7 @@ import type { Product } from "@/data/mock";
 import type { CmsBlog, CmsSeoPage } from "@/lib/cms-store";
 import type { CategoryHubPage } from "@/lib/cms-store";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
+import { productCategoryHref } from "@/lib/storefront-category-links";
 import { readEnglish } from "@/lib/cms-localize";
 import type { MobileAppRelease } from "@/lib/mobile-app-release";
 
@@ -313,20 +314,12 @@ export function listingBreadcrumbJsonLd(
   };
 }
 
-function categoryListingPath(categoryName: string) {
-  const hay = categoryName.toLowerCase();
-  if (hay.includes("kurta")) return "/products/kurtas";
-  if (hay.includes("shirt")) return "/products/shirts";
-  if (hay.includes("jacket")) return "/products/jackets";
-  return "/products";
-}
-
 export function productBreadcrumbJsonLd(product: Product) {
   const categoryName = product.category || "Catalog";
   return listingBreadcrumbJsonLd([
     { name: "Home", path: "/" },
     { name: "Products", path: "/products" },
-    { name: categoryName, path: categoryListingPath(categoryName) },
+    { name: categoryName, path: productCategoryHref(categoryName) },
     { name: product.name, path: `/products/${product.slug}` },
   ]);
 }

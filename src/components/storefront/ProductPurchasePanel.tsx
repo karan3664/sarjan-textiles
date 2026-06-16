@@ -10,7 +10,11 @@ import {
   productWholesaleMinSets,
 } from "@/lib/product-availability";
 import { useClientHasB2BToken, useShowProductUnavailable } from "./PriceGate";
-import { productColorList, visibleProductColors } from "@/lib/product-colors";
+import {
+  productColorList,
+  productDetailPickerColors,
+  cartColorForPickerIndex,
+} from "@/lib/product-colors";
 import { useProductDetailColor } from "./ProductDetailColorContext";
 import { productSetPrice } from "@/lib/product-pricing";
 import { ProductColorPicker } from "./ProductColorPicker";
@@ -27,6 +31,8 @@ type ProductPurchasePanelProps = {
   showViewDetailsLink?: boolean;
   colorIndex?: number;
   onColorIndexChange?: (index: number) => void;
+  /** Mini product photos as color swatches (Mashru assorted). */
+  swatchImages?: string[];
 };
 
 function ProductWishlistCompareIcons({
@@ -83,6 +89,7 @@ export function ProductPurchasePanel({
   showViewDetailsLink = false,
   colorIndex: controlledIndex,
   onColorIndexChange,
+  swatchImages,
 }: ProductPurchasePanelProps) {
   const detailColor = useProductDetailColor();
   const [internalIndex, setInternalIndex] = useState(0);
@@ -91,8 +98,8 @@ export function ProductPurchasePanel({
     detailColor?.colorIndex ?? controlledIndex ?? internalIndex;
   const setColorIndex =
     detailColor?.setColorIndex ?? onColorIndexChange ?? setInternalIndex;
-  const colors = visibleProductColors(product);
-  const activeColor = colors[colorIndex] ?? colors[0];
+  const colors = productDetailPickerColors(product);
+  const activeColor = cartColorForPickerIndex(product, colorIndex);
   const { groups, selectedGroup, setSelectedGroup, sizeRun } =
     useProductSizeGroup(product);
   const setPrice = productSetPrice(product, activeColor, sizeRun);
@@ -184,6 +191,7 @@ export function ProductPurchasePanel({
         colors={colors}
         selectedIndex={colorIndex}
         onSelect={setColorIndex}
+        swatchImages={swatchImages}
       />
       <ProductSizeGroupPicker
         groups={groups}

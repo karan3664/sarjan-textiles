@@ -2,25 +2,34 @@
 
 import type { CSSProperties } from "react";
 import { productColorHex } from "@/lib/product-color-swatch";
+import { StorefrontProductImage } from "./StorefrontProductImage";
 
 type ProductColorPickerProps = {
   colors: string[];
   selectedIndex: number;
   onSelect: (index: number) => void;
+  /** When set (e.g. Mashru assorted), show product photo as each swatch. */
+  swatchImages?: string[];
   /** Quick view / PDP use round template swatches; cards use list layout elsewhere. */
   variant?: "template" | "list";
   maxVisible?: number;
 };
 
+function usesPhotoSwatches(colors: string[], swatchImages?: string[]) {
+  return Boolean(swatchImages?.length && swatchImages.length === colors.length);
+}
+
 export function ProductColorPicker({
   colors,
   selectedIndex,
   onSelect,
+  swatchImages,
   variant = "template",
   maxVisible = 8,
 }: ProductColorPickerProps) {
   const visible = colors.slice(0, maxVisible);
   const active = colors[selectedIndex] ?? colors[0] ?? "Default";
+  const photoSwatches = usesPhotoSwatches(visible, swatchImages);
 
   if (variant === "list") {
     return (
@@ -28,7 +37,7 @@ export function ProductColorPicker({
         {visible.map((color, index) => (
           <li
             className={`list-color-item color-swatch${index === selectedIndex ? " active line" : ""}`}
-            key={color}
+            key={`${color}-${index}`}
             onClick={() => onSelect(index)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -66,23 +75,33 @@ export function ProductColorPicker({
       </div>
       <div className="variant-picker-values variant-color sarjan-variant-colors">
         {visible.map((color, index) => {
-          const hex = productColorHex(color);
+          const hex = productColorHex(color, index);
           const swatchStyle = {
             "--sarjan-swatch": hex,
           } as CSSProperties;
+          const image = swatchImages?.[index];
           return (
             <button
               type="button"
-              className={`sarjan-color-swatch-btn hover-tooltip tooltip-bot radius-60 color-btn${index === selectedIndex ? " active line" : ""}`}
+              className={`sarjan-color-swatch-btn hover-tooltip tooltip-bot radius-60 color-btn${index === selectedIndex ? " active line" : ""}${photoSwatches ? " sarjan-color-swatch-btn--photo" : ""}`}
               data-value={color}
               data-color={color.toLowerCase()}
               key={`${color}-${index}`}
-              style={swatchStyle}
+              style={photoSwatches ? undefined : swatchStyle}
               aria-label={`Select color ${color}`}
               aria-pressed={index === selectedIndex}
               onClick={() => onSelect(index)}
             >
-              <span className="btn-checkbox sarjan-color-swatch-fill" />
+              {photoSwatches && image ? (
+                <StorefrontProductImage
+                  src={image}
+                  alt={color}
+                  variant="swatch"
+                  className="sarjan-color-swatch-photo"
+                />
+              ) : (
+                <span className="btn-checkbox sarjan-color-swatch-fill" />
+              )}
               <span className="tooltip">{color}</span>
             </button>
           );

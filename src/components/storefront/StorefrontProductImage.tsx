@@ -34,6 +34,7 @@ export function StorefrontProductImage({
   style,
 }: ProductImageProps) {
   const mergedClass = productImageClassName(src, className);
+  const needsZoom = mergedClass.includes("tf-image-zoom");
 
   if (fill) {
     return (
@@ -44,7 +45,7 @@ export function StorefrontProductImage({
         className={mergedClass}
         sizes={sizes ?? STOREFRONT_IMAGE_SIZES.productCard}
         priority={priority}
-        unoptimized={unoptimized}
+        unoptimized={unoptimized ?? needsZoom}
         style={{ objectFit: "cover", ...style }}
       />
     );
@@ -84,7 +85,7 @@ export function StorefrontProductImage({
       className={mergedClass}
       sizes={dims.sizes}
       priority={priority}
-      unoptimized={unoptimized}
+      unoptimized={unoptimized ?? needsZoom}
       style={style}
     />
   );

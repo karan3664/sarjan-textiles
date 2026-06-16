@@ -33,7 +33,13 @@ function hashColorHex(name: string) {
   return `hsl(${hue} 42% 42%)`;
 }
 
-export function productColorHex(color: string) {
+export function productColorHex(color: string, index = 0) {
   const key = color.trim().toLowerCase().replace(/\s+/g, " ");
+  const designMatch = key.match(/^design\s+(\d+)$/);
+  if (designMatch) {
+    const designIndex = Math.max(1, Number(designMatch[1]) || index + 1);
+    const hue = ((designIndex - 1) * 67) % 360;
+    return `hsl(${hue} 48% 42%)`;
+  }
   return NAMED_COLOR_HEX[key] ?? hashColorHex(key);
 }

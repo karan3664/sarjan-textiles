@@ -67,6 +67,8 @@ function usage() {
   node scripts/sync-cms.mjs pull [--dry-run]              Download live CMS to local
   node scripts/sync-cms.mjs push-product-images [--dry-run]
       Merge only product image fields from local → live (safe for photos)
+  node scripts/sync-cms.mjs push-product-colors [--dry-run]
+      Merge product colors + variants from local → live (image-order aligned)
   node scripts/sync-cms.mjs list-backups
       List backups stored on live (Admin → DB Backup)
   node scripts/sync-cms.mjs restore-backup <id> [--dry-run]
@@ -153,17 +155,76 @@ async function fetchLiveCms(token) {
   return data;
 }
 
+const RETRYABLE_HTTP = new Set([502, 503, 504, 524]);
+
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(url, options, label = "request") {
+  const delays = [0, 2000, 5000, 10000];
+  let lastError = null;
+  for (let attempt = 0; attempt < delays.length; attempt += 1) {
+    if (delays[attempt]) await sleep(delays[attempt]);
+    try {
+      const res = await fetch(url, options);
+      if (
+        res.ok ||
+        !RETRYABLE_HTTP.has(res.status) ||
+        attempt === delays.length - 1
+      ) {
+        return res;
+      }
+      lastError = new Error(`${label} failed (${res.status})`);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === delays.length - 1) throw lastError;
+    }
+  }
+  throw lastError ?? new Error(`${label} failed`);
+}
+
+/** PUT only the keys provided — avoids re-localizing home/mobileApp on image-only sync. */
 async function saveLiveCms(token, snapshot) {
-  const res = await fetch(`${LIVE_URL}/api/admin/cms`, {
-    method: "PUT",
-    headers: adminHeaders(token),
-    body: JSON.stringify(snapshot),
-  });
+  const res = await fetchWithRetry(
+    `${LIVE_URL}/api/admin/cms`,
+    {
+      method: "PUT",
+      headers: adminHeaders(token),
+      body: JSON.stringify(snapshot),
+    },
+    "CMS save",
+  );
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.error ?? `CMS save failed (${res.status})`);
   }
   return data;
+}
+
+async function saveLiveProductsBulk(token, products, batchSize = 8) {
+  for (let i = 0; i < products.length; i += batchSize) {
+    const batch = products.slice(i, i + batchSize);
+    const res = await fetchWithRetry(
+      `${LIVE_URL}/api/admin/cms/products`,
+      {
+        method: "POST",
+        headers: adminHeaders(token),
+        body: JSON.stringify({ products: batch }),
+      },
+      `product batch ${Math.floor(i / batchSize) + 1}`,
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(
+        data.error ?? `Product batch save failed (${res.status})`,
+      );
+    }
+    process.stdout.write(
+      `  saved ${Math.min(i + batch.length, products.length)}/${products.length} products\r`,
+    );
+  }
+  process.stdout.write("\n");
 }
 
 function localProductLookup(local) {
@@ -209,11 +270,12 @@ async function pushProductImages() {
   const live = await fetchLiveCms(token);
   let updated = 0;
 
+  const changedProducts = [];
   live.products = (live.products ?? []).map((product) => {
     const fromLocal = matchLocalProduct(product, lookup);
     if (!fromLocal?.images?.length) return product;
     updated += 1;
-    return {
+    const next = {
       ...product,
       images: fromLocal.images,
       imageAlt: fromLocal.imageAlt ?? product.imageAlt,
@@ -221,11 +283,71 @@ async function pushProductImages() {
       fabricSwatchImage:
         fromLocal.fabricSwatchImage ?? product.fabricSwatchImage,
     };
+    changedProducts.push(next);
+    return next;
   });
 
-  await saveLiveCms(token, live);
+  try {
+    await saveLiveCms(token, { products: live.products });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/524|502|503|504/.test(message) || !changedProducts.length)
+      throw error;
+    console.warn(
+      `Full products PUT timed out — retrying in ${changedProducts.length} smaller batches…`,
+    );
+    await saveLiveProductsBulk(token, changedProducts);
+  }
   console.log(`Live product images updated for ${updated} products.`);
   console.log("Image files are separate — run: npm run cms:sync-uploads");
+}
+
+/** Merge product colors + variants from local JSON into live CMS. */
+async function pushProductColors() {
+  const local = await readLocalCms();
+  const lookup = localProductLookup(local);
+  const localWithColors = (local.products ?? []).filter(
+    (product) => product?.colors?.length,
+  ).length;
+
+  if (dryRun) {
+    console.log(
+      `[dry-run] Would merge colors for up to ${localWithColors} local products into live CMS`,
+    );
+    return;
+  }
+
+  const token = await adminLogin();
+  console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  const live = await fetchLiveCms(token);
+  let updated = 0;
+
+  live.products = (live.products ?? []).map((product) => {
+    const fromLocal = matchLocalProduct(product, lookup);
+    if (!fromLocal?.colors?.length) return product;
+    updated += 1;
+    return {
+      ...product,
+      colors: fromLocal.colors,
+      variants: fromLocal.variants ?? product.variants,
+    };
+  });
+
+  try {
+    await saveLiveCms(token, { products: live.products });
+  } catch (error) {
+    const changed = (live.products ?? []).filter((product) => {
+      const fromLocal = matchLocalProduct(product, lookup);
+      return Boolean(fromLocal?.colors?.length);
+    });
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/524|502|503|504/.test(message) || !changed.length) throw error;
+    console.warn(
+      `Full products PUT timed out — retrying in ${changed.length} smaller batches…`,
+    );
+    await saveLiveProductsBulk(token, changed);
+  }
+  console.log(`Live product colors updated for ${updated} products.`);
 }
 
 async function createLiveBackup(token, name) {
@@ -428,6 +550,7 @@ async function main() {
   else if (cmd === "pull") await pull();
   else if (cmd === "pull-db") await pullDb();
   else if (cmd === "push-product-images") await pushProductImages();
+  else if (cmd === "push-product-colors") await pushProductColors();
   else if (cmd === "list-backups") await listBackups();
   else if (cmd === "restore-backup") await restoreBackup(process.argv[3]);
   else {

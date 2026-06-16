@@ -23,11 +23,17 @@
     "cms:pull": "node scripts/sync-cms.mjs pull",
     "cms:pull-db": "node scripts/sync-cms.mjs pull-db",
     "cms:push-product-images": "node scripts/sync-cms.mjs push-product-images",
+    "cms:push-product-colors": "node scripts/sync-cms.mjs push-product-colors",
+    "cms:sync-colors": "node scripts/sync-product-colors-to-image-order.mjs",
+    "cms:sync-kaftan-colors": "node scripts/sync-kaftan-visual-colors.mjs",
+    "cms:sync-single-color": "node scripts/sync-single-image-product-colors.mjs",
     "cms:list-backups": "node scripts/sync-cms.mjs list-backups",
     "cms:restore-backup": "node scripts/sync-cms.mjs restore-backup",
     "cms:sync-uploads": "bash scripts/vps/sync-uploads.sh",
     "cms:pull-uploads": "bash scripts/vps/pull-uploads.sh",
-    "cms:pull-uploads:http": "node scripts/pull-uploads-http.mjs"
+    "cms:pull-uploads:http": "node scripts/pull-uploads-http.mjs",
+    "cms:align-colors-from-images": "node scripts/align-cms-colors-from-images.mjs",
+    "cms:replace-images": "node scripts/replace-product-images-bulk.mjs"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",

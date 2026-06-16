@@ -25,7 +25,12 @@ import { defaultProductSizeRun } from "@/lib/size-groups";
 import { type CmsProductFilterGroup } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
-import { productColorGalleryForProduct } from "@/lib/product-colors";
+import { isGenericMultiPhotoProduct } from "@/lib/garment-color-from-image";
+import {
+  productForDetailGallery,
+  resolveProductGallerySlots,
+} from "@/lib/product-gallery-server";
+import { productCategoryHref } from "@/lib/storefront-category-links";
 import {
   productGalleryImages,
   productImageClassName,
@@ -1019,10 +1024,18 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         : catalogProducts[idx + 1]
       : (products[1] ?? products[0]);
 
-  const galleryImages = productColorGalleryForProduct(product);
-  const sizeRun = defaultProductSizeRun(product.sizes, FULL_SIZE_RUN);
-  const setPrice = productSetPrice(product, product.colors[0], sizeRun);
-  const altText = buildProductImageAlt(product);
+  const displayProduct = await productForDetailGallery(product);
+  const gallerySlots = await resolveProductGallerySlots(product);
+  const galleryImages = gallerySlots.map((slot) => slot.image);
+  const photoSwatches = isGenericMultiPhotoProduct(product);
+  const sizeRun = defaultProductSizeRun(displayProduct.sizes, FULL_SIZE_RUN);
+  const setPrice = productSetPrice(
+    displayProduct,
+    displayProduct.colors[0],
+    sizeRun,
+  );
+  const altText = buildProductImageAlt(displayProduct);
+  const categoryHref = productCategoryHref(displayProduct.category);
 
   return (
     <>
@@ -1034,7 +1047,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                 Homepage
               </Link>
               <i className="icon icon-arrRight" />
-              <Link href="/#catalog" className="text text-caption-1">
+              <Link href={categoryHref} className="text text-caption-1">
                 {product.category}
               </Link>
               <i className="icon icon-arrRight" />
@@ -1047,7 +1060,7 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
               >
                 <i className="icon icon-arrLeft" />
               </Link>
-              <Link href="/#catalog" className="tf-breadcrumb-back">
+              <Link href={categoryHref} className="tf-breadcrumb-back">
                 <i className="icon icon-squares-four" />
               </Link>
               <Link
@@ -1103,11 +1116,11 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                   <div className="tf-product-media-wrap sticky-top position-relative">
                     <ProductDetailImmersiveMedia
                       galleryImages={galleryImages}
-                      spin360Images={product.spin360Images}
-                      fabricSwatchImage={product.fabricSwatchImage}
+                      spin360Images={displayProduct.spin360Images}
+                      fabricSwatchImage={displayProduct.fabricSwatchImage}
                       altText={altText}
-                      fabricLabel={product.fabric}
-                      product={product}
+                      fabricLabel={displayProduct.fabric}
+                      product={displayProduct}
                     />
                   </div>
                 </div>
@@ -1144,7 +1157,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                           <p>{product.description}</p>
                         </div>
                       </div>
-                      <ProductPurchasePanel product={product} />
+                      <ProductPurchasePanel
+                        product={displayProduct}
+                        swatchImages={photoSwatches ? galleryImages : undefined}
+                      />
                       <ProductDetailBuyNowBlock product={product} />
                       <ul className="tf-product-info-sku">
                         <li>

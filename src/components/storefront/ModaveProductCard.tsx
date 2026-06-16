@@ -180,7 +180,7 @@ export function ModaveProductCard({
               return (
                 <li
                   className={`list-color-item color-swatch${index === colorIndex ? " active line" : ""}`}
-                  key={`${product.slug}-${color}`}
+                  key={`${product.slug}-${color}-${index}`}
                   onClick={() => setColorIndex(index)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {

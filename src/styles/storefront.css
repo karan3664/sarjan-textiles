@@ -1039,6 +1039,32 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
   background: #ffffff !important;
 }
 
+/* PDP similar / recently viewed — Modave sets .product-img { height: 100% } which
+   stretches slides inside Swiper and crops images to a grey slab. */
+.sarjan-detail-recommendations .swiper-slide {
+  height: auto !important;
+}
+
+.sarjan-detail-recommendations .card-product .card-product-wrapper {
+  height: auto;
+}
+
+.sarjan-detail-recommendations .card-product .product-img {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  height: auto !important;
+  display: block !important;
+  max-height: none;
+}
+
+.sarjan-detail-recommendations .card-product .card-product-wrapper img {
+  height: auto !important;
+}
+
+.sarjan-pdp-recommendations-swiper {
+  overflow: hidden;
+}
+
 .sarjan-policy-media {
   position: relative;
   aspect-ratio: 4 / 5;
@@ -7384,7 +7410,21 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
 
 .variant-picker-item .sarjan-color-swatch-btn.active .sarjan-color-swatch-fill,
 .modal-quick-view .sarjan-color-swatch-btn.active .sarjan-color-swatch-fill {
-  border-color: #ffffff !important;
+  box-shadow: inset 0 0 0 2px var(--white);
+}
+
+.sarjan-color-swatch-btn--photo {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.sarjan-color-swatch-btn--photo .sarjan-color-swatch-photo,
+.sarjan-color-swatch-btn--photo .sarjan-color-swatch-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  display: block !important;
 }
 
 .sarjan-variant-colors {
@@ -9796,6 +9836,32 @@ body.sarjan-storefront:has(.sarjan-order-bot .sarjan-order-bot-panel)
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+/* PhotoSwipe lightbox — above Sarjan AI; keep toolbar/arrows clickable when zoomed */
+.pswp {
+  --pswp-root-z-index: 100250;
+}
+
+.pswp__top-bar,
+.pswp__button--arrow,
+.pswp__button--zoom,
+.pswp__button--close {
+  z-index: 60 !important;
+}
+
+.pswp__button {
+  pointer-events: auto !important;
+}
+
+body:has(.pswp--open) .sarjan-order-bot {
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+body:has(.pswp--open) #scroll-top {
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 /* Sarjan AI — floating chat */

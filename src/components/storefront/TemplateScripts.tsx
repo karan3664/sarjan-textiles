@@ -36,7 +36,7 @@ const productDetailScripts = [
   "zoom.js",
 ];
 
-const templateVersion = "sarjan-20260509-2";
+const templateVersion = "sarjan-20260616-pswp";
 
 export function TemplateScripts() {
   const pathname = usePathname();

@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
 import { SIZE_GROUPS, SIZE_GROUP_LABELS } from "@/lib/cart-client";
 import { setStockForSizeInGroup } from "@/lib/bulk-product-stock";
 import { totalPieceStockFromSetCounts } from "@/lib/set-stock";
+import { productInventoryOnHand } from "@/lib/product-availability";
+import { resolveProductSizeGroups } from "@/lib/size-groups";
 import type { ProductCategoryMaster } from "@/lib/cms-store";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { buildSeoProductSlug, isWeakProductSlug } from "@/lib/product-seo-slug";
@@ -158,6 +160,11 @@ function splitList(value: string) {
     .filter(Boolean);
 }
 
+function isFreeSizeOnlyRun(sizes: string[]) {
+  const groups = resolveProductSizeGroups(sizes, sizes);
+  return groups.hasFree && !groups.hasRegular && !groups.hasPlus;
+}
+
 function productFromForm(
   form: ProductForm,
   index = 0,
@@ -201,7 +208,12 @@ function productFromForm(
       };
     }),
   );
-  const stock =
+  const manualStock = Number(form.stock) || 0;
+  const variantTotal = variants.reduce(
+    (sum, variant) => sum + (Number(variant.stock) || 0),
+    0,
+  );
+  const stockFromSets =
     stockRegularSets > 0 || stockPlusSets > 0
       ? totalPieceStockFromSetCounts({
           colors,
@@ -209,11 +221,15 @@ function productFromForm(
           stockRegularSets,
           stockPlusSets,
         })
-      : Number(form.stock) ||
-        variants.reduce(
-          (sum, variant) => sum + (Number(variant.stock) || 0),
-          0,
-        );
+      : 0;
+  const stock = variantTotal > 0 ? variantTotal : stockFromSets || manualStock;
+  const resolvedStockRegularSets =
+    isFreeSizeOnlyRun(sizes) && variantTotal > 0 && colors.length
+      ? Math.max(
+          stockRegularSets,
+          Math.round(variantTotal / Math.max(1, colors.length)),
+        )
+      : stockRegularSets;
 
   return {
     id: fallbackId,
@@ -233,7 +249,8 @@ function productFromForm(
     sold: Number(form.sold) || 0,
     colors,
     sizes,
-    stockRegularSets: stockRegularSets > 0 ? stockRegularSets : undefined,
+    stockRegularSets:
+      resolvedStockRegularSets > 0 ? resolvedStockRegularSets : undefined,
     stockPlusSets: stockPlusSets > 0 ? stockPlusSets : undefined,
     images: form.images.length
       ? form.images
@@ -300,7 +317,11 @@ function formFromProduct(product?: Product): ProductForm {
     fabric: product.fabric,
     price: String(product.price),
     moq: String(product.moq),
-    stock: String(product.stock),
+    stock: String(
+      product.variants?.length
+        ? productInventoryOnHand(product)
+        : (product.stock ?? 0),
+    ),
     reserved: String(product.reserved),
     sold: String(product.sold),
     colors: product.colors.join(", "),
@@ -454,6 +475,56 @@ export function AdminProductCreateClient({
       variantOverrides,
     ],
   );
+
+  useEffect(() => {
+    if (!variantPreview.length) return;
+    const total = variantPreview.reduce(
+      (sum, variant) => sum + (Number(variant.stock) || 0),
+      0,
+    );
+    setForm((current) =>
+      current.stock === String(total)
+        ? current
+        : { ...current, stock: String(total) },
+    );
+  }, [variantPreview]);
+
+  const updateStockTotal = (value: string) => {
+    setForm((current) => ({ ...current, stock: value }));
+    const total = Number(value);
+    if (!Number.isFinite(total) || total < 0) return;
+    const colors = splitList(form.colors);
+    const sizes = splitList(form.sizes);
+    const variantCount = Math.max(1, colors.length * sizes.length);
+    if (!colors.length || !sizes.length) return;
+
+    const each = Math.floor(total / variantCount);
+    const remainder = total - each * variantCount;
+    setVariantOverrides((current) => {
+      const next = { ...current };
+      let index = 0;
+      colors.forEach((color) => {
+        sizes.forEach((size) => {
+          const key = `${color}__${size}`;
+          next[key] = {
+            ...(next[key] ?? {}),
+            stock: String(each + (index < remainder ? 1 : 0)),
+          };
+          index += 1;
+        });
+      });
+      return next;
+    });
+
+    if (isFreeSizeOnlyRun(sizes) && colors.length) {
+      const setsPerColor = Math.max(0, Math.round(total / colors.length));
+      setForm((current) => ({
+        ...current,
+        stock: value,
+        stockRegularSets: setsPerColor > 0 ? String(setsPerColor) : "",
+      }));
+    }
+  };
 
   const update = (
     key: keyof ProductForm,
@@ -1352,9 +1423,16 @@ export function AdminProductCreateClient({
                   <input
                     type="number"
                     value={form.stock}
-                    onChange={(event) => update("stock", event.target.value)}
+                    onChange={(event) => updateStockTotal(event.target.value)}
                     required
                   />
+                  {selectedColors.length > 0 && selectedSizes.length > 0 ? (
+                    <p className="text-caption-1 text-secondary mt-8 mb-0">
+                      Total on hand (sum of variant sets below). Edit variant
+                      &quot;Sets&quot; for per-color stock, or change this total
+                      to spread evenly on save.
+                    </p>
+                  ) : null}
                 </fieldset>
                 <fieldset>
                   <div className="text-button font-instrument mb-8">

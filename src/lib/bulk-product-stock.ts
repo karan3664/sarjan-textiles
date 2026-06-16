@@ -75,6 +75,14 @@ function setCountForVariant(input: {
   if (plusSizes.includes(size) && stockPlusSets > 0) {
     return stockPlusSets;
   }
+  if (
+    freeSizes.includes(size) &&
+    stockRegularSets > 0 &&
+    regularSizes.length === 0 &&
+    plusSizes.length === 0
+  ) {
+    return stockRegularSets;
+  }
   if (freeSizes.includes(size) && defaultSetStock > 0) {
     return defaultSetStock;
   }
@@ -178,6 +186,14 @@ export function setStockForSizeInGroup(
   }
   if (plusSizes.includes(size) && stockPlusSets > 0) {
     return stockPlusSets;
+  }
+  if (
+    freeSizes.includes(size) &&
+    stockRegularSets > 0 &&
+    regularSizes.length === 0 &&
+    plusSizes.length === 0
+  ) {
+    return stockRegularSets;
   }
   if (freeSizes.includes(size)) {
     return 0;

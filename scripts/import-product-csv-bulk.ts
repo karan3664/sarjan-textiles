@@ -1,11 +1,18 @@
 /**
- * Import products from one or more CSV bulk-upload sheets into CMS.
+ * Import products from one or more CSV / XLSX bulk-upload sheets into CMS.
  * Run:
- *   npx tsx --env-file=.env.local scripts/import-product-csv-bulk.ts "/path/a.csv" "/path/b.csv"
+ *   npx tsx --env-file=.env.local scripts/import-product-csv-bulk.ts "/path/a.csv"
+ *   npx tsx --env-file=.env.local scripts/import-product-csv-bulk.ts "/path/a.xlsx"
  */
 import * as fs from "node:fs";
+import path from "node:path";
 import ExcelJS from "exceljs";
 import type { Product } from "../src/data/mock";
+import {
+  extractSheetCellText,
+  splitSheetImageUrls,
+  splitSheetList,
+} from "../src/lib/bulk-sheet-cell";
 import {
   getCmsSnapshotForPatch,
   saveCategoryMaster,
@@ -36,14 +43,11 @@ function slugify(value: string) {
 }
 
 function splitList(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return splitSheetList(value);
 }
 
 function stringValue(row: SheetRow, key: string) {
-  return String(row[key] ?? "").trim();
+  return extractSheetCellText(row[key]);
 }
 
 function firstStringValue(row: SheetRow, keys: string[]) {
@@ -104,8 +108,11 @@ function isFreeSizeRow(row: SheetRow) {
 function productFromRow(row: SheetRow, index: number): Product {
   const name = stringValue(row, "name");
   const sku = stringValue(row, "sku");
+  const imageList = splitSheetImageUrls(row.image_urls ?? row.images);
   const imageUrls =
-    stringValue(row, "image_urls") || stringValue(row, "images");
+    imageList.length > 0
+      ? imageList
+      : splitList(stringValue(row, "image_urls") || stringValue(row, "images"));
   const categoryPath = [
     firstStringValue(row, [
       "category_level_1",
@@ -201,9 +208,7 @@ function productFromRow(row: SheetRow, index: number): Product {
     stockRegularSets: setStockFields.stockRegularSets,
     stockPlusSets: setStockFields.stockPlusSets,
     variants: variants.length ? variants : undefined,
-    images: splitList(imageUrls).length
-      ? splitList(imageUrls)
-      : [PRODUCT_PLACEHOLDER_IMAGE],
+    images: imageUrls.length ? imageUrls : [PRODUCT_PLACEHOLDER_IMAGE],
     imageAlt: firstStringValue(row, ["image_alt", "alt_text", "alt"]),
     description: stringValue(row, "description"),
     care: stringValue(row, "care"),
@@ -221,6 +226,36 @@ function productFromRow(row: SheetRow, index: number): Product {
     ]),
     isFeatured: boolValue(row.is_featured ?? row.featured),
   };
+}
+
+async function parseXlsxFile(filePath: string): Promise<SheetRow[]> {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`File not found: ${filePath}`);
+  }
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(filePath);
+  const sheet = workbook.worksheets[0];
+  if (!sheet) throw new Error(`No worksheet in ${filePath}`);
+
+  const headers: string[] = [];
+  const rows: SheetRow[] = [];
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      row.eachCell((cell, colNumber) => {
+        headers[colNumber] = extractSheetCellText(cell.value);
+      });
+      return;
+    }
+    const record: SheetRow = {};
+    row.eachCell((cell, colNumber) => {
+      const key = headers[colNumber];
+      if (key) record[key] = extractSheetCellText(cell.value);
+    });
+    if (stringValue(record, "name") || stringValue(record, "sku")) {
+      rows.push(record);
+    }
+  });
+  return rows;
 }
 
 async function parseCsvFile(filePath: string): Promise<SheetRow[]> {
@@ -329,13 +364,17 @@ async function main() {
   const filePaths = process.argv.slice(2);
   if (!filePaths.length) {
     throw new Error(
-      "Usage: npx tsx scripts/import-product-csv-bulk.ts <file1.csv> [file2.csv ...]",
+      "Usage: npx tsx scripts/import-product-csv-bulk.ts <file1.csv|xlsx> [file2 ...]",
     );
   }
 
   const allRows: SheetRow[] = [];
   for (const filePath of filePaths) {
-    const rows = await parseCsvFile(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const rows =
+      ext === ".xlsx" || ext === ".xlsm"
+        ? await parseXlsxFile(filePath)
+        : await parseCsvFile(filePath);
     console.log(`• ${filePath}: ${rows.length} rows`);
     allRows.push(...rows);
   }
@@ -348,7 +387,22 @@ async function main() {
 
   console.log(`\nImporting ${products.length} products…`);
   const cms = await getCmsSnapshotForPatch();
-  const stored = asStoredProducts(localizeProductsOnSaveFast(products));
+  const existingBySku = new Map(
+    (cms.products ?? []).map((product) => [
+      String(product.sku ?? "").toUpperCase(),
+      product,
+    ]),
+  );
+  const mergedProducts = products.map((product) => {
+    const existing = existingBySku.get(product.sku.toUpperCase());
+    if (!existing) return product;
+    return {
+      ...product,
+      id: existing.id,
+      slug: existing.slug,
+    };
+  });
+  const stored = asStoredProducts(localizeProductsOnSaveFast(mergedProducts));
   const t0 = Date.now();
   let nextCms = await upsertCmsProducts(stored, cms);
 

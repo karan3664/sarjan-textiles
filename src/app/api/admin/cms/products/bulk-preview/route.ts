@@ -1,6 +1,11 @@
 import ExcelJS from "exceljs";
 import { Readable } from "node:stream";
 import type { Product } from "@/data/mock";
+import {
+  extractSheetCellText,
+  splitSheetImageUrls,
+  splitSheetList,
+} from "@/lib/bulk-sheet-cell";
 import { PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/product-placeholder-image";
 import {
   buildVariantsFromBulkRow,
@@ -24,15 +29,12 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-function splitList(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+function splitList(value: unknown) {
+  return splitSheetList(value);
 }
 
 function stringValue(row: SheetRow, key: string) {
-  return String(row[key] ?? "").trim();
+  return extractSheetCellText(row[key]);
 }
 
 function firstStringValue(row: SheetRow, keys: string[]) {
@@ -80,8 +82,9 @@ function productSizesFromRow(row: SheetRow) {
 function productFromRow(row: SheetRow, index: number): Product {
   const name = stringValue(row, "name");
   const sku = stringValue(row, "sku");
+  const imageList = splitSheetImageUrls(row.image_urls ?? row.images);
   const imageUrls =
-    stringValue(row, "image_urls") || stringValue(row, "images");
+    imageList.length > 0 ? imageList : splitList(row.image_urls ?? row.images);
   const categoryPath = [
     firstStringValue(row, [
       "category_level_1",
@@ -158,9 +161,7 @@ function productFromRow(row: SheetRow, index: number): Product {
     stockRegularSets: setStockFields.stockRegularSets,
     stockPlusSets: setStockFields.stockPlusSets,
     variants: variants.length ? variants : undefined,
-    images: splitList(imageUrls).length
-      ? splitList(imageUrls)
-      : [PRODUCT_PLACEHOLDER_IMAGE],
+    images: imageUrls.length ? imageUrls : [PRODUCT_PLACEHOLDER_IMAGE],
     imageAlt: firstStringValue(row, ["image_alt", "alt_text", "alt"]),
     description: stringValue(row, "description"),
     care: stringValue(row, "care"),
@@ -184,27 +185,9 @@ function validProduct(product: Product) {
   return Boolean(product.name && product.sku && product.slug);
 }
 
-function parseCsvRows(buffer: Buffer): SheetRow[] {
-  const lines = buffer
-    .toString("utf8")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  if (!lines.length) return [];
-  const headers = lines[0].split(",").map((header) => header.trim());
-  return lines.slice(1).map((line) => {
-    const values = line.split(",");
-    const row: SheetRow = {};
-    headers.forEach((header, index) => {
-      row[header] = values[index]?.trim() ?? "";
-    });
-    return row;
-  });
-}
-
-async function parseWorkbookRows(buffer: Buffer): Promise<SheetRow[]> {
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.read(Readable.from(buffer));
+async function sheetRowsFromWorkbook(
+  workbook: ExcelJS.Workbook,
+): Promise<SheetRow[]> {
   const sheet = workbook.worksheets[0];
   if (!sheet) return [];
 
@@ -213,18 +196,32 @@ async function parseWorkbookRows(buffer: Buffer): Promise<SheetRow[]> {
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) {
       row.eachCell((cell, colNumber) => {
-        headers[colNumber] = String(cell.value ?? "").trim();
+        headers[colNumber] = extractSheetCellText(cell.value);
       });
       return;
     }
     const record: SheetRow = {};
     row.eachCell((cell, colNumber) => {
       const key = headers[colNumber];
-      if (key) record[key] = cell.value as SheetRow[string];
+      if (key) record[key] = cell.value;
     });
-    rows.push(record);
+    if (stringValue(record, "name") || stringValue(record, "sku")) {
+      rows.push(record);
+    }
   });
   return rows;
+}
+
+async function parseCsvRows(buffer: Buffer): Promise<SheetRow[]> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.csv.read(Readable.from(buffer));
+  return sheetRowsFromWorkbook(workbook);
+}
+
+async function parseWorkbookRows(buffer: Buffer): Promise<SheetRow[]> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.read(Readable.from(buffer));
+  return sheetRowsFromWorkbook(workbook);
 }
 
 export async function POST(request: Request) {
@@ -257,7 +254,7 @@ export async function POST(request: Request) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const rows =
     extension === "csv"
-      ? parseCsvRows(buffer)
+      ? await parseCsvRows(buffer)
       : await parseWorkbookRows(buffer);
   if (!rows.length) {
     return Response.json({ error: "No worksheet rows found" }, { status: 400 });

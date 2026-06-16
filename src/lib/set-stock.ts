@@ -84,7 +84,13 @@ export function totalPieceStockFromSetCounts(input: {
   const groups = resolveProductSizeGroups(input.sizes, input.sizes);
   const regularCount = groups.regular.length;
   const plusCount = groups.plus.length;
+  const freeCount = groups.free.length;
   const colorCount = Math.max(1, input.colors.length);
+
+  if (freeCount > 0 && regularCount === 0 && plusCount === 0) {
+    return colorCount * input.stockRegularSets * freeCount;
+  }
+
   return (
     colorCount *
     (input.stockRegularSets * regularCount + input.stockPlusSets * plusCount)

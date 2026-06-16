@@ -34,6 +34,7 @@ import {
   buildSetStockFieldsFromBulk,
   filterActiveSizes,
 } from "../src/lib/bulk-product-stock";
+import { alignProductColorsWithImages } from "../src/lib/product-color-order";
 import {
   metadataFromParts,
   processStudioImages,
@@ -456,7 +457,15 @@ async function main() {
 
   const products = rows.map((row, index) => {
     const sku = stringValue(row, "sku");
-    return productFromRow(row, index, imageUrlsBySku.get(sku) ?? []);
+    const built = productFromRow(row, index, imageUrlsBySku.get(sku) ?? []);
+    const aligned = alignProductColorsWithImages(built);
+    return {
+      ...built,
+      colors: aligned.colors.map((color) =>
+        typeof color === "string" ? color : readEnglish(color),
+      ),
+      variants: aligned.variants ?? built.variants,
+    };
   });
 
   console.log(`\nImporting ${products.length} products to CMS…`);

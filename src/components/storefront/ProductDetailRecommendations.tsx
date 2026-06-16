@@ -23,51 +23,88 @@ type RecommendationPayload = {
   hasOrderHistory?: boolean;
 };
 
-function useRecommendationSwiper(items: Product[], selector: string) {
+type SwiperElement = HTMLElement & {
+  swiper?: {
+    destroy?: (deleteInstance?: boolean, cleanStyles?: boolean) => void;
+    update?: () => void;
+  };
+};
+
+function updateRecommendationSwipers() {
+  document
+    .querySelectorAll<SwiperElement>(
+      ".sarjan-detail-recommendations .sarjan-pdp-recommendations-swiper",
+    )
+    .forEach((element) => {
+      element.swiper?.update?.();
+    });
+}
+
+function useRecommendationSwiper(items: Product[], swiperClass: string) {
   useEffect(() => {
     if (!items.length) return;
-    const timer = window.setTimeout(() => {
+
+    let disposed = false;
+    const selector = `.sarjan-detail-recommendations .${swiperClass}`;
+    const disposers: Array<() => void> = [];
+
+    const init = () => {
+      if (disposed) return;
+
       const SwiperCtor = (
         window as unknown as {
           Swiper?: new (
             element: Element,
             options: object,
-          ) => {
-            destroy?: (deleteInstance?: boolean, cleanStyles?: boolean) => void;
-          };
+          ) => NonNullable<SwiperElement["swiper"]>;
         }
       ).Swiper;
-      if (!SwiperCtor) return;
-      document
-        .querySelectorAll(`.sarjan-detail-recommendations ${selector}`)
-        .forEach((element) => {
-          const existing = (
-            element as HTMLElement & {
-              swiper?: {
-                destroy?: (
-                  deleteInstance?: boolean,
-                  cleanStyles?: boolean,
-                ) => void;
-              };
-            }
-          ).swiper;
-          existing?.destroy?.(true, true);
-          const pagination = element.querySelector(".sw-dots");
-          new SwiperCtor(element, {
-            slidesPerView: 2,
-            spaceBetween: 15,
-            pagination: pagination
-              ? { el: pagination, clickable: true }
-              : undefined,
-            breakpoints: {
-              768: { slidesPerView: 3, spaceBetween: 30 },
-              1200: { slidesPerView: 4, spaceBetween: 30 },
-            },
-          });
+      if (!SwiperCtor) {
+        window.setTimeout(init, 80);
+        return;
+      }
+
+      document.querySelectorAll<SwiperElement>(selector).forEach((element) => {
+        element.swiper?.destroy?.(true, true);
+        const pagination = element.querySelector(".sw-dots");
+        const swiper = new SwiperCtor(element, {
+          slidesPerView: 2,
+          spaceBetween: 15,
+          observer: true,
+          observeParents: true,
+          watchSlidesProgress: true,
+          pagination: pagination
+            ? { el: pagination, clickable: true }
+            : undefined,
+          breakpoints: {
+            768: { slidesPerView: 3, spaceBetween: 30 },
+            1200: { slidesPerView: 4, spaceBetween: 30 },
+          },
         });
-    }, 80);
-    return () => window.clearTimeout(timer);
-  }, [items, selector]);
+        element.swiper = swiper;
+        disposers.push(() => {
+          swiper.destroy?.(true, true);
+          delete element.swiper;
+        });
+      });
+
+      window.requestAnimationFrame(() => updateRecommendationSwipers());
+    };
+
+    const timer = window.setTimeout(init, 80);
+
+    const onTabShown = () => {
+      window.setTimeout(() => updateRecommendationSwipers(), 40);
+    };
+    document.addEventListener("shown.bs.tab", onTabShown);
+
+    return () => {
+      disposed = true;
+      window.clearTimeout(timer);
+      document.removeEventListener("shown.bs.tab", onTabShown);
+      disposers.forEach((dispose) => dispose());
+    };
+  }, [items, swiperClass]);
 }
 
 function RecommendationCarousel({
@@ -79,7 +116,7 @@ function RecommendationCarousel({
   swiperClass: string;
   keyPrefix: string;
 }) {
-  useRecommendationSwiper(items, `.${swiperClass}`);
+  useRecommendationSwiper(items, swiperClass);
 
   if (!items.length) {
     return (
@@ -92,7 +129,7 @@ function RecommendationCarousel({
   return (
     <div
       dir="ltr"
-      className={`swiper ${swiperClass}`}
+      className={`swiper sarjan-pdp-recommendations-swiper ${swiperClass}`}
       data-preview="4"
       data-tablet="3"
       data-mobile="2"
@@ -209,7 +246,7 @@ export function ProductDetailRecommendations({
           >
             <RecommendationCarousel
               items={similar}
-              swiperClass="tf-sw-similar"
+              swiperClass="tf-sw-pdp-similar"
               keyPrefix="similar"
             />
           </div>
@@ -217,7 +254,7 @@ export function ProductDetailRecommendations({
             <div className="tab-pane" id="boughtTogether" role="tabpanel">
               <RecommendationCarousel
                 items={boughtTogether}
-                swiperClass="tf-sw-bought-together"
+                swiperClass="tf-sw-pdp-bought"
                 keyPrefix="bought"
               />
             </div>
@@ -226,7 +263,7 @@ export function ProductDetailRecommendations({
             <div className="tab-pane" id="recentlyViewed" role="tabpanel">
               <RecommendationCarousel
                 items={recentlyViewed}
-                swiperClass="tf-sw-recent"
+                swiperClass="tf-sw-pdp-recent"
                 keyPrefix="recent"
               />
             </div>

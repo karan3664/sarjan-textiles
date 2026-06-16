@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { initProductDetailGallerySwiper } from "@/lib/product-gallery-swiper";
+import {
+  initProductDetailGallerySwiper,
+  initProductDetailImageZoom,
+  initProductDetailPhotoSwipe,
+} from "@/lib/product-gallery-swiper";
 import {
   hasFabricSwatch,
   hasSpin360,
   immersiveMediaModes,
 } from "@/lib/product-immersive-media";
 import type { Product } from "@/data/mock";
-import { productColorList } from "@/lib/product-colors";
+import { productDetailPickerColors } from "@/lib/product-colors";
 import { productImageClassName } from "@/lib/product-placeholder-image";
 import { FabricSwatchViewer } from "./FabricSwatchViewer";
 import { ProductSpin360Viewer } from "./ProductSpin360Viewer";
@@ -23,7 +27,19 @@ type Props = {
   fabricSwatchImage?: string;
   altText: string;
   fabricLabel?: string;
-  product: Pick<Product, "stock" | "reserved" | "colors" | "id" | "slug">;
+  product: Pick<
+    Product,
+    | "stock"
+    | "reserved"
+    | "colors"
+    | "id"
+    | "slug"
+    | "sku"
+    | "category"
+    | "images"
+    | "imageAlt"
+    | "variants"
+  >;
 };
 
 function colorDataAttr(colors: string[], index: number): string | undefined {
@@ -39,23 +55,39 @@ function ProductDetailGallery({
 }: {
   galleryImages: string[];
   altText: string;
-  product: Pick<Product, "colors" | "id" | "slug">;
+  product: Pick<
+    Product,
+    | "colors"
+    | "id"
+    | "slug"
+    | "images"
+    | "imageAlt"
+    | "variants"
+    | "sku"
+    | "category"
+  >;
 }) {
-  const colors = productColorList(product);
+  const colors = productDetailPickerColors(product);
 
   useEffect(() => {
     let cancelled = false;
+    let disposeGallery: (() => void) | undefined;
+    let disposePhotoSwipe: (() => void) | undefined;
     const boot = () => {
       if (cancelled) return;
-      initProductDetailGallerySwiper();
+      disposeGallery?.();
+      disposePhotoSwipe?.();
+      disposeGallery = initProductDetailGallerySwiper(0);
+      initProductDetailImageZoom();
+      disposePhotoSwipe = initProductDetailPhotoSwipe();
     };
     boot();
-    const timer = window.setTimeout(boot, 120);
     window.addEventListener("load", boot);
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
       window.removeEventListener("load", boot);
+      disposeGallery?.();
+      disposePhotoSwipe?.();
     };
   }, [galleryImages, product.slug]);
 

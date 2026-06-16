@@ -15,6 +15,8 @@ type BaseProps = {
   sizes?: string;
   unoptimized?: boolean;
   style?: CSSProperties;
+  /** Full-resolution URL for Drift.js hover zoom (`data-zoom`). */
+  zoomSrc?: string;
 };
 
 type FillProps = BaseProps & {
@@ -41,10 +43,17 @@ export function StorefrontImage(props: StorefrontImageProps) {
     unoptimized = false,
     style,
     fill,
+    zoomSrc,
   } = props;
 
   const normalized = normalizeStorefrontImageSrc(src);
   if (!normalized) return null;
+
+  const zoomNormalized = normalizeStorefrontImageSrc(zoomSrc ?? src);
+  const zoomAttr =
+    zoomNormalized && className?.includes("tf-image-zoom")
+      ? { "data-zoom": zoomNormalized }
+      : undefined;
 
   const useNextImage = isNextImageOptimizable(normalized) && !unoptimized;
   const svg = isSvgImage(normalized);
@@ -60,6 +69,7 @@ export function StorefrontImage(props: StorefrontImageProps) {
         width={fill ? undefined : props.width}
         height={fill ? undefined : props.height}
         style={style}
+        {...zoomAttr}
       />
     );
   }
@@ -74,6 +84,7 @@ export function StorefrontImage(props: StorefrontImageProps) {
     placeholder: "blur" as const,
     blurDataURL: storefrontImageBlurDataUrl(normalized),
     style,
+    ...zoomAttr,
   };
 
   if (fill) {
