@@ -33,6 +33,22 @@ export type CatalogFilters = {
   maxPrice?: number;
 };
 
+/** Merge route/collection defaults with URL filters — skip undefined so defaults are kept. */
+export function mergeCatalogFilters(
+  base: CatalogFilters | undefined,
+  overrides: CatalogFilters,
+): CatalogFilters {
+  const merged: CatalogFilters = { ...base };
+  for (const [key, value] of Object.entries(overrides) as Array<
+    [keyof CatalogFilters, CatalogFilters[keyof CatalogFilters]]
+  >) {
+    if (value !== undefined && value !== "") {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 function slugValue(value: string) {
   return value
     .toLowerCase()

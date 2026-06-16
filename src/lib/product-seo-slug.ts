@@ -56,7 +56,7 @@ export const PRODUCT_CATEGORY_ROUTES: ProductCategoryRoute[] = [
     title: "Kurtas",
     description:
       "Men's kurta collections — Ajrakh, block print, cotton, and festive assortments.",
-    filters: { category: "men-s-kurtas" },
+    filters: { category: "men-s-kurta" },
     keywords: [
       "mens kurta",
       "wholesale kurta",

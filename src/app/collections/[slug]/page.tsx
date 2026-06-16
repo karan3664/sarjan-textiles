@@ -1,7 +1,7 @@
 import { ProductSeoListingPage } from "@/components/storefront/ProductSeoListingPage";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
 import { getCollectionPageBySlug } from "@/lib/cms-store";
-import { getCatalogProducts } from "@/lib/catalog";
+import { getCatalogProducts, mergeCatalogFilters } from "@/lib/catalog";
 import { resolveCollection } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import {
@@ -75,19 +75,19 @@ export default async function CollectionDetailPage({
     image: page.heroImage,
   });
   const locale = getCacheableStorefrontLocale();
+  const listingFilters = mergeCatalogFilters(page.filters, {
+    category,
+    fabric,
+    color,
+    size,
+    stock,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+  });
   const catalog = await getCatalogProducts({
     page: Number(pageNum ?? 1),
     sort,
-    filters: {
-      ...page.filters,
-      category,
-      fabric,
-      color,
-      size,
-      stock,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-    },
+    filters: listingFilters,
     q: page.q,
     locale,
     limit: 24,
@@ -116,16 +116,7 @@ export default async function CollectionDetailPage({
         subtitle={page.description}
         page={Number(pageNum ?? 1)}
         sort={sort}
-        filters={{
-          ...page.filters,
-          category,
-          fabric,
-          color,
-          size,
-          stock,
-          minPrice: minPrice ? Number(minPrice) : undefined,
-          maxPrice: maxPrice ? Number(maxPrice) : undefined,
-        }}
+        filters={listingFilters}
         q={page.q}
         basePath={`/collections/${page.slug}`}
         crumbs={["Home", "Collections", page.title]}

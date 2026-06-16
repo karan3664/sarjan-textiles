@@ -1,7 +1,7 @@
 import { ProductSeoListingPage } from "@/components/storefront/ProductSeoListingPage";
 import { ProductDetailDynamic } from "@/components/storefront/ModaveSections";
 import { ModaveShell } from "@/components/storefront/ModaveShell";
-import { getCatalogProducts } from "@/lib/catalog";
+import { getCatalogProducts, mergeCatalogFilters } from "@/lib/catalog";
 import { getCmsProductBySlug } from "@/lib/cms-store";
 import { resolveProduct } from "@/lib/product-localize";
 import { getProductCategoryRoute } from "@/lib/product-seo-slug";
@@ -126,19 +126,19 @@ export default async function ProductSlugPage({
       maxPrice,
     } = await searchParams;
     const locale = getCacheableStorefrontLocale();
+    const listingFilters = mergeCatalogFilters(categoryRoute.filters, {
+      category,
+      fabric,
+      color,
+      size,
+      stock,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    });
     const catalog = await getCatalogProducts({
       page: Number(page ?? 1),
       sort,
-      filters: {
-        ...categoryRoute.filters,
-        category,
-        fabric,
-        color,
-        size,
-        stock,
-        minPrice: minPrice ? Number(minPrice) : undefined,
-        maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      },
+      filters: listingFilters,
       q: categoryRoute.q,
       locale,
       limit: 24,
@@ -174,16 +174,7 @@ export default async function ProductSlugPage({
           subtitle={categoryRoute.description}
           page={Number(page ?? 1)}
           sort={sort}
-          filters={{
-            ...categoryRoute.filters,
-            category,
-            fabric,
-            color,
-            size,
-            stock,
-            minPrice: minPrice ? Number(minPrice) : undefined,
-            maxPrice: maxPrice ? Number(maxPrice) : undefined,
-          }}
+          filters={listingFilters}
           q={categoryRoute.q}
           basePath={`/products/${categoryRoute.slug}`}
           crumbs={["Home", "Products", categoryRoute.title]}

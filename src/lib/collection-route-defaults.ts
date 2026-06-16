@@ -17,6 +17,7 @@ export const COLLECTION_ROUTES: CollectionRoute[] = [
     description:
       "Indigo resist and Ajrakh-inspired prints for shirts and kurtas.",
     q: "ajrak",
+    filters: { category: "men" },
     keywords: ["ajrakh", "ajrak print", "indigo textile"],
   },
   {
@@ -25,6 +26,7 @@ export const COLLECTION_ROUTES: CollectionRoute[] = [
     description:
       "Silk-cotton mashru blends with a soft sheen for premium retail.",
     q: "mashru",
+    filters: { category: "men" },
     keywords: ["mashru", "silk cotton blend", "textile mashru"],
   },
   {
@@ -32,6 +34,7 @@ export const COLLECTION_ROUTES: CollectionRoute[] = [
     title: "Block Print Collection",
     description: "Hand-block and studio block prints across shirts and kurtas.",
     q: "block",
+    filters: { category: "men" },
     keywords: ["block print", "bagru", "textile block print"],
   },
 ];

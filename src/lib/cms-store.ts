@@ -1338,11 +1338,16 @@ export async function listActiveCategoryHubPages() {
 
 export async function getCollectionPageBySlug(slug: string) {
   const cms = await getCachedCmsSnapshot();
-  return (
-    cms.collectionPages.find(
-      (page) => page.slug === slug && page.enabled !== false,
-    ) ?? null
+  const page = cms.collectionPages.find(
+    (entry) => entry.slug === slug && entry.enabled !== false,
   );
+  if (!page) return null;
+  const defaults = COLLECTION_ROUTES.find((route) => route.slug === slug);
+  return {
+    ...page,
+    q: page.q ?? defaults?.q,
+    filters: page.filters ?? defaults?.filters,
+  };
 }
 
 export async function listActiveCollectionPages() {
