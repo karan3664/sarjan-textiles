@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.88",
-  "versionCode": 89,
-  "releaseNotes": "Kaftan and kurta catalog navigation, correct product image on color select for new imports, category hub filters, and storefront color display fixes.",
+  "latestVersion": "1.0.89",
+  "versionCode": 90,
+  "releaseNotes": "Partner With Us opens Contact correctly, brand pages under Profile Settings, and men's catalog no longer shows women's kaftans on kurta and Ajrakh listings.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-16T06:34:50.000Z"
+  "updatedAt": "2026-06-16T07:36:35.000Z"
 }
