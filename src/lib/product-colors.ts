@@ -4,7 +4,11 @@ import {
   colorTokenFromImageUrl,
   colorsMatchImageToken,
 } from "@/lib/product-color-order";
-import { isProductPlaceholderImage } from "@/lib/product-placeholder-image";
+import {
+  isProductPlaceholderImage,
+  primaryProductImage,
+  PRODUCT_PLACEHOLDER_IMAGE,
+} from "@/lib/product-placeholder-image";
 
 export function productColorList(product: Pick<Product, "colors">): string[] {
   return product.colors?.length ? product.colors : ["Default"];
@@ -122,7 +126,15 @@ export function productGallerySlots(
   >,
 ): ProductGallerySlot[] {
   const images = uniqueRealProductImages(product.images);
-  if (!images.length) return [];
+  if (!images.length) {
+    const colors = productColorList(product);
+    return [
+      {
+        color: colors[0] ?? "Default",
+        image: PRODUCT_PLACEHOLDER_IMAGE,
+      },
+    ];
+  }
 
   if (hasSingleProductImage(product)) {
     return [
@@ -430,7 +442,11 @@ export function productColorGalleryForProduct(
 ): string[] {
   const colors = productColorList(product);
   const images = (product.images ?? []).filter(Boolean);
-  if (!images.length) return [];
+  if (!images.length || images.every(isProductPlaceholderImage)) {
+    return colors.length
+      ? colors.map(() => PRODUCT_PLACEHOLDER_IMAGE)
+      : [PRODUCT_PLACEHOLDER_IMAGE];
+  }
 
   if (hasSingleProductImage(product)) {
     return [uniqueRealProductImages(images)[0]];
@@ -459,7 +475,13 @@ export function productImageForColorIndex(
   product: Pick<Product, "images" | "colors" | "sku" | "slug" | "category">,
   colorIndex: number,
 ): string {
-  return productColorGalleryForProduct(product)[colorIndex] ?? "";
+  const gallery = productColorGalleryForProduct(product);
+  return (
+    gallery[colorIndex] ??
+    gallery[0] ??
+    primaryProductImage(product.images) ??
+    PRODUCT_PLACEHOLDER_IMAGE
+  );
 }
 
 export function productImageForColorIndexLegacy(

@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   PRODUCT_IMAGE_HEIGHT,
   PRODUCT_IMAGE_WIDTH,
@@ -5,7 +8,10 @@ import {
   PRODUCT_THUMB_WIDTH,
   STOREFRONT_IMAGE_SIZES,
 } from "@/lib/storefront-image";
-import { productImageClassName } from "@/lib/product-placeholder-image";
+import {
+  productImageClassName,
+  resolveProductImageSrc,
+} from "@/lib/product-placeholder-image";
 import { StorefrontImage, type StorefrontImageProps } from "./StorefrontImage";
 
 type ProductImageProps = Omit<
@@ -33,13 +39,24 @@ export function StorefrontProductImage({
   unoptimized,
   style,
 }: ProductImageProps) {
-  const mergedClass = productImageClassName(src, className);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setLoadFailed(false);
+  }, [src]);
+
+  const resolvedSrc = loadFailed
+    ? resolveProductImageSrc(null)
+    : resolveProductImageSrc(src);
+  const mergedClass = productImageClassName(resolvedSrc, className);
   const needsZoom = mergedClass.includes("tf-image-zoom");
+
+  const onError = () => setLoadFailed(true);
 
   if (fill) {
     return (
       <StorefrontImage
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         fill
         className={mergedClass}
@@ -47,6 +64,7 @@ export function StorefrontProductImage({
         priority={priority}
         unoptimized={unoptimized ?? needsZoom}
         style={{ objectFit: "cover", ...style }}
+        onError={onError}
       />
     );
   }
@@ -78,7 +96,7 @@ export function StorefrontProductImage({
 
   return (
     <StorefrontImage
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       width={dims.width}
       height={dims.height}
@@ -87,6 +105,7 @@ export function StorefrontProductImage({
       priority={priority}
       unoptimized={unoptimized ?? needsZoom}
       style={style}
+      onError={onError}
     />
   );
 }

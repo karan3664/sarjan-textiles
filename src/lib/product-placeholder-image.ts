@@ -1,6 +1,24 @@
 /** Default image when bulk import / create has no `image_urls`. */
 export const PRODUCT_PLACEHOLDER_IMAGE = "/sarjan-assets/sarjan-logo-full.png";
 
+/** Product card / PDP src — empty, placeholder, or missing URLs resolve to the brand logo. */
+export function resolveProductImageSrc(url?: string | null): string {
+  if (!url?.trim() || isProductPlaceholderImage(url)) {
+    return PRODUCT_PLACEHOLDER_IMAGE;
+  }
+  return url.trim();
+}
+
+/** First real product photo, or the brand logo when the catalog item has none. */
+export function primaryProductImage(images?: string[] | null): string {
+  for (const image of images ?? []) {
+    if (image?.trim() && !isProductPlaceholderImage(image)) {
+      return image.trim();
+    }
+  }
+  return PRODUCT_PLACEHOLDER_IMAGE;
+}
+
 export function isProductPlaceholderImage(url?: string | null): boolean {
   if (!url?.trim()) return true;
   const normalized = url.trim().toLowerCase();

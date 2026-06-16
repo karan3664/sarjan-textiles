@@ -17,6 +17,7 @@ type BaseProps = {
   style?: CSSProperties;
   /** Full-resolution URL for Drift.js hover zoom (`data-zoom`). */
   zoomSrc?: string;
+  onError?: () => void;
 };
 
 type FillProps = BaseProps & {
@@ -44,6 +45,7 @@ export function StorefrontImage(props: StorefrontImageProps) {
     style,
     fill,
     zoomSrc,
+    onError,
   } = props;
 
   const normalized = normalizeStorefrontImageSrc(src);
@@ -69,6 +71,7 @@ export function StorefrontImage(props: StorefrontImageProps) {
         width={fill ? undefined : props.width}
         height={fill ? undefined : props.height}
         style={style}
+        onError={onError}
         {...zoomAttr}
       />
     );
@@ -88,7 +91,15 @@ export function StorefrontImage(props: StorefrontImageProps) {
   };
 
   if (fill) {
-    return <Image {...common} alt={alt} fill sizes={sizes ?? "100vw"} />;
+    return (
+      <Image
+        {...common}
+        alt={alt}
+        fill
+        sizes={sizes ?? "100vw"}
+        onError={onError}
+      />
+    );
   }
 
   return (
@@ -99,6 +110,7 @@ export function StorefrontImage(props: StorefrontImageProps) {
       height={props.height}
       sizes={sizes}
       style={{ width: "100%", height: "auto", ...style }}
+      onError={onError}
     />
   );
 }

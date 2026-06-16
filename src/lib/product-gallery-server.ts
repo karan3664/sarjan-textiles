@@ -18,6 +18,9 @@ export async function resolveProductGallerySlots(
   >,
 ): Promise<ProductGallerySlot[]> {
   const images = uniqueRealProductImages(product.images);
+  if (!images.length) {
+    return productGallerySlots(product);
+  }
 
   const inferred = await inferImageColorLabelsForProduct(product);
   if (inferred?.length && inferred.length === images.length) {

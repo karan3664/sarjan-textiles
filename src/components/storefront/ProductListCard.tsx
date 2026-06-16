@@ -6,6 +6,7 @@ import { defaultProductSizeRun } from "@/lib/size-groups";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import {
   isProductPlaceholderImage,
+  primaryProductImage,
   productHasRealImages,
 } from "@/lib/product-placeholder-image";
 import { PRODUCT_UNAVAILABLE_SHORT } from "@/lib/product-purchase-eligibility";
@@ -20,8 +21,8 @@ import { StorefrontProductImage } from "./StorefrontProductImage";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 
 export function ProductListCard({ product }: { product: Product }) {
-  const primary = product.images[0];
-  const hover = product.images[1] ?? product.images[0];
+  const primary = primaryProductImage(product.images);
+  const hover = product.images[1] ?? primary;
   const showHoverSwap =
     productHasRealImages(product.images) &&
     Boolean(hover && hover !== primary) &&
