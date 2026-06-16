@@ -10,6 +10,7 @@ import type { CmsCustomSection } from "@/types/cms-custom";
 import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
 import { AdminCmsImageDisplayFields } from "@/components/admin/AdminCmsImageDisplayFields";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
+import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
 import { slugifyCmsSegment } from "@/lib/slug";
 import type { Product } from "@/data/mock";
 
@@ -45,6 +46,7 @@ export function AdminCustomSitePagesClient({
     () => initialPages[0]?.id ?? null,
   );
   const [saving, setSaving] = useState(false);
+  const [heroUploading, setHeroUploading] = useState(false);
   const [message, setMessage] = useState("");
 
   const selected = pages.find((p) => p.id === selectedId) ?? null;
@@ -77,6 +79,9 @@ export function AdminCustomSitePagesClient({
       pages.map((p) => ({
         ...p,
         slug: slugifyCmsSegment(p.slug || p.title),
+        heroImage: p.heroImage?.trim()
+          ? resolveCmsMediaUrl(p.heroImage)
+          : p.heroImage,
         sections: Array.isArray(p.sections) ? p.sections : [],
       })),
     [pages],
@@ -111,6 +116,26 @@ export function AdminCustomSitePagesClient({
 
   const onSectionsChange = (sections: CmsCustomSection[]) => {
     updateSelected({ sections });
+  };
+
+  const normalizeHeroImageUrl = (url: string) => resolveCmsMediaUrl(url);
+
+  const uploadHeroImage = async (file: File) => {
+    setHeroUploading(true);
+    setMessage("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/uploads", { method: "POST", body });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = (await res.json()) as { url: string };
+      updateSelected({ heroImage: data.url });
+      setMessage("Hero image uploaded.");
+    } catch {
+      setMessage("Hero image upload failed.");
+    } finally {
+      setHeroUploading(false);
+    }
   };
 
   return (
@@ -224,15 +249,41 @@ export function AdminCustomSitePagesClient({
                 <div className="text-button mb-8">Hero image URL</div>
                 <input
                   value={selected.heroImage ?? ""}
+                  placeholder="/uploads/cms/your-image.webp"
                   onChange={(e) =>
                     updateSelected({ heroImage: e.target.value })
                   }
+                  onBlur={(e) => {
+                    const normalized = normalizeHeroImageUrl(e.target.value);
+                    if (normalized !== e.target.value.trim()) {
+                      updateSelected({ heroImage: normalized });
+                    }
+                  }}
                 />
+                <div className="d-flex gap10 flex-wrap align-items-center mt-10">
+                  <label className="tf-button style-1 mb-0">
+                    {heroUploading ? "Uploading…" : "Upload image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="d-none"
+                      disabled={heroUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = "";
+                        if (file) void uploadHeroImage(file);
+                      }}
+                    />
+                  </label>
+                  <span className="text-caption-1 text-secondary">
+                    Paste <code>/uploads/cms/…</code> or full site URL
+                  </span>
+                </div>
                 {selected.heroImage?.trim() ? (
                   <div className="mt-16">
                     <CustomCmsImageBlock
                       className="sarjan-custom-image-admin-preview"
-                      src={selected.heroImage}
+                      src={normalizeHeroImageUrl(selected.heroImage)}
                       alt={selected.title}
                       display={selected}
                     />

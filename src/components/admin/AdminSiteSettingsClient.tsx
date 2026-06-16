@@ -15,6 +15,17 @@ import { putAdminCms } from "@/lib/admin-cms-fetch";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+function formatProductColorMaster(colors: string[] | undefined) {
+  return (colors ?? []).join("\n");
+}
+
+function parseProductColorMaster(text: string) {
+  return text
+    .split(/[\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export function AdminSiteSettingsClient({
   initialSiteSettings,
 }: {
@@ -28,6 +39,9 @@ export function AdminSiteSettingsClient({
   );
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState("");
+  const [colorMasterText, setColorMasterText] = useState(() =>
+    formatProductColorMaster(initialSiteSettings.productColorMaster),
+  );
 
   const setSettings = (key: keyof CmsSiteSettings, value: string | number) => {
     setSaveState("idle");
@@ -70,15 +84,22 @@ export function AdminSiteSettingsClient({
   const saveSettings = async () => {
     setSaveState("saving");
     setSaveError("");
+    const siteSettings = {
+      ...cms.siteSettings,
+      productColorMaster: parseProductColorMaster(colorMasterText),
+    };
     try {
       const data = await putAdminCms<{ siteSettings: CmsSiteSettings }>({
-        siteSettings: cms.siteSettings,
+        siteSettings,
       });
       if (data.siteSettings) {
         setCms((current) => ({
           ...current,
           siteSettings: data.siteSettings!,
         }));
+        setColorMasterText(
+          formatProductColorMaster(data.siteSettings.productColorMaster),
+        );
       }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2500);
@@ -325,20 +346,10 @@ export function AdminSiteSettingsClient({
             </p>
             <textarea
               rows={6}
-              value={(settings.productColorMaster ?? []).join("\n")}
+              value={colorMasterText}
               onChange={(event) => {
-                const colors = event.target.value
-                  .split(/[\n,]+/)
-                  .map((item) => item.trim())
-                  .filter(Boolean);
                 setSaveState("idle");
-                setCms((current) => ({
-                  ...current,
-                  siteSettings: {
-                    ...current.siteSettings,
-                    productColorMaster: colors,
-                  },
-                }));
+                setColorMasterText(event.target.value);
               }}
             />
           </fieldset>

@@ -49,8 +49,32 @@ const AJRAKH_STUDIO_FOLDER_BY_CMS_COLOR: Record<string, string> = {
   offwhite: "black",
 };
 
-function isAjrakhProduct(product: Pick<Product, "sku" | "slug">): boolean {
-  const hay = `${product.sku ?? ""} ${product.slug ?? ""}`.toLowerCase();
+/**
+ * Legacy men's Ajrakh shirt zip: studio folder names ≠ garment colors.
+ * New imports (kaftan, mashru kurta, cotton printed) use matching folder names.
+ */
+function usesMislabeledAjrakhStudioFolders(
+  product: Pick<Product, "sku" | "slug">,
+): boolean {
+  const sku = (product.sku ?? "").toUpperCase();
+  const slug = (product.slug ?? "").toLowerCase();
+
+  if (
+    sku.startsWith("STKFAJMD") ||
+    sku.startsWith("STKTAJMS") ||
+    sku.startsWith("STSRPRCT")
+  ) {
+    return false;
+  }
+  if (
+    slug.includes("kaftan") ||
+    slug.includes("kurta") ||
+    slug.includes("cotton-printed")
+  ) {
+    return false;
+  }
+
+  const hay = `${sku} ${slug}`.toLowerCase();
   return hay.includes("ajrakh");
 }
 
@@ -65,7 +89,7 @@ function imageTokensForColor(
   color: string,
   product?: Pick<Product, "sku" | "slug">,
 ): string[] {
-  if (product && isAjrakhProduct(product)) {
+  if (product && usesMislabeledAjrakhStudioFolders(product)) {
     const folder = AJRAKH_STUDIO_FOLDER_BY_CMS_COLOR[colorMatchToken(color)];
     if (folder) {
       return [folder];

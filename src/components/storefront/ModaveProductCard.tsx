@@ -17,6 +17,10 @@ import { ProductCardRating } from "./ProductCardRating";
 import { PriceGate } from "./PriceGate";
 import { SHOW_PRODUCT_PROMO_TAG } from "@/lib/product-card-display";
 import {
+  productImageForColorIndex,
+  visibleProductColors,
+} from "@/lib/product-colors";
+import {
   isProductPlaceholderImage,
   productHasRealImages,
 } from "@/lib/product-placeholder-image";
@@ -39,18 +43,13 @@ export function ModaveProductCard({
   const sizeRun = defaultProductSizeRun(product.sizes, ["M", "L", "XL"]);
   const altText = buildProductImageAlt(product);
   const unavailable = useShowProductUnavailable(product);
-  const colors = product.colors.length ? product.colors : ["Default"];
+  const colors = visibleProductColors(product);
   const activeColor = colors[colorIndex] ?? colors[0];
-  const primaryImage = product.images[colorIndex] ?? product.images[0];
+  const primaryImage = productImageForColorIndex(product, colorIndex);
   const hoverIndex =
-    product.images.length > 1
-      ? colorIndex === 0
-        ? 1
-        : colorIndex < product.images.length
-          ? colorIndex
-          : 0
-      : 0;
-  const hoverImage = product.images[hoverIndex] ?? primaryImage;
+    colors.length > 1 ? (colorIndex === 0 ? 1 : colorIndex) : 0;
+  const hoverImage =
+    productImageForColorIndex(product, hoverIndex) || primaryImage;
   const showHoverSwap =
     productHasRealImages(product.images) &&
     Boolean(hoverImage && hoverImage !== primaryImage) &&
@@ -177,8 +176,7 @@ export function ModaveProductCard({
             onClick={(event) => event.stopPropagation()}
           >
             {colors.slice(0, 5).map((color, index) => {
-              const swatchImage =
-                product.images[index] ?? product.images[0] ?? "";
+              const swatchImage = productImageForColorIndex(product, index);
               return (
                 <li
                   className={`list-color-item color-swatch${index === colorIndex ? " active line" : ""}`}

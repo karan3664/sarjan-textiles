@@ -23,10 +23,9 @@ export function QuickViewProduct({
   const [colorIndex, setColorIndex] = useState(0);
   const unavailable = useShowProductUnavailable(product);
   const primaryImage = productImageForColorIndex(product, colorIndex);
+  const hoverIndex = colorIndex === 0 ? 1 : colorIndex;
   const hoverImage =
-    product.images[colorIndex === 0 ? 1 : colorIndex] ??
-    product.images[0] ??
-    primaryImage;
+    productImageForColorIndex(product, hoverIndex) || primaryImage;
 
   useEffect(() => {
     setColorIndex(0);

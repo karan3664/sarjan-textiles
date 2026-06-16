@@ -1,3 +1,4 @@
+import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
 import { siteSettings } from "../data/site";
 
 /** Tiny neutral blur — shared placeholder while AVIF/WebP load. */
@@ -53,8 +54,7 @@ export function approvedImageHostnames(): string[] {
 export function normalizeStorefrontImageSrc(
   value: string | undefined | null,
 ): string {
-  const raw = (value ?? "").trim();
-  return raw;
+  return resolveCmsMediaUrl(value);
 }
 
 export function isSvgImage(src: string): boolean {
@@ -85,10 +85,11 @@ export function isNextImageOptimizable(src: string): boolean {
   const normalized = normalizeStorefrontImageSrc(src);
   if (!normalized) return false;
   if (isDataImage(normalized)) return false;
-  // Runtime upload routes — serve via <img> (optimizer returns 400 for /api/* paths).
+  // Runtime upload routes — serve via <img> (optimizer returns 400 for these paths).
   if (
     normalized.startsWith("/api/public/ai-products/") ||
-    normalized.startsWith("/uploads/ai-products/")
+    normalized.startsWith("/uploads/ai-products/") ||
+    normalized.startsWith("/uploads/cms/")
   ) {
     return false;
   }

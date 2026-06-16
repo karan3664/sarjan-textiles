@@ -14,6 +14,7 @@ import path from "path";
 
 const ROOT = process.cwd();
 const CMS_PATH = path.join(ROOT, "data", "cms-db.json");
+const LOCAL_DB_PATH = path.join(ROOT, "data", "local-db.json");
 
 function loadEnvLocal() {
   try {
@@ -70,6 +71,8 @@ function usage() {
       List backups stored on live (Admin → DB Backup)
   node scripts/sync-cms.mjs restore-backup <id> [--dry-run]
       Restore live CMS from a backup id (UNDO a bad cms:push)
+  node scripts/sync-cms.mjs pull-db [--dry-run]
+      Download latest live backup → local cms-db.json + local-db.json
 
 Env: LIVE_SITE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
      (optional LIVE_ADMIN_EMAIL / LIVE_ADMIN_PASSWORD for production login)`);
@@ -163,18 +166,40 @@ async function saveLiveCms(token, snapshot) {
   return data;
 }
 
+function localProductLookup(local) {
+  const byId = new Map();
+  const bySku = new Map();
+  for (const product of local.products ?? []) {
+    const id = String(product?.id ?? "").trim();
+    const sku = String(product?.sku ?? "").trim();
+    if (id) byId.set(id, product);
+    if (sku) bySku.set(sku, product);
+  }
+  return { byId, bySku };
+}
+
+function matchLocalProduct(liveProduct, lookup) {
+  const id = String(liveProduct?.id ?? "").trim();
+  const sku = String(liveProduct?.sku ?? "").trim();
+  return (
+    (id && lookup.byId.get(id)) ||
+    (sku && lookup.bySku.get(sku)) ||
+    lookup.byId.get(productKey(liveProduct)) ||
+    null
+  );
+}
+
 /** Merge only product image fields from local JSON into live CMS. */
 async function pushProductImages() {
   const local = await readLocalCms();
-  const localByKey = new Map(
-    (local.products ?? [])
-      .map((product) => [productKey(product), product])
-      .filter(([key]) => key),
-  );
+  const lookup = localProductLookup(local);
+  const localWithImages = (local.products ?? []).filter(
+    (product) => product?.images?.length,
+  ).length;
 
   if (dryRun) {
     console.log(
-      `[dry-run] Would merge images for ${localByKey.size} local products into live CMS`,
+      `[dry-run] Would merge images for up to ${localWithImages} local products into live CMS`,
     );
     return;
   }
@@ -185,7 +210,7 @@ async function pushProductImages() {
   let updated = 0;
 
   live.products = (live.products ?? []).map((product) => {
-    const fromLocal = localByKey.get(productKey(product));
+    const fromLocal = matchLocalProduct(product, lookup);
     if (!fromLocal?.images?.length) return product;
     updated += 1;
     return {
@@ -238,6 +263,18 @@ async function listLiveBackups(token) {
     throw new Error(data.error ?? `List backups failed (${res.status})`);
   }
   return data.backups ?? [];
+}
+
+async function downloadLiveBackup(token, id) {
+  const res = await fetch(
+    `${LIVE_URL}/api/admin/backups?id=${encodeURIComponent(id)}`,
+    { headers: adminHeaders(token) },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `Download backup failed (${res.status})`);
+  }
+  return data;
 }
 
 async function push() {
@@ -340,6 +377,48 @@ async function pull() {
   );
 }
 
+/** Latest live backup → local cms-db.json + local-db.json (clients, orders, etc.). */
+async function pullDb() {
+  if (dryRun) {
+    console.log(
+      `[dry-run] Would download latest live backup → ${CMS_PATH} + ${LOCAL_DB_PATH}`,
+    );
+    return;
+  }
+  const token = await adminLogin();
+  console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  const backups = await listLiveBackups(token);
+  if (!backups.length) {
+    throw new Error(
+      "No live backups found. Create one in Admin → DB Backup / Restore, or use: npm run cms:pull",
+    );
+  }
+  const latest = backups[0];
+  console.log(
+    `Downloading backup ${latest.id} (${latest.name}, ${latest.createdAt})`,
+  );
+  const backup = await downloadLiveBackup(token, latest.id);
+  if (backup.version !== 1 || !backup.cms || !backup.db) {
+    throw new Error("Invalid backup payload from live");
+  }
+  await mkdir(path.dirname(CMS_PATH), { recursive: true });
+  const cms = cmsForStorage(backup.cms);
+  await writeFile(CMS_PATH, `${JSON.stringify(cms, null, 2)}\n`, "utf8");
+  await writeFile(
+    LOCAL_DB_PATH,
+    `${JSON.stringify(backup.db, null, 2)}\n`,
+    "utf8",
+  );
+  console.log(`Saved live CMS → ${CMS_PATH}`);
+  console.log(
+    `  products=${cms.products?.length ?? 0}, blogs=${cms.blogs?.length ?? 0}, custom pages=${cms.customSitePages?.length ?? 0}`,
+  );
+  console.log(`Saved live DB → ${LOCAL_DB_PATH}`);
+  console.log(
+    `  clients=${backup.db.clients?.length ?? 0}, orders=${backup.db.orders?.length ?? 0}, feedbacks=${backup.db.feedbacks?.length ?? 0}`,
+  );
+}
+
 async function main() {
   if (!cmd || cmd === "--help" || cmd === "-h") {
     usage();
@@ -347,6 +426,7 @@ async function main() {
   }
   if (cmd === "push") await push();
   else if (cmd === "pull") await pull();
+  else if (cmd === "pull-db") await pullDb();
   else if (cmd === "push-product-images") await pushProductImages();
   else if (cmd === "list-backups") await listBackups();
   else if (cmd === "restore-backup") await restoreBackup(process.argv[3]);
