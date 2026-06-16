@@ -23,7 +23,6 @@ import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import type { AppLocale } from "@/lib/localized-text";
 import type {
-  StorefrontCatalogCategory,
   StorefrontCategoryHub,
   StorefrontHeaderNavLink,
 } from "@/lib/storefront-header-data";
@@ -43,24 +42,15 @@ import {
 
 type HeaderNavLink = StorefrontHeaderNavLink;
 
-function catalogCategoryHref(slug: string) {
-  const params = new URLSearchParams();
-  params.set("category", slug);
-  params.set("page", "1");
-  return `/products?${params.toString()}`;
-}
-
 export function ModaveHeader({
   initialLocale = "en",
   initialLogo,
   initialNavItems,
-  initialCategories = [],
   initialHubs = [],
 }: {
   initialLocale?: AppLocale;
   initialLogo?: string;
   initialNavItems?: HeaderNavLink[];
-  initialCategories?: StorefrontCatalogCategory[];
   initialHubs?: StorefrontCategoryHub[];
 }) {
   const pathname = usePathname();
@@ -68,7 +58,6 @@ export function ModaveHeader({
     companyName?: string;
     email?: string;
   } | null>(null);
-  const [catalogCategories, setCatalogCategories] = useState(initialCategories);
   const [hubs, setHubs] = useState(initialHubs);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
@@ -131,9 +120,8 @@ export function ModaveHeader({
     if (initialNavItems?.length) {
       setNavItems(initialNavItems);
     }
-    setCatalogCategories(initialCategories);
     setHubs(initialHubs);
-  }, [initialNavItems, initialCategories, initialHubs]);
+  }, [initialNavItems, initialHubs]);
 
   useEffect(() => {
     const applyClient = () => {
@@ -187,19 +175,10 @@ export function ModaveHeader({
     const lang = readHeaderLocale();
     fetch(`/api/categories?lang=${encodeURIComponent(lang)}`)
       .then((res) => res.json())
-      .then(
-        (data: {
-          categories?: StorefrontCatalogCategory[];
-          hubs?: StorefrontCategoryHub[];
-        }) => {
-          setCatalogCategories(
-            Array.isArray(data.categories) ? data.categories : [],
-          );
-          setHubs(Array.isArray(data.hubs) ? data.hubs : []);
-        },
-      )
+      .then((data: { hubs?: StorefrontCategoryHub[] }) => {
+        setHubs(Array.isArray(data.hubs) ? data.hubs : []);
+      })
       .catch(() => {
-        setCatalogCategories([]);
         setHubs([]);
       });
   }, [pathname]);
@@ -521,30 +500,6 @@ export function ModaveHeader({
                                 </ul>
                               </>
                             ) : null}
-                            {catalogCategories.length ? (
-                              <>
-                                <div className="menu-heading">
-                                  Catalog filters
-                                </div>
-                                <ul className="menu-list">
-                                  {catalogCategories.map((cat) => (
-                                    <li key={cat.slug}>
-                                      <a
-                                        href={catalogCategoryHref(cat.slug)}
-                                        className="menu-link-text"
-                                        title={`${cat.name} (${cat.productCount})`}
-                                      >
-                                        {cat.name}
-                                        <span className="text-caption-2 text-secondary">
-                                          {" "}
-                                          ({cat.productCount})
-                                        </span>
-                                      </a>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </>
-                            ) : null}
                           </div>
                         </li>
                       ) : null}
@@ -714,21 +669,6 @@ export function ModaveHeader({
                         className="mb-menu-link"
                       >
                         <span>{hub.title}</span>
-                      </a>
-                    </li>
-                  ))}
-                  {catalogCategories.map((cat) => (
-                    <li className="nav-mb-item" key={`cat-${cat.slug}`}>
-                      <a
-                        href={catalogCategoryHref(cat.slug)}
-                        className="mb-menu-link"
-                      >
-                        <span>
-                          {cat.name}{" "}
-                          <span className="text-caption-2">
-                            ({cat.productCount})
-                          </span>
-                        </span>
                       </a>
                     </li>
                   ))}

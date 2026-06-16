@@ -1,4 +1,4 @@
-import { siteSettings } from "@/data/site";
+import { siteSettings } from "../data/site";
 
 const SAME_ORIGIN_HOSTS = new Set(
   [

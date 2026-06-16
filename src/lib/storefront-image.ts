@@ -1,4 +1,4 @@
-import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
+import { resolveCmsMediaUrl } from "./cms-media-url";
 import { siteSettings } from "../data/site";
 
 /** Tiny neutral blur — shared placeholder while AVIF/WebP load. */

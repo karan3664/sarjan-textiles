@@ -61,7 +61,6 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
             initialLocale={header.locale}
             initialLogo={brandLogo}
             initialNavItems={header.items}
-            initialCategories={header.categories}
             initialHubs={header.hubs}
           />
         </StorefrontThemeProvider>
