@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.87",
-  "versionCode": 88,
-  "releaseNotes": "OTP login fix for unregistered emails, saved addresses screen, Men/Women category filters, single-photo color display, and logged-in-only notifications.",
+  "latestVersion": "1.0.88",
+  "versionCode": 89,
+  "releaseNotes": "Kaftan and kurta catalog navigation, correct product image on color select for new imports, category hub filters, and storefront color display fixes.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-16T02:57:43.000Z"
+  "updatedAt": "2026-06-16T06:34:50.000Z"
 }
