@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.98",
-  "versionCode": 99,
+  "latestVersion": "1.0.99",
+  "versionCode": 100,
   "releaseNotes": "Partner With Us opens Contact correctly, brand pages under Profile Settings, and men's catalog no longer shows women's kaftans on kurta and Ajrakh listings.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-17T08:13:21.000Z"
+  "updatedAt": "2026-06-17T08:22:31.000Z"
 }
