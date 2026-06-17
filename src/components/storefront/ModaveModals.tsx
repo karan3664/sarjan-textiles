@@ -57,7 +57,6 @@ import { ModaveProductCard } from "./ModaveProductCard";
 import { QuickViewProduct } from "./QuickViewProduct";
 import { TfButtonIcon, withBtnIcon } from "./TfButtonIcon";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
-import { formatInr, formatInrPricingLine } from "@/lib/gst-display";
 import { sumOrderPieces } from "@/lib/order-pieces";
 import {
   buildPricingDisplayLines,
@@ -895,7 +894,7 @@ export function ModaveModals() {
                           >
                             <span className="text-button">{line.label}</span>
                             <span className="text-button">
-                              {formatInrPricingLine(line.amount)}
+                              <PriceGate amount={line.amount} compact />
                             </span>
                           </div>
                         ))}

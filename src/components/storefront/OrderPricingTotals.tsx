@@ -1,6 +1,5 @@
 "use client";
 
-import { formatInrPricingLine } from "@/lib/gst-display";
 import {
   buildPricingDisplayLines,
   type OrderPricingBreakdown,
@@ -27,7 +26,7 @@ export function OrderPricingTotals({
             className="item d-flex align-items-center justify-content-between text-button"
           >
             <span>{line.label}</span>
-            <span>{formatInrPricingLine(line.amount)}</span>
+            <PriceGate amount={line.amount} compact />
           </div>
         ))}
       </div>

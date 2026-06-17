@@ -25,7 +25,6 @@ import {
   writeCart,
 } from "@/lib/cart-client";
 import { readStoredClient, storedClientGstNumber } from "@/lib/client-session";
-import { formatInr, formatInrPricingLine } from "@/lib/gst-display";
 import { sumOrderPieces } from "@/lib/order-pieces";
 import {
   buildPricingDisplayLines,
@@ -424,7 +423,9 @@ export function CartPageClient({
                       className="discount text-button d-flex justify-content-between align-items-center"
                     >
                       <span>{line.label}</span>
-                      <span>{formatInrPricingLine(line.amount)}</span>
+                      <span>
+                        <PriceGate amount={line.amount} compact />
+                      </span>
                     </div>
                   ))}
                   <h5 className="total-order d-flex justify-content-between align-items-center">
