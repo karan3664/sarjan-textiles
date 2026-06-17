@@ -92,6 +92,97 @@ export function newsletterAdminNotificationInnerHtml(
 <p style="margin:16px 0 0;color:#6f6a64;font-size:13px;line-height:1.5;">Reply-To is set to the subscriber so you can respond directly from your inbox.</p>`;
 }
 
+export type InquiryAdminNotificationFields = {
+  id: string;
+  companyName: string;
+  email: string;
+  contactPerson?: string;
+  phone?: string;
+  requirement?: string;
+  orderId?: string;
+  message: string;
+  createdAt: string;
+};
+
+function inquiryDetailTableRow(label: string, value: string): string {
+  return `
+        <tr>
+          <td style="width:38%;padding:10px 12px;border:1px solid #e8e2d9;background:#fbfaf7;color:#6f6a64;font-size:14px;font-family:Arial,Helvetica,sans-serif;">${label}</td>
+          <td style="padding:10px 12px;border:1px solid #e8e2d9;font-size:14px;color:#141414;line-height:1.45;font-family:Arial,Helvetica,sans-serif;">${value}</td>
+        </tr>`;
+}
+
+/** Internal notification when someone submits the wholesale contact form. */
+export function inquiryAdminNotificationInnerHtml(
+  fields: InquiryAdminNotificationFields,
+): string {
+  const email = escapeHtml(fields.email.trim().toLowerCase());
+  const rows: [string, string][] = [
+    ["Company", escapeHtml(fields.companyName.trim() || "—")],
+    ["Contact person", escapeHtml(fields.contactPerson?.trim() || "—")],
+    [
+      "Email",
+      `<a href="mailto:${email}" style="color:#8b1e2d;text-decoration:none;">${email}</a>`,
+    ],
+    ["Phone", escapeHtml(fields.phone?.trim() || "—")],
+  ];
+
+  const submitted = formatInquiryEmailDate(fields.createdAt);
+  if (submitted) rows.push(["Submitted", escapeHtml(submitted)]);
+
+  if (fields.requirement?.trim()) {
+    rows.push(["Requirement", escapeHtml(fields.requirement.trim())]);
+  }
+  if (fields.orderId?.trim()) {
+    rows.push(["Order reference", escapeHtml(fields.orderId.trim())]);
+  }
+
+  const refTable = `<table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 22px;background:#fff;">
+      <tbody>
+        ${rows.map(([label, value]) => inquiryDetailTableRow(label, value)).join("")}
+      </tbody>
+    </table>`;
+
+  const messageHtml = plainTextToEmailHtml(fields.message.trim());
+
+  return `<p style="margin:0 0 16px;color:#4d4843;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">A wholesale inquiry was submitted on the website contact form. Details are below — you can also view and reply from <strong>Admin → Contact Inquiries</strong>.</p>
+    ${refTable}
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#6f6a64;font-weight:700;font-family:Arial,Helvetica,sans-serif;">Message</p>
+    <div style="padding:18px 16px;background:#ffffff;border-radius:10px;border:1px solid #e8e2d9;font-size:15px;line-height:1.65;color:#141414;font-family:Arial,Helvetica,sans-serif;">
+      ${messageHtml}
+    </div>
+    <p style="margin:16px 0 0;color:#6f6a64;font-size:13px;line-height:1.5;font-family:Arial,Helvetica,sans-serif;">Reply-To is set to the inquirer so you can respond directly from your inbox. Inquiry ID: <code style="font-size:12px;">${escapeHtml(fields.id)}</code></p>`;
+}
+
+export function inquiryAdminNotificationPlainText(
+  fields: InquiryAdminNotificationFields,
+): string {
+  const submitted = formatInquiryEmailDate(fields.createdAt);
+  const lines = [
+    "New wholesale inquiry on sarjantextiles.com",
+    "",
+    `Company: ${fields.companyName.trim() || "—"}`,
+    `Contact person: ${fields.contactPerson?.trim() || "—"}`,
+    `Email: ${fields.email.trim()}`,
+    `Phone: ${fields.phone?.trim() || "—"}`,
+  ];
+  if (submitted) lines.push(`Submitted: ${submitted}`);
+  if (fields.requirement?.trim()) {
+    lines.push(`Requirement: ${fields.requirement.trim()}`);
+  }
+  if (fields.orderId?.trim()) {
+    lines.push(`Order reference: ${fields.orderId.trim()}`);
+  }
+  lines.push(
+    "",
+    "Message:",
+    fields.message.trim(),
+    "",
+    `Inquiry ID: ${fields.id}`,
+  );
+  return lines.join("\n");
+}
+
 function formatInquiryEmailDate(iso?: string): string | undefined {
   if (!iso?.trim()) return undefined;
   try {

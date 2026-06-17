@@ -11,7 +11,7 @@ export default async function AdminProductsListPage() {
   return (
     <AdminTemplateChrome active="products" title="Products List">
       <AdminProductListClient
-        initialProducts={flattenProductsForAdmin(cms.products)}
+        initialProducts={flattenProductsForAdmin(cms.products ?? [])}
       />
     </AdminTemplateChrome>
   );

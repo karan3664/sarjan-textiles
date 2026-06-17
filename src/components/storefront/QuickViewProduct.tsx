@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/mock";
+import { CmsPlainTextBody } from "@/components/shared/CmsPlainTextBody";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { PRODUCT_UNAVAILABLE_SHORT } from "@/lib/product-purchase-eligibility";
 import { useShowProductUnavailable } from "./PriceGate";
@@ -78,7 +79,10 @@ export function QuickViewProduct({
               <PriceGate amount={product.price} suffix=" / piece" />
             </h4>
           </div>
-          <p className="text-secondary">{product.description}</p>
+          <CmsPlainTextBody
+            text={product.description}
+            className="text-secondary mb_0"
+          />
         </div>
         <ProductPurchasePanel
           product={product}

@@ -9,6 +9,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { inferGarmentColorLabelsFromImages } from "../src/lib/garment-color-from-image.ts";
+import { isProductPlaceholderImage } from "../src/lib/product-placeholder-image.ts";
 
 const ROOT = process.cwd();
 const CMS_PATH = path.join(ROOT, "data", "cms-db.json");
@@ -66,7 +67,9 @@ async function main() {
   let changedCount = 0;
 
   for (const product of cms.products ?? []) {
-    const images = (product.images ?? []).filter(Boolean);
+    const images = (product.images ?? []).filter(
+      (url) => url?.trim() && !isProductPlaceholderImage(url),
+    );
     if (!images.length) continue;
 
     const before = (product.colors ?? []).map((color) => readEnglish(color));

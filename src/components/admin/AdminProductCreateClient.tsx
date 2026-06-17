@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { Product } from "@/data/mock";
 import { SIZE_GROUPS, SIZE_GROUP_LABELS } from "@/lib/cart-client";
@@ -595,13 +595,37 @@ export function AdminProductCreateClient({
     setMessage("");
     try {
       const uploaded = await uploadFiles(files);
-      setForm((current) => ({ ...current, images: uploaded }));
+      setForm((current) => ({
+        ...current,
+        images: [...current.images, ...uploaded],
+      }));
       setMessage(`${uploaded.length} image uploaded.`);
     } catch {
       setMessage("Image upload failed.");
     } finally {
       setUploading(false);
     }
+  };
+
+  const removeProductImage = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      images: current.images.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const setMainProductImage = (index: number) => {
+    setForm((current) => {
+      const image = current.images[index];
+      if (!image || index === 0) return current;
+      return {
+        ...current,
+        images: [
+          image,
+          ...current.images.filter((_, itemIndex) => itemIndex !== index),
+        ],
+      };
+    });
   };
 
   const uploadFiles = async (files: FileList | File[]) => {
@@ -846,28 +870,54 @@ export function AdminProductCreateClient({
                 className="tf-button w-100"
                 onClick={() => update("images", [])}
               >
-                Remove Images
+                Remove All Images
               </button>
             ) : null}
 
             <div>
               <h6 className="mb-20">Products Image</h6>
+              {form.images.length ? (
+                <p className="text-caption-1 text-secondary mb-12">
+                  Click a thumbnail to set main image. Use × to remove a single
+                  photo.
+                </p>
+              ) : null}
               <div className="upload-image style-1 sarjan-product-thumb-upload">
                 <div className="upload-img">
-                  {form.images.map((image) => (
-                    <button
-                      type="button"
-                      className="item"
-                      key={image}
-                      onClick={() =>
-                        update("images", [
-                          image,
-                          ...form.images.filter((item) => item !== image),
-                        ])
-                      }
+                  {form.images.map((image, index) => (
+                    <div
+                      className="sarjan-product-thumb-wrap item"
+                      key={`${image}-${index}`}
                     >
-                      <img src={image} alt="Product thumbnail" />
-                    </button>
+                      <button
+                        type="button"
+                        className="sarjan-product-thumb-select"
+                        title={
+                          index === 0
+                            ? "Main product image"
+                            : "Set as main image"
+                        }
+                        onClick={() => setMainProductImage(index)}
+                      >
+                        <img src={image} alt={`Product photo ${index + 1}`} />
+                        {index === 0 ? (
+                          <span className="sarjan-product-thumb-main-badge">
+                            Main
+                          </span>
+                        ) : null}
+                      </button>
+                      <button
+                        type="button"
+                        className="sarjan-product-thumb-remove"
+                        aria-label={`Remove photo ${index + 1}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeProductImage(index);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                   {Array.from({
                     length: Math.max(0, 4 - form.images.length),

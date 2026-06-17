@@ -18,6 +18,9 @@ const CMS_ALLOWED_TAGS = [
   "small",
   "sub",
   "sup",
+  "ul",
+  "ol",
+  "li",
 ];
 
 function looksLikeHtml(value: string) {
@@ -36,13 +39,41 @@ export function isCmsHtmlContent(value: string): boolean {
   return looksLikeHtml(value?.trim() ?? "");
 }
 
-/** Plain CMS text → safe HTML (preserves line breaks from legacy content). */
-export function plainTextToCmsHtml(value: string): string {
-  const paragraphs = splitCmsTextParagraphs(value);
-  if (paragraphs.length <= 1) {
-    return paragraphs[0] ?? "";
+function plainTextLinesToHtmlBlock(text: string): string {
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (!lines.length) return "";
+
+  const bulletLines = lines.filter((line) => /^[-•*]\s+/.test(line));
+  if (bulletLines.length >= 1 && bulletLines.length === lines.length) {
+    const items = lines.map((line) => line.replace(/^[-•*]\s+/, ""));
+    return `<ul>${items.map((item) => `<li>${escapeHtmlText(item)}</li>`).join("")}</ul>`;
   }
-  return paragraphs.map((part) => `<p>${escapeHtmlText(part)}</p>`).join("");
+
+  const numberedLines = lines.filter((line) => /^\d+[.)]\s+/.test(line));
+  if (numberedLines.length >= 1 && numberedLines.length === lines.length) {
+    const items = lines.map((line) => line.replace(/^\d+[.)]\s+/, ""));
+    return `<ol>${items.map((item) => `<li>${escapeHtmlText(item)}</li>`).join("")}</ol>`;
+  }
+
+  if (lines.length > 1) {
+    return lines.map((line) => `<p>${escapeHtmlText(line)}</p>`).join("");
+  }
+
+  return `<p>${escapeHtmlText(text.trim())}</p>`;
+}
+
+/** Plain CMS text → safe HTML (preserves line breaks and bullet lists). */
+export function plainTextToCmsHtml(value: string): string {
+  const normalized = value?.trim() ?? "";
+  if (!normalized) return "";
+  if (looksLikeHtml(normalized)) return normalized;
+
+  const paragraphs = splitCmsTextParagraphs(normalized);
+  if (!paragraphs.length) return "";
+  return paragraphs.map((part) => plainTextLinesToHtmlBlock(part)).join("");
 }
 
 /** Plain text → TipTap / CMS editor HTML with one `<p>` per paragraph. */
@@ -96,7 +127,7 @@ export function sanitizeCmsHtml(value: string): string {
           /^hsla\(/i,
         ],
         "background-color": [/^#[0-9a-fA-F]{3,8}$/i, /^rgb\(/i, /^rgba\(/i],
-        "font-size": [/^\d+(?:px|rem|em|%)$/],
+        "font-size": [/^\d+(?:\.\d+)?(?:px|rem|em|%|pt)$/],
         "font-family": [/.*/],
         "font-weight": [/^\d{3}$/, /^bold$/, /^normal$/],
         "text-align": [/^left$/, /^right$/, /^center$/, /^justify$/],

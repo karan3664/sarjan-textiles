@@ -19,6 +19,20 @@ export function categoryFilterSlug(value: unknown) {
     .replace(/^-|-$/g, "");
 }
 
+/** Which category hub page should list this product category. */
+export function categoryHubSlugForName(categoryName: string): string {
+  const lower = categoryName.toLowerCase();
+  if (lower.includes("women")) return "womens-wear";
+  if (lower.includes("shirt") && !lower.includes("kurta")) return "mens-shirts";
+  return "mens-kurtas";
+}
+
+export function categoryHubDepartment(hubSlug: string): "men" | "women" | null {
+  if (hubSlug === "womens-wear") return "women";
+  if (hubSlug === "mens-shirts" || hubSlug === "mens-kurtas") return "men";
+  return null;
+}
+
 function categoryPathSlugs(product: Product): string[] {
   const path = Array.isArray(product.categoryPath) ? product.categoryPath : [];
   return [
@@ -54,6 +68,12 @@ export function productDepartment(product: Product): ProductDepartment | null {
   ) {
     return "men";
   }
+
+  const hubSlug = categoryHubSlugForName(
+    readEnglish(product.category as string),
+  );
+  if (hubSlug === "womens-wear") return "women";
+  if (hubSlug === "mens-shirts" || hubSlug === "mens-kurtas") return "men";
 
   return null;
 }

@@ -203,7 +203,7 @@ async function sheetRowsFromWorkbook(
     const record: SheetRow = {};
     row.eachCell((cell, colNumber) => {
       const key = headers[colNumber];
-      if (key) record[key] = cell.value;
+      if (key) record[key] = extractSheetCellText(cell.value);
     });
     if (stringValue(record, "name") || stringValue(record, "sku")) {
       rows.push(record);

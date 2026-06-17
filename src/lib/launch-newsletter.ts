@@ -19,19 +19,27 @@ export {
   isSilentNewsletterSource,
 } from "@/lib/launch-newsletter-constants";
 
+type LaunchNewsletterSubscriberOptions = {
+  /** When false, only saves the email — no “New subscriber” admin mail. */
+  adminAlert?: boolean;
+};
+
 /** Add email to launch list without failing the parent flow. */
 export async function addLaunchNewsletterSubscriber(
   email: string,
   source: "launch" | "inquiry" | "register",
+  options?: LaunchNewsletterSubscriberOptions,
 ) {
   const normalized = email.trim().toLowerCase();
   if (!normalized || !normalized.includes("@")) return null;
   try {
     const result = await subscribeNewsletterEmail(normalized, source);
-    try {
-      await sendNewsletterAdminSignupAlert(normalized, source);
-    } catch {
-      // Subscriber saved — admin alert is best-effort (SMTP may be unset in dev).
+    if (options?.adminAlert !== false) {
+      try {
+        await sendNewsletterAdminSignupAlert(normalized, source);
+      } catch {
+        // Subscriber saved — admin alert is best-effort (SMTP may be unset in dev).
+      }
     }
     return result;
   } catch {

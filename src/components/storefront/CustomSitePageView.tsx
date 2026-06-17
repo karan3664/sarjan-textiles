@@ -8,6 +8,7 @@ import {
   visibleCustomSections,
 } from "@/lib/cms-custom-section-utils";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
+import { CmsPlainTextBody } from "@/components/shared/CmsPlainTextBody";
 import { PageFaqSection } from "./PageFaqSection";
 
 function customPageFaqKey(slug: string): PageFaqKey | null {
@@ -44,7 +45,11 @@ export async function CustomSitePageView({
           >
             <h1 className="heading">{page.title}</h1>
             {hasSubtitle ? (
-              <p className="subheading text-secondary">{page.heroSubtitle}</p>
+              <CmsPlainTextBody
+                text={page.heroSubtitle ?? ""}
+                className="subheading text-secondary"
+                wrapperClassName="cms-html-content sarjan-custom-hero-subtitle"
+              />
             ) : null}
           </div>
           {hasHeroImage ? (

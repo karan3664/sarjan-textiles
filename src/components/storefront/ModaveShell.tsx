@@ -62,6 +62,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
             initialLogo={brandLogo}
             initialNavItems={header.items}
             initialHubs={header.hubs}
+            initialDepartmentCategories={header.departmentCategories}
           />
         </StorefrontThemeProvider>
         <AbandonedCartResumeBanner />

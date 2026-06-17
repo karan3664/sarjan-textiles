@@ -1,4 +1,4 @@
-import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
+import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import { applyProductDeals } from "@/lib/product-deal";
 import { resolveProducts } from "@/lib/product-localize";
 import { readEnglish } from "@/lib/cms-localize";
@@ -15,6 +15,7 @@ import {
   productCatalogActive,
   withProductAvailability,
 } from "@/lib/product-purchase-eligibility";
+import { productMatchesCollectionSlug } from "@/lib/collection-product-match";
 
 export type CatalogSort =
   | "best-selling"
@@ -186,7 +187,7 @@ export async function applyClientPricing(
   }
 
   const [cms, client] = await Promise.all([
-    getLocalizedCmsSnapshot(),
+    getCachedCmsSnapshot(),
     getClient(clientId),
   ]);
   if (!client || client.status !== "approved") {
@@ -273,6 +274,7 @@ export async function getCatalogProducts({
   sort = "best-selling",
   ids,
   q,
+  collection,
   clientId,
   filters,
   locale = "en",
@@ -282,32 +284,39 @@ export async function getCatalogProducts({
   sort?: string;
   ids?: string[];
   q?: string;
+  /** Curated /collections/[slug] — uses pattern rules, not loose substring search. */
+  collection?: string;
   clientId?: string | null;
   filters?: CatalogFilters;
   locale?: AppLocale;
 }) {
-  const { products: rawProducts } = await getLocalizedCmsSnapshot();
+  const { products: rawProducts } = await getCachedCmsSnapshot();
   const query = q?.trim().toLowerCase();
+  const collectionSlug = collection?.trim().toLowerCase();
   const source = ids?.length
     ? rawProducts.filter((product) => productMatchesCartIds(product, ids))
     : rawProducts;
-  const searched = query
+  const searched = collectionSlug
     ? source.filter((product) =>
-        [
-          readEnglish(product.name),
-          product.slug,
-          product.sku,
-          readEnglish(product.category),
-          readEnglish(product.fabric),
-          readEnglish(product.description),
-          ...product.colors.map((color) => readEnglish(color)),
-          ...product.sizes,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query),
+        productMatchesCollectionSlug(product, collectionSlug),
       )
-    : source;
+    : query
+      ? source.filter((product) =>
+          [
+            readEnglish(product.name),
+            product.slug,
+            product.sku,
+            readEnglish(product.category),
+            readEnglish(product.fabric),
+            readEnglish(product.description),
+            ...product.colors.map((color) => readEnglish(color)),
+            ...product.sizes,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(query),
+        )
+      : source;
   const viewerLoggedIn = Boolean(clientId);
   const browseOnly = !ids?.length;
   const catalogVisible = browseOnly

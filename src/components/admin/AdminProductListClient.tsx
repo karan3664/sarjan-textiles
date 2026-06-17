@@ -37,7 +37,7 @@ export function AdminProductListClient({
 }: {
   initialProducts: Product[];
 }) {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -102,8 +102,9 @@ export function AdminProductListClient({
         { method: "DELETE" },
       );
       if (!res.ok) throw new Error("Delete failed");
-      const data = (await res.json()) as { products: Product[] };
-      setProducts(data.products);
+      setProducts((current) =>
+        current.filter((item) => item.slug !== product.slug),
+      );
     } finally {
       setDeletingSlug(null);
     }

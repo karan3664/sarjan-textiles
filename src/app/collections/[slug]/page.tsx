@@ -87,8 +87,8 @@ export default async function CollectionDetailPage({
   const catalog = await getCatalogProducts({
     page: Number(pageNum ?? 1),
     sort,
+    collection: page.slug,
     filters: listingFilters,
-    q: page.q,
     locale,
     limit: 24,
   });
@@ -117,7 +117,7 @@ export default async function CollectionDetailPage({
         page={Number(pageNum ?? 1)}
         sort={sort}
         filters={listingFilters}
-        q={page.q}
+        collection={page.slug}
         basePath={`/collections/${page.slug}`}
         crumbs={["Home", "Collections", page.title]}
       />

@@ -1,5 +1,9 @@
 import { CmsHtml } from "@/components/shared/CmsHtml";
-import { isCmsHtmlContent, splitCmsTextParagraphs } from "@/lib/cms-html";
+import {
+  isCmsHtmlContent,
+  plainTextToCmsHtml,
+  splitCmsTextParagraphs,
+} from "@/lib/cms-html";
 
 export function CmsPlainTextBody({
   text,
@@ -17,6 +21,15 @@ export function CmsPlainTextBody({
     return (
       <div className={wrapperClassName}>
         <CmsHtml html={value} className={className} />
+      </div>
+    );
+  }
+
+  const html = plainTextToCmsHtml(value);
+  if (isCmsHtmlContent(html)) {
+    return (
+      <div className={wrapperClassName}>
+        <CmsHtml html={html} className={className} />
       </div>
     );
   }

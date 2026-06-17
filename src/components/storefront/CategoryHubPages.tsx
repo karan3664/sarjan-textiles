@@ -4,6 +4,7 @@ import type { CategoryHubPage } from "@/lib/cms-store";
 import { listActiveCategoryHubPages } from "@/lib/cms-store";
 import { resolveCategoryHub } from "@/lib/pages-localize";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
+import { groupHubCategoriesByDepartment } from "@/lib/storefront-category-nav";
 import { PageFaqSection } from "./PageFaqSection";
 
 export async function CategoryHubIndexContent() {
@@ -11,6 +12,15 @@ export async function CategoryHubIndexContent() {
   const hubs = (await listActiveCategoryHubPages()).map((hub) =>
     resolveCategoryHub(hub, locale),
   );
+  const navHubs = hubs.map((hub) => ({
+    title: hub.title,
+    slug: hub.slug,
+    subcategories: (hub.subcategories ?? []).map((sub) => ({
+      title: sub.title,
+      href: sub.href,
+    })),
+  }));
+  const departmentCategories = groupHubCategoriesByDepartment(navHubs);
   if (!hubs.length) {
     return (
       <section className="flat-spacing">
@@ -49,6 +59,46 @@ export async function CategoryHubIndexContent() {
               All products
             </Link>
           </div>
+        </div>
+        {departmentCategories.men.length ||
+        departmentCategories.women.length ? (
+          <div className="sarjan-category-dept-grid mb_48">
+            {departmentCategories.men.length ? (
+              <div className="mb_32">
+                <h2 className="heading fw-5 mb_16">Men</h2>
+                <div className="d-flex flex-wrap gap-10">
+                  {departmentCategories.men.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="tf-btn btn-white has-border radius-4"
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {departmentCategories.women.length ? (
+              <div>
+                <h2 className="heading fw-5 mb_16">Women</h2>
+                <div className="d-flex flex-wrap gap-10">
+                  {departmentCategories.women.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="tf-btn btn-white has-border radius-4"
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        <div className="heading-section text-center mb_24">
+          <h2 className="heading">Collection hubs</h2>
         </div>
         <div className="tf-grid-layout md-col-3 sm-col-2 sarjan-hub-main-grid">
           {hubs.map((hub) => (

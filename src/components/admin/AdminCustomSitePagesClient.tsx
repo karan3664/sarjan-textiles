@@ -8,6 +8,7 @@ import {
 import type { CustomSitePage } from "@/lib/cms-store";
 import type { CmsCustomSection } from "@/types/cms-custom";
 import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
+import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
 import { AdminCmsImageDisplayFields } from "@/components/admin/AdminCmsImageDisplayFields";
 import { CustomCmsImageBlock } from "@/components/shared/CustomCmsImageBlock";
 import { resolveCmsMediaUrl } from "@/lib/cms-media-url";
@@ -238,11 +239,12 @@ export function AdminCustomSitePagesClient({
               </div>
               <fieldset className="mb-16">
                 <div className="text-button mb-8">Hero subtitle</div>
-                <input
+                <AdminHtmlEditor
+                  compact
+                  rows={2}
                   value={selected.heroSubtitle ?? ""}
-                  onChange={(e) =>
-                    updateSelected({ heroSubtitle: e.target.value })
-                  }
+                  onChange={(value) => updateSelected({ heroSubtitle: value })}
+                  placeholder="Optional hero subtitle below page title"
                 />
               </fieldset>
               <fieldset className="mb-16">

@@ -22,6 +22,7 @@ const NAMED_COLOR_HEX: Record<string, string> = {
   pink: "#e8a0b4",
   purple: "#6b4c9a",
   gold: "#c9a227",
+  olive: "#6b6b3a",
 };
 
 function hashColorHex(name: string) {

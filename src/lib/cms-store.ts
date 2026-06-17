@@ -27,7 +27,7 @@ import {
   type MobileAppConfig,
   type MobileAppConfigStored,
 } from "@/lib/mobile-app-cms";
-import { slugifyCmsSegment } from "@/lib/slug";
+import { COLLECTION_ROUTES } from "@/lib/collection-route-defaults";
 import {
   dedupeBlogsByTitle,
   dedupeProductsByName,
@@ -37,7 +37,7 @@ import {
 import { withProductImageAlts } from "@/lib/product-image-alt";
 import { readEnglish } from "@/lib/cms-localize";
 import type { CatalogFilters } from "@/lib/catalog";
-import { COLLECTION_ROUTES } from "@/lib/collection-route-defaults";
+import { slugifyCmsSegment } from "@/lib/slug";
 import {
   ensureUniqueProductSlugs,
   migrateWeakProductSlugs,
@@ -1352,13 +1352,54 @@ export async function getCollectionPageBySlug(slug: string) {
 
 export async function listActiveCollectionPages() {
   const cms = await getCachedCmsSnapshot();
-  return cms.collectionPages
+  const storedBySlug = new Map(
+    cms.collectionPages.map((page) => [page.slug, page]),
+  );
+
+  const merged: typeof cms.collectionPages = COLLECTION_ROUTES.map(
+    (route, index) => {
+      const page = storedBySlug.get(route.slug);
+      return {
+        id: page?.id ?? `collection-${route.slug}`,
+        slug: route.slug,
+        title: page?.title ?? route.title,
+        description: page?.description ?? route.description,
+        q: page?.q ?? route.q,
+        filters: page?.filters ?? route.filters,
+        keywords: page?.keywords ?? route.keywords?.join(", "),
+        enabled: page?.enabled ?? true,
+        sortOrder: page?.sortOrder ?? index + 1,
+        updatedAt: page?.updatedAt ?? new Date(0).toISOString(),
+        heroImage: page?.heroImage,
+        metaTitle: page?.metaTitle,
+        metaDescription: page?.metaDescription,
+      };
+    },
+  );
+
+  for (const page of cms.collectionPages) {
+    if (!COLLECTION_ROUTES.some((route) => route.slug === page.slug)) {
+      merged.push(page);
+    }
+  }
+
+  return merged
     .filter((page) => page.enabled !== false)
     .sort((a, b) => {
       const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
       const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
       if (orderA !== orderB) return orderA - orderB;
       return readEnglish(a.title).localeCompare(readEnglish(b.title));
+    })
+    .map((page) => {
+      const defaults = COLLECTION_ROUTES.find(
+        (route) => route.slug === page.slug,
+      );
+      return {
+        ...page,
+        q: page.q ?? defaults?.q,
+        filters: page.filters ?? defaults?.filters,
+      };
     });
 }
 

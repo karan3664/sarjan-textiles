@@ -53,6 +53,21 @@ function mapBlockForMobile(block: CmsCustomBlock): CmsCustomBlock {
 }
 
 /** Payload tuned for the React Native app (absolute media URLs, no empty blocks). */
+export function buildMobileCustomSections(
+  sections: CmsCustomSection[] = [],
+): CmsCustomSection[] {
+  return sections
+    .filter(customSectionHasContent)
+    .map((section) => ({
+      ...section,
+      blocks: (section.blocks ?? [])
+        .filter(customBlockHasContent)
+        .map((block) => mapBlockForMobile(block)),
+    }))
+    .filter(customSectionHasContent);
+}
+
+/** Payload tuned for the React Native app (absolute media URLs, no empty blocks). */
 export function buildMobileCustomSitePage(
   page: PublicCustomSitePage,
 ): MobileCustomSitePage {

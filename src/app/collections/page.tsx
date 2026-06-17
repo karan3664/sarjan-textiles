@@ -5,8 +5,10 @@ import { listActiveCollectionPages } from "@/lib/cms-store";
 import { resolveCollection } from "@/lib/pages-localize";
 import { cmsSeoJsonLd, cmsSeoMetadata } from "@/lib/page-seo";
 import { SarjanButton } from "@/components/storefront/SarjanButton";
+import { StorefrontProductImage } from "@/components/storefront/StorefrontProductImage";
 import { getCacheableStorefrontLocale } from "@/lib/server-locale";
 import { itemListJsonLd, JsonLdGraph } from "@/lib/seo";
+import { getCatalogProducts } from "@/lib/catalog";
 
 export const revalidate = 300;
 
@@ -16,8 +18,23 @@ export async function generateMetadata() {
 
 export default async function CollectionsPage() {
   const locale = getCacheableStorefrontLocale();
-  const collections = (await listActiveCollectionPages()).map((page) =>
-    resolveCollection(page, locale),
+  const pages = await listActiveCollectionPages();
+  const collections = await Promise.all(
+    pages.map(async (page) => {
+      const localized = resolveCollection(page, locale);
+      const catalog = await getCatalogProducts({
+        collection: page.slug,
+        filters: page.filters,
+        locale,
+        limit: 4,
+        page: 1,
+      });
+      return {
+        ...localized,
+        productCount: catalog.total,
+        previewProducts: catalog.items.slice(0, 4),
+      };
+    }),
   );
   const jsonLd = await cmsSeoJsonLd("collections");
   const itemList = itemListJsonLd({
@@ -38,13 +55,33 @@ export default async function CollectionsPage() {
       <section className="flat-spacing-2">
         <div className="container">
           <p className="text-muted mb-4">
-            Explore Ajrakh, Mashru, and block-print lines — each collection
-            links to a curated wholesale catalog view.
+            Browse curated wholesale lines — Ajrakh, Mashru, block print, kaftan
+            shirts, cotton kurtas, printed shirts, and more.
           </p>
           <div className="row g-4">
             {collections.map((collection) => (
               <div className="col-md-4" key={collection.slug}>
-                <div className="card h-100">
+                <div className="card h-100 sarjan-collection-card">
+                  {collection.previewProducts.length ? (
+                    <div className="sarjan-collection-preview-grid">
+                      {collection.previewProducts.map((product) => (
+                        <Link
+                          key={product.id}
+                          href={`/products/${product.slug}`}
+                          className="sarjan-collection-preview-thumb hover-img"
+                          aria-label={product.name}
+                        >
+                          <StorefrontProductImage
+                            src={product.images[0]}
+                            alt={product.name}
+                            variant="thumb"
+                            width={72}
+                            height={90}
+                          />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="card-body d-flex flex-column">
                     <h3 className="h5">
                       <Link href={`/collections/${collection.slug}`}>
@@ -53,6 +90,10 @@ export default async function CollectionsPage() {
                     </h3>
                     <p className="text-muted flex-grow-1">
                       {collection.description}
+                    </p>
+                    <p className="text-caption-1 text-secondary mb_12">
+                      {collection.productCount} wholesale{" "}
+                      {collection.productCount === 1 ? "style" : "styles"}
                     </p>
                     <SarjanButton
                       href={`/collections/${collection.slug}`}

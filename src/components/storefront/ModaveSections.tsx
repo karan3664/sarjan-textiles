@@ -1090,7 +1090,8 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
               </Link>
             </div>
             <div className="text-caption-1 text-secondary-2">
-              {product.colors[0]} · full set · {product.fabric}
+              {pickerColors[0] ?? product.colors[0]} · full set ·{" "}
+              {product.fabric}
             </div>
             <div className="text-title">
               <PriceGate amount={setPrice} suffix=" / set" compact />
@@ -1150,7 +1151,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                               <ProductDealOriginalPrice product={product} />
                             </h5>
                           </div>
-                          <p>{product.description}</p>
+                          <CmsPlainTextBody
+                            text={product.description}
+                            className="text-secondary mb_0"
+                          />
                         </div>
                       </div>
                       <ProductPurchasePanel
@@ -1203,7 +1207,8 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                     <div className="content">
                       <div className="text-title">{product.name}</div>
                       <div className="text-caption-1 text-secondary-2">
-                        {product.colors[0]}, full size set, {product.fabric}
+                        {pickerColors[0] ?? product.colors[0]}, full size set,{" "}
+                        {product.fabric}
                       </div>
                       <div className="text-title sarjan-deal-price-row">
                         <PriceGate
@@ -1247,9 +1252,10 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
                         <div className="letter-1 text-btn-uppercase mb_12">
                           {product.name}
                         </div>
-                        <p className="mb_12 text-secondary">
-                          {product.description}
-                        </p>
+                        <CmsPlainTextBody
+                          text={product.description}
+                          className="mb_12 text-secondary"
+                        />
                         <p className="text-secondary">
                           {product.care
                             ? `${product.fabric}. ${product.care}`
@@ -1860,6 +1866,7 @@ export async function ProductsListingDynamic({
   page = 1,
   sort = "best-selling",
   q,
+  collection,
   filters = {},
   pageTitle = "Products",
   pageCrumbs = ["Homepage", "Products"],
@@ -1870,6 +1877,7 @@ export async function ProductsListingDynamic({
   page?: number;
   sort?: string;
   q?: string;
+  collection?: string;
   filters?: CatalogFilters;
   pageTitle?: string;
   pageCrumbs?: string[];
@@ -1901,6 +1909,7 @@ export async function ProductsListingDynamic({
     limit: perPage,
     sort: sortValue,
     q,
+    collection,
     filters,
     locale,
   });
@@ -2285,8 +2294,12 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
               </div>
             </div>
           </div>
-          <div className="content">
-            <p className="body-text-1 mb_12">{blog.excerpt}</p>
+          <div className="content sarjan-blog-detail-content">
+            <CmsPlainTextBody
+              text={blog.excerpt}
+              className="body-text-1 mb_12"
+              wrapperClassName="cms-html-content sarjan-blog-excerpt"
+            />
             {blogBlocks.map((block, index) =>
               block.type === "image" ? (
                 <div
@@ -2299,9 +2312,12 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
                   />
                 </div>
               ) : (
-                <p className="body-text-1 mb_16" key={`${block.type}-${index}`}>
-                  {block.value}
-                </p>
+                <CmsPlainTextBody
+                  key={`${block.type}-${index}`}
+                  text={block.value}
+                  className="body-text-1 mb_16"
+                  wrapperClassName="cms-html-content sarjan-blog-text-block"
+                />
               ),
             )}
           </div>
@@ -2318,38 +2334,6 @@ export async function BlogDetailDynamic({ slug }: { slug: string }) {
               </div>
             </div>
           )}
-          <div className="content">
-            <h3 className="fw-5 mb_16">
-              How Sarjan manages B2B textile workflows
-            </h3>
-            <p className="body-text-1 mb_16">
-              Every CMS article is admin managed. Title, image, date, excerpt,
-              content, SEO fields, and publish status are designed to come from
-              the blog table once Supabase is connected.
-            </p>
-            <p className="body-text-1 mb_16">
-              The same flow connects product planning, MOQ checks, order
-              approvals, and dispatch stages into one buyer journey.
-            </p>
-            <ul className="list-text type-disc mb_16">
-              <li className="body-text-1">
-                Plan printed shirt and kurta collections around MOQ and color
-                families.
-              </li>
-              <li className="body-text-1">
-                Use order approval to confirm stock, reserved quantity, and
-                dispatch readiness.
-              </li>
-              <li className="body-text-1">
-                Track approved order and dispatch status without scattered
-                manual follow-up.
-              </li>
-            </ul>
-            <p className="body-text-1 mb_16">
-              This keeps the frontend fully dynamic while preserving the Modave
-              article layout and interaction styling.
-            </p>
-          </div>
           <div className="bot d-flex justify-content-between gap-10 flex-wrap">
             <ul className="list-tags has-bg">
               <li>Tag:</li>

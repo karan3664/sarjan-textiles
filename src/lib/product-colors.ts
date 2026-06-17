@@ -15,13 +15,9 @@ export function productColorList(product: Pick<Product, "colors">): string[] {
 }
 
 export function uniqueRealProductImages(images?: string[] | null): string[] {
-  return [
-    ...new Set(
-      (images ?? []).filter(
-        (url) => url?.trim() && !isProductPlaceholderImage(url),
-      ),
-    ),
-  ];
+  return (images ?? []).filter(
+    (url) => url?.trim() && !isProductPlaceholderImage(url),
+  );
 }
 
 export function hasSingleProductImage(
@@ -118,7 +114,7 @@ export type ProductGallerySlot = {
   image: string;
 };
 
-/** PDP gallery + color picker slots — always aligned by index. */
+/** PDP gallery + color picker slots — image[i] always pairs with color[i]. */
 export function productGallerySlots(
   product: Pick<
     Product,
@@ -146,20 +142,14 @@ export function productGallerySlots(
   }
 
   const colors = productColorList(product);
-  const gallery = productColorGalleryForProduct(product);
+  const pickerColors =
+    colors.length >= images.length
+      ? colors.slice(0, images.length)
+      : expandColorsForImageCount(colors, images.length);
 
-  if (images.length > colors.length) {
-    const pickerColors = expandColorsForImageCount(colors, images.length);
-    return pickerColors.map((color, index) => ({
-      color,
-      image: images[index] ?? gallery[index] ?? images[0],
-    }));
-  }
-
-  const pickerColors = colors.length ? colors : ["Default"];
-  return pickerColors.map((color, index) => ({
-    color,
-    image: gallery[index] ?? images[index] ?? images[0],
+  return images.map((image, index) => ({
+    color: pickerColors[index] ?? pickerColors[0] ?? "Default",
+    image,
   }));
 }
 
@@ -463,16 +453,8 @@ export function productColorGalleryForProduct(
     return [uniqueRealProductImages(images)[0]];
   }
 
-  if (usesCmsCatalogImages(images) && images.length > colors.length) {
-    return images;
-  }
-
-  if (usesCmsCatalogImages(images) && images.length === colors.length) {
-    return images;
-  }
-
   if (usesCmsCatalogImages(images)) {
-    return mapColorsToImages(colors, images);
+    return images;
   }
 
   if (isWomensKaftanShirt(product) && images.length === colors.length) {

@@ -22,10 +22,12 @@ import { ThemeToggle } from "./ThemeToggle";
 import { effectiveStorefrontLocale } from "@/lib/locale-launch";
 import { SARJAN_LANG_COOKIE } from "@/lib/locale-cookie";
 import type { AppLocale } from "@/lib/localized-text";
-import type {
-  StorefrontCategoryHub,
-  StorefrontHeaderNavLink,
-} from "@/lib/storefront-header-data";
+import type { StorefrontHeaderNavLink } from "@/lib/storefront-header-data";
+import {
+  groupHubCategoriesByDepartment,
+  type StorefrontCategoryHub,
+  type StorefrontDepartmentCategories,
+} from "@/lib/storefront-category-nav";
 import {
   readWishlist,
   refreshWishlistFromCatalog,
@@ -47,11 +49,13 @@ export function ModaveHeader({
   initialLogo,
   initialNavItems,
   initialHubs = [],
+  initialDepartmentCategories,
 }: {
   initialLocale?: AppLocale;
   initialLogo?: string;
   initialNavItems?: HeaderNavLink[];
   initialHubs?: StorefrontCategoryHub[];
+  initialDepartmentCategories?: StorefrontDepartmentCategories;
 }) {
   const pathname = usePathname();
   const [client, setClient] = useState<{
@@ -59,6 +63,9 @@ export function ModaveHeader({
     email?: string;
   } | null>(null);
   const [hubs, setHubs] = useState(initialHubs);
+  const [departmentCategories, setDepartmentCategories] = useState(
+    initialDepartmentCategories ?? groupHubCategoriesByDepartment(initialHubs),
+  );
   const [wishlistCount, setWishlistCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [navItems, setNavItems] = useState<HeaderNavLink[]>(
@@ -121,7 +128,11 @@ export function ModaveHeader({
       setNavItems(initialNavItems);
     }
     setHubs(initialHubs);
-  }, [initialNavItems, initialHubs]);
+    setDepartmentCategories(
+      initialDepartmentCategories ??
+        groupHubCategoriesByDepartment(initialHubs),
+    );
+  }, [initialDepartmentCategories, initialNavItems, initialHubs]);
 
   useEffect(() => {
     const applyClient = () => {
@@ -481,6 +492,40 @@ export function ModaveHeader({
                                 </Link>
                               </li>
                             </ul>
+                            {departmentCategories.men.length ? (
+                              <>
+                                <div className="menu-heading">Men</div>
+                                <ul className="menu-list mb_8">
+                                  {departmentCategories.men.map((item) => (
+                                    <li key={item.href}>
+                                      <a
+                                        href={item.href}
+                                        className="menu-link-text"
+                                      >
+                                        {item.title}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : null}
+                            {departmentCategories.women.length ? (
+                              <>
+                                <div className="menu-heading">Women</div>
+                                <ul className="menu-list mb_8">
+                                  {departmentCategories.women.map((item) => (
+                                    <li key={item.href}>
+                                      <a
+                                        href={item.href}
+                                        className="menu-link-text"
+                                      >
+                                        {item.title}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : null}
                             {hubs.length ? (
                               <>
                                 <div className="menu-heading">
@@ -662,6 +707,20 @@ export function ModaveHeader({
                   Browse categories
                 </summary>
                 <ul className="nav-ul-mb sarjan-mobile-menu__sub">
+                  {departmentCategories.men.map((item) => (
+                    <li className="nav-mb-item" key={`men-${item.href}`}>
+                      <a href={item.href} className="mb-menu-link">
+                        <span>{item.title}</span>
+                      </a>
+                    </li>
+                  ))}
+                  {departmentCategories.women.map((item) => (
+                    <li className="nav-mb-item" key={`women-${item.href}`}>
+                      <a href={item.href} className="mb-menu-link">
+                        <span>{item.title}</span>
+                      </a>
+                    </li>
+                  ))}
                   {hubs.map((hub) => (
                     <li className="nav-mb-item" key={`hub-${hub.slug}`}>
                       <a

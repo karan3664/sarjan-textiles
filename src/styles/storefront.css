@@ -405,11 +405,63 @@ footer .footer-bottom-wrap .sarjan-footer-credit:hover,
 }
 
 .cms-html-content p {
-  margin: 0 0 0.35em;
+  margin: 0 0 0.85em;
 }
 
 .cms-html-content p:last-child {
   margin-bottom: 0;
+}
+
+.cms-html-content ul,
+.cms-html-content ol {
+  margin: 0 0 0.85em;
+  padding-left: 1.35em;
+  list-style-position: outside;
+}
+
+.cms-html-content ul {
+  list-style-type: disc;
+}
+
+.cms-html-content ol {
+  list-style-type: decimal;
+}
+
+.cms-html-content li {
+  margin: 0 0 0.45em;
+  padding-left: 0.2em;
+}
+
+.cms-html-content li:last-child {
+  margin-bottom: 0;
+}
+
+.sarjan-blog-detail-content .cms-html-content {
+  line-height: 1.75;
+}
+
+.sarjan-blog-detail-content .sarjan-blog-text-block + .sarjan-blog-text-block,
+.sarjan-blog-detail-content .sarjan-blog-excerpt + .sarjan-blog-text-block {
+  margin-top: 0.25em;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface ul,
+.sarjan-tiptap-editor .sarjan-tiptap-surface ol {
+  margin: 0 0 1em;
+  padding-left: 1.35em;
+  list-style-position: outside;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface ul {
+  list-style-type: disc;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface ol {
+  list-style-type: decimal;
+}
+
+.sarjan-tiptap-editor .sarjan-tiptap-surface li {
+  margin: 0 0 0.35em;
 }
 
 .sarjan-hero-media {
@@ -3627,7 +3679,37 @@ body.sarjan-storefront button.sarjan-btn:not(:disabled).is-hovered {
 .sarjan-products-page .card-product .card-product-info .price {
   margin-top: 2px;
   flex-wrap: wrap;
-  gap: 4px 8px;
+}
+
+/* List view: color swatches hidden until photo-detected colors are wired here. */
+.sarjan-products-page .card-product.style-list .sarjan-list-card-actions {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.sarjan-products-page
+  .card-product.style-list
+  .sarjan-list-card-actions
+  .list-product-btn {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .sarjan-products-page
+    .card-product.style-list
+    .sarjan-list-card-actions
+    .list-product-btn {
+    gap: 8px;
+  }
+
+  .sarjan-products-page
+    .card-product.style-list
+    .sarjan-list-card-actions
+    .btn-main-product {
+    flex: 1 1 100%;
+    max-width: none;
+  }
 }
 
 .sarjan-products-page .card-product .btn-main-product {
@@ -9711,6 +9793,31 @@ body.sarjan-storefront
 .sarjan-hub-subcard {
   text-decoration: none;
   color: inherit;
+}
+
+.sarjan-collection-card {
+  overflow: hidden;
+}
+
+.sarjan-collection-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 12px 12px 0;
+}
+
+.sarjan-collection-preview-thumb {
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f5f0ea;
+}
+
+.sarjan-collection-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sarjan-breadcrumb a {

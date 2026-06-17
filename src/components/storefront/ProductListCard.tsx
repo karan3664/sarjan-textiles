@@ -80,33 +80,7 @@ export function ProductListCard({ product }: { product: Product }) {
         <p className="description text-secondary text-line-clamp-2">
           {product.description}
         </p>
-        <div className="variant-wrap-list">
-          <ul className="list-color-product">
-            {product.colors.slice(0, 3).map((color, index) => (
-              <li
-                className={`list-color-item color-swatch${index === 0 ? " active line" : ""}`}
-                key={`${color}-${index}`}
-              >
-                <span className="d-none text-capitalize color-filter">
-                  {color}
-                </span>
-                <span
-                  className={
-                    index === 0
-                      ? "swatch-value bg-main"
-                      : index === 1
-                        ? "swatch-value bg-light-blue"
-                        : "swatch-value bg-grey"
-                  }
-                />
-                <StorefrontProductImage
-                  src={product.images[0]}
-                  alt={altText}
-                  variant="swatch"
-                />
-              </li>
-            ))}
-          </ul>
+        <div className="variant-wrap-list sarjan-list-card-actions">
           <div className="list-product-btn">
             {unavailable ? (
               <span

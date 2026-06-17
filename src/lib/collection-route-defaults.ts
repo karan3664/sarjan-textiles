@@ -37,4 +37,51 @@ export const COLLECTION_ROUTES: CollectionRoute[] = [
     filters: { category: "men" },
     keywords: ["block print", "bagru", "textile block print"],
   },
+  {
+    slug: "kaftan-shirts",
+    title: "Kaftan Shirt Collection",
+    description:
+      "Modal Ajrakh kaftan shirts — relaxed free-size silhouettes for women's wholesale.",
+    filters: { category: "women" },
+    keywords: ["kaftan", "modal kaftan", "women's wear"],
+  },
+  {
+    slug: "cotton-kurtas",
+    title: "Cotton Kurta Collection",
+    description:
+      "Everyday cotton kurtas with dependable MOQs for retail repeat orders.",
+    filters: { category: "mens-cotton-kurta" },
+    keywords: ["cotton kurta", "men's cotton kurta", "printed kurta"],
+  },
+  {
+    slug: "printed-shirts",
+    title: "Printed Shirt Collection",
+    description:
+      "Cotton printed shirts for smart-casual and festive men's assortments.",
+    filters: { category: "mens-shirt" },
+    keywords: ["printed shirt", "cotton shirt", "men's shirt"],
+  },
+  {
+    slug: "short-kurtas",
+    title: "Short Kurta Collection",
+    description: "Shorter-length cotton kurtas for contemporary men's edits.",
+    filters: { category: "mens-short-kurta" },
+    keywords: ["short kurta", "men's short kurta"],
+  },
+  {
+    slug: "mirror-work-kurtas",
+    title: "Mirror Work Kurta Collection",
+    description:
+      "Embellished mashru kurtas with mirror-work detail for occasion-led buying.",
+    filters: { category: "mens-mirror-work-kurta" },
+    keywords: ["mirror work", "embellished kurta"],
+  },
+  {
+    slug: "womens-clutch",
+    title: "Women's Clutch Collection",
+    description:
+      "Embroidered clutch bags — assorted designs for boutique add-on sales.",
+    filters: { category: "womens-clutch" },
+    keywords: ["clutch", "women's clutch", "embroidered bag"],
+  },
 ];

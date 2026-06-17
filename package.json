@@ -24,6 +24,8 @@
     "cms:pull-db": "node scripts/sync-cms.mjs pull-db",
     "cms:push-product-images": "node scripts/sync-cms.mjs push-product-images",
     "cms:push-product-colors": "node scripts/sync-cms.mjs push-product-colors",
+    "cms:push-categories": "node scripts/sync-cms.mjs push-categories",
+    "cms:sync-categories": "tsx --env-file=.env.local scripts/sync-categories-from-products.ts",
     "cms:sync-colors": "node scripts/sync-product-colors-to-image-order.mjs",
     "cms:sync-kaftan-colors": "node scripts/sync-kaftan-visual-colors.mjs",
     "cms:sync-single-color": "node scripts/sync-single-image-product-colors.mjs",

@@ -1,5 +1,6 @@
 import { createFeedback } from "@/lib/local-db";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
+import { sendInquiryAdminNotification } from "@/lib/newsletter-admin-notify";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import {
   sanitizeUserText,
@@ -53,7 +54,14 @@ export async function POST(request: Request) {
       orderId: sanitizeUserText(String(raw.orderId ?? "")),
       message: messageCheck.value,
     });
-    await addLaunchNewsletterSubscriber(email, "inquiry");
+    try {
+      await sendInquiryAdminNotification(feedback);
+    } catch {
+      // Inquiry saved — admin mail is best-effort (SMTP may be unset in dev).
+    }
+    await addLaunchNewsletterSubscriber(email, "inquiry", {
+      adminAlert: false,
+    });
     return Response.json({ feedback });
   } catch (error) {
     return Response.json(

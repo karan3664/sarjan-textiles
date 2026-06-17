@@ -357,7 +357,7 @@ export function flattenProductForAdmin(
 }
 
 export function flattenProductsForAdmin(
-  products: Array<Product | ProductRecord>,
+  products?: Array<Product | ProductRecord> | null,
 ): Product[] {
-  return products.map((product) => flattenProductForAdmin(product));
+  return (products ?? []).map((product) => flattenProductForAdmin(product));
 }

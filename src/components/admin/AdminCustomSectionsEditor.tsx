@@ -407,10 +407,12 @@ export function AdminCustomSectionsEditor({
                 </Field>
               </div>
               <Field label="Section subtitle">
-                <textarea
+                <AdminHtmlEditor
+                  compact
+                  rows={3}
                   value={section.subtitle ?? ""}
-                  onChange={(event) =>
-                    updateSection(index, { subtitle: event.target.value })
+                  onChange={(value) =>
+                    updateSection(index, { subtitle: value })
                   }
                   placeholder="Optional subtitle shown under section name"
                 />
@@ -683,14 +685,16 @@ export function AdminCustomSectionsEditor({
                                   </Field>
                                 </div>
                                 <Field label="Description">
-                                  <textarea
+                                  <AdminHtmlEditor
+                                    compact
+                                    rows={4}
                                     value={item.body ?? ""}
-                                    onChange={(event) =>
+                                    onChange={(value) =>
                                       updateCardItem(
                                         index,
                                         blockIndex,
                                         itemIndex,
-                                        { body: event.target.value },
+                                        { body: value },
                                       )
                                     }
                                   />

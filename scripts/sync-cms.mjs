@@ -69,6 +69,10 @@ function usage() {
       Merge only product image fields from local → live (safe for photos)
   node scripts/sync-cms.mjs push-product-colors [--dry-run]
       Merge product colors + variants from local → live (image-order aligned)
+  node scripts/sync-cms.mjs push-new-products [--dry-run] [--sku-prefix STSKPRCT]
+      Add local products whose SKU is not already on live (full product row)
+  node scripts/sync-cms.mjs push-categories [--dry-run]
+      Merge categoryMaster + categoryHubPages from local → live
   node scripts/sync-cms.mjs list-backups
       List backups stored on live (Admin → DB Backup)
   node scripts/sync-cms.mjs restore-backup <id> [--dry-run]
@@ -350,6 +354,99 @@ async function pushProductColors() {
   console.log(`Live product colors updated for ${updated} products.`);
 }
 
+/** Merge category master + hub pages from local JSON into live CMS. */
+async function pushCategories() {
+  const local = await readLocalCms();
+  const masterCount = local.categoryMaster?.length ?? 0;
+  const hubCount = local.categoryHubPages?.length ?? 0;
+
+  if (dryRun) {
+    console.log(
+      `[dry-run] Would push categoryMaster (${masterCount}) and categoryHubPages (${hubCount}) to live`,
+    );
+    return;
+  }
+
+  const token = await adminLogin();
+  console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  await saveLiveCms(token, {
+    categoryMaster: local.categoryMaster ?? [],
+    categoryHubPages: local.categoryHubPages ?? [],
+  });
+  console.log(
+    `Live categories updated (master=${masterCount}, hubs=${hubCount}).`,
+  );
+}
+
+/** Append local products missing from live (matched by SKU). */
+async function pushNewProducts() {
+  const skuPrefix = argValue("--sku-prefix");
+  const local = await readLocalCms();
+  const candidates = (local.products ?? []).filter((product) => {
+    const sku = String(product?.sku ?? "").trim();
+    if (!sku) return false;
+    if (skuPrefix && !sku.toUpperCase().startsWith(skuPrefix.toUpperCase())) {
+      return false;
+    }
+    return true;
+  });
+
+  if (dryRun) {
+    console.log(
+      `[dry-run] Would check ${candidates.length} local product(s) for live upsert`,
+    );
+    return;
+  }
+
+  const token = await adminLogin();
+  console.log(`Logged in to ${LIVE_URL} as ${ADMIN_EMAIL}`);
+  const live = await fetchLiveCms(token);
+  const liveSkus = new Set(
+    (live.products ?? [])
+      .map((product) =>
+        String(product?.sku ?? "")
+          .trim()
+          .toUpperCase(),
+      )
+      .filter(Boolean),
+  );
+
+  const toAdd = candidates.filter(
+    (product) =>
+      !liveSkus.has(
+        String(product.sku ?? "")
+          .trim()
+          .toUpperCase(),
+      ),
+  );
+  if (!toAdd.length) {
+    console.log(
+      "No new products to add — all local SKUs already exist on live.",
+    );
+    return;
+  }
+
+  console.log(`Adding ${toAdd.length} new product(s) to live…`);
+  await saveLiveProductsBulk(token, toAdd);
+  for (const product of toAdd) {
+    console.log(`  + ${product.sku} — ${readEnglish(product.name)}`);
+  }
+  console.log("\nImage files are separate — run: npm run cms:sync-uploads");
+}
+
+function readEnglish(value) {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value === "object" && typeof value.en === "string") {
+    return value.en.trim();
+  }
+  return String(value ?? "").trim();
+}
+
+function argValue(flag) {
+  const index = process.argv.indexOf(flag);
+  return index >= 0 ? process.argv[index + 1] : undefined;
+}
+
 async function createLiveBackup(token, name) {
   const res = await fetch(`${LIVE_URL}/api/admin/backups`, {
     method: "POST",
@@ -551,6 +648,8 @@ async function main() {
   else if (cmd === "pull-db") await pullDb();
   else if (cmd === "push-product-images") await pushProductImages();
   else if (cmd === "push-product-colors") await pushProductColors();
+  else if (cmd === "push-categories") await pushCategories();
+  else if (cmd === "push-new-products") await pushNewProducts();
   else if (cmd === "list-backups") await listBackups();
   else if (cmd === "restore-backup") await restoreBackup(process.argv[3]);
   else {

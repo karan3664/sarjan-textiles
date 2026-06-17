@@ -93,8 +93,6 @@ export function AdminHtmlEditor({
     extensions: [
       StarterKit.configure({
         heading: false,
-        bulletList: false,
-        orderedList: false,
         blockquote: false,
         codeBlock: false,
         horizontalRule: false,
@@ -244,6 +242,22 @@ export function AdminHtmlEditor({
                 title="Underline"
               >
                 <u>U</u>
+              </button>
+              <button
+                type="button"
+                className={editor?.isActive("bulletList") ? "active" : ""}
+                onClick={() => runCommand((chain) => chain.toggleBulletList())}
+                title="Bullet list"
+              >
+                •
+              </button>
+              <button
+                type="button"
+                className={editor?.isActive("orderedList") ? "active" : ""}
+                onClick={() => runCommand((chain) => chain.toggleOrderedList())}
+                title="Numbered list"
+              >
+                1.
               </button>
             </div>
           </div>
@@ -425,9 +439,9 @@ export function AdminHtmlEditor({
 
       {!compact ? (
         <p className="sarjan-html-editor-hint">
-          Text select karke ya bina select kiye — size, font, color lagao.
-          Editor mein text black dikhega; right side par site par dikhne wala
-          color.
+          Text select karke ya bina select kiye — bold, italic, underline,
+          bullet list, numbered list, size, font, color lagao. Editor mein text
+          black dikhega; right side par site par dikhne wala color.
         </p>
       ) : null}
     </div>

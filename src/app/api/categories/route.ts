@@ -4,6 +4,7 @@ import { resolveProduct, resolveProducts } from "@/lib/product-localize";
 import { resolveCategoryHub } from "@/lib/pages-localize";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
 import { slugifyCmsSegment } from "@/lib/slug";
+import { groupHubCategoriesByDepartment } from "@/lib/storefront-category-nav";
 
 export async function GET(request: Request) {
   const locale = localeFromRequest(request);
@@ -49,9 +50,15 @@ export async function GET(request: Request) {
       };
     });
 
-  return jsonLocalized({ categories, hubs, locale }, locale, {
-    headers: {
-      "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+  const departmentCategories = groupHubCategoriesByDepartment(hubs);
+
+  return jsonLocalized(
+    { categories, hubs, departmentCategories, locale },
+    locale,
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+      },
     },
-  });
+  );
 }

@@ -1,6 +1,8 @@
 import { getCmsBlogBySlug } from "@/lib/cms-store";
 import { resolveBlog } from "@/lib/content-localize";
+import { buildMobileCustomSections } from "@/lib/mobile-custom-page";
 import { jsonLocalized, localeFromRequest } from "@/lib/request-locale";
+import type { CmsCustomSection } from "@/types/cms-custom";
 
 export const revalidate = 300;
 
@@ -17,6 +19,8 @@ export async function GET(
   }
 
   const localized = resolveBlog(blog, locale);
+  const rawSections =
+    (blog as { sections?: CmsCustomSection[] }).sections ?? [];
   const image =
     (localized as { image?: string; coverImage?: string }).image ??
     (localized as { coverImage?: string }).coverImage;
@@ -37,6 +41,7 @@ export async function GET(
         date,
         publishedAt: date,
         author: (localized as { author?: string }).author ?? "Sarjan Textiles",
+        sections: buildMobileCustomSections(rawSections),
       },
       locale,
     },

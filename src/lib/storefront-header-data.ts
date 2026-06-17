@@ -6,6 +6,17 @@ import { resolveProduct, resolveProducts } from "@/lib/product-localize";
 import type { AppLocale } from "@/lib/localized-text";
 import { slugifyCmsSegment } from "@/lib/slug";
 import { translateStorefrontNav } from "@/lib/storefront-ui";
+import {
+  groupHubCategoriesByDepartment,
+  type StorefrontCategoryHub,
+} from "@/lib/storefront-category-nav";
+
+export type {
+  StorefrontCategoryHub,
+  StorefrontCategoryNavLink,
+  StorefrontDepartmentCategories,
+} from "@/lib/storefront-category-nav";
+export { groupHubCategoriesByDepartment } from "@/lib/storefront-category-nav";
 
 export type StorefrontHeaderNavLink = {
   label: string;
@@ -17,12 +28,6 @@ export type StorefrontCatalogCategory = {
   name: string;
   slug: string;
   productCount: number;
-};
-
-export type StorefrontCategoryHub = {
-  title: string;
-  slug: string;
-  subcategories?: Array<{ title: string; href: string }>;
 };
 
 /** SSR header chrome — same data as /api/navigation + /api/categories without client fetch flash. */
@@ -70,5 +75,7 @@ export async function getStorefrontHeaderData(locale: AppLocale) {
       };
     });
 
-  return { locale, items, categories, hubs };
+  const departmentCategories = groupHubCategoriesByDepartment(hubs);
+
+  return { locale, items, categories, hubs, departmentCategories };
 }

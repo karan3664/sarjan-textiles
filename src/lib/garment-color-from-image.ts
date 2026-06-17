@@ -1,4 +1,6 @@
 import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { isProductPlaceholderImage } from "./product-placeholder-image.ts";
 
 export const GARMENT_COLOR_LABELS = [
   "Black",
@@ -7,8 +9,10 @@ export const GARMENT_COLOR_LABELS = [
   "Cream",
   "Green",
   "Indigo",
+  "Magenta",
   "Maroon",
   "Olive",
+  "Purple",
   "Red",
   "Teal",
   "Yellow",
@@ -26,8 +30,10 @@ const COLOR_SAMPLES: Array<{
   { label: "Cream", rgb: [232, 220, 196] },
   { label: "Green", rgb: [42, 98, 58] },
   { label: "Indigo", rgb: [36, 52, 96] },
+  { label: "Magenta", rgb: [148, 42, 108] },
   { label: "Maroon", rgb: [108, 28, 42] },
   { label: "Olive", rgb: [98, 102, 52] },
+  { label: "Purple", rgb: [88, 38, 92] },
   { label: "Red", rgb: [168, 36, 48] },
   { label: "Teal", rgb: [32, 118, 118] },
   { label: "Yellow", rgb: [212, 176, 52] },
@@ -43,6 +49,10 @@ function colorDistance(
 function normalizeCatalogColor(color: string): string {
   const token = color.trim().toLowerCase();
   if (token === "navy" || token === "navyblue") return "indigo";
+  if (token === "mustard") return "yellow";
+  if (token === "violet" || token === "plum" || token === "lavender") {
+    return "purple";
+  }
   if (token === "white" || token === "offwhite" || token === "ivory") {
     return "cream";
   }
@@ -53,32 +63,80 @@ function brightness(rgb: [number, number, number]): number {
   return (rgb[0] + rgb[1] + rgb[2]) / 3;
 }
 
+function pixelSaturation(r: number, g: number, b: number): number {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  return max === 0 ? 0 : (max - min) / max;
+}
+
+function isBackgroundPixel(r: number, g: number, b: number): boolean {
+  const bright = (r + g + b) / 3;
+  const sat = pixelSaturation(r, g, b);
+  return bright > 238 || bright < 16 || sat < 0.14;
+}
+
 function classifyGarmentRgb(rgb: [number, number, number]): GarmentColorLabel {
   const [r, g, b] = rgb;
   const bright = brightness(rgb);
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const spread = max - min;
+  const sat = pixelSaturation(r, g, b);
 
-  if (bright < 72 && spread < 28) return "Black";
-  if (bright < 102 && spread < 22) return "Black";
-  if (r > 130 && g > 120 && b < 95 && r - b > 70 && g - b > 35) return "Yellow";
-  if (r > 95 && g > 70 && b < 95 && r > g && r - b > 25 && g - b > 5) {
-    return r > 150 ? "Red" : "Maroon";
+  // Charcoal / grey garment — before warm misreads.
+  if (spread < 28 && bright >= 55 && bright <= 145 && sat < 0.22) {
+    return bright < 95 ? "Black" : "Cream";
   }
-  if (g > r + 12 && g > b + 8 && g > 70) {
-    if (b > r + 6 && bright < 145) return "Teal";
-    if (bright < 125 && r > 70) return "Olive";
+
+  // Mustard / gold / yellow — before maroon (kaftans, yellow Ajrakh shirts).
+  if (r >= 105 && g >= 70 && b <= 100 && r > b + 30 && g > b + 15) {
+    return "Yellow";
+  }
+
+  // Plum / purple / violet — before black on dark Mashru prints.
+  if (
+    r >= 28 &&
+    b >= 28 &&
+    g <= Math.min(r, b) * 0.78 &&
+    sat >= 0.16 &&
+    r > g + 12 &&
+    b > g + 8
+  ) {
+    if (r >= 118 && r > b + 18 && g < 72) return "Magenta";
+    return "Purple";
+  }
+
+  // Dark navy indigo base — before black on Ajrakh navy prints.
+  if (bright < 98 && b >= r && b >= g - 12 && b - r >= 2) {
+    return "Indigo";
+  }
+
+  if (bright < 72 && spread < 28 && sat < 0.2) return "Black";
+  if (bright < 102 && spread < 22 && sat < 0.16) return "Black";
+
+  // True maroon / red — needs strong red dominance (not gold).
+  if (r > g && r > b && r >= 95 && sat >= 0.2 && r - g >= 30 && b < 95) {
+    if (r >= 150 && g < 85) return "Red";
+    return "Maroon";
+  }
+
+  if (r > 130 && g > 120 && b < 95 && r - b > 70 && g - b > 35) return "Yellow";
+  if (b > r + 10 && b > g + 4 && b > 55 && sat >= 0.12) {
+    return bright > 118 || b > 90 ? "Blue" : "Indigo";
+  }
+  if (g > r + 18 && g > b + 12 && g > 80 && sat >= 0.2) {
+    if (b > r + 10 && bright < 145) return "Teal";
     return "Green";
   }
-  if (g > 70 && b > 70 && Math.abs(g - b) < 28 && r < g - 8) return "Teal";
-  if (r > 85 && g > 55 && b < 72 && r > g && bright < 150) return "Brown";
-  if (b > r + 14 && b > g + 6 && b > 72) {
-    return bright > 118 ? "Blue" : "Indigo";
+  if (g > r + 10 && g > b + 6 && bright >= 70 && bright < 118 && sat >= 0.15) {
+    return "Olive";
   }
-  if (b > r + 8 && b > g && b > 55) return "Indigo";
-  if (bright > 105 && spread < 55 && r > 115 && g > 105 && b > 85)
+  if (r > 85 && g > 55 && b < 80 && r > g && bright < 150 && sat >= 0.15) {
+    return "Brown";
+  }
+  if (bright > 105 && spread < 55 && r > 115 && g > 105 && b > 85) {
     return "Cream";
+  }
 
   return nearestSample(rgb).label;
 }
@@ -156,26 +214,20 @@ export function resolveLocalImagePath(
 
 type SharpModule = typeof import("sharp");
 
-export async function averageGarmentRgb(
-  filePath: string,
-  sharp: SharpModule,
-): Promise<[number, number, number]> {
-  const { data, info } = await sharp(filePath)
-    .resize(120, 150, { fit: "cover" })
-    .removeAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
+function dominantRgbFromPixelData(
+  data: Buffer,
+  info: { width: number; height: number; channels: number },
+): [number, number, number] {
   const { width, height, channels } = info;
-  const left = Math.floor(width * 0.2);
-  const right = Math.ceil(width * 0.8);
-  const top = Math.floor(height * 0.18);
-  const bottom = Math.ceil(height * 0.82);
+  const left = Math.floor(width * 0.15);
+  const right = Math.ceil(width * 0.85);
+  const top = Math.floor(height * 0.15);
+  const bottom = Math.ceil(height * 0.85);
 
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  let count = 0;
+  const buckets = new Map<
+    string,
+    { r: number; g: number; b: number; count: number }
+  >();
 
   for (let y = top; y < bottom; y += 1) {
     for (let x = left; x < right; x += 1) {
@@ -183,20 +235,105 @@ export async function averageGarmentRgb(
       const pr = data[offset] ?? 0;
       const pg = data[offset + 1] ?? 0;
       const pb = data[offset + 2] ?? 0;
-      const brightness = (pr + pg + pb) / 3;
-      if (brightness > 248 || brightness < 8) continue;
-      r += pr;
-      g += pg;
-      b += pb;
-      count += 1;
+      if (isBackgroundPixel(pr, pg, pb)) continue;
+
+      const qr = Math.min(240, Math.round(pr / 24) * 24);
+      const qg = Math.min(240, Math.round(pg / 24) * 24);
+      const qb = Math.min(240, Math.round(pb / 24) * 24);
+      const key = `${qr},${qg},${qb}`;
+      const bucket = buckets.get(key) ?? { r: 0, g: 0, b: 0, count: 0 };
+      bucket.r += pr;
+      bucket.g += pg;
+      bucket.b += pb;
+      bucket.count += 1;
+      buckets.set(key, bucket);
     }
   }
 
-  if (!count) {
+  if (!buckets.size) {
     return [120, 120, 120];
   }
 
-  return [Math.round(r / count), Math.round(g / count), Math.round(b / count)];
+  const ranked = [...buckets.values()]
+    .map((bucket) => {
+      const r = Math.round(bucket.r / bucket.count);
+      const g = Math.round(bucket.g / bucket.count);
+      const b = Math.round(bucket.b / bucket.count);
+      const sat = pixelSaturation(r, g, b);
+      return {
+        r,
+        g,
+        b,
+        score: bucket.count * (0.35 + sat),
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const best = ranked[0];
+  return [best.r, best.g, best.b];
+}
+
+async function rgbFromImageBuffer(
+  buffer: Buffer,
+  sharp: SharpModule,
+): Promise<[number, number, number]> {
+  const { data, info } = await sharp(buffer)
+    .resize(160, 200, { fit: "cover" })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return dominantRgbFromPixelData(data, info);
+}
+
+export async function averageGarmentRgb(
+  filePath: string,
+  sharp: SharpModule,
+): Promise<[number, number, number]> {
+  return rgbFromImageBuffer(await readFile(filePath), sharp);
+}
+
+function siteOrigin(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    process.env.SITE_URL?.replace(/\/$/, "") ||
+    "https://sarjantextiles.com"
+  );
+}
+
+/** Local upload file, or fetch from live site when building on CI/VPS without uploads volume. */
+export async function garmentRgbForImageUrl(
+  imageUrl: string,
+  options?: { publicDir?: string; sharp?: SharpModule },
+): Promise<[number, number, number] | null> {
+  const normalized = imageUrl.trim();
+  if (!normalized || isProductPlaceholderImage(normalized)) return null;
+
+  const publicDir = options?.publicDir ?? path.join(process.cwd(), "public");
+  const sharpLib = options?.sharp ?? (await import("sharp")).default;
+  const localPath = resolveLocalImagePath(normalized, publicDir);
+
+  if (localPath) {
+    try {
+      return await averageGarmentRgb(localPath, sharpLib);
+    } catch {
+      /* try remote */
+    }
+  }
+
+  if (!normalized.startsWith("/uploads/")) return null;
+
+  try {
+    const res = await fetch(`${siteOrigin()}${normalized}`, {
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) return null;
+    return await rgbFromImageBuffer(
+      Buffer.from(await res.arrayBuffer()),
+      sharpLib,
+    );
+  } catch {
+    return null;
+  }
 }
 
 export async function inferGarmentColorFromImageFile(
@@ -340,6 +477,8 @@ const TEXTILE_COLOR_POOL = [
   "Red",
   "Green",
   "Olive",
+  "Purple",
+  "Magenta",
 ];
 
 export function isGenericMultiPhotoProduct(product: {
@@ -366,27 +505,17 @@ export async function inferGarmentColorLabelsFromImages(
   product: { images?: string[] },
   options?: { publicDir?: string; sharp?: SharpModule },
 ): Promise<string[] | null> {
-  const images = (product.images ?? []).filter(Boolean);
+  const images = (product.images ?? []).filter(
+    (url) => url?.trim() && !isProductPlaceholderImage(url),
+  );
   if (!images.length) return null;
-
-  const publicDir = options?.publicDir ?? path.join(process.cwd(), "public");
-  const sharpLib = options?.sharp ?? (await import("sharp")).default;
 
   const rgbs: Array<[number, number, number]> = [];
   for (const imageUrl of images) {
-    const filePath = resolveLocalImagePath(imageUrl, publicDir);
-    if (!filePath) return null;
-    try {
-      rgbs.push(await averageGarmentRgb(filePath, sharpLib));
-    } catch {
-      return null;
-    }
+    const rgb = await garmentRgbForImageUrl(imageUrl, options);
+    if (!rgb) return null;
+    rgbs.push(rgb);
   }
 
-  const direct = rgbs.map((rgb) => nearestGarmentColorLabel(rgb));
-  if (new Set(direct).size === direct.length) {
-    return direct;
-  }
-
-  return assignDistinctColorsFromPool(rgbs, TEXTILE_COLOR_POOL) ?? direct;
+  return rgbs.map((rgb) => nearestGarmentColorLabel(rgb));
 }

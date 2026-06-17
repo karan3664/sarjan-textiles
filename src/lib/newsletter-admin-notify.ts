@@ -2,6 +2,9 @@ import { siteSettings as defaultSiteSettings } from "@/data/mock";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
 import {
   buildSarjanEmailHtml,
+  type InquiryAdminNotificationFields,
+  inquiryAdminNotificationInnerHtml,
+  inquiryAdminNotificationPlainText,
   newsletterAdminNotificationInnerHtml,
 } from "@/lib/email-template";
 import { sendDomainMail } from "@/lib/mailer";
@@ -26,6 +29,30 @@ function signupSubject(email: string, source: string) {
     return `Registration + launch list: ${email}`;
   }
   return `Newsletter signup: ${email}`;
+}
+
+/** Alert info@sarjantextiles.com (or CMS inbox) when someone submits the contact form. */
+export async function sendInquiryAdminNotification(
+  inquiry: InquiryAdminNotificationFields,
+) {
+  const cms = await getCachedCmsSnapshot();
+  const settings = { ...defaultSiteSettings, ...cms.siteSettings };
+  const notifyTo = adminInboxEmail(settings);
+  const email = inquiry.email.trim().toLowerCase();
+  const company = inquiry.companyName.trim() || "Wholesale inquiry";
+
+  await sendDomainMail({
+    to: notifyTo,
+    subject: `New inquiry: ${company} — ${email}`,
+    text: inquiryAdminNotificationPlainText(inquiry),
+    replyTo: email,
+    html: buildSarjanEmailHtml({
+      preheader: `${company} — ${email}`,
+      eyebrow: "Contact form",
+      heading: "New wholesale inquiry",
+      innerHtml: inquiryAdminNotificationInnerHtml(inquiry),
+    }),
+  });
 }
 
 /** Alert info@sarjantextiles.com (or CMS inbox) when someone joins the list. */
