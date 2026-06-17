@@ -39,6 +39,11 @@ export function resolveHubSubcategoryImage(
   sub: { title: string; href: string; image?: string },
   productImageByCategory: Map<string, string>,
 ): string | undefined {
+  const trimmed = sub.image?.trim();
+  if (trimmed && !isGenericHubSubcategoryImage(trimmed)) {
+    return trimmed;
+  }
+
   const hrefSlug = categoryFromCatalogHref(sub.href);
   if (hrefSlug) {
     for (const [name, img] of productImageByCategory) {
@@ -48,11 +53,6 @@ export function resolveHubSubcategoryImage(
 
   for (const [name, img] of productImageByCategory) {
     if (categoryFilterSlug(name) === categoryFilterSlug(sub.title)) return img;
-  }
-
-  const trimmed = sub.image?.trim();
-  if (trimmed && !isGenericHubSubcategoryImage(trimmed)) {
-    return trimmed;
   }
 
   return undefined;
