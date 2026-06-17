@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sarjan Textiles — Tax Invoice Sample | ST/INV/FY26-27/00482</title>
+    <style>
+      :root {
+        --brand: #7a1e2c;
+        --brand-dark: #5c1520;
+        --brand-soft: #f8ecee;
+        --ink: #1a1a1a;
+        --muted: #5c5c5c;
+        --line: #d9d0d2;
+        --paper: #ffffff;
+        --warn-bg: #fff8e6;
+        --warn-border: #e8c547;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family:
+          "Segoe UI",
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        font-size: 11px;
+        line-height: 1.4;
+        color: var(--ink);
+        background: #ececec;
+      }
+
+      .toolbar {
+        max-width: 210mm;
+        margin: 0 auto 12px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .toolbar button {
+        background: var(--brand);
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .toolbar button:hover {
+        background: var(--brand-dark);
+      }
+
+      .toolbar p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .invoice {
+        width: 100%;
+        max-width: 210mm;
+        margin: 0 auto;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .sample-banner {
+        background: var(--warn-bg);
+        border-bottom: 2px solid var(--warn-border);
+        padding: 8px 12px;
+        font-size: 9px;
+        color: #6b5600;
+        text-align: center;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 14px 12px;
+        border-bottom: 3px solid var(--brand);
+      }
+
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .brand img.logo {
+        width: 64px;
+        height: auto;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      .brand h1 {
+        margin: 0 0 4px;
+        font-size: 17px;
+        letter-spacing: 0.02em;
+        color: var(--brand);
+      }
+
+      .brand .legal {
+        font-weight: 700;
+        color: var(--ink);
+        font-size: 10px;
+      }
+
+      .brand p {
+        margin: 1px 0;
+        color: var(--muted);
+        font-size: 9px;
+        line-height: 1.35;
+      }
+
+      .brand a {
+        color: var(--brand);
+        text-decoration: none;
+        word-break: break-all;
+      }
+
+      .doc-title {
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .doc-title h2 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.04em;
+        color: var(--brand-dark);
+        white-space: nowrap;
+      }
+
+      .doc-title .copy {
+        margin-top: 4px;
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .meta-grid div {
+        padding: 8px 10px;
+        border-right: 1px solid var(--line);
+        min-width: 0;
+      }
+
+      .meta-grid div:last-child {
+        border-right: 0;
+      }
+
+      .meta-grid label {
+        display: block;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-weight: 700;
+      }
+
+      .meta-grid strong {
+        font-size: 10px;
+        word-break: break-word;
+      }
+
+      .parties {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .party {
+        padding: 10px 12px;
+        min-width: 0;
+      }
+
+      .party + .party {
+        border-left: 1px solid var(--line);
+      }
+
+      .party h3 {
+        margin: 0 0 10px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--brand);
+      }
+
+      .party p {
+        margin: 2px 0;
+        font-size: 9px;
+        word-break: break-word;
+      }
+
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8.5px;
+        table-layout: fixed;
+      }
+
+      table.items thead th {
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+        text-align: left;
+        padding: 5px 3px;
+        font-size: 7.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        vertical-align: bottom;
+        line-height: 1.2;
+        word-wrap: break-word;
+      }
+
+      table.items col.col-no {
+        width: 3%;
+      }
+      table.items col.col-product {
+        width: 24%;
+      }
+      table.items col.col-hsn {
+        width: 8%;
+      }
+      table.items col.col-color {
+        width: 7%;
+      }
+      table.items col.col-size {
+        width: 5%;
+      }
+      table.items col.col-sets {
+        width: 5%;
+      }
+      table.items col.col-pcs {
+        width: 5%;
+      }
+      table.items col.col-qty {
+        width: 5%;
+      }
+      table.items col.col-rate {
+        width: 8%;
+      }
+      table.items col.col-taxable {
+        width: 9%;
+      }
+      table.items col.col-gst {
+        width: 5%;
+      }
+      table.items col.col-tax {
+        width: 8%;
+      }
+      table.items col.col-total {
+        width: 8%;
+      }
+
+      table.items thead th:last-child {
+        border-right: 0;
+      }
+
+      table.items tbody td {
+        padding: 5px 3px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      table.items tbody tr:nth-child(even) {
+        background: #fafafa;
+      }
+
+      .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      .product-cell {
+        display: flex;
+        gap: 5px;
+        align-items: flex-start;
+      }
+
+      .product-cell img {
+        width: 30px;
+        height: 30px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid var(--line);
+        background: #fff;
+        flex-shrink: 0;
+      }
+
+      .product-cell .name {
+        font-weight: 600;
+        margin-bottom: 1px;
+        font-size: 8px;
+        line-height: 1.25;
+      }
+
+      .product-cell .sku {
+        color: var(--muted);
+        font-size: 7px;
+        line-height: 1.2;
+      }
+
+      .totals-wrap {
+        display: grid;
+        grid-template-columns: 1fr 240px;
+        gap: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .qty-summary {
+        padding: 10px 12px;
+        border-right: 1px solid var(--line);
+      }
+
+      .qty-summary h4 {
+        margin: 0 0 8px;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--brand);
+      }
+
+      .qty-summary p {
+        margin: 3px 0;
+        font-size: 9px;
+      }
+
+      .totals {
+        padding: 10px 12px;
+        background: #fcfcfc;
+      }
+
+      .totals table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+      }
+
+      .totals td {
+        padding: 5px 0;
+      }
+
+      .totals td:last-child {
+        text-align: right;
+        font-weight: 600;
+      }
+
+      .totals .grand td {
+        border-top: 2px solid var(--brand);
+        padding-top: 8px;
+        font-size: 12px;
+        color: var(--brand-dark);
+        font-weight: 800;
+      }
+
+      .words {
+        padding: 8px 12px;
+        border-top: 1px solid var(--line);
+        background: var(--brand-soft);
+        font-size: 9px;
+      }
+
+      .words strong {
+        color: var(--brand-dark);
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .footer-block {
+        padding: 10px 12px;
+      }
+
+      .footer-block + .footer-block {
+        border-left: 1px solid var(--line);
+      }
+
+      .footer-block h4 {
+        margin: 0 0 8px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--brand);
+      }
+
+      .footer-block ul {
+        margin: 0;
+        padding-left: 16px;
+      }
+
+      .footer-block li {
+        margin-bottom: 3px;
+        color: var(--muted);
+        font-size: 8.5px;
+        line-height: 1.35;
+      }
+
+      .bank p {
+        margin: 4px 0;
+      }
+
+      .signatures {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1px solid var(--line);
+      }
+
+      .sign {
+        padding: 12px;
+        min-height: 72px;
+      }
+
+      .sign + .sign {
+        border-left: 1px solid var(--line);
+      }
+
+      .sign .line {
+        margin-top: 36px;
+        border-top: 1px solid var(--ink);
+        padding-top: 6px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .footnote {
+        padding: 10px 20px 18px;
+        font-size: 9px;
+        color: var(--muted);
+        text-align: center;
+        border-top: 1px dashed var(--line);
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
+      }
+
+      @media print {
+        body {
+          padding: 0;
+          background: #fff;
+          font-size: 9px;
+        }
+
+        .toolbar {
+          display: none;
+        }
+
+        .invoice {
+          max-width: none;
+          width: 100%;
+          border: 0;
+          box-shadow: none;
+        }
+
+        .table-wrap {
+          overflow: visible;
+        }
+
+        table.items {
+          font-size: 7.5px;
+        }
+
+        table.items thead th {
+          font-size: 7px;
+          padding: 4px 2px;
+        }
+
+        table.items tbody td {
+          padding: 4px 2px;
+        }
+
+        table.items {
+          page-break-inside: auto;
+        }
+
+        tr {
+          page-break-inside: avoid;
+        }
+
+        .footer-grid,
+        .signatures {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <p>
+        Open in Chrome → <strong>Print</strong> →
+        <strong>Save as PDF</strong> to share with owner.
+      </p>
+      <button type="button" onclick="window.print()">Save / Print PDF</button>
+    </div>
+
+    <article class="invoice">
+      <div class="sample-banner">
+        SAMPLE FOR LAYOUT APPROVAL ONLY — The original tax invoice will be
+        issued by Sarjan Textiles with each confirmed wholesale order. Figures
+        shown are illustrative.
+      </div>
+
+      <header class="header">
+        <div class="brand">
+          <img
+            class="logo"
+            src="https://sarjantextiles.com/sarjan-assets/sarjan-logo-full.png"
+            alt="Sarjan Textiles"
+            onerror="
+              this.src =
+                'https://sarjantextiles.com/sarjan-assets/sarjan-logo.svg'
+            "
+          />
+          <div>
+            <h1>SARJAN TEXTILES</h1>
+            <p class="legal">Sarjan Textiles</p>
+            <p>
+              Ground Floor, Jyoti Chambers – Rajniketan,<br />
+              New Station Rd, Dharanagar Kodki, Old Dhatia Falia,<br />
+              Bhuj, Kachchh, Gujarat – 370001, India
+            </p>
+            <p>
+              <strong>GSTIN:</strong> 24JXPPK2159M2ZQ &nbsp;|&nbsp;
+              <strong>State:</strong> Gujarat (24)
+            </p>
+            <p>
+              <strong>Phone:</strong> +91 7567428100 &nbsp;|&nbsp;
+              <strong>Email:</strong>
+              <a href="mailto:info@sarjantextiles.com"
+                >info@sarjantextiles.com</a
+              >
+            </p>
+            <p>
+              <strong>Web:</strong>
+              <a href="https://sarjantextiles.com">sarjantextiles.com</a>
+            </p>
+          </div>
+        </div>
+        <div class="doc-title">
+          <h2>TAX INVOICE</h2>
+          <span class="copy">Original for Recipient</span>
+        </div>
+      </header>
+
+      <section class="meta-grid">
+        <div>
+          <label>Invoice Number</label>
+          <strong>ST/INV/FY26-27/00482</strong>
+        </div>
+        <div>
+          <label>Invoice Date</label>
+          <strong>03 Jun 2026</strong>
+        </div>
+        <div>
+          <label>Order Reference</label>
+          <strong>ORD-2026-001847</strong>
+        </div>
+        <div>
+          <label>Place of Supply</label>
+          <strong>Gujarat (24)</strong>
+        </div>
+        <div>
+          <label>Payment Terms</label>
+          <strong>Credit — 90 Days</strong>
+        </div>
+        <div>
+          <label>Due Date</label>
+          <strong>01 Sep 2026</strong>
+        </div>
+        <div>
+          <label>Transport / LR No.</label>
+          <strong>VRL Logistics · VRL7849201</strong>
+        </div>
+        <div>
+          <label>Reverse Charge</label>
+          <strong>No</strong>
+        </div>
+      </section>
+
+      <section class="parties">
+        <div class="party">
+          <h3>Bill To</h3>
+          <p><strong>Aaradhya Textiles</strong></p>
+          <p>GSTIN: 24AABCA1234F1Z5</p>
+          <p>Shop 12, Ring Road Market, Navrangpura</p>
+          <p>Ahmedabad, Gujarat – 380009, India</p>
+          <p>Contact: Mr. Rajesh Mehta · +91 98765 43210</p>
+          <p>Email: orders@aaradhyatextiles.in</p>
+        </div>
+        <div class="party">
+          <h3>Ship To</h3>
+          <p><strong>Aaradhya Textiles — Warehouse</strong></p>
+          <p>Plot 8, GIDC Industrial Estate, Phase II</p>
+          <p>Naroda, Ahmedabad, Gujarat – 382330, India</p>
+          <p>Contact: Warehouse In-charge · +91 98765 43211</p>
+          <p>Delivery: Door delivery · Carton dispatch</p>
+        </div>
+      </section>
+
+      <div class="table-wrap">
+        <table class="items">
+          <colgroup>
+            <col class="col-no" />
+            <col class="col-product" />
+            <col class="col-hsn" />
+            <col class="col-color" />
+            <col class="col-size" />
+            <col class="col-sets" />
+            <col class="col-pcs" />
+            <col class="col-qty" />
+            <col class="col-rate" />
+            <col class="col-taxable" />
+            <col class="col-gst" />
+            <col class="col-tax" />
+            <col class="col-total" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="center">#</th>
+              <th>Product</th>
+              <th>HSN</th>
+              <th>Color</th>
+              <th>Size</th>
+              <th class="center">Sets</th>
+              <th class="center">Pcs/Set</th>
+              <th class="center">Qty</th>
+              <th class="num">Rate/Set</th>
+              <th class="num">Taxable</th>
+              <th class="center">GST</th>
+              <th class="num">Tax ₹</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center">1</td>
+              <td>
+                <div class="product-cell">
+                  <img
+                    src="https://sarjantextiles.com/uploads/cms/1781662954941-6ec0647b-4a11-464c-a23e-3185bcc883cc.webp"
+                    alt=""
+                  />
+                  <div>
+                    <div class="name">Bandhani Mashru Printed Kurta</div>
+                    <div class="sku">STKTPRMS01 · Purple · M</div>
+                  </div>
+                </div>
+              </td>
+              <td>62031990</td>
+              <td>Purple</td>
+              <td>M</td>
+              <td class="center">2</td>
+              <td class="center">5</td>
+              <td class="center">10</td>
+              <td class="num">560</td>
+              <td class="num">1,120</td>
+              <td class="center">5%</td>
+              <td class="num">56</td>
+              <td class="num">1,176</td>
+            </tr>
+            <tr>
+              <td class="center">2</td>
+              <td>
+                <div class="product-cell">
+                  <img
+                    src="https://sarjantextiles.com/uploads/cms/1781662955334-83d9250d-ed5d-4fd1-ac33-15551ef88052.webp"
+                    alt=""
+                  />
+                  <div>
+                    <div class="name">Bandhani Mashru Printed Kurta</div>
+                    <div class="sku">STKTPRMS01 · Indigo · L</div>
+                  </div>
+                </div>
+              </td>
+              <td>62031990</td>
+              <td>Indigo</td>
+              <td>L</td>
+              <td class="center">3</td>
+              <td class="center">5</td>
+              <td class="center">15</td>
+              <td class="num">560</td>
+              <td class="num">1,680</td>
+              <td class="center">5%</td>
+              <td class="num">84</td>
+              <td class="num">1,764</td>
+            </tr>
+            <tr>
+              <td class="center">3</td>
+              <td>
+                <div class="product-cell">
+                  <img
+                    src="https://sarjantextiles.com/uploads/cms/1781626072787-1fc1e9e4-207d-44a8-b1b3-477fbfd6be11.webp"
+                    alt=""
+                  />
+                  <div>
+                    <div class="name">Ajrakh Block Print Shirt</div>
+                    <div class="sku">STSRAJCT24 · Black · XL</div>
+                  </div>
+                </div>
+              </td>
+              <td>62052000</td>
+              <td>Black</td>
+              <td>XL</td>
+              <td class="center">4</td>
+              <td class="center">6</td>
+              <td class="center">24</td>
+              <td class="num">450</td>
+              <td class="num">1,800</td>
+              <td class="center">5%</td>
+              <td class="num">90</td>
+              <td class="num">1,890</td>
+            </tr>
+            <tr>
+              <td class="center">4</td>
+              <td>
+                <div class="product-cell">
+                  <img
+                    src="https://sarjantextiles.com/uploads/cms/1781677482436-2e52a90e-b4b7-4100-879f-d28398a8aa43.webp"
+                    alt=""
+                  />
+                  <div>
+                    <div class="name">Embroidered Clutch (Assorted)</div>
+                    <div class="sku">STWCLT01 · Free Size</div>
+                  </div>
+                </div>
+              </td>
+              <td>42022220</td>
+              <td>Assorted</td>
+              <td>FS</td>
+              <td class="center">2</td>
+              <td class="center">10</td>
+              <td class="center">20</td>
+              <td class="num">700</td>
+              <td class="num">1,400</td>
+              <td class="center">18%</td>
+              <td class="num">252</td>
+              <td class="num">1,652</td>
+            </tr>
+            <tr>
+              <td class="center">5</td>
+              <td>
+                <div class="product-cell">
+                  <img
+                    src="https://sarjantextiles.com/uploads/cms/1781663877565-48be9650-66a0-4be0-827f-546c187694a7.webp"
+                    alt=""
+                  />
+                  <div>
+                    <div class="name">Mashru Mirror Work Kurta</div>
+                    <div class="sku">MMWK-IND01 · Indigo · XXL</div>
+                  </div>
+                </div>
+              </td>
+              <td>62031990</td>
+              <td>Indigo</td>
+              <td>XXL</td>
+              <td class="center">1</td>
+              <td class="center">4</td>
+              <td class="center">4</td>
+              <td class="num">720</td>
+              <td class="num">720</td>
+              <td class="center">5%</td>
+              <td class="num">36</td>
+              <td class="num">756</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p
+        style="
+          margin: 0;
+          padding: 4px 12px 6px;
+          font-size: 8px;
+          color: var(--muted);
+          border-bottom: 1px solid var(--line);
+        "
+      >
+        Tax ₹ = CGST + SGST (intra-state). IGST applies on inter-state supplies.
+      </p>
+
+      <div class="totals-wrap">
+        <div class="qty-summary">
+          <h4>Dispatch Summary</h4>
+          <p><strong>Total Sets:</strong> 12</p>
+          <p><strong>Total Pieces:</strong> 73</p>
+          <p><strong>Cartons:</strong> 3 (approx.)</p>
+          <p><strong>HSN Reference:</strong></p>
+          <p style="color: var(--muted); font-size: 10px; margin-top: 6px">
+            62031990 — Men's woven kurtas (other textile materials)<br />
+            62052000 — Men's cotton shirts (woven, not knitted)<br />
+            42022220 — Handbags / clutches with outer surface of textile
+          </p>
+        </div>
+        <div class="totals">
+          <table>
+            <tr>
+              <td>Taxable Value (Goods)</td>
+              <td>₹6,720.00</td>
+            </tr>
+            <tr>
+              <td>CGST</td>
+              <td>₹259.00</td>
+            </tr>
+            <tr>
+              <td>SGST</td>
+              <td>₹259.00</td>
+            </tr>
+            <tr>
+              <td>IGST</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>
+                Shipping / Freight
+                <span style="color: var(--muted)"
+                  >(73 pcs @ ₹500 per 100 pcs)</span
+                >
+              </td>
+              <td>₹365.00</td>
+            </tr>
+            <tr>
+              <td>Shipping GST (18%)</td>
+              <td>₹65.70</td>
+            </tr>
+            <tr>
+              <td>Round Off</td>
+              <td>-₹0.70</td>
+            </tr>
+            <tr class="grand">
+              <td>Grand Total (INR)</td>
+              <td>₹7,668.00</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="words">
+        <strong>Amount in Words:</strong> Seven Thousand Six Hundred Sixty Eight
+        Rupees Only
+      </div>
+
+      <div class="footer-grid">
+        <div class="footer-block bank">
+          <h4>Bank Details (Sample — To Be Confirmed by Owner)</h4>
+          <p><strong>Account Name:</strong> Sarjan Textiles</p>
+          <p><strong>Bank:</strong> HDFC Bank Ltd., Bhuj Branch</p>
+          <p><strong>Account Number:</strong> 50200098765432</p>
+          <p><strong>IFSC Code:</strong> HDFC0002847</p>
+          <p><strong>Account Type:</strong> Current Account</p>
+          <p><strong>UPI:</strong> sarjantextiles@hdfcbank</p>
+          <p style="margin-top: 8px; color: var(--muted); font-size: 10px">
+            Please mention invoice number
+            <strong>ST/INV/FY26-27/00482</strong> in payment reference.
+          </p>
+        </div>
+        <div class="footer-block">
+          <h4>Terms &amp; Conditions</h4>
+          <ul>
+            <li>
+              Goods once sold shall not be taken back except as per Sarjan
+              Textiles quality claim policy.
+            </li>
+            <li>
+              Any quantity or quality discrepancy must be reported within 48
+              hours of delivery with LR proof.
+            </li>
+            <li>
+              Title and risk pass to the buyer upon handover to the carrier
+              unless otherwise agreed in writing.
+            </li>
+            <li>
+              Interest @ 18% p.a. may apply on overdue invoices beyond agreed
+              credit period.
+            </li>
+            <li>
+              All disputes subject to exclusive jurisdiction of courts at Bhuj,
+              Kachchh, Gujarat.
+            </li>
+            <li>E. &amp; O.E. — Errors and omissions excepted.</li>
+            <li>
+              This is a computer-generated tax invoice and is valid without
+              physical signature when issued from Sarjan systems.
+            </li>
+            <li>
+              GST is charged as per applicable law; intra-state supplies attract
+              CGST + SGST.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="signatures">
+        <div class="sign">
+          <div class="line">Authorised Signatory — For Sarjan Textiles</div>
+        </div>
+        <div class="sign">
+          <div class="line">
+            Customer Acknowledgement — Name, Date &amp; Stamp
+          </div>
+        </div>
+      </div>
+
+      <div class="footnote">
+        Sarjan Textiles · GSTIN 24JXPPK2159M2ZQ · Bhuj, Gujarat · Premium
+        wholesale ethnic wear for retailers &amp; boutiques · Designed sample
+        invoice for owner approval — not a legally issued tax document.
+      </div>
+    </article>
+  </body>
+</html>

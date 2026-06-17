@@ -484,13 +484,9 @@ export function CheckoutPageClient({
     if (res.ok) {
       requestAdminNotificationRefresh();
       writeCart([]);
-      const { celebrateOrderPlaced } = await import("@/lib/order-celebration");
-      celebrateOrderPlaced();
-      window.setTimeout(() => {
-        window.location.assign(
-          `/payment-confirmation?orderId=${encodeURIComponent(data.order.id)}`,
-        );
-      }, 2200);
+      window.location.assign(
+        `/payment-confirmation?orderId=${encodeURIComponent(data.order.id)}`,
+      );
     }
   };
 

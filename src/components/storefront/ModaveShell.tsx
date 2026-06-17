@@ -6,6 +6,7 @@ import { ModavePreload } from "./ModavePreload";
 import { BootstrapDismissBridge } from "./BootstrapDismissBridge";
 import { OffcanvasRouteGuard } from "./OffcanvasRouteGuard";
 import { OrderBotWidget } from "./OrderBotWidget";
+import { OrderConfettiLayer } from "./OrderConfettiLayer";
 import { AbandonedCartResumeBanner } from "./AbandonedCartResumeBanner";
 import { SavedListsSync } from "./SavedListsSync";
 import { ClientSessionBootstrap } from "./ClientSessionBootstrap";
@@ -79,6 +80,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
       <ModaveModals />
       <SarjanButtonHoverFix />
       <OrderBotWidget />
+      <OrderConfettiLayer />
       <PwaInstallPrompt />
     </>
   );

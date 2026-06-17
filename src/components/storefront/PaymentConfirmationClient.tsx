@@ -21,7 +21,22 @@ export function PaymentConfirmationClient({
   useEffect(() => {
     if (celebrationStarted.current) return;
     celebrationStarted.current = true;
-    return celebrateOrderPlaced();
+    let celebrationCleanup: (() => void) | undefined;
+    let delayTimer: ReturnType<typeof window.setTimeout> | undefined;
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        delayTimer = window.setTimeout(() => {
+          celebrationCleanup = celebrateOrderPlaced();
+        }, 80);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (delayTimer !== undefined) {
+        window.clearTimeout(delayTimer);
+      }
+      celebrationCleanup?.();
+    };
   }, []);
 
   return (
