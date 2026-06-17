@@ -1,6 +1,7 @@
 import { bearerToken, verifyClientToken } from "@/lib/client-token";
 import {
   isBroadcastNotification,
+  listBroadcastNotifications,
   listInboxForClient,
 } from "@/lib/client-notifications";
 import { localizeNotificationRecord } from "@/lib/notification-localize";
@@ -23,13 +24,11 @@ export async function GET(request: Request) {
 
   const notifications = session
     ? await listInboxForClient(session.clientId)
-    : [];
+    : await listBroadcastNotifications();
   return Response.json({
-    notifications: session
-      ? notifications
-          .map(toPublicNotification)
-          .map((item) => localizeNotificationRecord(item, locale))
-      : [],
+    notifications: notifications
+      .map(toPublicNotification)
+      .map((item) => localizeNotificationRecord(item, locale)),
     mode: session ? "authenticated" : "guest",
     locale,
   });
