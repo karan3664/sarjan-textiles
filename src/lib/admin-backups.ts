@@ -6,7 +6,7 @@ import {
   saveCmsSnapshot,
   appendAuditLog,
 } from "@/lib/cms-store";
-import { readLocalDb } from "@/lib/local-db";
+import { readLocalDb, writeLocalDb } from "@/lib/local-db";
 
 export type AppBackup = {
   version: 1;
@@ -189,6 +189,94 @@ export async function readAppBackup(id: string): Promise<AppBackup> {
   ) as AppBackup;
 }
 
+function toPgTimestamp(value: unknown) {
+  if (!value) return new Date().toISOString();
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime())
+    ? new Date().toISOString()
+    : date.toISOString();
+}
+
+export type TransactionalPurgeResult = {
+  keepEmail: string;
+  keepClientId: string;
+  ordersRemaining: number;
+  clientsRemaining: number;
+};
+
+/** Delete all orders and all clients except keepEmail (Postgres or local JSON). */
+export async function purgeTransactionalData(
+  keepEmail: string,
+  actor: string,
+): Promise<TransactionalPurgeResult> {
+  const email = keepEmail.trim().toLowerCase();
+  if (!email) throw new Error("keepEmail is required");
+
+  if (!isPostgresEnabled()) {
+    const db = await readLocalDb();
+    const keepClient = db.clients.find(
+      (client) => client.email.trim().toLowerCase() === email,
+    );
+    if (!keepClient) throw new Error(`Client not found: ${keepEmail}`);
+    const nextCarts: typeof db.carts = {};
+    if (db.carts?.[keepClient.id]) {
+      nextCarts[keepClient.id] = db.carts[keepClient.id];
+    }
+    await writeLocalDb({
+      ...db,
+      clients: [keepClient],
+      orders: [],
+      carts: nextCarts,
+      resetRequests: [],
+    });
+    await appendAuditLog({
+      actor,
+      role: "super_admin",
+      action: "purge_transactional_data",
+      entity: "database",
+      entityId: keepClient.id,
+      note: `Kept ${keepEmail}, cleared orders`,
+    }).catch(() => null);
+    return {
+      keepEmail,
+      keepClientId: keepClient.id,
+      ordersRemaining: 0,
+      clientsRemaining: 1,
+    };
+  }
+
+  const { rows } = await pgQuery<{ id: string }>(
+    "select id from clients where lower(trim(email)) = $1 limit 1",
+    [email],
+  );
+  const keepClientId = rows[0]?.id ? String(rows[0].id) : "";
+  if (!keepClientId) throw new Error(`Client not found: ${keepEmail}`);
+
+  await pgQuery("delete from orders");
+  await pgQuery("delete from clients where id <> $1::uuid", [keepClientId]);
+
+  const [{ rows: orderCount }, { rows: clientCount }] = await Promise.all([
+    pgQuery<{ count: string }>("select count(*)::text as count from orders"),
+    pgQuery<{ count: string }>("select count(*)::text as count from clients"),
+  ]);
+
+  await appendAuditLog({
+    actor,
+    role: "super_admin",
+    action: "purge_transactional_data",
+    entity: "database",
+    entityId: keepClientId,
+    note: `Kept ${keepEmail}, cleared orders`,
+  }).catch(() => null);
+
+  return {
+    keepEmail,
+    keepClientId,
+    ordersRemaining: Number(orderCount[0]?.count ?? 0),
+    clientsRemaining: Number(clientCount[0]?.count ?? 0),
+  };
+}
+
 async function restorePostgresDb(db: AppBackup["db"]) {
   if (!isPostgresEnabled()) {
     await mkdir(path.join(process.cwd(), "data"), { recursive: true });
@@ -197,6 +285,34 @@ async function restorePostgresDb(db: AppBackup["db"]) {
       JSON.stringify(db, null, 2),
     );
     return;
+  }
+
+  const keepClientIds = db.clients.map((client) => client.id);
+  const keepOrderIds = db.orders.map((order) => order.id);
+  const keepFeedbackIds = (db.feedbacks ?? []).map((item) => item.id);
+
+  if (keepOrderIds.length === 0) {
+    await pgQuery("delete from orders");
+  } else {
+    await pgQuery("delete from orders where not (id = any($1::text[]))", [
+      keepOrderIds,
+    ]);
+  }
+
+  if (keepClientIds.length === 0) {
+    await pgQuery("delete from clients");
+  } else {
+    await pgQuery("delete from clients where not (id = any($1::uuid[]))", [
+      keepClientIds,
+    ]);
+  }
+
+  if (keepFeedbackIds.length === 0) {
+    await pgQuery("delete from feedbacks");
+  } else {
+    await pgQuery("delete from feedbacks where not (id = any($1::uuid[]))", [
+      keepFeedbackIds,
+    ]);
   }
 
   const clientRows = db.clients.map((client) => ({
@@ -274,7 +390,7 @@ async function restorePostgresDb(db: AppBackup["db"]) {
         row.phone ?? null,
         JSON.stringify(row.address),
         row.status,
-        row.created_at,
+        toPgTimestamp(row.created_at),
       ],
     );
   }
@@ -317,7 +433,7 @@ async function restorePostgresDb(db: AppBackup["db"]) {
         row.tracking_notes ?? null,
         JSON.stringify(row.dispatch_history),
         row.note ?? null,
-        row.created_at,
+        toPgTimestamp(row.created_at),
       ],
     );
   }
@@ -342,8 +458,8 @@ async function restorePostgresDb(db: AppBackup["db"]) {
         row.status ?? null,
         row.reply_subject ?? null,
         row.reply_message ?? null,
-        row.replied_at ?? null,
-        row.created_at,
+        row.replied_at ? toPgTimestamp(row.replied_at) : null,
+        toPgTimestamp(row.created_at),
       ],
     );
   }

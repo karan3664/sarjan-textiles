@@ -52,6 +52,11 @@ export function isLaunchBypassPath(pathname: string): boolean {
   if (pathname === "/api/version") return true;
   if (pathname === "/download") return true;
   if (pathname === "/downloads/sarjan-textiles.apk") return true;
+  // Post-checkout celebration + B2B flow while countdown is active
+  if (pathname === "/payment-confirmation") return true;
+  if (pathname === "/checkout") return true;
+  if (pathname === "/cart") return true;
+  if (pathname.startsWith("/my-account")) return true;
   // Mobile app + storefront JSON APIs (website HTML stays on /launch until go-live)
   if (
     pathname.startsWith("/api/") &&
