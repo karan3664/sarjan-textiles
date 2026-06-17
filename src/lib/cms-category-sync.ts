@@ -22,6 +22,28 @@ function categoryFromCatalogHref(href: string): string | null {
   }
 }
 
+/** Hub subcategory tile image — CMS image or first product in that category. */
+export function resolveHubSubcategoryImage(
+  sub: { title: string; href: string; image?: string },
+  productImageByCategory: Map<string, string>,
+): string | undefined {
+  const trimmed = sub.image?.trim();
+  if (trimmed) return trimmed;
+
+  const hrefSlug = categoryFromCatalogHref(sub.href);
+  if (hrefSlug) {
+    for (const [name, img] of productImageByCategory) {
+      if (categoryFilterSlug(name) === hrefSlug) return img;
+    }
+  }
+
+  for (const [name, img] of productImageByCategory) {
+    if (categoryFilterSlug(name) === categoryFilterSlug(sub.title)) return img;
+  }
+
+  return undefined;
+}
+
 function titlesMatchCategory(subTitle: string, categoryName: string): boolean {
   return (
     categoryFilterSlug(subTitle) === categoryFilterSlug(categoryName) &&

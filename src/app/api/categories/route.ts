@@ -1,3 +1,7 @@
+import {
+  firstProductImageByCategory,
+  resolveHubSubcategoryImage,
+} from "@/lib/cms-category-sync";
 import { getLocalizedCmsSnapshot } from "@/lib/cms-locale-sync";
 import { readEnglish } from "@/lib/cms-localize";
 import { resolveProduct, resolveProducts } from "@/lib/product-localize";
@@ -34,6 +38,8 @@ export async function GET(request: Request) {
     });
   });
 
+  const productImageByCategory = firstProductImageByCategory(cms.products);
+
   const hubs = (cms.categoryHubPages ?? [])
     .filter((page) => page.enabled !== false)
     .sort((a, b) => readEnglish(a.title).localeCompare(readEnglish(b.title)))
@@ -46,6 +52,7 @@ export async function GET(request: Request) {
         subcategories: localized.subcategories.map((sub) => ({
           title: sub.title,
           href: sub.href,
+          image: resolveHubSubcategoryImage(sub, productImageByCategory),
         })),
       };
     });
