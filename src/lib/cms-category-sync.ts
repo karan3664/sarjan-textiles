@@ -22,14 +22,23 @@ function categoryFromCatalogHref(href: string): string | null {
   }
 }
 
-/** Hub subcategory tile image — CMS image or first product in that category. */
+const GENERIC_HUB_SUBCATEGORY_IMAGES = new Set([
+  "/sarjan-assets/banner-textiles-studio.webp",
+  "/sarjan-assets/sarjan-logo-icon.png",
+]);
+
+function isGenericHubSubcategoryImage(image?: string) {
+  const trimmed = image?.trim();
+  if (!trimmed) return true;
+  if (GENERIC_HUB_SUBCATEGORY_IMAGES.has(trimmed)) return true;
+  return /sarjan-logo|banner-textiles-studio/i.test(trimmed);
+}
+
+/** Hub subcategory tile image — first product in category, not logo placeholders. */
 export function resolveHubSubcategoryImage(
   sub: { title: string; href: string; image?: string },
   productImageByCategory: Map<string, string>,
 ): string | undefined {
-  const trimmed = sub.image?.trim();
-  if (trimmed) return trimmed;
-
   const hrefSlug = categoryFromCatalogHref(sub.href);
   if (hrefSlug) {
     for (const [name, img] of productImageByCategory) {
@@ -39,6 +48,11 @@ export function resolveHubSubcategoryImage(
 
   for (const [name, img] of productImageByCategory) {
     if (categoryFilterSlug(name) === categoryFilterSlug(sub.title)) return img;
+  }
+
+  const trimmed = sub.image?.trim();
+  if (trimmed && !isGenericHubSubcategoryImage(trimmed)) {
+    return trimmed;
   }
 
   return undefined;
