@@ -11214,6 +11214,19 @@ a.sarjan-order-bot-card:focus-visible {
   cursor: not-allowed;
 }
 
+.sarjan-order-bot-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+}
+
 .sarjan-order-bot button.sarjan-order-bot-send {
   display: inline-flex !important;
   align-items: center !important;

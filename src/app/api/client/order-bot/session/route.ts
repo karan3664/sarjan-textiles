@@ -37,11 +37,18 @@ export async function POST(request: Request) {
       auth.session.clientId,
     );
     if (existing && existing.status !== "closed") {
+      const client = await getClient(auth.session.clientId);
+      const clientName =
+        client?.companyName?.trim() || client?.email?.split("@")[0] || "there";
+      const welcome = buildWelcomeMessage(existing.language, clientName);
       return Response.json({
         sessionId: existing.id,
         language: existing.language,
         source: existing.source,
         status: existing.status,
+        welcome: welcome.text,
+        quickActions: welcome.quickActions,
+        clientName,
         resumed: true,
       });
     }

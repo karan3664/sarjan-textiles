@@ -59,6 +59,7 @@ import {
 import {
   mapQuickActionToMessage,
   filterQuickActionsForApproved,
+  buildWelcomeMessage,
 } from "@/lib/ai-chat/welcome";
 import {
   closeOrderBotSession,
@@ -139,6 +140,15 @@ function isOrderBotLoginRequired(res: Response, error?: string) {
     msg.includes("valid client token required") ||
     msg.includes("please sign in again")
   );
+}
+
+function approvedWelcomeMessage(language: AiLanguage = "en") {
+  const client = readStoredClient();
+  const name =
+    client?.companyName?.trim() ||
+    client?.email?.split("@")[0]?.trim() ||
+    undefined;
+  return buildWelcomeMessage(language, name);
 }
 
 function resolveBotAccess(): BotAccess {
@@ -260,6 +270,11 @@ export function OrderBotWidget() {
       setShowAuthOtp(false);
       setAuthOtpToken("");
       setGuestQuickReplies(GUEST_QUICK_REPLIES);
+      setMessages((prev) => {
+        if (prev.length !== 1 || prev[0]?.id !== "welcome") return prev;
+        const { text } = approvedWelcomeMessage();
+        return [{ id: "welcome", role: "assistant", text }];
+      });
     } else {
       setCanChat(false);
       setQuickReplies([]);
@@ -418,16 +433,22 @@ export function OrderBotWidget() {
           persistSessionId(started.sessionId);
           setLanguage(started.language ?? lang);
           setSessionReady(true);
-          if (started.welcome && !options?.preserveMessages) {
+          const welcomeText =
+            started.welcome ??
+            approvedWelcomeMessage(started.language ?? lang).text;
+          if (!options?.preserveMessages) {
             setMessages([
               {
                 id: "welcome",
                 role: "assistant",
-                text: started.welcome,
+                text: welcomeText,
               },
             ]);
             setQuickReplies(
-              filterQuickActionsForApproved(started.quickActions ?? []),
+              filterQuickActionsForApproved(
+                started.quickActions ??
+                  approvedWelcomeMessage(started.language ?? lang).quickActions,
+              ),
             );
           } else if (started.quickActions?.length) {
             setQuickReplies(
@@ -439,11 +460,42 @@ export function OrderBotWidget() {
         }
       } catch {
         setLanguageReady(true);
-        setSessionReady(true);
+        setSessionReady(false);
+        setMessages((prev) => {
+          if (prev.length !== 1 || prev[0]?.id !== "welcome") return prev;
+          return [
+            {
+              id: "welcome",
+              role: "assistant",
+              text: "Hello! I'm **Sarjan AI**. I'm reconnecting your chat session — please try again in a moment, or refresh the page.",
+            },
+          ];
+        });
       }
     },
     [sessionId, persistSessionId],
   );
+
+  const ensureActiveSession = useCallback(async (): Promise<string | null> => {
+    if (sessionId) return sessionId;
+    if (!hasLocalClientSession() || access !== "approved") return null;
+    try {
+      const prefs = await fetchOrderBotPreferences();
+      const lang = prefs.language ?? language;
+      const started = await startOrderBotSession({
+        language: lang,
+        source: "web",
+        resumeSessionId: readWebAiSessionId() || undefined,
+      });
+      persistSessionId(started.sessionId);
+      setLanguage(started.language ?? lang);
+      setNeedsLanguagePick(false);
+      setSessionReady(true);
+      return started.sessionId;
+    } catch {
+      return null;
+    }
+  }, [sessionId, access, language, persistSessionId]);
 
   const bootstrapSession = useCallback(
     async (nextLanguage: AiLanguage) => {
@@ -1018,8 +1070,7 @@ export function OrderBotWidget() {
 
   const handleVisualSearchUpload = useCallback(
     async (file: File) => {
-      if (!file || sending || access !== "approved" || !sessionReady) return;
-      if (!sessionId) return;
+      if (!file || sending || access !== "approved") return;
 
       resetInactivityTimer();
       unlockOrderBotAudio();
@@ -1035,9 +1086,22 @@ export function OrderBotWidget() {
       ]);
       setSending(true);
       try {
+        const activeSessionId = (await ensureActiveSession()) ?? sessionId;
+        if (!activeSessionId) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text: "Could not start your Sarjan AI session. Please refresh the page and try again.",
+            },
+          ]);
+          return;
+        }
+
         let { res, data } = await postOrderBotVisualSearch({
           file,
-          sessionId,
+          sessionId: activeSessionId,
           language,
           source: "web",
         });
@@ -1047,7 +1111,7 @@ export function OrderBotWidget() {
           if (restored.ok) {
             ({ res, data } = await postOrderBotVisualSearch({
               file,
-              sessionId,
+              sessionId: activeSessionId,
               language,
               source: "web",
             }));
@@ -1084,11 +1148,11 @@ export function OrderBotWidget() {
     [
       access,
       applyResponse,
+      ensureActiveSession,
       language,
       resetInactivityTimer,
       sending,
       sessionId,
-      sessionReady,
     ],
   );
 
@@ -1495,38 +1559,26 @@ export function OrderBotWidget() {
                 ref={visualSearchInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
-                className="sr-only"
+                className="sarjan-order-bot-file-input"
                 tabIndex={-1}
                 aria-hidden
-                disabled={
-                  sending ||
-                  authOtpLoading ||
-                  showAuthOtp ||
-                  showGstVerify ||
-                  accessUi !== "approved" ||
-                  !canChat ||
-                  !sessionReady ||
-                  needsLanguagePick
-                }
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   event.target.value = "";
                   if (file) void handleVisualSearchUpload(file);
                 }}
               />
-              {accessUi === "approved" && sessionReady && !needsLanguagePick ? (
+              {accessUi === "approved" &&
+              canChat &&
+              sessionReady &&
+              !needsLanguagePick ? (
                 <button
                   type="button"
                   className="sarjan-order-bot-photo"
                   title="Search by photo"
                   aria-label="Search by photo"
                   disabled={
-                    sending ||
-                    authOtpLoading ||
-                    showAuthOtp ||
-                    showGstVerify ||
-                    !canChat ||
-                    !sessionReady
+                    sending || authOtpLoading || showAuthOtp || showGstVerify
                   }
                   onClick={() => visualSearchInputRef.current?.click()}
                 >
