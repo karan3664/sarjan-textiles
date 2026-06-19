@@ -1,4 +1,18 @@
 {
-  "promotions": [],
-  "updatedAt": "2026-06-03T00:00:00.000Z"
+  "promotions": [
+    {
+      "id": "promo-1781878674381",
+      "title": "2nd Anniversary",
+      "image": "http://localhost:3001/uploads/cms/1781544650525-f0249446-ecf4-4a01-a4a5-4d780cab1dde.webp",
+      "ctaLabel": "Shop now",
+      "ctaHref": "/products",
+      "placement": "web_home",
+      "audience": "all",
+      "startAt": "2026-06-19T14:17:54.381Z",
+      "endAt": "2026-07-03T14:17:54.381Z",
+      "priority": 50,
+      "enabled": true
+    }
+  ],
+  "updatedAt": "2026-06-19T14:19:57.723Z"
 }

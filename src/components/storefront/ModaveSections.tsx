@@ -35,6 +35,7 @@ import { productSetPrice } from "@/lib/product-pricing";
 import {
   isProductSoldOut,
   productStockOnHand,
+  productWholesaleMinSets,
 } from "@/lib/product-availability";
 import { formatMoqSets } from "@/lib/b2b-order-messages";
 import { getCachedCmsSnapshot } from "@/lib/cms-store";
@@ -73,6 +74,7 @@ import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductDetailImmersiveMedia } from "./ProductDetailImmersiveMedia";
 import { ProductDetailColorProvider } from "./ProductDetailColorContext";
 import { ProductRecentlyViewedTracker } from "./ProductRecentlyViewedTracker";
+import { ProductAiContextBridge } from "./ProductAiContextBridge";
 import { ProductSortSelect } from "./ProductSortSelect";
 import { StorefrontEmptyState } from "./StorefrontEmptyState";
 import { StorefrontBannerImage } from "./StorefrontBannerImage";
@@ -1031,6 +1033,8 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
   );
   const altText = buildProductImageAlt(product);
   const categoryHref = productCategoryHref(product.category);
+  const setsInStock = productStockOnHand(product);
+  const moq = productWholesaleMinSets(product);
 
   return (
     <>
@@ -1500,6 +1504,16 @@ export async function ProductDetailDynamic({ product }: { product: Product }) {
         productName={product.name}
       />
       <ProductDetailRecommendations currentSlug={product.slug} />
+      <ProductAiContextBridge
+        slug={product.slug}
+        name={product.name}
+        category={String(product.category)}
+        setPrice={setPrice}
+        moq={moq}
+        inStock={!isProductSoldOut(product) && (setsInStock ?? 0) > 0}
+        setsInStock={setsInStock}
+        color={pickerColors[0] ?? product.colors[0]}
+      />
     </>
   );
 }
@@ -2070,7 +2084,7 @@ export async function ProductsListingDynamic({
                           cx={cx}
                           cy={cy}
                           r="2.5"
-                          stroke="#181818"
+                          stroke="currentColor"
                           key={`${cx}-${cy}`}
                         />
                       ))}
@@ -2081,7 +2095,7 @@ export async function ProductsListingDynamic({
                           width="12"
                           height="5"
                           rx="2.5"
-                          stroke="#181818"
+                          stroke="currentColor"
                           key={`${x}-${y}`}
                         />
                       ))}

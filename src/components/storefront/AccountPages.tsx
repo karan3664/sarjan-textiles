@@ -37,6 +37,7 @@ import {
   isValidGstin,
   normalizeGstin,
 } from "@/lib/gstin-form";
+import { siteSettings } from "@/data/site";
 import { PageTitle } from "./PageTitle";
 import { TestimonialSubmitForm } from "./TestimonialSubmitForm";
 import { OrderPlacedViaBadge } from "./OrderPlacedViaBadge";
@@ -601,7 +602,7 @@ function AccountDashboardContent() {
                 Credit terms
               </span>
               <strong className="sarjan-account-stat-card__value">
-                90 days
+                {siteSettings.creditTermDays} days
               </strong>
             </div>
           </div>

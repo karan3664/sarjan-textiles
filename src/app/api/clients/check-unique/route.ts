@@ -73,10 +73,15 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+      const emailOnly = Boolean(fields.email) && !fields.phone && !fields.gst;
       return Response.json(
         {
           ok: false,
-          error: "One or more values are already registered.",
+          field: duplicate.field,
+          error:
+            emailOnly && duplicate.field === "email"
+              ? duplicate.message
+              : "One or more values are already registered.",
         },
         { status: 409 },
       );

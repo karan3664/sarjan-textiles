@@ -1561,7 +1561,7 @@ export function AdminOrderManagementClient({
               <div>
                 <h5>Payment Ledger Aging Report</h5>
                 <div className="body-text text-secondary">
-                  90-day cheque workflow, pending dues, overdue buckets, partial
+                  30-day cheque workflow, pending dues, overdue buckets, partial
                   payments, and deposit status.
                 </div>
               </div>

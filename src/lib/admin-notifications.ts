@@ -29,6 +29,18 @@ type StateFile = {
   listClearedBefore: string | null;
 };
 
+/** Postgres / JS Date → ISO string safe for timestamptz round-trips. */
+function toIsoTimestamp(value: unknown): string | null {
+  if (value == null || value === "") return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+  const raw = String(value).trim();
+  if (!raw) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
 function canWriteJsonStateFile() {
   if (isPostgresEnabled()) return false;
   if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME)
@@ -39,8 +51,7 @@ function canWriteJsonStateFile() {
 function normalizeState(raw: Partial<StateFile> | null | undefined): StateFile {
   return {
     readIds: Array.isArray(raw?.readIds) ? raw.readIds.map(String) : [],
-    listClearedBefore:
-      typeof raw?.listClearedBefore === "string" ? raw.listClearedBefore : null,
+    listClearedBefore: toIsoTimestamp(raw?.listClearedBefore),
   };
 }
 
@@ -63,11 +74,8 @@ async function readStateFromPostgres(): Promise<StateFile | null> {
     | undefined;
   if (!data) return { readIds: [], listClearedBefore: null };
   return normalizeState({
-    readIds: Array.isArray(data.read_ids) ? data.read_ids : [],
-    listClearedBefore:
-      data.list_cleared_before != null
-        ? String(data.list_cleared_before)
-        : null,
+    readIds: Array.isArray(data.read_ids) ? data.read_ids.map(String) : [],
+    listClearedBefore: toIsoTimestamp(data.list_cleared_before),
   });
 }
 
@@ -101,8 +109,8 @@ async function writeStateToPostgres(state: StateFile) {
     {
       id: 1,
       read_ids: state.readIds,
-      list_cleared_before: state.listClearedBefore,
-      updated_at: new Date().toISOString(),
+      list_cleared_before: toIsoTimestamp(state.listClearedBefore),
+      updated_at: new Date(),
     },
     "id",
   );

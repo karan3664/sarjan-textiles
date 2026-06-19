@@ -17,6 +17,7 @@ import {
   readStoredClientId,
   restoreClientSessionFromCookie,
   validateAndRefreshClientSession,
+  persistClientSession,
 } from "@/lib/client-auth-browser";
 import { clientStatusAuthError } from "@/lib/client-status-auth";
 import { readStoredClient } from "@/lib/client-session";
@@ -35,15 +36,64 @@ import {
 import {
   OrderBotCartCards,
   OrderBotCategoryCards,
+  OrderBotLanguagePicker,
   OrderBotOrderCards,
   OrderBotProductCards,
+  OrderBotRatingPanel,
+  OrderBotSalesSuggestions,
+  OrderBotCartOptimizationBanner,
+  OrderBotAuthOtpPanel,
+  OrderBotGstCaptchaPanel,
+  type OrderBotProductAction,
 } from "@/components/storefront/OrderBotVisuals";
+import type {
+  BotCartOptimization,
+  BotSalesSuggestion,
+} from "@/lib/ai-sales/types";
+import type { AiLanguage } from "@/lib/ai-chat/types";
+import { AI_INACTIVITY_MS } from "@/lib/ai-chat/types";
+import {
+  readWebAiSessionId,
+  writeWebAiSessionId,
+} from "@/lib/ai-memory/web-session";
+import {
+  mapQuickActionToMessage,
+  filterQuickActionsForApproved,
+} from "@/lib/ai-chat/welcome";
+import {
+  closeOrderBotSession,
+  fetchOrderBotPreferences,
+  postOrderBotAction,
+  postOrderBotChat,
+  postOrderBotVisualSearch,
+  saveOrderBotLanguage,
+  startOrderBotSession,
+} from "@/lib/order-bot-client";
 import {
   clearStorefrontCartAfterOrder,
   mirrorStorefrontCartFromBot,
   syncCartWithApi,
 } from "@/lib/cart-client";
 import type { BotChatResponse, BotNavAction } from "@/lib/order-bot/types";
+import {
+  authFlowActive,
+  authFlowNeedsGstPanel,
+  completeGstVerification,
+  detectAuthIntent,
+  getOtpPromptMessage,
+  processAuthMessage,
+  registrationFieldQuestion,
+  startAuthFlow,
+} from "@/lib/ai-auth/flow";
+import type { AuthFlowState } from "@/lib/ai-auth/types";
+import { REGISTRATION_FIELDS } from "@/lib/ai-auth/types";
+import {
+  checkRegistrationEmailAvailable,
+  loginWithEmailOtp,
+  registerViaAgent,
+  sendEmailAuthOtp,
+} from "@/lib/ai-auth/browser";
+import { useOrderBotPageContext } from "@/hooks/useOrderBotPageContext";
 
 type ChatMessage = {
   id: string;
@@ -54,6 +104,8 @@ type ChatMessage = {
   cart?: BotChatResponse["cart"];
   cartTotal?: number;
   orders?: BotChatResponse["orders"];
+  salesSuggestions?: BotSalesSuggestion[];
+  cartOptimization?: BotCartOptimization;
 };
 
 function nextId() {
@@ -63,16 +115,10 @@ function nextId() {
 const ASSISTANT_NAME = "Sarjan AI";
 const ASSISTANT_TAGLINE = "Products · Orders · Tracking · Help";
 
-const WELCOME_APPROVED =
-  "Hi! I'm your Sarjan assistant — ask anything about products, bulk orders, or **track my order ST-…** in plain Hindi or English.";
-
 const WELCOME_GUEST =
-  "Hi! I'm **Sarjan AI**. Sign in or register as a wholesale client to browse catalog, manage cart, and track orders.";
+  "Hi! I'm **Sarjan AI**. Say **Register** for a wholesale account or **Login** with your email — one question at a time, no long forms.";
 
-const GUEST_NAV: BotNavAction[] = [
-  { label: "Sign in", href: "/login" },
-  { label: "Register", href: "/register" },
-];
+const GUEST_QUICK_REPLIES = ["Register", "Login"];
 
 const LOGIN_REQUIRED_MESSAGE =
   "You are not signed in, or your session expired. Please **sign in** first, then try again.";
@@ -130,42 +176,6 @@ function gateMessage(access: BotAccess): string {
   }
 }
 
-async function parseChatResponse(res: Response) {
-  const text = await res.text();
-  if (!text.trim()) {
-    return {
-      data: {} as BotChatResponse & { error?: string },
-      parseFailed: !res.ok,
-    };
-  }
-  try {
-    return {
-      data: JSON.parse(text) as BotChatResponse & { error?: string },
-      parseFailed: false,
-    };
-  } catch {
-    return {
-      data: {
-        error: res.ok
-          ? "Unexpected server response."
-          : `Request failed (${res.status}). Please try again.`,
-      } as BotChatResponse & { error?: string },
-      parseFailed: true,
-    };
-  }
-}
-
-async function postOrderBotChat(message: string, sessionId: string) {
-  const res = await fetch("/api/client/order-bot/chat", {
-    method: "POST",
-    headers: clientAuthJsonHeaders(),
-    credentials: "include",
-    body: JSON.stringify({ message, sessionId: sessionId || undefined }),
-  });
-  const { data } = await parseChatResponse(res);
-  return { res, data };
-}
-
 function renderBotText(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, index) => {
@@ -176,6 +186,18 @@ function renderBotText(text: string) {
   });
 }
 
+function languageLabel(language: AiLanguage) {
+  if (language === "hi") return "हिंदी";
+  if (language === "hinglish") return "Hinglish";
+  return "English";
+}
+
+function languageShortLabel(language: AiLanguage) {
+  if (language === "hi") return "HI";
+  if (language === "hinglish") return "HIN";
+  return "EN";
+}
+
 export function OrderBotWidget() {
   const [portalReady, setPortalReady] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -183,6 +205,12 @@ export function OrderBotWidget() {
   const [canChat, setCanChat] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [sessionId, setSessionId] = useState("");
+  const [language, setLanguage] = useState<AiLanguage>("en");
+  const [languageReady, setLanguageReady] = useState(false);
+  const [needsLanguagePick, setNeedsLanguagePick] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [showRating, setShowRating] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -191,9 +219,30 @@ export function OrderBotWidget() {
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [navActions, setNavActions] = useState<BotNavAction[]>([]);
   const [orderPlacedToastId, setOrderPlacedToastId] = useState("");
+  const [authFlow, setAuthFlow] = useState<AuthFlowState | null>(null);
+  const [showAuthOtp, setShowAuthOtp] = useState(false);
+  const [authOtpToken, setAuthOtpToken] = useState("");
+  const [authOtpEmail, setAuthOtpEmail] = useState("");
+  const [authOtpLoading, setAuthOtpLoading] = useState(false);
+  const [guestQuickReplies, setGuestQuickReplies] =
+    useState<string[]>(GUEST_QUICK_REPLIES);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const visualSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const pageContext = useOrderBotPageContext();
   const autoOpenedRef = useRef(false);
   const orderToastTimerRef = useRef<number | null>(null);
+  const inactivityTimerRef = useRef<number | null>(null);
+  const lastActivityRef = useRef(Date.now());
+
+  const persistSessionId = useCallback((id: string) => {
+    setSessionId(id);
+    writeWebAiSessionId(id);
+  }, []);
+
+  useEffect(() => {
+    const saved = readWebAiSessionId();
+    if (saved) setSessionId(saved);
+  }, []);
 
   useLayoutEffect(() => {
     setPortalReady(true);
@@ -206,18 +255,16 @@ export function OrderBotWidget() {
     setAccess(nextAccess);
 
     if (nextAccess === "approved") {
-      setMessages((prev) => {
-        if (prev.length !== 1 || prev[0]?.id !== "welcome") return prev;
-        return [{ id: "welcome", role: "assistant", text: WELCOME_APPROVED }];
-      });
-      setQuickReplies((prev) =>
-        prev.length ? prev : ["Categories", "My cart", "Place order"],
-      );
       setCanChat(hasLocalClientSession());
+      setAuthFlow(null);
+      setShowAuthOtp(false);
+      setAuthOtpToken("");
+      setGuestQuickReplies(GUEST_QUICK_REPLIES);
     } else {
       setCanChat(false);
       setQuickReplies([]);
       setNavActions([]);
+      setGuestQuickReplies(GUEST_QUICK_REPLIES);
       setMessages((prev) => {
         if (prev.length !== 1 || prev[0]?.id !== "welcome") return prev;
         return [{ id: "welcome", role: "assistant", text: WELCOME_GUEST }];
@@ -264,7 +311,7 @@ export function OrderBotWidget() {
       if (authTimer) clearTimeout(authTimer);
       authTimer = setTimeout(() => {
         authTimer = null;
-        applyAccessFromLocal();
+        void syncAccessFromServer();
       }, 0);
     };
     window.addEventListener("storage", onStorage);
@@ -274,17 +321,20 @@ export function OrderBotWidget() {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("sarjan-auth-updated", onAuth);
     };
-  }, [applyAccessFromLocal]);
+  }, [applyAccessFromLocal, syncAccessFromServer]);
 
   const accessUi = authReady ? access : "guest";
+  const inAuthFlow = authFlowActive(authFlow);
+  const showGstVerify = authFlowNeedsGstPanel(authFlow);
 
-  const showGuestNav = accessUi === "guest";
   const inputPlaceholder =
     accessUi === "approved"
-      ? "e.g. show Ajrakh, add 1 50 sets, place order"
-      : accessUi === "guest"
-        ? "Sign in or register to chat…"
-        : "Available after account approval…";
+      ? "Ask about products, orders, or tracking…"
+      : accessUi === "guest" && inAuthFlow
+        ? "Type your answer…"
+        : accessUi === "guest"
+          ? "Say Register or Login to start…"
+          : "Available after account approval…";
 
   useEffect(() => {
     return () => {
@@ -334,7 +384,114 @@ export function OrderBotWidget() {
     });
   }, [messages, visible]);
 
+  const resetInactivityTimer = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    if (inactivityTimerRef.current) {
+      window.clearTimeout(inactivityTimerRef.current);
+    }
+    if (!visible || access !== "approved" || showRating) return;
+    inactivityTimerRef.current = window.setTimeout(() => {
+      void sendMessageRef.current?.("__SARJAN_INACTIVITY__");
+    }, AI_INACTIVITY_MS);
+  }, [visible, access, showRating]);
+
+  const sendMessageRef = useRef<
+    ((raw: string, options?: { silent?: boolean }) => Promise<void>) | null
+  >(null);
+
+  const bootstrapApprovedSession = useCallback(
+    async (options?: { preserveMessages?: boolean }) => {
+      if (!hasLocalClientSession()) return;
+      try {
+        const prefs = await fetchOrderBotPreferences();
+        const lang = prefs.language ?? "en";
+        setLanguage(lang);
+        setNeedsLanguagePick(!prefs.hasPreference);
+        setLanguageReady(true);
+
+        if (prefs.hasPreference) {
+          const started = await startOrderBotSession({
+            language: lang,
+            source: "web",
+            resumeSessionId: sessionId || readWebAiSessionId() || undefined,
+          });
+          persistSessionId(started.sessionId);
+          setLanguage(started.language ?? lang);
+          setSessionReady(true);
+          if (started.welcome && !options?.preserveMessages) {
+            setMessages([
+              {
+                id: "welcome",
+                role: "assistant",
+                text: started.welcome,
+              },
+            ]);
+            setQuickReplies(
+              filterQuickActionsForApproved(started.quickActions ?? []),
+            );
+          } else if (started.quickActions?.length) {
+            setQuickReplies(
+              filterQuickActionsForApproved(started.quickActions),
+            );
+          }
+        } else {
+          setSessionReady(true);
+        }
+      } catch {
+        setLanguageReady(true);
+        setSessionReady(true);
+      }
+    },
+    [sessionId, persistSessionId],
+  );
+
+  const bootstrapSession = useCallback(
+    async (nextLanguage: AiLanguage) => {
+      if (!hasLocalClientSession()) return;
+      try {
+        const started = await startOrderBotSession({
+          language: nextLanguage,
+          source: "web",
+          resumeSessionId: sessionId || undefined,
+        });
+        persistSessionId(started.sessionId);
+        setLanguage(started.language ?? nextLanguage);
+        setNeedsLanguagePick(false);
+        setSessionReady(true);
+        if (started.welcome) {
+          setMessages([
+            {
+              id: "welcome",
+              role: "assistant",
+              text: started.welcome,
+            },
+          ]);
+          setQuickReplies(
+            filterQuickActionsForApproved(started.quickActions ?? []),
+          );
+        }
+      } catch {
+        setSessionReady(true);
+      }
+    },
+    [sessionId],
+  );
+
+  useEffect(() => {
+    if (access !== "approved" || !canChat) return;
+    let cancelled = false;
+    void bootstrapApprovedSession().finally(() => {
+      if (cancelled) return;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [access, canChat, bootstrapApprovedSession]);
+
   const applyResponse = useCallback((data: BotChatResponse) => {
+    if (data.sessionPhase === "awaiting_rating" || data.showRating) {
+      setShowRating(true);
+    }
     if (data.orderPlaced) {
       clearStorefrontCartAfterOrder();
       void syncCartWithApi();
@@ -342,7 +499,7 @@ export function OrderBotWidget() {
       mirrorStorefrontCartFromBot(data.cart);
     }
 
-    setSessionId(data.sessionId);
+    persistSessionId(data.sessionId);
     setMessages((prev) => [
       ...prev,
       {
@@ -359,33 +516,352 @@ export function OrderBotWidget() {
                 list.findIndex((item) => item.id === order.id) === index,
             )
           : data.orders,
+        salesSuggestions: data.salesSuggestions,
+        cartOptimization: data.cartOptimization,
       },
     ]);
     setQuickReplies(
-      data.quickReplies ?? ["Categories", "My cart", "Place order"],
+      filterQuickActionsForApproved(
+        data.quickReplies ?? ["Categories", "My cart", "Place order"],
+      ),
     );
     setNavActions(data.navActions ?? []);
   }, []);
 
-  const sendMessage = useCallback(
-    async (raw: string) => {
-      const message = raw.trim();
-      if (!message || sending) return;
-
-      if (access !== "approved") {
-        setVisible(true);
-        setNavActions(GUEST_NAV);
-        setQuickReplies([]);
+  const triggerAuthOtp = useCallback(
+    async (flow: AuthFlowState, email: string) => {
+      setAuthOtpLoading(true);
+      try {
+        const { res, data } = await sendEmailAuthOtp({
+          email,
+          mode: flow.mode,
+        });
+        if (!res.ok || !data.otpToken) {
+          const errorText =
+            data.error ??
+            (flow.mode === "login"
+              ? "If an account exists with this email, a verification code has been sent. Otherwise check the email or register."
+              : "Could not send OTP. Please try again.");
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text: errorText,
+            },
+          ]);
+          setShowAuthOtp(false);
+          if (
+            flow.mode === "register" &&
+            typeof data.error === "string" &&
+            /already registered/i.test(data.error)
+          ) {
+            setAuthFlow(null);
+            setAuthOtpToken("");
+            setGuestQuickReplies(["Login", "Register"]);
+          }
+          return;
+        }
+        setAuthFlow(flow);
+        setAuthOtpToken(data.otpToken);
+        setAuthOtpEmail(email.trim().toLowerCase());
+        setShowAuthOtp(true);
         setMessages((prev) => [
           ...prev,
-          { id: nextId(), role: "user", text: message },
           {
             id: nextId(),
             role: "assistant",
-            text: gateMessage(access === "loading" ? "guest" : access),
+            text: getOtpPromptMessage(language),
           },
         ]);
+      } finally {
+        setAuthOtpLoading(false);
+      }
+    },
+    [language],
+  );
+
+  const handleAuthOtpSubmit = useCallback(
+    async (otp: string) => {
+      if (!authFlow || !authOtpToken || !authOtpEmail) return;
+      setAuthOtpLoading(true);
+      try {
+        if (authFlow.mode === "login") {
+          const { res, data } = await loginWithEmailOtp({
+            email: authOtpEmail,
+            otp,
+            otpToken: authOtpToken,
+          });
+          if (!res.ok || !data.client) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: nextId(),
+                role: "assistant",
+                text:
+                  data.error ?? "Login failed. Check the OTP and try again.",
+              },
+            ]);
+            return;
+          }
+          persistClientSession("", data.client);
+          setShowAuthOtp(false);
+          setAuthFlow(null);
+          setAuthOtpToken("");
+          applyAccessFromLocal();
+          await syncAccessFromServer();
+          const name = data.client.companyName?.trim() || "there";
+          if (data.client.status === "approved") {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: nextId(),
+                role: "assistant",
+                text: `Welcome back, **${name}**! You're signed in — ask me about products, cart, or orders.`,
+              },
+            ]);
+            await bootstrapApprovedSession({ preserveMessages: true });
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: nextId(),
+                role: "assistant",
+                text: `Signed in as **${name}**. ${gateMessage("pending")}`,
+              },
+            ]);
+          }
+          setGuestQuickReplies(GUEST_QUICK_REPLIES);
+          return;
+        }
+
+        const { res, data } = await registerViaAgent({
+          draft: authFlow.data,
+          otpEmail: authOtpEmail,
+          otp,
+          otpToken: authOtpToken,
+          ownerLegalName: authFlow.ownerLegalName,
+          gstPortalVerified: authFlow.gstVerified ?? !authFlow.data.gst,
+        });
+        if (!res.ok) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text: data.error ?? "Registration failed. Please try again.",
+            },
+          ]);
+          return;
+        }
+        setShowAuthOtp(false);
+        setAuthFlow(null);
+        setAuthOtpToken("");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: nextId(),
+            role: "assistant",
+            text:
+              data.message ??
+              "Registration submitted. Your wholesale account is under admin review.",
+          },
+        ]);
+        setGuestQuickReplies(["Login"]);
+      } finally {
+        setAuthOtpLoading(false);
+      }
+    },
+    [
+      bootstrapApprovedSession,
+      applyAccessFromLocal,
+      authFlow,
+      authOtpEmail,
+      authOtpToken,
+      syncAccessFromServer,
+    ],
+  );
+
+  const handleAuthOtpResend = useCallback(async () => {
+    if (!authFlow || !authOtpEmail) return;
+    await triggerAuthOtp(authFlow, authOtpEmail);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId(),
+        role: "assistant",
+        text: "A fresh OTP has been sent to your email.",
+      },
+    ]);
+  }, [authFlow, authOtpEmail, triggerAuthOtp]);
+
+  const handleGstVerified = useCallback(
+    (result: { gst: string; tradeName: string; legalName: string }) => {
+      if (!authFlow) return;
+      const completed = completeGstVerification(authFlow, result, language);
+      setAuthFlow(completed.state);
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), role: "assistant", text: completed.reply },
+      ]);
+      setGuestQuickReplies(completed.quickReplies ?? ["Cancel"]);
+    },
+    [authFlow, language],
+  );
+
+  const sendMessage = useCallback(
+    async (raw: string, options?: { silent?: boolean }) => {
+      const message = raw.trim();
+      if (!message || sending) return;
+
+      if (message !== "__SARJAN_INACTIVITY__") {
+        resetInactivityTimer();
+      }
+
+      if (access !== "approved") {
+        setVisible(true);
+        unlockOrderBotAudio();
+
+        const normalizedMessage =
+          message === "__SARJAN_AUTH_REGISTER__" || message === "Registration"
+            ? "Register"
+            : message === "__SARJAN_AUTH_LOGIN__"
+              ? "Login"
+              : message === "Skip"
+                ? "skip"
+                : message;
+
+        if (
+          !options?.silent &&
+          message !== "__SARJAN_INACTIVITY__" &&
+          message !== "__SARJAN_AUTH_REGISTER__" &&
+          message !== "__SARJAN_AUTH_LOGIN__"
+        ) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "user",
+              text: normalizedMessage === "skip" ? "Skip" : normalizedMessage,
+            },
+          ]);
+        }
         setInput("");
+
+        if (authFlowActive(authFlow)) {
+          const prevFlow = authFlow!;
+          const emailFieldIndex = REGISTRATION_FIELDS.indexOf("email");
+          const result = processAuthMessage(
+            prevFlow,
+            normalizedMessage,
+            language,
+          );
+          setAuthFlow(result.cancelled ? null : result.state);
+          if (result.cancelled) {
+            setShowAuthOtp(false);
+            setAuthOtpToken("");
+          }
+
+          if (result.readyForOtp && result.otpEmail) {
+            setGuestQuickReplies(result.quickReplies ?? GUEST_QUICK_REPLIES);
+            await triggerAuthOtp(result.state, result.otpEmail);
+            return;
+          }
+
+          const justCollectedEmail =
+            prevFlow.mode === "register" &&
+            prevFlow.fieldIndex === emailFieldIndex &&
+            !result.cancelled &&
+            Boolean(result.state.data.email);
+
+          if (justCollectedEmail && result.state.data.email) {
+            const availability = await checkRegistrationEmailAvailable(
+              result.state.data.email,
+            );
+            if (!availability.ok) {
+              setAuthFlow({
+                ...result.state,
+                fieldIndex: emailFieldIndex,
+              });
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: nextId(),
+                  role: "assistant",
+                  text: availability.error,
+                },
+                {
+                  id: nextId(),
+                  role: "assistant",
+                  text: registrationFieldQuestion("email", language),
+                },
+              ]);
+              setGuestQuickReplies(["Cancel"]);
+              return;
+            }
+          }
+
+          setMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "assistant", text: result.reply },
+          ]);
+          setGuestQuickReplies(result.quickReplies ?? GUEST_QUICK_REPLIES);
+          return;
+        }
+
+        const intent =
+          normalizedMessage === "Register"
+            ? ("register" as const)
+            : normalizedMessage === "Login"
+              ? ("login" as const)
+              : detectAuthIntent(normalizedMessage);
+
+        if (intent === "register" || intent === "login") {
+          const started = startAuthFlow(intent, language);
+          setAuthFlow(started.state);
+          setShowAuthOtp(false);
+          setAuthOtpToken("");
+          setMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "assistant", text: started.reply },
+          ]);
+          setGuestQuickReplies(started.quickReplies ?? ["Cancel"]);
+          return;
+        }
+
+        if (intent === "cancel") {
+          setAuthFlow(null);
+          setShowAuthOtp(false);
+          setAuthOtpToken("");
+          setGuestQuickReplies(GUEST_QUICK_REPLIES);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text: "Cancelled. Say **Register** or **Login** anytime.",
+            },
+          ]);
+          return;
+        }
+
+        if (access !== "guest") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text: gateMessage(access === "loading" ? "guest" : access),
+            },
+          ]);
+          return;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "assistant", text: WELCOME_GUEST },
+        ]);
+        setGuestQuickReplies(GUEST_QUICK_REPLIES);
         return;
       }
 
@@ -409,21 +885,59 @@ export function OrderBotWidget() {
         setCanChat(true);
       }
       unlockOrderBotAudio();
-      playOrderBotSendSound();
+      if (message !== "__SARJAN_INACTIVITY__") {
+        playOrderBotSendSound();
+      }
       setVisible(true);
-      setMessages((prev) => [
-        ...prev,
-        { id: nextId(), role: "user", text: message },
-      ]);
+
+      const authChipMessage =
+        message === "__SARJAN_AUTH_REGISTER__" || message === "Registration"
+          ? "Register"
+          : message === "__SARJAN_AUTH_LOGIN__"
+            ? "Login"
+            : null;
+
+      if (authChipMessage) {
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "user", text: authChipMessage },
+          {
+            id: nextId(),
+            role: "assistant",
+            text: "You're already signed in. Ask me about **products**, **cart**, or **orders**.",
+          },
+        ]);
+        setInput("");
+        return;
+      }
+
+      if (!options?.silent && message !== "__SARJAN_INACTIVITY__") {
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "user", text: message },
+        ]);
+      }
       setInput("");
       setSending(true);
       try {
-        let { res, data } = await postOrderBotChat(message, sessionId);
+        let { res, data } = await postOrderBotChat({
+          message,
+          sessionId,
+          language,
+          source: "web",
+          pageContext,
+        });
 
         if (res.status === 401) {
           const restored = await restoreClientSessionFromCookie();
           if (restored.ok) {
-            ({ res, data } = await postOrderBotChat(message, sessionId));
+            ({ res, data } = await postOrderBotChat({
+              message,
+              sessionId,
+              language,
+              source: "web",
+              pageContext,
+            }));
           }
         }
 
@@ -432,7 +946,7 @@ export function OrderBotWidget() {
             clearExpiredClientSession();
             setAccess("guest");
             setCanChat(false);
-            setNavActions(GUEST_NAV);
+            setNavActions([]);
             setQuickReplies([]);
           }
           setMessages((prev) => [
@@ -487,8 +1001,223 @@ export function OrderBotWidget() {
         setSending(false);
       }
     },
-    [access, applyResponse, canChat, sending, sessionId],
+    [
+      access,
+      applyResponse,
+      authFlow,
+      canChat,
+      language,
+      resetInactivityTimer,
+      sending,
+      sessionId,
+      triggerAuthOtp,
+    ],
   );
+
+  sendMessageRef.current = sendMessage;
+
+  const handleVisualSearchUpload = useCallback(
+    async (file: File) => {
+      if (!file || sending || access !== "approved" || !sessionReady) return;
+      if (!sessionId) return;
+
+      resetInactivityTimer();
+      unlockOrderBotAudio();
+      playOrderBotSendSound();
+      setVisible(true);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: nextId(),
+          role: "user",
+          text: `📷 Photo: ${file.name}`,
+        },
+      ]);
+      setSending(true);
+      try {
+        let { res, data } = await postOrderBotVisualSearch({
+          file,
+          sessionId,
+          language,
+          source: "web",
+        });
+
+        if (res.status === 401) {
+          const restored = await restoreClientSessionFromCookie();
+          if (restored.ok) {
+            ({ res, data } = await postOrderBotVisualSearch({
+              file,
+              sessionId,
+              language,
+              source: "web",
+            }));
+          }
+        }
+
+        if (!res.ok) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text:
+                data.error ??
+                "Could not search by photo. Try a clearer image under 6MB.",
+            },
+          ]);
+          return;
+        }
+        applyResponse(data);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: nextId(),
+            role: "assistant",
+            text: "Could not search by photo. Please try again.",
+          },
+        ]);
+      } finally {
+        setSending(false);
+      }
+    },
+    [
+      access,
+      applyResponse,
+      language,
+      resetInactivityTimer,
+      sending,
+      sessionId,
+      sessionReady,
+    ],
+  );
+
+  const handleProductAction = useCallback(
+    async (payload: OrderBotProductAction) => {
+      if (!sessionId || sending) return;
+      setSending(true);
+      resetInactivityTimer();
+      try {
+        const { res, data } = await postOrderBotAction({
+          sessionId,
+          ...payload,
+          language,
+          source: "web",
+          pageContext,
+        });
+        if (!res.ok) {
+          const errorText =
+            "error" in data && typeof data.error === "string"
+              ? data.error
+              : "Could not update cart.";
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              text: errorText,
+            },
+          ]);
+          return;
+        }
+        applyResponse(data as BotChatResponse);
+      } finally {
+        setSending(false);
+      }
+    },
+    [
+      applyResponse,
+      language,
+      pageContext,
+      resetInactivityTimer,
+      sending,
+      sessionId,
+    ],
+  );
+
+  const handleLanguageSelect = useCallback(
+    async (nextLanguage: AiLanguage) => {
+      const isInitialPick = needsLanguagePick;
+      setLanguage(nextLanguage);
+      setShowLanguageMenu(false);
+      try {
+        await saveOrderBotLanguage(nextLanguage);
+      } catch {
+        /* keep local selection */
+      }
+      setLanguageReady(true);
+      setNeedsLanguagePick(false);
+
+      if (isInitialPick || !sessionReady || !sessionId) {
+        await bootstrapSession(nextLanguage);
+        return;
+      }
+
+      try {
+        const started = await startOrderBotSession({
+          language: nextLanguage,
+          source: "web",
+        });
+        persistSessionId(started.sessionId);
+        setLanguage(started.language ?? nextLanguage);
+        setSessionReady(true);
+        const label = languageLabel(nextLanguage);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: nextId(),
+            role: "assistant",
+            text: started.welcome
+              ? `Language switched to **${label}**.\n\n${started.welcome}`
+              : `Language switched to **${label}**. Continue chatting in your preferred language.`,
+          },
+        ]);
+        if (started.quickActions?.length) {
+          setQuickReplies(filterQuickActionsForApproved(started.quickActions));
+        }
+      } catch {
+        setSessionReady(true);
+      }
+    },
+    [bootstrapSession, needsLanguagePick, sessionId, sessionReady],
+  );
+
+  const handleRatingSubmit = useCallback(
+    async (rating: number, feedback: string) => {
+      if (!sessionId) return;
+      setSending(true);
+      try {
+        await closeOrderBotSession({
+          sessionId,
+          action: "rate",
+          rating,
+          feedback,
+        });
+        setShowRating(false);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: nextId(),
+            role: "assistant",
+            text: "Thank you for your feedback. Session closed.",
+          },
+        ]);
+        setQuickReplies([]);
+      } finally {
+        setSending(false);
+      }
+    },
+    [sessionId],
+  );
+
+  useEffect(() => {
+    if (visible && sessionReady) resetInactivityTimer();
+    return () => {
+      if (inactivityTimerRef.current) {
+        window.clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [visible, sessionReady, resetInactivityTimer]);
 
   if (!portalReady) return null;
 
@@ -521,21 +1250,58 @@ export function OrderBotWidget() {
                 {ASSISTANT_TAGLINE}
               </p>
             </div>
-            <button
-              type="button"
-              className="sarjan-order-bot-close"
-              aria-label="Close chat"
-              onClick={() => {
-                suppressOrderBotAutoOpen();
-                setVisible(false);
-              }}
-            >
-              ×
-            </button>
+            <div className="sarjan-order-bot-header-actions">
+              {accessUi === "approved" &&
+              canChat &&
+              sessionReady &&
+              !needsLanguagePick ? (
+                <button
+                  type="button"
+                  className={`sarjan-order-bot-lang-toggle${
+                    showLanguageMenu ? " is-open" : ""
+                  }`}
+                  aria-label="Change language"
+                  aria-expanded={showLanguageMenu}
+                  onClick={() => setShowLanguageMenu((open) => !open)}
+                >
+                  {languageShortLabel(language)}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="sarjan-order-bot-close"
+                aria-label="Close chat"
+                onClick={() => {
+                  suppressOrderBotAutoOpen();
+                  setShowLanguageMenu(false);
+                  setVisible(false);
+                }}
+              >
+                ×
+              </button>
+            </div>
           </header>
+          {showLanguageMenu &&
+          accessUi === "approved" &&
+          canChat &&
+          sessionReady &&
+          !needsLanguagePick ? (
+            <div className="sarjan-order-bot-lang-menu">
+              <p className="sarjan-order-bot-lang-menu__label">
+                Change language
+              </p>
+              <OrderBotLanguagePicker
+                value={language}
+                disabled={sending || authOtpLoading}
+                onSelect={(next) => void handleLanguageSelect(next)}
+              />
+            </div>
+          ) : null}
           <div className="sarjan-order-bot-scroll">
             <div className="sarjan-order-bot-messages" ref={scrollRef}>
-              {accessUi !== "approved" && accessUi !== "loading" ? (
+              {accessUi !== "approved" &&
+              accessUi !== "loading" &&
+              accessUi !== "guest" ? (
                 <div className="sarjan-order-bot-bubble sarjan-order-bot-bubble--assistant sarjan-order-bot-gate">
                   {renderBotText(gateMessage(accessUi))}
                 </div>
@@ -552,6 +1318,8 @@ export function OrderBotWidget() {
                   className={`sarjan-order-bot-bubble sarjan-order-bot-bubble--${msg.role}${
                     msg.role === "assistant" &&
                     (msg.products?.length ||
+                      msg.salesSuggestions?.length ||
+                      msg.cartOptimization ||
                       msg.categoryPreviews?.length ||
                       msg.cart?.length ||
                       msg.orders?.length)
@@ -568,7 +1336,27 @@ export function OrderBotWidget() {
                         />
                       ) : null}
                       {msg.products?.length ? (
-                        <OrderBotProductCards products={msg.products} />
+                        <OrderBotProductCards
+                          products={msg.products}
+                          disabled={sending || !sessionReady}
+                          onAction={(payload) =>
+                            void handleProductAction(payload)
+                          }
+                        />
+                      ) : null}
+                      {msg.salesSuggestions?.length ? (
+                        <OrderBotSalesSuggestions
+                          suggestions={msg.salesSuggestions}
+                          disabled={sending || !sessionReady}
+                          onAction={(payload) =>
+                            void handleProductAction(payload)
+                          }
+                        />
+                      ) : null}
+                      {msg.cartOptimization ? (
+                        <OrderBotCartOptimizationBanner
+                          optimization={msg.cartOptimization}
+                        />
                       ) : null}
                       {msg.cart?.length ? (
                         <OrderBotCartCards
@@ -585,6 +1373,36 @@ export function OrderBotWidget() {
                   )}
                 </div>
               ))}
+              {showRating ? (
+                <div className="sarjan-order-bot-bubble sarjan-order-bot-bubble--assistant">
+                  <OrderBotRatingPanel
+                    disabled={sending}
+                    onSubmit={(rating, feedback) =>
+                      void handleRatingSubmit(rating, feedback)
+                    }
+                  />
+                </div>
+              ) : null}
+              {showAuthOtp && authOtpEmail ? (
+                <div className="sarjan-order-bot-bubble sarjan-order-bot-bubble--assistant">
+                  <OrderBotAuthOtpPanel
+                    email={authOtpEmail}
+                    disabled={sending}
+                    loading={authOtpLoading}
+                    onSubmit={(otp) => void handleAuthOtpSubmit(otp)}
+                    onResend={() => void handleAuthOtpResend()}
+                  />
+                </div>
+              ) : null}
+              {authFlowNeedsGstPanel(authFlow) && authFlow?.data.gst ? (
+                <div className="sarjan-order-bot-bubble sarjan-order-bot-bubble--assistant">
+                  <OrderBotGstCaptchaPanel
+                    gstin={authFlow.data.gst}
+                    disabled={sending || authOtpLoading}
+                    onVerified={handleGstVerified}
+                  />
+                </div>
+              ) : null}
               {sending ? (
                 <div className="sarjan-order-bot-bubble sarjan-order-bot-bubble--assistant">
                   Thinking…
@@ -592,12 +1410,12 @@ export function OrderBotWidget() {
               ) : null}
             </div>
           </div>
-          {showGuestNav || navActions.length ? (
+          {navActions.length ? (
             <div
               className="sarjan-order-bot-nav"
               data-order-placed={orderPlacedToastId ? "true" : undefined}
             >
-              {(showGuestNav ? GUEST_NAV : navActions).map((action) => (
+              {navActions.map((action) => (
                 <a
                   key={`${action.href}-${action.label}`}
                   href={action.href}
@@ -613,7 +1431,30 @@ export function OrderBotWidget() {
               ))}
             </div>
           ) : null}
-          {accessUi === "approved" && canChat && quickReplies.length ? (
+          {accessUi === "guest" &&
+          guestQuickReplies.length &&
+          !showAuthOtp &&
+          !showGstVerify ? (
+            <div className="sarjan-order-bot-quick">
+              {guestQuickReplies.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  className="sarjan-order-bot-chip"
+                  disabled={sending || authOtpLoading}
+                  onClick={() =>
+                    void sendMessage(mapQuickActionToMessage(chip))
+                  }
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {accessUi === "approved" &&
+          canChat &&
+          quickReplies.length &&
+          sessionReady ? (
             <div className="sarjan-order-bot-quick">
               {quickReplies.map((chip) => (
                 <button
@@ -621,36 +1462,110 @@ export function OrderBotWidget() {
                   type="button"
                   className="sarjan-order-bot-chip"
                   disabled={sending || !canChat || access !== "approved"}
-                  onClick={() => void sendMessage(chip)}
+                  onClick={() =>
+                    void sendMessage(mapQuickActionToMessage(chip))
+                  }
                 >
                   {chip}
                 </button>
               ))}
             </div>
           ) : null}
-          <form
-            className="sarjan-order-bot-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void sendMessage(input);
-            }}
-          >
-            <input
-              type="text"
-              placeholder={inputPlaceholder}
-              value={input}
-              disabled={sending || accessUi !== "approved" || !canChat}
-              onChange={(event) => setInput(event.target.value)}
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              className="sarjan-order-bot-send"
-              disabled={sending || accessUi !== "approved" || !canChat}
+          {accessUi === "approved" && canChat && needsLanguagePick ? (
+            <div className="sarjan-order-bot-lang-footer">
+              <p className="sarjan-order-bot-lang-footer__label">
+                Choose your language to start chatting
+              </p>
+              <OrderBotLanguagePicker
+                value={language}
+                disabled={sending || authOtpLoading}
+                onSelect={(next) => void handleLanguageSelect(next)}
+              />
+            </div>
+          ) : null}
+          {!(accessUi === "approved" && canChat && needsLanguagePick) ? (
+            <form
+              className="sarjan-order-bot-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void sendMessage(input);
+              }}
             >
-              Send
-            </button>
-          </form>
+              <input
+                ref={visualSearchInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
+                className="sr-only"
+                tabIndex={-1}
+                aria-hidden
+                disabled={
+                  sending ||
+                  authOtpLoading ||
+                  showAuthOtp ||
+                  showGstVerify ||
+                  accessUi !== "approved" ||
+                  !canChat ||
+                  !sessionReady ||
+                  needsLanguagePick
+                }
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void handleVisualSearchUpload(file);
+                }}
+              />
+              {accessUi === "approved" && sessionReady && !needsLanguagePick ? (
+                <button
+                  type="button"
+                  className="sarjan-order-bot-photo"
+                  title="Search by photo"
+                  aria-label="Search by photo"
+                  disabled={
+                    sending ||
+                    authOtpLoading ||
+                    showAuthOtp ||
+                    showGstVerify ||
+                    !canChat ||
+                    !sessionReady
+                  }
+                  onClick={() => visualSearchInputRef.current?.click()}
+                >
+                  📷
+                </button>
+              ) : null}
+              <input
+                type="text"
+                placeholder={inputPlaceholder}
+                value={input}
+                disabled={
+                  sending ||
+                  authOtpLoading ||
+                  showAuthOtp ||
+                  showGstVerify ||
+                  (accessUi === "approved"
+                    ? !canChat || !sessionReady || needsLanguagePick
+                    : accessUi !== "guest")
+                }
+                onChange={(event) => setInput(event.target.value)}
+                autoComplete="off"
+              />
+              <button
+                type="submit"
+                className="sarjan-order-bot-send"
+                disabled={
+                  sending ||
+                  authOtpLoading ||
+                  showAuthOtp ||
+                  showGstVerify ||
+                  (accessUi === "approved"
+                    ? !canChat || !sessionReady || needsLanguagePick
+                    : accessUi !== "guest")
+                }
+              >
+                Send
+              </button>
+            </form>
+          ) : null}
         </div>
       ) : null}
       {orderPlacedToastId && !visible ? (

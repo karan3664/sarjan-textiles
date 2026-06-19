@@ -11,7 +11,7 @@ function demoOrderStatus(status: string): LocalOrder["status"] {
   return "Pending approval";
 }
 
-function creditDueDate(createdAt: string, days = 90) {
+function creditDueDate(createdAt: string, days = 30) {
   const date = new Date(createdAt);
   date.setDate(date.getDate() + days);
   return date.toISOString();
@@ -50,7 +50,7 @@ export async function getAdminOrders() {
       approvalRemark: "",
       paymentMode: "cheque" as const,
       paymentStatus: "Pending" as const,
-      creditDays: 90,
+      creditDays: 30,
       paidAmount: 0,
       chequeNumber: "",
       chequeDate: "",

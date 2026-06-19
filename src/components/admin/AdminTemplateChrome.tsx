@@ -82,6 +82,9 @@ type AdminActiveSection =
   | "mobileBranding"
   | "promotions"
   | "analytics"
+  | "aiAnalytics"
+  | "aiRevenue"
+  | "aiLeads"
   | "bulkImages"
   | "accountMenu"
   | "account";
@@ -261,6 +264,24 @@ const SIDEBAR_SECONDARY_ITEMS: SidebarNavItem[] = [
     icon: "icon-chart-bar",
     label: "App analytics",
     section: "analytics",
+  },
+  {
+    href: "/admin/ai-analytics",
+    icon: "icon-chart-bar",
+    label: "Sarjan AI analytics",
+    section: "aiAnalytics",
+  },
+  {
+    href: "/admin/ai-revenue",
+    icon: "icon-dollar",
+    label: "AI revenue",
+    section: "aiRevenue",
+  },
+  {
+    href: "/admin/ai-leads",
+    icon: "icon-users",
+    label: "AI leads",
+    section: "aiLeads",
   },
   {
     href: "/admin/bulk-images",

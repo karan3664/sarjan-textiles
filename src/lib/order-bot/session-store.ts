@@ -1,4 +1,12 @@
 import { randomUUID } from "crypto";
+import {
+  createAiChatSession,
+  getAiChatSession,
+  hydrateBotSessionFromState,
+  serializeBotSessionState,
+  touchAiChatSession,
+} from "@/lib/ai-chat/store";
+import type { AiLanguage, AiSource } from "@/lib/ai-chat/types";
 import type {
   BotCartLine,
   BotOrderPreview,
@@ -9,28 +17,29 @@ export type BotSession = {
   id: string;
   clientId: string;
   clientEmail: string;
+  language: AiLanguage;
+  source: AiSource;
   cart: BotCartLine[];
   lastProducts: BotProductPreview[];
   lastCategory?: string;
-  /** User was shown a product list or "did you mean" — accept yes / 1 / add N sets */
   pendingProductPick?: boolean;
-  /** Last product the user confirmed or asked about */
   focusProductIndex?: number;
-  /** Recent turns for OpenAI chat (user + assistant text only) */
   chatHistory: Array<{ role: "user" | "assistant"; content: string }>;
-  /** Set when place_order succeeds; consumed on next chat response */
   lastPlacedOrderId?: string;
-  /** Order cards for track / my orders (consumed on next chat response) */
   lastOrderPreviews?: BotOrderPreview[];
-  /** Next assistant bubble should show product image cards (browse/search) */
   attachProductCards?: boolean;
-  /** Next assistant bubble should show cart line cards (view_cart) */
   attachCartCards?: boolean;
+  lifecyclePhase?: "active" | "closing" | "awaiting_rating";
+  salesBudgetInr?: number;
+  salesTargetSets?: number;
+  lastLeadId?: string;
+  attachSalesSuggestions?: import("@/lib/ai-sales/types").BotSalesSuggestion[];
+  attachCartOptimization?: import("@/lib/ai-sales/types").BotCartOptimization;
+  pageContext?: import("@/lib/ai-chat/page-context").AiPageContext;
   updatedAt: number;
 };
 
 const MAX_CHAT_HISTORY = 24;
-
 const sessions = new Map<string, BotSession>();
 const TTL_MS = 1000 * 60 * 60 * 4;
 
@@ -41,27 +50,88 @@ function pruneSessions() {
   }
 }
 
-export function getBotSession(
-  sessionId: string | undefined,
+function baseSession(
+  id: string,
   clientId: string,
   clientEmail: string,
-) {
-  pruneSessions();
-  const existing = sessionId ? sessions.get(sessionId) : undefined;
-  if (existing && existing.clientId === clientId) {
-    existing.updatedAt = Date.now();
-    if (!existing.chatHistory) existing.chatHistory = [];
-    return existing;
-  }
-  const session: BotSession = {
-    id: randomUUID(),
+  language: AiLanguage,
+  source: AiSource,
+): BotSession {
+  return {
+    id,
     clientId,
     clientEmail,
+    language,
+    source,
     cart: [],
     lastProducts: [],
     chatHistory: [],
     updatedAt: Date.now(),
   };
+}
+
+export async function getBotSession(input: {
+  sessionId?: string;
+  clientId: string;
+  clientEmail: string;
+  language?: AiLanguage;
+  source?: AiSource;
+  createIfMissing?: boolean;
+}): Promise<BotSession> {
+  pruneSessions();
+  const language = input.language ?? "en";
+  const source = input.source ?? "web";
+
+  const cached = input.sessionId ? sessions.get(input.sessionId) : undefined;
+  if (cached && cached.clientId === input.clientId) {
+    cached.updatedAt = Date.now();
+    if (input.language) cached.language = input.language;
+    if (input.source) cached.source = input.source;
+    if (!cached.chatHistory) cached.chatHistory = [];
+    return cached;
+  }
+
+  if (input.sessionId) {
+    const persisted = await getAiChatSession(input.sessionId, input.clientId);
+    if (persisted && persisted.status !== "closed") {
+      const session = baseSession(
+        persisted.id,
+        input.clientId,
+        input.clientEmail,
+        persisted.language,
+        persisted.source,
+      );
+      hydrateBotSessionFromState(session, persisted.state);
+      sessions.set(session.id, session);
+      return session;
+    }
+  }
+
+  if (input.createIfMissing === false) {
+    const fallback = baseSession(
+      input.sessionId ?? randomUUID(),
+      input.clientId,
+      input.clientEmail,
+      language,
+      source,
+    );
+    sessions.set(fallback.id, fallback);
+    return fallback;
+  }
+
+  const created = await createAiChatSession({
+    clientId: input.clientId,
+    language,
+    source,
+    state: {},
+  });
+  const session = baseSession(
+    created.id,
+    input.clientId,
+    input.clientEmail,
+    created.language,
+    created.source,
+  );
   sessions.set(session.id, session);
   return session;
 }
@@ -69,6 +139,41 @@ export function getBotSession(
 export function touchBotSession(session: BotSession) {
   session.updatedAt = Date.now();
   sessions.set(session.id, session);
+  void touchAiChatSession(session.id, {
+    state: serializeBotSessionState(session),
+  });
+}
+
+export async function flushBotSession(session: BotSession): Promise<void> {
+  session.updatedAt = Date.now();
+  sessions.set(session.id, session);
+  await touchAiChatSession(session.id, {
+    state: serializeBotSessionState(session),
+  });
+}
+
+export async function flushBotSessionById(
+  sessionId: string,
+  clientId: string,
+): Promise<void> {
+  const session = sessions.get(sessionId);
+  if (session && session.clientId === clientId) {
+    await flushBotSession(session);
+  }
+}
+
+export async function reloadBotSessionFromStore(
+  session: BotSession,
+): Promise<void> {
+  const persisted = await getAiChatSession(session.id, session.clientId);
+  if (persisted) {
+    hydrateBotSessionFromState(session, persisted.state);
+    sessions.set(session.id, session);
+  }
+}
+
+export function getBotSessionFromMemory(sessionId: string) {
+  return sessions.get(sessionId);
 }
 
 export function appendChatHistory(

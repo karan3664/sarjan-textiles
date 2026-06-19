@@ -319,7 +319,7 @@ export function defaultMobileAppConfig(
           id: "pricing",
           title: "Direct Factory Pricing",
           subtitle:
-            "MOQ-based sets, transparent wholesale rates, and 90-day credit for approved clients.",
+            "MOQ-based sets, transparent wholesale rates, and 30-day credit for approved clients.",
           icon: "tag",
           enabled: true,
         },

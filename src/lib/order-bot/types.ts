@@ -1,3 +1,8 @@
+import type {
+  BotCartOptimization,
+  BotSalesSuggestion,
+} from "@/lib/ai-sales/types";
+
 export type BotCartLine = {
   slug: string;
   name: string;
@@ -56,9 +61,18 @@ export type BotNavAction = {
   href: string;
 };
 
+export type BotSessionPhase =
+  | "active"
+  | "closing"
+  | "awaiting_rating"
+  | "closed";
+
 export type BotChatResponse = {
   sessionId: string;
   reply: string;
+  language?: "en" | "hi" | "hinglish";
+  sessionPhase?: BotSessionPhase;
+  showRating?: boolean;
   categories?: string[];
   categoryPreviews?: BotCategoryPreview[];
   products?: BotProductPreview[];
@@ -70,4 +84,13 @@ export type BotChatResponse = {
   orderId?: string;
   quickReplies?: string[];
   navActions?: BotNavAction[];
+  salesSuggestions?: BotSalesSuggestion[];
+  cartOptimization?: BotCartOptimization;
+  visualSearch?: {
+    pattern?: string;
+    colors?: string[];
+    category?: string;
+    keywords?: string[];
+    source?: "vision" | "color-fallback";
+  };
 };

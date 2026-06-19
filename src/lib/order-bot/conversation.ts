@@ -46,6 +46,22 @@ export function isOrderTrackingIntent(text: string) {
   );
 }
 
+/** User wants to submit the current cart as an order (chip, rules, before LLM). */
+export function isPlaceOrderIntent(text: string) {
+  const lower = text.trim().toLowerCase();
+  return (
+    /^place order$|^submit order$|^confirm order$/i.test(lower) ||
+    /^order place$/i.test(lower) ||
+    /^place my order$/i.test(lower)
+  );
+}
+
+/** User wants to view the cart (before LLM). */
+export function isViewCartIntent(text: string) {
+  const lower = text.trim().toLowerCase();
+  return /^cart$|^my cart$|^show cart$|^view cart$/i.test(lower);
+}
+
 /** e.g. "1 23", "1 23 yes", "#2 50 sets" — product # then set count */
 export function parseProductIndexAndSets(
   text: string,

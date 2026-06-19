@@ -248,7 +248,7 @@ export function detectWebsitePolicyTopic(
     return "moq";
   }
 
-  if (/(credit|90 day|90-day)/i.test(lower) && !/card/i.test(lower)) {
+  if (/(credit|\d+\s*days?|\d+-day)/i.test(lower) && !/card/i.test(lower)) {
     return "credit";
   }
 

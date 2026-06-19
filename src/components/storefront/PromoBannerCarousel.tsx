@@ -39,9 +39,10 @@ export function PromoBannerCarousel({
   const banner = banners[active] ?? banners[0];
   const href =
     banner.ctaHref?.trim() || banner.actionValue?.trim() || "/products";
+  const ctaLabel = banner.ctaLabel?.trim() || "Shop now";
 
   return (
-    <section className="flat-spacing sarjan-promo-banner-section">
+    <section className="sarjan-promo-banner-section">
       <div className="container">
         {title || subtitle ? (
           <div className="heading-section text-center wow fadeInUp">
@@ -58,7 +59,7 @@ export function PromoBannerCarousel({
           </div>
         ) : null}
         <div className="sarjan-promo-banner-carousel">
-          <Link href={href} className="sarjan-promo-banner-slide hover-img">
+          <Link href={href} className="sarjan-promo-banner-slide">
             <StorefrontBannerImage
               src={banner.image}
               alt={banner.title?.trim() || "Promotional banner"}
@@ -67,20 +68,23 @@ export function PromoBannerCarousel({
               priority
               fill
             />
-            {banner.eyebrow?.trim() || banner.title?.trim() ? (
-              <div className="sarjan-promo-banner-caption">
+            <div className="sarjan-promo-banner-caption">
+              <div className="sarjan-promo-banner-copy">
                 {banner.eyebrow?.trim() ? (
-                  <span className="text-caption-1 sarjan-cms-banner-text">
+                  <span className="sarjan-promo-banner-eyebrow sarjan-cms-banner-text">
                     <CmsHtml html={banner.eyebrow} />
                   </span>
                 ) : null}
                 {banner.title?.trim() ? (
-                  <h4 className="mb_0 sarjan-cms-banner-text">
+                  <h4 className="sarjan-promo-banner-title mb_0 sarjan-cms-banner-text">
                     <CmsHtml html={banner.title} />
                   </h4>
                 ) : null}
               </div>
-            ) : null}
+              <span className="sarjan-promo-banner-cta tf-btn btn-fill btn-white btn-md radius-4">
+                {ctaLabel}
+              </span>
+            </div>
           </Link>
           {banners.length > 1 ? (
             <div className="sarjan-promo-banner-dots">

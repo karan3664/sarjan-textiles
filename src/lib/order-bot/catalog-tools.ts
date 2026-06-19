@@ -321,3 +321,38 @@ export function resolveProductFromSession(
     )
   );
 }
+
+export function resolveBotSessionProduct(
+  lastProducts: BotProductPreview[],
+  productIndex: number,
+  productSlug?: string,
+): BotProductPreview | undefined {
+  const slug = productSlug?.trim();
+  if (slug) {
+    const bySlug = lastProducts.find((item) => item.slug === slug);
+    if (bySlug) return bySlug;
+  }
+  const byPosition = lastProducts[productIndex - 1];
+  if (byPosition) return byPosition;
+  return lastProducts.find((item) => item.index === productIndex);
+}
+
+export async function fetchBotProductPreviewBySlug(
+  clientId: string,
+  slug: string,
+  index = 1,
+): Promise<BotProductPreview | null> {
+  const needle = slug.trim();
+  if (!needle) return null;
+  const catalog = await getCatalogProducts({
+    clientId,
+    ids: [needle],
+    limit: 1,
+  });
+  const product = catalog.items[0];
+  if (!product) return null;
+  const previews = toPreviews([product], 1);
+  const preview = previews[0];
+  if (!preview) return null;
+  return { ...preview, index };
+}

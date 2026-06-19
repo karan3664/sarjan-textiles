@@ -18,6 +18,7 @@ import {
   resolveOrderBotLlmModel,
 } from "@/lib/order-bot/openai-env";
 import { siteSettings } from "@/data/site";
+import { formatPageContextForPrompt } from "@/lib/ai-chat/page-context";
 
 const OPENAI_TOOLS = [
   {
@@ -170,6 +171,71 @@ const OPENAI_TOOLS = [
   {
     type: "function" as const,
     function: {
+      name: "recommend_products",
+      description:
+        "Sales recommendations: similar, bought_together, budget, quantity, upsell, or cross_sell.",
+      parameters: {
+        type: "object",
+        properties: {
+          kind: {
+            type: "string",
+            enum: [
+              "similar",
+              "bought_together",
+              "budget",
+              "quantity",
+              "upsell",
+              "cross_sell",
+            ],
+          },
+          product_slug: {
+            type: "string",
+            description: "Reference product slug",
+          },
+          budget_inr: { type: "number", description: "Client budget in INR" },
+          target_sets: { type: "number", description: "Desired set quantity" },
+        },
+        required: ["kind"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "optimize_cart",
+      description:
+        "Analyze cart for shipping slab optimization (e.g. add pieces to save shipping).",
+      parameters: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "capture_lead",
+      description:
+        "Capture wholesale lead interest: product, quantity, budget for sales follow-up.",
+      parameters: {
+        type: "object",
+        properties: {
+          product_interest: { type: "string" },
+          product_slugs: { type: "array", items: { type: "string" } },
+          quantity_interest: { type: "number" },
+          budget_inr: { type: "number" },
+          notes: { type: "string" },
+          status: { type: "string", enum: ["new", "qualified", "lost"] },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
       name: "website_info",
       description:
         "Official Sarjan website policies and help: payment/credit, shipping/dispatch, terms, B2B process, collections, FAQs, refunds, contact, MOQ, registration, tracking, page list. Use for any non-catalog site question.",
@@ -215,10 +281,33 @@ type ToolCall = {
   function: { name: string; arguments: string };
 };
 
-function systemPrompt() {
+function systemPrompt(
+  pageContext?: import("@/lib/ai-chat/page-context").AiPageContext,
+  client?: { email?: string; companyName?: string },
+) {
+  const contextBlock = formatPageContextForPrompt(pageContext);
+  const clientBlock = client?.email?.trim()
+    ? [
+        "SIGNED-IN CLIENT (already authenticated on the website — never ask them to log in or register):",
+        `• Email: ${client.email.trim()}`,
+        ...(client.companyName?.trim()
+          ? [`• Company: ${client.companyName.trim()}`]
+          : []),
+        "• Use place_order, view_cart, track_orders, and catalog tools directly.",
+        "",
+      ].join("\n")
+    : "";
   return [
     `You are the live AI assistant for ${siteSettings.brandName} (${siteSettings.domain}) — a B2B textile wholesale storefront.`,
     "",
+    ...(clientBlock ? [clientBlock] : []),
+    ...(contextBlock
+      ? [
+          "PAGE CONTEXT (use this when the user refers to “this page” or “this product”):",
+          contextBlock,
+          "",
+        ]
+      : []),
     "SCOPE (only these topics):",
     "• Product catalog: categories, collections, search, prices per set, MOQ, stock",
     "• Cart and placing wholesale orders for the logged-in approved client",
@@ -228,7 +317,12 @@ function systemPrompt() {
     "RULES:",
     "• For payment, shipping, terms, process, collections, or FAQ questions — call **website_info** with the right topic. Summarize tool output; add page links (/faqs, /terms, /shipping-policy, /process).",
     "• Always use tools for catalog, cart, orders, and site facts — never invent SKUs, prices, order IDs, or policy details.",
-    "• When the user says yes/haan/ok after products, call add_to_cart. For **1 23** or **1 23 yes**, use add_to_cart with product_index=1, sets=23, replace=true.",
+    "• Product cards have **Add 25/50/100** buttons — guide users to those instead of typing product numbers.",
+    "• When user mentions budget or quantity, call **recommend_products** with kind=budget or kind=quantity.",
+    "• Proactively suggest **recommend_products** (similar, upsell, cross_sell) after browse/search.",
+    "• After cart changes or before place order, call **optimize_cart** when cart has items.",
+    "• When user shares buying intent without ordering, call **capture_lead** with product_interest, budget_inr, quantity_interest.",
+    "• When the user says yes/haan/ok after products, call add_to_cart with appropriate sets.",
     "• Low stock: add_to_cart/update_cart_line auto-cap qty; explain the adjustment to the user.",
     "• To change cart qty: update_cart_line (line_index, sets) or user says **update cart 1 30**.",
     "• Speak naturally like ChatGPT. Match Hindi, English, or Hinglish.",
@@ -236,7 +330,8 @@ function systemPrompt() {
     "• After browse_products, search_products, track_orders, or view_cart: the chat UI shows photo cards — do NOT paste numbered product lists or order bullet lists in your reply (one short intro sentence only).",
     "• Refuse off-topic requests (other brands, general knowledge, code, politics) — redirect politely to Sarjan ordering.",
     "• Refuse vulgar or abusive messages.",
-    "• Credit term: 90 days for approved clients. Orders need admin approval.",
+    "• Never tell an approved signed-in client to log in — they are already authenticated in this chat.",
+    `• Credit term: ${siteSettings.creditTermDays} days for approved clients. Orders need admin approval.`,
   ].join("\n");
 }
 
@@ -318,6 +413,14 @@ function sessionToResponse(
   const showCartCards = Boolean(session.attachCartCards);
   if (session.attachCartCards) session.attachCartCards = undefined;
 
+  const salesSuggestions = session.attachSalesSuggestions;
+  if (session.attachSalesSuggestions)
+    session.attachSalesSuggestions = undefined;
+
+  const cartOptimization = session.attachCartOptimization;
+  if (session.attachCartOptimization)
+    session.attachCartOptimization = undefined;
+
   let finalReply = reply;
   if (orderPreviews?.length) {
     finalReply =
@@ -326,9 +429,13 @@ function sessionToResponse(
         : `Your **${orderPreviews.length}** recent orders (newest first):`;
   } else if (showProductCards) {
     const label = session.lastCategory ? `**${session.lastCategory}** — ` : "";
-    finalReply = `${label}${session.lastProducts.length} product(s) below. Reply **1 50** or **add 1 50 sets**:`;
+    finalReply = `${label}${session.lastProducts.length} product(s) below. Use the card buttons to view details or add sets.`;
+  } else if (cartOptimization && !showCartCards) {
+    finalReply = cartOptimization.message;
   } else if (showCartCards) {
-    finalReply = `Your cart — **${money(cartTotal)}** estimated total. Lines below.`;
+    finalReply = cartOptimization
+      ? `${cartOptimization.message}\n\nYour cart — **${money(cartTotal)}** estimated total.`
+      : `Your cart — **${money(cartTotal)}** estimated total. Lines below.`;
   }
 
   return {
@@ -338,6 +445,8 @@ function sessionToResponse(
     cart: placedOrderId ? [] : showCartCards ? session.cart : undefined,
     cartTotal: placedOrderId ? 0 : showCartCards ? cartTotal : undefined,
     orders: orderPreviews?.length ? orderPreviews : undefined,
+    salesSuggestions: salesSuggestions?.length ? salesSuggestions : undefined,
+    cartOptimization: cartOptimization ?? undefined,
     quickReplies: placedOrderId
       ? ["My orders", "Categories"]
       : defaultQuickReplies(session),
@@ -366,14 +475,15 @@ export async function tryHandleOrderBotWithLlm(input: {
   sessionId?: string;
   clientId: string;
   clientEmail: string;
+  clientName?: string;
 }): Promise<BotChatResponse | null> {
   if (!isOrderBotLlmEnabled()) return null;
 
-  const session = getBotSession(
-    input.sessionId,
-    input.clientId,
-    input.clientEmail,
-  );
+  const session = await getBotSession({
+    sessionId: input.sessionId,
+    clientId: input.clientId,
+    clientEmail: input.clientEmail,
+  });
   const text = input.message.trim();
   if (!text) return null;
 
@@ -384,7 +494,13 @@ export async function tryHandleOrderBotWithLlm(input: {
   appendChatHistory(session, "user", text);
 
   const messages: OpenAIMessage[] = [
-    { role: "system", content: systemPrompt() },
+    {
+      role: "system",
+      content: systemPrompt(session.pageContext, {
+        email: input.clientEmail,
+        companyName: input.clientName,
+      }),
+    },
     ...session.chatHistory.map((entry) => ({
       role: entry.role,
       content: entry.content,

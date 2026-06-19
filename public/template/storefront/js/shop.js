@@ -1,14 +1,51 @@
-
 /**
-  * Range Two Price
-  * Filter Products
-  * Filter Sort 
-  * Switch Layout
-  * Handle Sidebar Filter
-  * Handle Dropdown Filter
+ * Range Two Price
+ * Filter Products
+ * Filter Sort
+ * Switch Layout
+ * Handle Sidebar Filter
+ * Handle Dropdown Filter
  */
 (function ($) {
   "use strict";
+
+  var GRID_COLUMN_CLASSES =
+    "tf-col-2 tf-col-3 tf-col-4 tf-col-5 tf-col-6 tf-col-7";
+
+  function isListLayoutActive() {
+    return $(".wrapper-control-shop").hasClass("listLayout-wrapper");
+  }
+
+  /** jQuery .show() restores display:block and breaks CSS grid — clear inline instead. */
+  function clearInlineLayoutDisplay() {
+    $("#gridLayout, #listLayout").css("display", "");
+  }
+
+  /** Preserve Sarjan grid classes — never use .removeClass() with no args. */
+  function applyGridColumnLayout(layoutClass) {
+    var $grid = $("#gridLayout");
+    if (!$grid.length || !layoutClass) {
+      return;
+    }
+    $grid.removeClass(GRID_COLUMN_CLASSES).addClass(layoutClass);
+    clearInlineLayoutDisplay();
+    $(".wrapper-control-shop")
+      .addClass("gridLayout-wrapper")
+      .removeClass("listLayout-wrapper");
+    $(".tf-view-layout-switch").removeClass("active");
+    $(
+      '.tf-view-layout-switch[data-value-layout="' + layoutClass + '"]',
+    ).addClass("active");
+  }
+
+  function applyListLayout() {
+    clearInlineLayoutDisplay();
+    $(".wrapper-control-shop")
+      .addClass("listLayout-wrapper")
+      .removeClass("gridLayout-wrapper");
+    $(".tf-view-layout-switch").removeClass("active");
+    $('.tf-view-layout-switch[data-value-layout="list"]').addClass("active");
+  }
 
   /* Range Two Price
   -------------------------------------------------------------------------------------*/
@@ -131,17 +168,17 @@
 
       if (filters.availability) {
         appliedFilters.append(
-          `<span class="filter-tag">${filters.availability} <span class="remove-tag icon-close" data-filter="availability"></span></span>`
+          `<span class="filter-tag">${filters.availability} <span class="remove-tag icon-close" data-filter="availability"></span></span>`,
         );
       }
       if (filters.size) {
         appliedFilters.append(
-          `<span class="filter-tag">${filters.size} <span class="remove-tag icon-close" data-filter="size"></span></span>`
+          `<span class="filter-tag">${filters.size} <span class="remove-tag icon-close" data-filter="size"></span></span>`,
         );
       }
       if (filters.minPrice > minPrice || filters.maxPrice < maxPrice) {
         appliedFilters.append(
-          `<span class="filter-tag">$${filters.minPrice} - $${filters.maxPrice} <span class="remove-tag icon-close" data-filter="price"></span></span>`
+          `<span class="filter-tag">$${filters.minPrice} - $${filters.maxPrice} <span class="remove-tag icon-close" data-filter="price"></span></span>`,
         );
       }
       if (filters.color) {
@@ -157,21 +194,21 @@
                   <span class="color ${backgroundClass} ${line}"></span>
                   ${filters.color}
                   <span class="remove-tag icon-close" data-filter="color"></span>
-              </span>`
+              </span>`,
         );
       }
 
       if (filters.brands.length > 0) {
         filters.brands.forEach((brand) => {
           appliedFilters.append(
-            `<span class="filter-tag">${brand.label} <span class="remove-tag icon-close" data-filter="brand" data-value="${brand.id}"></span></span>`
+            `<span class="filter-tag">${brand.label} <span class="remove-tag icon-close" data-filter="brand" data-value="${brand.id}"></span></span>`,
           );
         });
       }
 
       if (filters.sale) {
         appliedFilters.append(
-          `<span class="filter-tag on-sale d-none">On Sale <span class="remove-tag icon-close" data-filter="sale"></span></span>`
+          `<span class="filter-tag on-sale d-none">On Sale <span class="remove-tag icon-close" data-filter="sale"></span></span>`,
         );
       }
 
@@ -199,7 +236,7 @@
       }
       if (filterType === "brand") {
         filters.brands = filters.brands.filter(
-          (brand) => brand.id !== filterValue
+          (brand) => brand.id !== filterValue,
         );
         $(`input[name="brand"][id="${filterValue}"]`).prop("checked", false);
       }
@@ -245,9 +282,7 @@
         const product = $(this);
         let showProduct = true;
 
-        const priceText = product
-          .find(".current-price")
-          .text();
+        const priceText = product.find(".current-price").text();
         const price = parseMoney(priceText);
         if (price < filters.minPrice || price > filters.maxPrice) {
           showProduct = false;
@@ -299,10 +334,10 @@
       });
 
       $("#product-count-grid").html(
-        `<span class="count">${visibleProductCountGrid}</span> Products Found`
+        `<span class="count">${visibleProductCountGrid}</span> Products Found`,
       );
       $("#product-count-list").html(
-        `<span class="count">${visibleProductCountList}</span> Products Found`
+        `<span class="count">${visibleProductCountList}</span> Products Found`,
       );
       updateLastVisibleItem();
       if (visibleProductCountGrid >= 12 || visibleProductCountList >= 12) {
@@ -324,9 +359,8 @@
   };
 
   /* Filter Sort
-  -------------------------------------------------------------------------------------*/  
+  -------------------------------------------------------------------------------------*/
   var filterSort = function () {
-    let isListActive = $(".sw-layout-list").hasClass("active");
     let originalProductsList = $("#listLayout .card-product").clone();
     let originalProductsGrid = $("#gridLayout .card-product").clone();
     let paginationList = $("#listLayout .wg-pagination").clone();
@@ -336,7 +370,11 @@
     };
 
     $(".select-item").on("click", function () {
-      if (this.tagName === "A" && $(this).attr("href") && $(this).attr("href") !== "#") {
+      if (
+        this.tagName === "A" &&
+        $(this).attr("href") &&
+        $(this).attr("href") !== "#"
+      ) {
         return;
       }
       const sortValue = $(this).data("sort-value");
@@ -344,40 +382,26 @@
       $(this).addClass("active");
       $(".text-sort-value").text($(this).find(".text-value-item").text());
 
-      applyFilter(sortValue, isListActive);
+      applyFilter(sortValue, isListLayoutActive());
     });
 
-    $(".tf-view-layout-switch").on("click", function () {
-      const layout = $(this).data("value-layout");
-
-      if (layout === "list") {
-        isListActive = true;
-        $("#gridLayout").hide();
-        $("#listLayout").show();
-      } else {
-        isListActive = false;
-        $("#listLayout").hide();
-        setGridLayout(layout);
-      }
-    });
-
-    function applyFilter(sortValue, isListActive) {
+    function applyFilter(sortValue, listActive) {
       let products;
 
-      if (isListActive) {
+      if (listActive) {
         products = $("#listLayout .card-product");
       } else {
         products = $("#gridLayout .card-product");
       }
 
       if (sortValue === "best-selling") {
-        if (isListActive) {
+        if (listActive) {
           $("#listLayout").empty().append(originalProductsList.clone());
         } else {
           $("#gridLayout").empty().append(originalProductsGrid.clone());
         }
         bindProductEvents();
-        displayPagination(products, isListActive);
+        displayPagination(products, listActive);
         return;
       }
 
@@ -385,36 +409,36 @@
         products.sort(
           (a, b) =>
             parseMoney($(a).find(".current-price,.price").first().text()) -
-            parseMoney($(b).find(".current-price,.price").first().text())
+            parseMoney($(b).find(".current-price,.price").first().text()),
         );
       } else if (sortValue === "price-high-low") {
         products.sort(
           (a, b) =>
             parseMoney($(b).find(".current-price,.price").first().text()) -
-            parseMoney($(a).find(".current-price,.price").first().text())
+            parseMoney($(a).find(".current-price,.price").first().text()),
         );
       } else if (sortValue === "a-z") {
         products.sort((a, b) =>
-          $(a).find(".title").text().localeCompare($(b).find(".title").text())
+          $(a).find(".title").text().localeCompare($(b).find(".title").text()),
         );
       } else if (sortValue === "z-a") {
         products.sort((a, b) =>
-          $(b).find(".title").text().localeCompare($(a).find(".title").text())
+          $(b).find(".title").text().localeCompare($(a).find(".title").text()),
         );
       }
 
-      if (isListActive) {
+      if (listActive) {
         $("#listLayout").empty().append(products);
       } else {
         $("#gridLayout").empty().append(products);
       }
       bindProductEvents();
-      displayPagination(products, isListActive);
+      displayPagination(products, listActive);
     }
 
-    function displayPagination(products, isListActive) {
+    function displayPagination(products, listActive) {
       if (products.length >= 12) {
-        if (isListActive) {
+        if (listActive) {
           $("#listLayout").append(paginationList.clone());
         } else {
           $("#gridLayout").append(paginationGrid.clone());
@@ -422,16 +446,6 @@
       }
     }
 
-    function setGridLayout(layoutClass) {
-      $("#gridLayout")
-        .show()
-        .removeClass()
-        .addClass(`wrapper-shop tf-grid-layout ${layoutClass}`);
-      $(".tf-view-layout-switch").removeClass("active");
-      $(`.tf-view-layout-switch[data-value-layout="${layoutClass}"]`).addClass(
-        "active"
-      );
-    }
     function bindProductEvents() {
       if ($(".card-product").length > 0) {
         $(".color-swatch").on("click, mouseover", function () {
@@ -456,7 +470,7 @@
   };
 
   /* Switch Layout 
-  -------------------------------------------------------------------------------------*/   
+  -------------------------------------------------------------------------------------*/
   var swLayoutShop = function () {
     let isListActive = $(".sw-layout-list").hasClass("active");
     let userSelectedLayout = null;
@@ -474,93 +488,67 @@
 
     function updateLayoutDisplay() {
       const windowWidth = $(window).width();
-      const currentLayout = $("#gridLayout").attr("class");
 
       if (!hasValidLayout()) {
-        console.warn(
-          "Page does not contain a valid layout (2-7 columns), skipping layout adjustments."
-        );
+        applyGridColumnLayout("tf-col-4");
         return;
       }
 
       if (isListActive) {
-        $("#gridLayout").hide();
-        $("#listLayout").show();
-        $(".wrapper-control-shop")
-          .addClass("listLayout-wrapper")
-          .removeClass("gridLayout-wrapper");
+        applyListLayout();
         return;
       }
 
       if (userSelectedLayout) {
         if (windowWidth <= 767) {
-          setGridLayout("tf-col-2");
+          applyGridColumnLayout("tf-col-2");
         } else if (windowWidth <= 1200 && userSelectedLayout !== "tf-col-2") {
-          setGridLayout("tf-col-3");
+          applyGridColumnLayout("tf-col-3");
         } else if (
           windowWidth <= 1400 &&
           (userSelectedLayout === "tf-col-5" ||
             userSelectedLayout === "tf-col-6" ||
             userSelectedLayout === "tf-col-7")
         ) {
-          setGridLayout("tf-col-4");
+          applyGridColumnLayout("tf-col-4");
         } else {
-          setGridLayout(userSelectedLayout);
+          applyGridColumnLayout(userSelectedLayout);
         }
         return;
       }
 
       if (windowWidth <= 767) {
-        if (!currentLayout.includes("tf-col-2")) {
-          setGridLayout("tf-col-2");
+        if (!$("#gridLayout").hasClass("tf-col-2")) {
+          applyGridColumnLayout("tf-col-2");
         }
       } else if (windowWidth <= 1200) {
-        if (!currentLayout.includes("tf-col-3")) {
-          setGridLayout("tf-col-3");
+        if (!$("#gridLayout").hasClass("tf-col-3")) {
+          applyGridColumnLayout("tf-col-3");
         }
       } else if (windowWidth <= 1400) {
         if (
-          currentLayout.includes("tf-col-5") ||
-          currentLayout.includes("tf-col-6") ||
-          currentLayout.includes("tf-col-7")
+          $("#gridLayout").hasClass("tf-col-5") ||
+          $("#gridLayout").hasClass("tf-col-6") ||
+          $("#gridLayout").hasClass("tf-col-7")
         ) {
-          setGridLayout("tf-col-4");
+          applyGridColumnLayout("tf-col-4");
         }
       } else {
-        $("#listLayout").hide();
-        $("#gridLayout").show();
+        clearInlineLayoutDisplay();
         $(".wrapper-control-shop")
           .addClass("gridLayout-wrapper")
           .removeClass("listLayout-wrapper");
       }
     }
 
-    function setGridLayout(layoutClass) {
-      $("#listLayout").hide();
-      $("#gridLayout")
-        .show()
-        .removeClass()
-        .addClass(`wrapper-shop tf-grid-layout ${layoutClass}`);
-      $(".tf-view-layout-switch").removeClass("active");
-      $(`.tf-view-layout-switch[data-value-layout="${layoutClass}"]`).addClass(
-        "active"
-      );
-      $(".wrapper-control-shop")
-        .addClass("gridLayout-wrapper")
-        .removeClass("listLayout-wrapper");
-      isListActive = false;
-    }
-
     $(document).ready(function () {
       if (isListActive) {
-        $("#gridLayout").hide();
-        $("#listLayout").show();
-        $(".wrapper-control-shop")
-          .addClass("listLayout-wrapper")
-          .removeClass("gridLayout-wrapper");
+        applyListLayout();
       } else {
-        $("#listLayout").hide();
-        $("#gridLayout").show();
+        clearInlineLayoutDisplay();
+        $(".wrapper-control-shop")
+          .addClass("gridLayout-wrapper")
+          .removeClass("listLayout-wrapper");
         updateLayoutDisplay();
       }
     });
@@ -569,26 +557,21 @@
 
     $(".tf-view-layout-switch").on("click", function () {
       const layout = $(this).data("value-layout");
-      $(".tf-view-layout-switch").removeClass("active");
-      $(this).addClass("active");
 
       if (layout === "list") {
         isListActive = true;
         userSelectedLayout = null;
-        $("#gridLayout").hide();
-        $("#listLayout").show();
-        $(".wrapper-control-shop")
-          .addClass("listLayout-wrapper")
-          .removeClass("gridLayout-wrapper");
+        applyListLayout();
       } else {
+        isListActive = false;
         userSelectedLayout = layout;
-        setGridLayout(layout);
+        applyGridColumnLayout(layout);
       }
     });
   };
 
   /* Handle Sidebar Filter 
-  -------------------------------------------------------------------------------------*/ 
+  -------------------------------------------------------------------------------------*/
   var handleSidebarFilter = function () {
     $(".filterShop").click(function () {
       if ($(window).width() <= 1200) {
@@ -601,7 +584,7 @@
   };
 
   /* Handle Dropdown Filter 
-  -------------------------------------------------------------------------------------*/   
+  -------------------------------------------------------------------------------------*/
   var handleDropdownFilter = function () {
     if (".wrapper-filter-dropdown".length > 0) {
       $(".filterDropdown").click(function (event) {

@@ -854,6 +854,78 @@ html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
     :has(.sarjan-admin-shell)
   )
+  .sarjan-order-bot-lang-footer,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-lang-menu {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-lang-footer__label,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-lang-menu__label {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-language__btn {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-language__btn.is-active {
+  background-color: var(--sarjan-accent) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-language__btn:hover:not(:disabled):not(.is-active),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-language__btn:focus-visible:not(:disabled):not(
+    .is-active
+  ) {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: var(--sarjan-accent) !important;
+  -webkit-text-fill-color: var(--sarjan-accent) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
   .sarjan-order-bot-bubble--assistant,
 html[data-theme="dark"]
   body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
@@ -1081,6 +1153,402 @@ html[data-theme="dark"]
   .sarjan-order-bot-thumb__placeholder {
   color: var(--sarjan-muted) !important;
   -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+/* Sarjan AI — product cards, auth flows, ratings, GST, toasts */
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-bubble--rich,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-bubble--rich
+  > span,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-bubble--rich
+  > strong {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-bubble.sarjan-order-bot-gate {
+  background: rgba(139, 30, 45, 0.14) !important;
+  border-color: rgba(196, 90, 106, 0.45) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-product-actions__btn:not(
+    .sarjan-order-bot-product-actions__btn--ghost
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  a.sarjan-order-bot-product-actions__btn:not(
+    .sarjan-order-bot-product-actions__btn--ghost
+  ) {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-product-actions__btn--ghost,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  a.sarjan-order-bot-product-actions__btn--ghost {
+  background-color: transparent !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-product-actions__btn:hover:not(:disabled):not(
+    .sarjan-order-bot-product-actions__btn--ghost
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-product-actions__btn:focus-visible:not(:disabled):not(
+    .sarjan-order-bot-product-actions__btn--ghost
+  ),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  a.sarjan-order-bot-product-actions__btn:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  a.sarjan-order-bot-product-actions__btn:focus-visible,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-product-actions__btn--ghost:hover:not(:disabled),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-product-actions__btn--ghost:focus-visible:not(
+    :disabled
+  ) {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: var(--sarjan-accent) !important;
+  -webkit-text-fill-color: var(--sarjan-accent) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-product-actions__custom
+  input {
+  background-color: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+  color: var(--sarjan-input-text) !important;
+  -webkit-text-fill-color: var(--sarjan-input-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-photo {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-photo:hover:not(:disabled),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-photo:focus-visible:not(:disabled) {
+  background-color: var(--sarjan-bg-muted) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: var(--sarjan-accent) !important;
+  -webkit-text-fill-color: var(--sarjan-accent) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-otp__hint,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__hint,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__loading {
+  color: var(--sarjan-muted) !important;
+  -webkit-text-fill-color: var(--sarjan-muted) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__hint
+  strong {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__hint
+  a {
+  color: var(--sarjan-accent) !important;
+  -webkit-text-fill-color: var(--sarjan-accent) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-otp__input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__captcha-input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__manual-input,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-rating__feedback {
+  background-color: var(--sarjan-input-bg) !important;
+  border-color: var(--sarjan-input-border) !important;
+  color: var(--sarjan-input-text) !important;
+  -webkit-text-fill-color: var(--sarjan-input-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-otp__submit,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-rating__submit,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-gst__verify {
+  background-color: var(--sarjan-accent) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-otp__resend,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-gst__refresh {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-border) !important;
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-otp__resend:hover:not(:disabled),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-otp__resend:focus-visible:not(:disabled),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-gst__refresh:hover:not(:disabled),
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-gst__refresh:focus-visible:not(:disabled) {
+  background-color: var(--sarjan-bg-elevated) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: var(--sarjan-accent) !important;
+  -webkit-text-fill-color: var(--sarjan-accent) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__captcha,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  .sarjan-gst-captcha-panel {
+  background: var(--sarjan-bg-muted) !important;
+  border: 1px solid var(--sarjan-border) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__captcha
+  .sarjan-gst-captcha-img {
+  border-color: var(--sarjan-border) !important;
+  background: #fff !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-gst__error {
+  color: #f87171 !important;
+  -webkit-text-fill-color: #f87171 !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-sales-tip {
+  background: rgba(139, 30, 45, 0.12) !important;
+  border-color: rgba(196, 90, 106, 0.35) !important;
+  color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-sales-tip__save {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-sales-group__head,
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-order-block__head
+  strong {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-order-toast {
+  background: var(--sarjan-bg-elevated) !important;
+  border-color: rgba(196, 90, 106, 0.45) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot
+  button.sarjan-order-bot-order-toast__dismiss {
+  color: var(--sarjan-text) !important;
+  -webkit-text-fill-color: var(--sarjan-text) !important;
+}
+
+html[data-theme="dark"]
+  body.sarjan-storefront:not(:has(.sarjan-launch-page)):not(
+    :has(.sarjan-admin-shell)
+  )
+  .sarjan-order-bot-order-toast__cta {
+  background: var(--sarjan-accent) !important;
+  border-color: var(--sarjan-accent) !important;
+  color: #ffffff !important;
 }
 
 html[data-theme="dark"]

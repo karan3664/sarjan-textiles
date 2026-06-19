@@ -1,4 +1,8 @@
-import { sanitizeCmsHtml } from "@/lib/cms-html";
+import {
+  cmsSanitizedHasBlockContent,
+  sanitizeCmsHtml,
+  unwrapSingleInlineParagraph,
+} from "@/lib/cms-html";
 
 type Props = {
   html: string;
@@ -9,14 +13,19 @@ type Props = {
 export function CmsHtml({ html, className, as: Tag = "span" }: Props) {
   const clean = sanitizeCmsHtml(html);
   if (!clean) return null;
-  // Avoid <p><p>...</p></p> — invalid HTML that browsers rewrite before hydration.
-  const TagName = Tag === "p" && /<p[\s>]/i.test(clean) ? "div" : Tag;
+
+  const hasBlock = cmsSanitizedHasBlockContent(clean);
+  const TagName =
+    hasBlock || (Tag === "p" && /<p[\s>]/i.test(clean)) ? "div" : Tag;
+  const innerHtml =
+    !hasBlock && TagName !== "div" ? unwrapSingleInlineParagraph(clean) : clean;
+
   return (
     <TagName
       className={
         className ? `cms-html-content ${className}` : "cms-html-content"
       }
-      dangerouslySetInnerHTML={{ __html: clean }}
+      dangerouslySetInnerHTML={{ __html: innerHtml }}
     />
   );
 }

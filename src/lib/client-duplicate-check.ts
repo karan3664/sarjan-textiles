@@ -108,3 +108,14 @@ export function assertUniqueAmongClients(
   const duplicate = findClientFieldDuplicate(clients, fields, excludeClientId);
   if (duplicate) throw new Error(duplicate.message);
 }
+
+export function findClientByPhone<T extends ClientLike>(
+  clients: T[],
+  phoneInput: string,
+): T | null {
+  const phone = normalizeClientPhone(phoneInput);
+  if (phone.length !== 10) return null;
+  return (
+    clients.find((client) => clientPhoneValues(client).includes(phone)) ?? null
+  );
+}

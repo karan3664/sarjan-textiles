@@ -76,7 +76,7 @@ export async function getAdminCustomers() {
           clientEmail: `${client.id.toLowerCase()}@sarjan-demo.local`,
           status: demoOrderStatus(order.status),
           paymentMode: "cheque" as const,
-          creditDays: 90,
+          creditDays: 30,
           subtotal: order.total,
           items: [],
           dispatchAddress: client.city,

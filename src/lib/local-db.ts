@@ -1171,7 +1171,7 @@ export async function createOrder(
       status: "Pending approval",
       paymentMode: "cheque",
       paymentStatus: "Pending",
-      creditDays: 90,
+      creditDays: 30,
       depositStatus: "Not deposited",
       placedVia,
       dispatchHistory: [
@@ -1235,7 +1235,7 @@ export async function createOrder(
     status: "Pending approval",
     paymentMode: "cheque",
     paymentStatus: "Pending",
-    creditDays: 90,
+    creditDays: 30,
     depositStatus: "Not deposited",
     placedVia,
     dispatchHistory: [
@@ -1288,7 +1288,7 @@ export async function createAdminOrder(input: {
     status: input.status ?? "Pending approval",
     paymentMode: "cheque",
     paymentStatus: "Pending",
-    creditDays: 90,
+    creditDays: 30,
     depositStatus: "Not deposited",
     subtotal: pricing.subtotal,
     tax: pricing.tax,

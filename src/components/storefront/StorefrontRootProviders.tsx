@@ -7,6 +7,7 @@ import "@/styles/emoji-picker.css";
 import { StorefrontThemeProvider } from "@/components/storefront/StorefrontThemeProvider";
 import { AnalyticsTracker } from "@/components/storefront/AnalyticsTracker";
 import { CookieConsentBanner } from "@/components/storefront/CookieConsentBanner";
+import { MetaPixel } from "@/components/storefront/MetaPixel";
 import { SiteAnalytics } from "@/components/storefront/SiteAnalytics";
 import { StorefrontOriginGuard } from "@/components/storefront/StorefrontOriginGuard";
 import { StorefrontPwaRegistration } from "@/components/storefront/StorefrontPwaRegistration";
@@ -20,6 +21,7 @@ export function StorefrontRootProviders({
   return (
     <StorefrontThemeProvider>
       <SiteAnalytics />
+      <MetaPixel />
       <AnalyticsTracker />
       <CookieConsentBanner />
       <StorefrontOriginGuard />

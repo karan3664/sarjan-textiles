@@ -38,6 +38,7 @@ import {
 } from "@/lib/catalog-product-cache";
 import { buildProductImageAlt } from "@/lib/product-image-alt";
 import { StorefrontProductImage } from "./StorefrontProductImage";
+import { CartAiContextBridge } from "./CartAiContextBridge";
 import {
   productImageClassName,
   productImageThumbWrapClassName,
@@ -227,353 +228,358 @@ export function CartPageClient({
   };
 
   return (
-    <section className="flat-spacing sarjan-cart-page">
-      <div className="container">
-        {loadError ? (
-          <div className="alert alert-warning mb_24" role="alert">
-            {labels.cartLoadError ??
-              "Couldn't load product details. Your cart items are shown with last known data — refresh to retry."}
-          </div>
-        ) : null}
-        {loading ? (
-          <div className="text-center py-5">
-            {labels.loadingCart ?? "Loading cart..."}
-          </div>
-        ) : lines.length ? (
-          <div className="row g-4">
-            <div className="col-12 col-xl-8">
-              <form className="sarjan-cart-form">
-                <table className="tf-table-page-cart sarjan-cart-table">
-                  <thead>
-                    <tr>
-                      <th>{labels.products ?? "Products"}</th>
-                      <th>{labels.price ?? "Price"}</th>
-                      <th>{labels.quantity ?? "Quantity"}</th>
-                      <th>{labels.totalPrice ?? "Total Price"}</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lines.map((item) => (
-                      <tr
-                        className="tf-cart-item file-delete"
-                        key={`${item.slug}-${item.sizes.join("-")}-${item.color}`}
-                      >
-                        <td className="tf-cart-item_product">
-                          <Link
-                            href={`/products/${item.product.slug}`}
-                            className={productImageThumbWrapClassName(
-                              item.product.images[0],
-                              "img-box position-relative d-inline-block",
-                            )}
+    <>
+      <CartAiContextBridge />
+      <section className="flat-spacing sarjan-cart-page">
+        <div className="container">
+          {loadError ? (
+            <div className="alert alert-warning mb_24" role="alert">
+              {labels.cartLoadError ??
+                "Couldn't load product details. Your cart items are shown with last known data — refresh to retry."}
+            </div>
+          ) : null}
+          {loading ? (
+            <div className="text-center py-5">
+              {labels.loadingCart ?? "Loading cart..."}
+            </div>
+          ) : lines.length ? (
+            <div className="row g-4">
+              <div className="col-12 col-xl-8">
+                <form className="sarjan-cart-form">
+                  <table className="tf-table-page-cart sarjan-cart-table">
+                    <thead>
+                      <tr>
+                        <th>{labels.products ?? "Products"}</th>
+                        <th>{labels.price ?? "Price"}</th>
+                        <th>{labels.quantity ?? "Quantity"}</th>
+                        <th>{labels.totalPrice ?? "Total Price"}</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lines.map((item) => (
+                        <tr
+                          className="tf-cart-item file-delete"
+                          key={`${item.slug}-${item.sizes.join("-")}-${item.color}`}
+                        >
+                          <td className="tf-cart-item_product">
+                            <Link
+                              href={`/products/${item.product.slug}`}
+                              className={productImageThumbWrapClassName(
+                                item.product.images[0],
+                                "img-box position-relative d-inline-block",
+                              )}
+                            >
+                              {cartLineExceedsStock(
+                                item.product,
+                                item.sizes,
+                                item.quantity,
+                                viewerLoggedIn,
+                              ) ? (
+                                <div
+                                  className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
+                                  role="status"
+                                >
+                                  Exceeds stock
+                                </div>
+                              ) : null}
+                              <StorefrontProductImage
+                                src={item.product.images[0]}
+                                alt={buildProductImageAlt(item.product)}
+                                variant="thumb"
+                                className={productImageClassName(
+                                  item.product.images[0],
+                                )}
+                              />
+                            </Link>
+                            <div className="cart-info">
+                              <Link
+                                href={`/products/${item.product.slug}`}
+                                className="cart-title link"
+                              >
+                                {item.product.name}
+                              </Link>
+                              <div
+                                className="sarjan-cart-variant-row"
+                                aria-label={`Variant: ${item.color}, ${labels.fullSet ?? "Full set"}`}
+                              >
+                                <span className="sarjan-cart-variant-pill">
+                                  {item.color}
+                                </span>
+                                <span className="sarjan-cart-variant-pill">
+                                  {labels.fullSet ?? "Full set"}
+                                </span>
+                              </div>
+                              <div className="text-caption-1 text-secondary mt_8">
+                                {labels.setLabel ?? "Set"}:{" "}
+                                {item.sizes.join(" / ")}
+                              </div>
+                              <div className="text-caption-1 text-secondary">
+                                1 {labels.setLabel?.toLowerCase() ?? "set"} ={" "}
+                                {item.sizes.length} pcs
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            data-cart-title={labels.price ?? "Price"}
+                            className="tf-cart-item_price text-center"
                           >
+                            <div className="cart-price text-button price-on-sale">
+                              <PriceGate amount={item.setPrice} compact />
+                            </div>
+                          </td>
+                          <td
+                            data-cart-title={labels.quantity ?? "Quantity"}
+                            className="tf-cart-item_quantity"
+                          >
+                            <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
+                              <button
+                                type="button"
+                                className="btn-quantity btn-decrease"
+                                onClick={() =>
+                                  updateQuantity(item, item.quantity - 1)
+                                }
+                                aria-label={
+                                  labels.decreaseQty ?? "Decrease set quantity"
+                                }
+                              >
+                                -
+                              </button>
+                              <input
+                                type="text"
+                                className="quantity-product"
+                                name="number"
+                                value={item.quantity}
+                                onChange={(event) =>
+                                  updateQuantity(
+                                    item,
+                                    Number(event.target.value) || 1,
+                                  )
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="btn-quantity btn-increase"
+                                onClick={() =>
+                                  updateQuantity(item, item.quantity + 1)
+                                }
+                                disabled={item.quantity >= B2B_CART_MAX_SETS}
+                                aria-label={
+                                  labels.increaseQty ?? "Increase set quantity"
+                                }
+                              >
+                                +
+                              </button>
+                            </div>
                             {cartLineExceedsStock(
                               item.product,
                               item.sizes,
                               item.quantity,
                               viewerLoggedIn,
                             ) ? (
-                              <div
-                                className="sarjan-oos-ribbon sarjan-oos-ribbon--thumb"
-                                role="status"
-                              >
-                                Exceeds stock
-                              </div>
+                              <p className="text-caption-1 text-secondary mt_8 mb_0">
+                                Exceeds available stock
+                              </p>
                             ) : null}
-                            <StorefrontProductImage
-                              src={item.product.images[0]}
-                              alt={buildProductImageAlt(item.product)}
-                              variant="thumb"
-                              className={productImageClassName(
-                                item.product.images[0],
-                              )}
-                            />
-                          </Link>
-                          <div className="cart-info">
-                            <Link
-                              href={`/products/${item.product.slug}`}
-                              className="cart-title link"
-                            >
-                              {item.product.name}
-                            </Link>
-                            <div
-                              className="sarjan-cart-variant-row"
-                              aria-label={`Variant: ${item.color}, ${labels.fullSet ?? "Full set"}`}
-                            >
-                              <span className="sarjan-cart-variant-pill">
-                                {item.color}
-                              </span>
-                              <span className="sarjan-cart-variant-pill">
-                                {labels.fullSet ?? "Full set"}
-                              </span>
-                            </div>
-                            <div className="text-caption-1 text-secondary mt_8">
-                              {labels.setLabel ?? "Set"}:{" "}
-                              {item.sizes.join(" / ")}
+                          </td>
+                          <td
+                            data-cart-title={labels.total ?? "Total"}
+                            className="tf-cart-item_total text-center"
+                          >
+                            <div className="cart-total text-button total-price">
+                              <PriceGate amount={item.lineTotal} compact />
                             </div>
                             <div className="text-caption-1 text-secondary">
-                              1 {labels.setLabel?.toLowerCase() ?? "set"} ={" "}
-                              {item.sizes.length} pcs
+                              {item.quantity}{" "}
+                              {labels.setLabel?.toLowerCase() ?? "set"} x{" "}
+                              <PriceGate amount={item.setPrice} compact />
                             </div>
-                          </div>
-                        </td>
-                        <td
-                          data-cart-title={labels.price ?? "Price"}
-                          className="tf-cart-item_price text-center"
-                        >
-                          <div className="cart-price text-button price-on-sale">
-                            <PriceGate amount={item.setPrice} compact />
-                          </div>
-                        </td>
-                        <td
-                          data-cart-title={labels.quantity ?? "Quantity"}
-                          className="tf-cart-item_quantity"
-                        >
-                          <div className="wg-quantity mx-md-auto sarjan-cart-quantity">
-                            <button
-                              type="button"
-                              className="btn-quantity btn-decrease"
-                              onClick={() =>
-                                updateQuantity(item, item.quantity - 1)
-                              }
-                              aria-label={
-                                labels.decreaseQty ?? "Decrease set quantity"
-                              }
-                            >
-                              -
-                            </button>
-                            <input
-                              type="text"
-                              className="quantity-product"
-                              name="number"
-                              value={item.quantity}
-                              onChange={(event) =>
-                                updateQuantity(
-                                  item,
-                                  Number(event.target.value) || 1,
-                                )
-                              }
-                            />
-                            <button
-                              type="button"
-                              className="btn-quantity btn-increase"
-                              onClick={() =>
-                                updateQuantity(item, item.quantity + 1)
-                              }
-                              disabled={item.quantity >= B2B_CART_MAX_SETS}
-                              aria-label={
-                                labels.increaseQty ?? "Increase set quantity"
-                              }
-                            >
-                              +
-                            </button>
-                          </div>
-                          {cartLineExceedsStock(
-                            item.product,
-                            item.sizes,
-                            item.quantity,
-                            viewerLoggedIn,
-                          ) ? (
-                            <p className="text-caption-1 text-secondary mt_8 mb_0">
-                              Exceeds available stock
-                            </p>
-                          ) : null}
-                        </td>
-                        <td
-                          data-cart-title={labels.total ?? "Total"}
-                          className="tf-cart-item_total text-center"
-                        >
-                          <div className="cart-total text-button total-price">
-                            <PriceGate amount={item.lineTotal} compact />
-                          </div>
-                          <div className="text-caption-1 text-secondary">
-                            {item.quantity}{" "}
-                            {labels.setLabel?.toLowerCase() ?? "set"} x{" "}
-                            <PriceGate amount={item.setPrice} compact />
-                          </div>
-                        </td>
-                        <td
-                          data-cart-title={labels.removeItem ?? "Remove"}
-                          className="remove-cart"
-                        >
-                          <button
-                            type="button"
-                            className="sarjan-remove-cart"
-                            onClick={() => removeItem(item)}
-                            aria-label={`${labels.removeItem ?? "Remove"} ${item.product.name}`}
+                          </td>
+                          <td
+                            data-cart-title={labels.removeItem ?? "Remove"}
+                            className="remove-cart"
                           >
-                            ×
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </form>
-            </div>
-            <div className="col-12 col-xl-4">
-              <div className="fl-sidebar-cart sarjan-cart-summary">
-                <div className="box-order bg-surface">
-                  <h5 className="title">
-                    {labels.orderSummary ?? "Order Summary"}
-                  </h5>
-                  {buildPricingDisplayLines(orderPricing).map((line) => (
-                    <div
-                      key={line.key}
-                      className="discount text-button d-flex justify-content-between align-items-center"
-                    >
-                      <span>{line.label}</span>
-                      <span>
-                        <PriceGate amount={line.amount} compact />
-                      </span>
-                    </div>
-                  ))}
-                  <h5 className="total-order d-flex justify-content-between align-items-center">
-                    <span>{labels.total ?? "Total"}</span>
-                    <PriceGate
-                      amount={orderPricing.total}
-                      className="total"
-                      compact
-                    />
-                  </h5>
-                  <div className="box-progress-checkout">
-                    <fieldset className="check-agree">
-                      <input
-                        type="checkbox"
-                        id="check-agree"
-                        className="tf-check-rounded"
-                        defaultChecked
-                      />
-                      <label htmlFor="check-agree">
-                        {labels.termsAgree ?? "I agree with the"}{" "}
-                        <a href="/term-of-use">
-                          {labels.termsOfUse ?? "terms and conditions"}
-                        </a>
-                      </label>
-                    </fieldset>
-                    {stockWarnings.length ? (
+                            <button
+                              type="button"
+                              className="sarjan-remove-cart"
+                              onClick={() => removeItem(item)}
+                              aria-label={`${labels.removeItem ?? "Remove"} ${item.product.name}`}
+                            >
+                              ×
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </form>
+              </div>
+              <div className="col-12 col-xl-4">
+                <div className="fl-sidebar-cart sarjan-cart-summary">
+                  <div className="box-order bg-surface">
+                    <h5 className="title">
+                      {labels.orderSummary ?? "Order Summary"}
+                    </h5>
+                    {buildPricingDisplayLines(orderPricing).map((line) => (
                       <div
-                        className="sarjan-b2b-stock-warning mb_12"
-                        role="status"
+                        key={line.key}
+                        className="discount text-button d-flex justify-content-between align-items-center"
                       >
-                        {stockWarnings.map((warning) => (
-                          <p
-                            key={warning.slug}
-                            className="text-caption-1 text-secondary mb_6"
-                          >
-                            <strong>{warning.name}</strong> — Requested:{" "}
-                            {warning.requestedSets}, Available:{" "}
-                            {warning.availableSets}. {B2B_CART_EXCEEDS_STOCK}
-                          </p>
-                        ))}
-                      </div>
-                    ) : null}
-                    {checkoutBlocked ? (
-                      <p
-                        className="text-caption-1 text-danger mb_12"
-                        role="alert"
-                      >
-                        Some items are unavailable for your account tier.
-                      </p>
-                    ) : null}
-                    <div className="sarjan-cart-page-actions">
-                      {checkoutBlocked ? (
-                        <span
-                          className={withBtnIcon(
-                            "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
-                          )}
-                          style={{ opacity: 0.55, pointerEvents: "none" }}
-                          aria-disabled="true"
-                        >
-                          <TfButtonIcon icon="icon-checkCircle">
-                            {labels.proceedToCheckout ?? "Proceed To Checkout"}
-                          </TfButtonIcon>
+                        <span>{line.label}</span>
+                        <span>
+                          <PriceGate amount={line.amount} compact />
                         </span>
-                      ) : (
-                        <Link
-                          href="/checkout"
-                          className={withBtnIcon(
-                            "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
-                          )}
+                      </div>
+                    ))}
+                    <h5 className="total-order d-flex justify-content-between align-items-center">
+                      <span>{labels.total ?? "Total"}</span>
+                      <PriceGate
+                        amount={orderPricing.total}
+                        className="total"
+                        compact
+                      />
+                    </h5>
+                    <div className="box-progress-checkout">
+                      <fieldset className="check-agree">
+                        <input
+                          type="checkbox"
+                          id="check-agree"
+                          className="tf-check-rounded"
+                          defaultChecked
+                        />
+                        <label htmlFor="check-agree">
+                          {labels.termsAgree ?? "I agree with the"}{" "}
+                          <a href="/term-of-use">
+                            {labels.termsOfUse ?? "terms and conditions"}
+                          </a>
+                        </label>
+                      </fieldset>
+                      {stockWarnings.length ? (
+                        <div
+                          className="sarjan-b2b-stock-warning mb_12"
+                          role="status"
                         >
-                          <TfButtonIcon icon="icon-checkCircle">
-                            {labels.proceedToCheckout ?? "Proceed To Checkout"}
-                          </TfButtonIcon>
-                        </Link>
-                      )}
-                      {!hasB2BSession ? (
-                        <div className="sarjan-cart-page-actions__auth">
-                          <Link
-                            href="/login"
-                            className={withBtnIcon(
-                              "tf-btn btn-white radius-4 has-border w-100",
-                            )}
-                          >
-                            <TfButtonIcon icon="icon-user">
-                              {labels.login ?? "Login"}
-                            </TfButtonIcon>
-                          </Link>
-                          <Link
-                            href="/register"
-                            className={withBtnIcon(
-                              "tf-btn btn-fill radius-4 w-100",
-                            )}
-                          >
-                            <TfButtonIcon icon="icon-user">
-                              {labels.signUp ?? "Sign Up"}
-                            </TfButtonIcon>
-                          </Link>
+                          {stockWarnings.map((warning) => (
+                            <p
+                              key={warning.slug}
+                              className="text-caption-1 text-secondary mb_6"
+                            >
+                              <strong>{warning.name}</strong> — Requested:{" "}
+                              {warning.requestedSets}, Available:{" "}
+                              {warning.availableSets}. {B2B_CART_EXCEEDS_STOCK}
+                            </p>
+                          ))}
                         </div>
                       ) : null}
+                      {checkoutBlocked ? (
+                        <p
+                          className="text-caption-1 text-danger mb_12"
+                          role="alert"
+                        >
+                          Some items are unavailable for your account tier.
+                        </p>
+                      ) : null}
+                      <div className="sarjan-cart-page-actions">
+                        {checkoutBlocked ? (
+                          <span
+                            className={withBtnIcon(
+                              "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
+                            )}
+                            style={{ opacity: 0.55, pointerEvents: "none" }}
+                            aria-disabled="true"
+                          >
+                            <TfButtonIcon icon="icon-checkCircle">
+                              {labels.proceedToCheckout ??
+                                "Proceed To Checkout"}
+                            </TfButtonIcon>
+                          </span>
+                        ) : (
+                          <Link
+                            href="/checkout"
+                            className={withBtnIcon(
+                              "tf-btn btn-fill radius-4 w-100 sarjan-cart-page-actions__checkout",
+                            )}
+                          >
+                            <TfButtonIcon icon="icon-checkCircle">
+                              {labels.proceedToCheckout ??
+                                "Proceed To Checkout"}
+                            </TfButtonIcon>
+                          </Link>
+                        )}
+                        {!hasB2BSession ? (
+                          <div className="sarjan-cart-page-actions__auth">
+                            <Link
+                              href="/login"
+                              className={withBtnIcon(
+                                "tf-btn btn-white radius-4 has-border w-100",
+                              )}
+                            >
+                              <TfButtonIcon icon="icon-user">
+                                {labels.login ?? "Login"}
+                              </TfButtonIcon>
+                            </Link>
+                            <Link
+                              href="/register"
+                              className={withBtnIcon(
+                                "tf-btn btn-fill radius-4 w-100",
+                              )}
+                            >
+                              <TfButtonIcon icon="icon-user">
+                                {labels.signUp ?? "Sign Up"}
+                              </TfButtonIcon>
+                            </Link>
+                          </div>
+                        ) : null}
+                      </div>
+                      <p className="text-button text-center">
+                        {labels.orContinueShopping ?? "Or continue shopping"}
+                      </p>
                     </div>
-                    <p className="text-button text-center">
-                      {labels.orContinueShopping ?? "Or continue shopping"}
-                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-5">
-            <h5>{labels.yourCartEmpty ?? "Your cart is empty"}</h5>
-            <p className="text-secondary mt_8">
-              {labels.addProductsEmpty ??
-                "Add products to create an order request."}
-            </p>
-            <div className="sarjan-cart-empty-actions">
-              {!hasB2BSession ? (
-                <>
-                  <Link
-                    href="/login"
-                    className={withBtnIcon("tf-btn btn-reset radius-4")}
-                  >
-                    <TfButtonIcon icon="icon-user">
-                      {labels.login ?? "Login"}
-                    </TfButtonIcon>
-                  </Link>
-                  <Link
-                    href="/register"
-                    className={withBtnIcon("tf-btn btn-fill radius-4")}
-                  >
-                    <TfButtonIcon icon="icon-user">
-                      {labels.signUp ?? "Sign Up"}
-                    </TfButtonIcon>
-                  </Link>
-                </>
-              ) : null}
-              <Link
-                href="/products"
-                className={withBtnIcon("tf-btn btn-fill radius-4")}
-              >
-                <TfButtonIcon icon="icon-arrRight">
-                  {labels.browseProducts ?? "Browse Products"}
-                </TfButtonIcon>
-              </Link>
+          ) : (
+            <div className="text-center py-5">
+              <h5>{labels.yourCartEmpty ?? "Your cart is empty"}</h5>
+              <p className="text-secondary mt_8">
+                {labels.addProductsEmpty ??
+                  "Add products to create an order request."}
+              </p>
+              <div className="sarjan-cart-empty-actions">
+                {!hasB2BSession ? (
+                  <>
+                    <Link
+                      href="/login"
+                      className={withBtnIcon("tf-btn btn-reset radius-4")}
+                    >
+                      <TfButtonIcon icon="icon-user">
+                        {labels.login ?? "Login"}
+                      </TfButtonIcon>
+                    </Link>
+                    <Link
+                      href="/register"
+                      className={withBtnIcon("tf-btn btn-fill radius-4")}
+                    >
+                      <TfButtonIcon icon="icon-user">
+                        {labels.signUp ?? "Sign Up"}
+                      </TfButtonIcon>
+                    </Link>
+                  </>
+                ) : null}
+                <Link
+                  href="/products"
+                  className={withBtnIcon("tf-btn btn-fill radius-4")}
+                >
+                  <TfButtonIcon icon="icon-arrRight">
+                    {labels.browseProducts ?? "Browse Products"}
+                  </TfButtonIcon>
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-    </section>
+          )}
+        </div>
+      </section>
+    </>
   );
 }

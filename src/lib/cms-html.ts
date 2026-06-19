@@ -106,6 +106,26 @@ export function splitCmsTextParagraphs(value: string): string[] {
     .filter(Boolean);
 }
 
+const CMS_BLOCK_TAG_PATTERN = /<(p|ul|ol|h[1-6]|div|li)[\s>]/i;
+
+/** True when sanitized HTML needs a block container (not a single inline-only `<p>` wrap). */
+export function cmsSanitizedHasBlockContent(html: string): boolean {
+  const trimmed = html.trim();
+  const singleParagraph = trimmed.match(/^<p>([\s\S]*)<\/p>$/i);
+  if (singleParagraph && !CMS_BLOCK_TAG_PATTERN.test(singleParagraph[1])) {
+    return false;
+  }
+  return CMS_BLOCK_TAG_PATTERN.test(trimmed);
+}
+
+/** Plain-text CMS values are wrapped in one `<p>`; unwrap for inline parents (h2, span, button). */
+export function unwrapSingleInlineParagraph(html: string): string {
+  const match = html.match(/^<p>([\s\S]*)<\/p>$/i);
+  if (!match) return html;
+  if (CMS_BLOCK_TAG_PATTERN.test(match[1])) return html;
+  return match[1];
+}
+
 export function sanitizeCmsHtml(value: string): string {
   const raw = value?.trim() ?? "";
   if (!raw) return "";

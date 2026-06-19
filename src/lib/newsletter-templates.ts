@@ -267,7 +267,7 @@ export const NEWSLETTER_TEMPLATES: NewsletterTemplate[] = [
         key: "offer_note",
         label: "Offer highlight",
         type: "text",
-        defaultValue: "MOQ-friendly sets · 90-day credit for approved partners",
+        defaultValue: "MOQ-friendly sets · 30-day credit for approved partners",
       },
     ],
     renderBody: (v) =>

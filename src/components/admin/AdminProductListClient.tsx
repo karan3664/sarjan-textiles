@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { isProductPlaceholderImage } from "@/lib/product-placeholder-image";
+import { AdminProductBulkEditPanel } from "@/components/admin/AdminProductBulkEditPanel";
 
 type StatusFilter = "all" | "published" | "low" | "out";
 type SortOption = "default" | "name" | "price" | "stock";
@@ -45,10 +46,21 @@ export function AdminProductListClient({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const categories = useMemo(
     () =>
       Array.from(new Set(products.map((product) => product.category))).sort(),
+    [products],
+  );
+
+  const fabrics = useMemo(
+    () =>
+      Array.from(
+        new Set(products.map((product) => product.fabric).filter(Boolean)),
+      ).sort(),
     [products],
   );
 
@@ -77,6 +89,7 @@ export function AdminProductListClient({
 
   useEffect(() => {
     setPage(1);
+    setSelectedSlugs([]);
   }, [category, pageSize, query, sort, status]);
 
   const totalPages = Math.max(1, Math.ceil(visibleProducts.length / pageSize));
@@ -91,6 +104,85 @@ export function AdminProductListClient({
     (item) =>
       item === 1 || item === totalPages || Math.abs(item - currentPage) <= 1,
   );
+
+  const selectedSlugSet = useMemo(
+    () => new Set(selectedSlugs),
+    [selectedSlugs],
+  );
+
+  const selectedProducts = useMemo(
+    () => products.filter((product) => selectedSlugSet.has(product.slug)),
+    [products, selectedSlugSet],
+  );
+
+  const pageSlugs = useMemo(
+    () => paginatedProducts.map((product) => product.slug),
+    [paginatedProducts],
+  );
+  const allPageSelected =
+    pageSlugs.length > 0 &&
+    pageSlugs.every((slug) => selectedSlugSet.has(slug));
+  const somePageSelected = pageSlugs.some((slug) => selectedSlugSet.has(slug));
+
+  const togglePageSelection = () => {
+    if (allPageSelected) {
+      setSelectedSlugs((current) =>
+        current.filter((slug) => !pageSlugs.includes(slug)),
+      );
+      return;
+    }
+    setSelectedSlugs((current) =>
+      Array.from(new Set([...current, ...pageSlugs])),
+    );
+  };
+
+  const toggleProductSelection = (slug: string) => {
+    setSelectedSlugs((current) =>
+      current.includes(slug)
+        ? current.filter((item) => item !== slug)
+        : [...current, slug],
+    );
+  };
+
+  const clearSelection = () => {
+    setSelectedSlugs([]);
+  };
+
+  const mergeUpdatedProducts = (updated: Product[]) => {
+    if (!updated.length) return;
+    const bySlug = new Map(updated.map((product) => [product.slug, product]));
+    setProducts((current) =>
+      current.map((product) => bySlug.get(product.slug) ?? product),
+    );
+    clearSelection();
+  };
+
+  const bulkDeleteProducts = async () => {
+    if (!selectedProducts.length) return;
+    const ok = window.confirm(
+      `Delete ${selectedProducts.length} selected product${selectedProducts.length === 1 ? "" : "s"}? This cannot be undone.`,
+    );
+    if (!ok) return;
+
+    setBulkDeleting(true);
+    try {
+      const deleted: string[] = [];
+      for (const product of selectedProducts) {
+        const res = await fetch(
+          `/api/admin/cms/products?slug=${encodeURIComponent(product.slug)}`,
+          { method: "DELETE" },
+        );
+        if (!res.ok) throw new Error(`Failed to delete ${product.name}`);
+        deleted.push(product.slug);
+      }
+      setProducts((current) =>
+        current.filter((product) => !deleted.includes(product.slug)),
+      );
+      clearSelection();
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   const deleteProduct = async (product: Product) => {
     const ok = window.confirm(`Delete ${product.name}?`);
@@ -225,10 +317,63 @@ export function AdminProductListClient({
           </div>
         </div>
 
+        {selectedProducts.length > 0 ? (
+          <div className="sarjan-products-bulk-bar">
+            <div className="sarjan-products-bulk-bar__meta">
+              <strong>{selectedProducts.length}</strong> selected
+            </div>
+            <div className="sarjan-products-bulk-bar__actions">
+              <button
+                type="button"
+                className="tf-button text-btn-uppercase"
+                onClick={() => setBulkEditOpen(true)}
+              >
+                Bulk edit
+              </button>
+              <button
+                type="button"
+                className="tf-button style-2 text-btn-uppercase btns-trash"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDeleteProducts()}
+              >
+                {bulkDeleting ? "Deleting..." : "Delete selected"}
+              </button>
+              <button
+                type="button"
+                className="sarjan-products-bulk-bar__link"
+                onClick={clearSelection}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className="wg-table list-item-function sarjan-products-table">
           <table>
             <thead>
               <tr>
+                <th className="sarjan-products-select-col">
+                  <label className="tf-cart-checkbox sarjan-products-select-all">
+                    <div className="tf-checkbox-wrapp">
+                      <input
+                        type="checkbox"
+                        checked={allPageSelected}
+                        ref={(input) => {
+                          if (input) {
+                            input.indeterminate =
+                              somePageSelected && !allPageSelected;
+                          }
+                        }}
+                        onChange={togglePageSelection}
+                        aria-label="Select all products on this page"
+                      />
+                      <div>
+                        <i className="icon-check" />
+                      </div>
+                    </div>
+                  </label>
+                </th>
                 <th className="text-title">ID</th>
                 <th className="text-title">Product</th>
                 <th className="text-title">Category</th>
@@ -241,8 +386,29 @@ export function AdminProductListClient({
             <tbody>
               {paginatedProducts.map((product) => {
                 const statusInfo = productStatus(product);
+                const isSelected = selectedSlugSet.has(product.slug);
                 return (
-                  <tr className="tf-table-item item-row" key={product.id}>
+                  <tr
+                    className={`tf-table-item item-row${isSelected ? " sarjan-products-row-selected" : ""}`}
+                    key={product.id}
+                  >
+                    <td className="sarjan-products-select-col">
+                      <label className="tf-cart-checkbox">
+                        <div className="tf-checkbox-wrapp">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() =>
+                              toggleProductSelection(product.slug)
+                            }
+                            aria-label={`Select ${product.name}`}
+                          />
+                          <div>
+                            <i className="icon-check" />
+                          </div>
+                        </div>
+                      </label>
+                    </td>
                     <td>{product.id}</td>
                     <td>
                       <li className="product-item type-1">
@@ -330,7 +496,7 @@ export function AdminProductListClient({
               })}
               {!visibleProducts.length && (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     <div className="body-text text-secondary p-4">
                       No products found.
                     </div>
@@ -404,6 +570,15 @@ export function AdminProductListClient({
           </div>
         ) : null}
       </div>
+
+      <AdminProductBulkEditPanel
+        open={bulkEditOpen}
+        selectedProducts={selectedProducts}
+        categories={categories}
+        fabrics={fabrics}
+        onClose={() => setBulkEditOpen(false)}
+        onApplied={mergeUpdatedProducts}
+      />
     </>
   );
 }

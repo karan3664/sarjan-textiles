@@ -13,9 +13,108 @@ export type VisualSearchAnalysis = {
   fabric?: string;
   category?: string;
   pattern?: string;
+  /** @deprecated prefer productType */
   garmentType?: string;
+  /** Primary catalog item type: clutch, kurta, saree, bag, etc. */
+  productType?: string;
   source: "vision" | "color-fallback";
 };
+
+/** Wholesale product-type tokens (accessories + apparel). */
+const PRODUCT_TYPE_ALIASES: Record<string, string[]> = {
+  clutch: ["clutch", "potli", "evening bag"],
+  bag: ["bag", "handbag", "tote", "sling bag"],
+  wallet: ["wallet", "pouch", "coin purse"],
+  accessories: ["accessory", "accessories"],
+  kurta: ["kurta", "kurti", "kurtas"],
+  shirt: ["shirt", "shirts", "top", "tops", "blouse", "tunic", "tunics"],
+  saree: ["saree", "sari", "sarees"],
+  dupatta: ["dupatta", "stole", "scarf"],
+  dress: ["dress", "gown", "kaftan", "kaftans"],
+  lehenga: ["lehenga", "skirt"],
+};
+
+const APPAREL_TYPE_KEYS = new Set([
+  "kurta",
+  "shirt",
+  "saree",
+  "dupatta",
+  "dress",
+  "lehenga",
+]);
+
+const ACCESSORY_TYPE_KEYS = new Set(["clutch", "bag", "wallet", "accessories"]);
+
+function normalizeTypeKey(raw: string) {
+  const term = raw.trim().toLowerCase();
+  for (const [key, aliases] of Object.entries(PRODUCT_TYPE_ALIASES)) {
+    if (key === term || aliases.some((alias) => term.includes(alias))) {
+      return key;
+    }
+  }
+  return null;
+}
+
+export function inferPrimaryProductTypes(analysis: VisualSearchAnalysis) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const candidates = [
+    analysis.productType,
+    analysis.garmentType,
+    analysis.category,
+    ...analysis.keywords,
+  ];
+  for (const raw of candidates) {
+    if (!raw?.trim()) continue;
+    const key = normalizeTypeKey(raw);
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      out.push(key);
+    }
+  }
+  return out;
+}
+
+/** When vision says "accessories", also search clutch/bag/wallet SKUs. */
+export function expandPrimaryTypesForSearch(types: string[]) {
+  const expanded = new Set(types);
+  if (expanded.has("accessories")) {
+    expanded.add("clutch");
+    expanded.add("bag");
+    expanded.add("wallet");
+  }
+  return [...expanded];
+}
+
+export function shouldRestrictToAccessoryCatalog(types: string[]) {
+  const hasAccessory = types.some((type) => ACCESSORY_TYPE_KEYS.has(type));
+  const hasApparel = types.some((type) => APPAREL_TYPE_KEYS.has(type));
+  return hasAccessory && !hasApparel;
+}
+
+function productMatchesAccessoryCatalog(product: Product) {
+  const keys = productTypeKeysForProduct(product);
+  return [...keys].some((type) => ACCESSORY_TYPE_KEYS.has(type));
+}
+
+function productTypeKeysForProduct(product: Product) {
+  const haystack = productHaystack(product);
+  const keys = new Set<string>();
+  for (const [key, aliases] of Object.entries(PRODUCT_TYPE_ALIASES)) {
+    if (aliases.some((alias) => haystack.includes(alias))) {
+      keys.add(key);
+    }
+  }
+  return keys;
+}
+
+function isAccessoryAnalysis(types: string[]) {
+  return types.some((type) => ACCESSORY_TYPE_KEYS.has(type));
+}
+
+function isApparelAnalysis(types: string[]) {
+  return types.some((type) => APPAREL_TYPE_KEYS.has(type));
+}
 
 function productHaystack(product: Product) {
   return [
@@ -50,15 +149,49 @@ function uniqueTerms(values: Array<string | undefined | null>) {
   return out;
 }
 
-function scoreProduct(product: Product, terms: string[]) {
+export function scoreProduct(
+  product: Product,
+  terms: string[],
+  options?: { primaryTypes?: string[] },
+) {
   let score = 0;
   const haystack = productHaystack(product);
   const name = readEnglish(product.name).toLowerCase();
   const category = readEnglish(product.category).toLowerCase();
   const fabric = readEnglish(product.fabric ?? "").toLowerCase();
   const colors = product.colors.map((c) => readEnglish(c).toLowerCase());
+  const productTypes = productTypeKeysForProduct(product);
+  const primaryTypes = options?.primaryTypes ?? [];
+
+  for (const type of primaryTypes) {
+    const aliases = PRODUCT_TYPE_ALIASES[type] ?? [type];
+    for (const alias of aliases) {
+      if (name.includes(alias)) score += 30;
+      if (category.includes(alias)) score += 24;
+      if (haystack.includes(alias)) score += 12;
+    }
+    if (productTypes.has(type)) score += 28;
+  }
+
+  if (primaryTypes.length) {
+    const accessoryQuery = isAccessoryAnalysis(primaryTypes);
+    const apparelQuery = isApparelAnalysis(primaryTypes);
+    const productIsAccessory = [...productTypes].some((type) =>
+      ACCESSORY_TYPE_KEYS.has(type),
+    );
+    const productIsApparel = [...productTypes].some((type) =>
+      APPAREL_TYPE_KEYS.has(type),
+    );
+    if (accessoryQuery && productIsApparel && !productIsAccessory) score -= 40;
+    if (apparelQuery && productIsAccessory && !productIsApparel) score -= 40;
+  }
 
   for (const term of terms) {
+    if (
+      primaryTypes.some((type) => PRODUCT_TYPE_ALIASES[type]?.includes(term))
+    ) {
+      continue;
+    }
     if (name.includes(term)) score += 8;
     if (category.includes(term)) score += 6;
     if (fabric.includes(term)) score += 5;
@@ -102,14 +235,14 @@ async function analyzeWithOpenAi(
         {
           role: "system",
           content:
-            "You analyze wholesale Indian textile product photos for catalog search. Reply with JSON only.",
+            "You analyze wholesale Indian textile product photos for B2B catalog search. Identify the physical product type first (clutch, bag, wallet, potli, kurta, shirt, saree, dupatta, dress, etc.), then fabric, print, and colors. Reply with JSON only.",
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: 'Return {"keywords":["..."],"colors":["..."],"fabric":"...","category":"...","pattern":"...","garmentType":"..."}. keywords: 5-12 short English search terms (fabric, print, garment, color). colors: visible color names. Use common wholesale terms: kurta, saree, dupatta, cotton, silk, bandhani, ajrakh, block print, embroidery, etc.',
+              text: 'Return {"keywords":["..."],"colors":["..."],"fabric":"...","category":"...","pattern":"...","productType":"...","garmentType":"..."}. productType: one primary item (clutch, handbag, wallet, potli, kurta, shirt, tunic, saree, dupatta, dress, accessories, etc.). keywords: 5-12 short English search terms — include product type first, then fabric/print/color. If a person is wearing the item, productType must be the garment (shirt, kurta, tunic, dress) — not accessories. For flat rectangular fabric items without sleeves or a model, prefer clutch/wallet/potli over kurta/shirt unless clearly apparel. colors: visible color names.',
             },
             {
               type: "image_url",
@@ -137,9 +270,11 @@ async function analyzeWithOpenAi(
       category?: string;
       pattern?: string;
       garmentType?: string;
+      productType?: string;
     };
     const keywords = uniqueTerms([
       ...(parsed.keywords ?? []),
+      parsed.productType,
       parsed.fabric,
       parsed.category,
       parsed.pattern,
@@ -154,6 +289,7 @@ async function analyzeWithOpenAi(
       category: parsed.category?.trim(),
       pattern: parsed.pattern?.trim(),
       garmentType: parsed.garmentType?.trim(),
+      productType: parsed.productType?.trim() || parsed.garmentType?.trim(),
       source: "vision",
     };
   } catch {
@@ -236,8 +372,17 @@ export function buildSearchTerms(
     analysis.fabric,
     analysis.category,
     analysis.pattern,
+    analysis.productType,
     analysis.garmentType,
   ]);
+}
+
+function typeSearchTerms(primaryTypes: string[]) {
+  const terms: string[] = [];
+  for (const type of primaryTypes) {
+    terms.push(type, ...(PRODUCT_TYPE_ALIASES[type] ?? []));
+  }
+  return uniqueTerms(terms);
 }
 
 export async function searchProductsByImage({
@@ -256,24 +401,76 @@ export async function searchProductsByImage({
   locale?: AppLocale;
 }) {
   const analysis = await analyzeSearchImage(imageBuffer, mime);
+  const primaryTypes = expandPrimaryTypesForSearch(
+    inferPrimaryProductTypes(analysis),
+  );
+  const restrictAccessories = shouldRestrictToAccessoryCatalog(primaryTypes);
   const terms = buildSearchTerms(analysis, textQuery);
   const { products } = await getCmsSnapshot();
 
-  const scored = products
-    .map((product) => ({ product, score: scoreProduct(product, terms) }))
+  const scoreOptions = { primaryTypes };
+  let scored = products
+    .map((product) => ({
+      product,
+      score: scoreProduct(product, terms, scoreOptions),
+    }))
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
+
+  if (primaryTypes.length) {
+    const typeTerms = typeSearchTerms(primaryTypes);
+    const typeMatches = products
+      .filter((product) => {
+        if (restrictAccessories && !productMatchesAccessoryCatalog(product)) {
+          return false;
+        }
+        const haystack = productHaystack(product);
+        const keys = productTypeKeysForProduct(product);
+        return (
+          primaryTypes.some((type) => keys.has(type)) ||
+          typeTerms.some((term) => haystack.includes(term))
+        );
+      })
+      .map((product) => ({
+        product,
+        score: scoreProduct(product, terms, scoreOptions),
+      }))
+      .filter((row) => row.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    if (typeMatches.length) {
+      scored = typeMatches;
+    } else if (restrictAccessories) {
+      scored = products
+        .filter((product) => productMatchesAccessoryCatalog(product))
+        .map((product) => ({
+          product,
+          score: scoreProduct(product, terms, scoreOptions),
+        }))
+        .filter((row) => row.score > 0)
+        .sort((a, b) => b.score - a.score);
+    }
+  }
+
+  if (restrictAccessories) {
+    scored = scored.filter((row) =>
+      productMatchesAccessoryCatalog(row.product),
+    );
+  }
 
   let items = scored.map((row) => row.product);
 
   if (!items.length && textQuery?.trim()) {
     const needle = textQuery.trim().toLowerCase();
-    items = products.filter((product) =>
-      productHaystack(product).includes(needle),
-    );
+    items = products.filter((product) => {
+      if (restrictAccessories && !productMatchesAccessoryCatalog(product)) {
+        return false;
+      }
+      return productHaystack(product).includes(needle);
+    });
   }
 
-  if (!items.length) {
+  if (!items.length && !restrictAccessories) {
     items = products.filter((product) =>
       analysis.colors.some((color) =>
         product.colors.some((c) =>

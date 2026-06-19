@@ -22,7 +22,7 @@ export function PaymentConfirmationClient({
     if (celebrationStarted.current) return;
     celebrationStarted.current = true;
     let celebrationCleanup: (() => void) | undefined;
-    let delayTimer: ReturnType<typeof window.setTimeout> | undefined;
+    let delayTimer: number | undefined;
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         delayTimer = window.setTimeout(() => {

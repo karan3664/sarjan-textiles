@@ -9,6 +9,10 @@ import {
   SARJAN_PWA_INSTALLED_EVENT,
   SARJAN_PWA_INSTALL_READY_EVENT,
 } from "@/lib/storefront-pwa";
+import {
+  isDesktopWebClient,
+  isMobileStorefrontClient,
+} from "@/lib/storefront-device";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -22,10 +26,11 @@ export function PwaInstallPrompt() {
 
   useEffect(() => {
     if (isPwaStandalone()) return;
-    if (isPwaInstallDismissed()) return;
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
+      if (isMobileStorefrontClient()) return;
+      if (isPwaInstallDismissed()) return;
       setDeferredPrompt(event as BeforeInstallPromptEvent);
       setVisible(true);
       window.dispatchEvent(new Event(SARJAN_PWA_INSTALL_READY_EVENT));
@@ -63,7 +68,7 @@ export function PwaInstallPrompt() {
     dismiss();
   }, [deferredPrompt, dismiss]);
 
-  if (!visible || !deferredPrompt) return null;
+  if (!visible || !deferredPrompt || !isDesktopWebClient()) return null;
 
   return (
     <div

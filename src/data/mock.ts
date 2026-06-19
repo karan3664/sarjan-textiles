@@ -116,7 +116,7 @@ export const siteSettings = {
   directionsUrl: sarjanDirectionsUrl,
   openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
   openTimeSunday: "Sunday: By appointment",
-  creditTermDays: 90,
+  creditTermDays: 30,
   platformFee: {
     enabled: false,
     amountInr: 10,
@@ -141,7 +141,7 @@ export const siteSettings = {
   seo: {
     title: "Sarjan Textiles | B2B Textile Ordering Platform",
     description:
-      "Explore Sarjan Textiles collections, place B2B orders, track dispatches, and manage 90-day credit workflows.",
+      "Explore Sarjan Textiles collections, place B2B orders, track dispatches, and manage 30-day credit workflows.",
   },
   /** Login / register / forgot side banners (CMS-editable, WebP + AVIF + blur). */
   authBanners: defaultAuthBanners,
@@ -454,7 +454,7 @@ export const home = {
     eyebrow: "Wholesale textile collections",
     title: "Premium prints ready for your next retail season",
     description:
-      "Curated shirts, kurtas, and textile ranges with MOQ-based ordering, admin approval, dispatch tracking, and 90-day credit workflows.",
+      "Curated shirts, kurtas, and textile ranges with MOQ-based ordering, admin approval, dispatch tracking, and 30-day credit workflows.",
     primaryCta: { label: "Explore Catalog", href: "#catalog" },
     secondaryCta: { label: "Register as Client", href: "/register" },
     image: asset("banner-textiles-studio.png"),
@@ -475,7 +475,7 @@ export const home = {
       eyebrow: "Wholesale textile collections",
       title: "Premium prints ready for your next retail season",
       description:
-        "Curated shirts, kurtas, and textile ranges with MOQ-based ordering, admin approval, dispatch tracking, and 90-day credit workflows.",
+        "Curated shirts, kurtas, and textile ranges with MOQ-based ordering, admin approval, dispatch tracking, and 30-day credit workflows.",
       ctaLabel: "Explore Catalog",
       ctaHref: "#catalog",
       actionType: "url",
@@ -508,7 +508,7 @@ export const home = {
     },
   ],
   highlights: [
-    { value: "90", label: "Day credit cycle" },
+    { value: "30", label: "Day credit cycle" },
     { value: "24+", label: "MOQ for shirts" },
     { value: "18+", label: "MOQ for kurtas" },
     { value: "100%", label: "Admin approved orders" },
@@ -613,7 +613,7 @@ export const blogs = [
     image: asset("shirt-ajrak-black-studio.png"),
     date: "2026-05-07",
     content:
-      "A 90-day cheque cycle needs visibility. The platform records order approvals, dispatch movement, outstanding amounts, and client history so the sales and accounts team can coordinate without scattered spreadsheets.",
+      "A 30-day cheque cycle needs visibility. The platform records order approvals, dispatch movement, outstanding amounts, and client history so the sales and accounts team can coordinate without scattered spreadsheets.",
   },
 ];
 
@@ -718,7 +718,7 @@ export const dashboard = {
       label: "Outstanding Payments",
       value: "₹9.24L",
       icon: "icon-hand-coins",
-      note: "90-day cheque cycle",
+      note: "30-day cheque cycle",
     },
     {
       label: "Ready Dispatch",

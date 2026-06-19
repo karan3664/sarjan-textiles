@@ -64,9 +64,11 @@ function HomeBannerBlock({
             </h2>
           ) : null}
           {slideDescription ? (
-            <p className="sarjan-home-banner-section__description sarjan-cms-banner-text">
-              <CmsHtml html={slideDescription} />
-            </p>
+            <CmsHtml
+              html={slideDescription}
+              as="div"
+              className="sarjan-home-banner-section__description sarjan-cms-banner-text"
+            />
           ) : null}
           {slideCta.label && slideCta.href ? (
             <div className="sarjan-home-banner-section__actions">

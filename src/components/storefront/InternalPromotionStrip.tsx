@@ -77,16 +77,18 @@ export function InternalPromotionStrip({
 
   const href = ad.ctaHref?.trim() || "/products";
 
+  const ctaLabel = ad.ctaLabel?.trim() || "Shop now";
+
   return (
     <section
-      className={`sarjan-internal-promo flat-spacing ${className}`.trim()}
+      className={`sarjan-internal-promo ${className}`.trim()}
       aria-label="Promotion"
     >
       <div className="container">
         <div className="sarjan-promo-banner-carousel">
           <Link
             href={href}
-            className="sarjan-promo-banner-slide hover-img sarjan-internal-promo-slide"
+            className="sarjan-promo-banner-slide sarjan-internal-promo-slide"
             onClick={onClick}
           >
             <StorefrontBannerImage
@@ -96,14 +98,14 @@ export function InternalPromotionStrip({
               className="sarjan-promo-banner-media"
               fill
             />
-            {ad.title?.trim() || ad.ctaLabel?.trim() ? (
-              <div className="sarjan-promo-banner-caption">
-                {ad.title?.trim() ? <h4 className="mb_0">{ad.title}</h4> : null}
-                {ad.ctaLabel?.trim() ? (
-                  <span className="text-caption-1">{ad.ctaLabel}</span>
-                ) : null}
-              </div>
-            ) : null}
+            <div className="sarjan-promo-banner-caption">
+              {ad.title?.trim() ? (
+                <h4 className="sarjan-promo-banner-title mb_0">{ad.title}</h4>
+              ) : null}
+              <span className="sarjan-promo-banner-cta tf-btn btn-fill btn-white btn-md radius-4">
+                {ctaLabel}
+              </span>
+            </div>
           </Link>
           {promotions.length > 1 ? (
             <div className="sarjan-promo-banner-dots">

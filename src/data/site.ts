@@ -20,13 +20,13 @@ export const siteSettings = {
   directionsUrl: sarjanDirectionsUrl,
   openTimeWeekday: "Mon - Sat: 10:00am - 7:00pm IST",
   openTimeSunday: "Sunday: By appointment",
-  creditTermDays: 90,
+  creditTermDays: 30,
   footerNote:
     "Premium textile collections for wholesalers, boutiques, and growing retail partners.",
   seo: {
     title: "Sarjan Textiles | B2B Textile Ordering Platform",
     description:
-      "Explore Sarjan Textiles collections, place B2B orders, track dispatches, and manage 90-day credit workflows.",
+      "Explore Sarjan Textiles collections, place B2B orders, track dispatches, and manage 30-day credit workflows.",
   },
 };
 

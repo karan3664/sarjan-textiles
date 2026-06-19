@@ -206,9 +206,13 @@ export function HomeHeroRotator({
                 <h2 className="heading sarjan-hero-heading sarjan-hero-heading-multiline sarjan-cms-banner-text">
                   <CmsHtml html={slideTitle} />
                 </h2>
-                <p className="body-text-1 subheading sarjan-hero-subheading sarjan-cms-banner-text">
-                  <CmsHtml html={slideDescription} />
-                </p>
+                {slideDescription ? (
+                  <CmsHtml
+                    html={slideDescription}
+                    as="div"
+                    className="body-text-1 subheading sarjan-hero-subheading sarjan-cms-banner-text"
+                  />
+                ) : null}
               </div>
               <div className="box-btn-slider sarjan-hero-cta">
                 <Link

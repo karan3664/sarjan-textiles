@@ -19,6 +19,7 @@ import { getStorefrontHeaderData } from "@/lib/storefront-header-data";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { StorefrontScrollChrome } from "./StorefrontScrollChrome";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
+import { AndroidAppInstallPrompt } from "./AndroidAppInstallPrompt";
 import { StorefrontThemeProvider } from "./StorefrontThemeProvider";
 import { StorefrontGlobalJsonLd } from "./StorefrontGlobalJsonLd";
 
@@ -82,6 +83,7 @@ export async function ModaveShell({ children }: { children: React.ReactNode }) {
       <OrderBotWidget />
       <OrderConfettiLayer />
       <PwaInstallPrompt />
+      <AndroidAppInstallPrompt />
     </>
   );
 }

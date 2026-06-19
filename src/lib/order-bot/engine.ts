@@ -2,8 +2,10 @@ import { buildValidatedOrderPayload } from "@/lib/order-pricing";
 import { createOrder } from "@/lib/local-db";
 import {
   browseBotCatalog,
+  fetchBotProductPreviewBySlug,
   listBotCategories,
   listBotCategoryPreviews,
+  resolveBotSessionProduct,
   resolveProductFromSession,
   searchBotProducts,
 } from "@/lib/order-bot/catalog-tools";
@@ -16,6 +18,8 @@ import {
   isAffirmative,
   isNegative,
   isOrderTrackingIntent,
+  isPlaceOrderIntent,
+  isViewCartIntent,
   isVulgarMessage,
   markProductPickPending,
   parseCartQuantityUpdate,
@@ -26,7 +30,9 @@ import {
   vulgarRefusal,
 } from "@/lib/order-bot/conversation";
 import {
+  flushBotSession,
   getBotSession,
+  reloadBotSessionFromStore,
   touchBotSession,
   type BotSession,
 } from "@/lib/order-bot/session-store";
@@ -54,7 +60,26 @@ import { tryHandleOrderBotWithLlm } from "@/lib/order-bot/llm-agent";
 import { orderPlacedNavActions } from "@/lib/order-bot/order-placed-ui";
 import { requestAdminNotificationRefresh } from "@/lib/admin-notification-live";
 import { notifyEInvoiceOrderCreated } from "@/lib/compliance-webhooks";
+import {
+  convertSalesLeadFromOrder,
+  enrichCartResponse,
+} from "@/lib/ai-sales/engine";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
+import { productsCardsIntro as localizedProductsIntro } from "@/lib/ai-chat/welcome";
+import {
+  buildClosingPromptResponse,
+  buildRatingPromptResponse,
+  isClosingAccept,
+  isClosingDecline,
+  normalizeAiLanguage,
+  normalizeAiSource,
+  persistBotExchange,
+  trackBotEvent,
+} from "@/lib/ai-chat/session-lifecycle";
+import { tryAnswerFromPageContext } from "@/lib/ai-chat/page-context";
+import type { AiPageContext } from "@/lib/ai-chat/page-context";
+import { applyPageContextToSession } from "@/lib/ai-chat/page-context.server";
+import type { AiLanguage } from "@/lib/ai-chat/types";
 
 const BROWSE_NAV_ACTIONS: BotNavAction[] = [
   { label: "All categories", href: "/categories" },
@@ -68,6 +93,7 @@ function money(value: number) {
 
 /** Short text when product cards carry the catalog (avoids duplicate text list). */
 function productsCardsIntro(
+  session: BotSession,
   products: BotProductPreview[],
   options?: { label?: string; collectionHref?: string; didYouMean?: boolean },
 ) {
@@ -78,10 +104,11 @@ function productsCardsIntro(
     ? `\n\nBrowse on site: ${options.collectionHref}`
     : "";
   const label = options?.label ? `**${options.label}** — ` : "";
+  const intro = localizedProductsIntro(session.language, products.length);
   const hint = options?.didYouMean
-    ? "Reply **yes** for the first, a **number**, or **add 2 50 sets**:"
-    : "Reply **1 50** or **add 1 50 sets** (product # + sets):";
-  return `${label}${products.length} product(s) below. ${hint}${siteLink}`;
+    ? " Tap a product card to view details or add quantity."
+    : "";
+  return `${label}${intro}${hint}${siteLink}`;
 }
 
 async function buildTrackOrdersResponse(
@@ -120,7 +147,7 @@ async function buildTrackOrdersResponse(
 
 function formatCart(cart: BotCartLine[], total: number) {
   if (!cart.length)
-    return "Your cart is empty. Browse a category first, then **add 1 50 sets** (product number + how many sets).";
+    return "Your cart is empty. Browse products and use the **Add 25 / 50 / 100** buttons on product cards.";
   const lines = cart
     .map(
       (line, index) =>
@@ -134,33 +161,24 @@ function productPickReply(session: BotSession, product: BotProductPreview) {
   touchBotSession(session);
   return {
     sessionId: session.id,
-    reply: `**${product.name}** (${product.category}) — ${money(product.setPrice)}/set, MOQ ${product.moq ?? 1}. Add sets below:`,
+    reply: `**${product.name}** (${product.category}) — ${money(product.setPrice)}/set, MOQ ${product.moq ?? 1}. Use the card buttons to add sets.`,
     products: [product],
     cart: session.cart,
-    quickReplies: [
-      `Add ${product.index} 1 sets`,
-      `Add ${product.index} 50 sets`,
-      "Cart",
-      "Categories",
-    ],
+    language: session.language,
+    quickReplies: ["Cart", "Categories", "Place order"],
   };
 }
 
 function helpMessage() {
   return [
-    "I can help you place B2B orders by category:",
+    "I can help you place B2B orders:",
     "",
-    "• **categories** — list product categories",
-    "• **show Ajrakh** or **products in Kurtas** — browse by category",
-    "• **search blue cotton** — search catalog",
-    "• **1 50** or **add 2 50 sets** — product **#** then sets (low stock auto-adjusts)",
-    "• **update cart 1 30** — change qty on cart line 1 when stock is low",
-    "• **add 1 20 sets** then **add 1 30 sets** — same product again adds up (50 total)",
+    "• **Browse Products** — categories and search",
+    "• Product cards — **View Details**, **Add 25/50/100**, or custom quantity",
     "• **cart** — view cart and total",
     "• **place order** — submit order (shows as *AI order assistant* in history)",
     "• **my orders** — recent order status",
     "",
-    "Bulk example: `show Kurtas` → `add 1 100 sets` → `add 2 80 sets` → `cart` → `place order`",
     "Each product line shows **MOQ** — order at or above that; team confirms stock on approval.",
   ].join("\n");
 }
@@ -183,6 +201,11 @@ async function placeBotOrder(session: BotSession, note?: string) {
   });
   const order = await createOrder(validated, { placedVia: "ai_bot" });
   session.lastPlacedOrderId = order.id;
+  await convertSalesLeadFromOrder(
+    session,
+    order.id,
+    Number(order.total ?? order.subtotal ?? 0),
+  );
   session.cart = [];
   session.lastProducts = [];
   await persistBotCartToStore(session);
@@ -232,6 +255,45 @@ const POLICY_QUICK_REPLIES = [
   "How to order",
   "Collections",
 ];
+
+async function buildPlaceOrderResponse(
+  session: BotSession,
+  quickReplies = DEFAULT_QUICK_REPLIES,
+): Promise<BotChatResponse> {
+  if (!session.cart.length) {
+    await hydrateBotCartFromStore(session);
+  }
+  try {
+    const order = await placeBotOrder(session);
+    const placedOrder = await buildOrderPreview(session.clientId, order);
+    touchBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: `Order **${order.id}** submitted (${money(order.subtotal)}). Status: **${order.status}**. Tap **View order details** below for the full breakdown.`,
+      orderPlaced: true,
+      orderId: order.id,
+      placedOrder,
+      orders: [placedOrder],
+      navActions: orderPlacedNavActions(order.id),
+      cart: [],
+      cartTotal: 0,
+      quickReplies: ["My orders", "Categories"],
+    };
+  } catch (error) {
+    touchBotSession(session);
+    const { cart, total } = await enrichCartLines(
+      session.clientId,
+      session.cart,
+    );
+    return {
+      sessionId: session.id,
+      reply: error instanceof Error ? error.message : "Could not place order.",
+      cart,
+      cartTotal: total,
+      quickReplies,
+    };
+  }
+}
 
 /** Cart / yes / pick / site policies — must run before LLM so short replies are not lost. */
 async function tryPreLlmOrderBotHandlers(
@@ -325,7 +387,70 @@ async function tryPreLlmOrderBotHandlers(
     return buildTrackOrdersResponse(session, text);
   }
 
+  if (isViewCartIntent(text)) {
+    const { cart, total } = await hydrateBotCartFromStore(session);
+    touchBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: cart.length
+        ? `Your cart — **${money(total)}** estimated total. Lines below. Say **place order** when ready.`
+        : formatCart(cart, total),
+      cart,
+      cartTotal: total,
+      quickReplies,
+    };
+  }
+
+  if (/^clear cart$/i.test(text.trim())) {
+    session.cart = [];
+    await persistBotCartToStore(session);
+    touchBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: "Cart cleared.",
+      cart: [],
+      cartTotal: 0,
+      quickReplies,
+    };
+  }
+
+  if (isPlaceOrderIntent(text)) {
+    return buildPlaceOrderResponse(session, quickReplies);
+  }
+
   return null;
+}
+
+const INACTIVITY_CHECK = "__SARJAN_INACTIVITY__";
+
+async function finalizeBotResponse(
+  session: BotSession,
+  userMessage: string,
+  response: BotChatResponse,
+): Promise<BotChatResponse> {
+  const enriched: BotChatResponse = {
+    ...response,
+    sessionId: session.id,
+    language: session.language,
+    sessionPhase: response.sessionPhase ?? session.lifecyclePhase ?? "active",
+  };
+  if (userMessage && enriched.reply) {
+    await persistBotExchange(session, userMessage, enriched.reply, {
+      products: enriched.products?.length ?? 0,
+      orderPlaced: enriched.orderPlaced ?? false,
+    });
+  }
+  if (enriched.products?.length) {
+    await trackBotEvent(session, "product_recommended", {
+      metadata: { count: enriched.products.length },
+    });
+  }
+  if (enriched.orderPlaced) {
+    await trackBotEvent(session, "order_placed", {
+      metadata: { orderId: enriched.orderId },
+    });
+  }
+  return enriched;
 }
 
 export async function handleOrderBotMessage(input: {
@@ -333,25 +458,99 @@ export async function handleOrderBotMessage(input: {
   sessionId?: string;
   clientId: string;
   clientEmail: string;
+  language?: AiLanguage;
+  source?: "web" | "app";
+  clientName?: string;
+  pageContext?: AiPageContext | unknown;
 }): Promise<BotChatResponse> {
-  const session = getBotSession(
-    input.sessionId,
-    input.clientId,
-    input.clientEmail,
-  );
+  const session = await getBotSession({
+    sessionId: input.sessionId,
+    clientId: input.clientId,
+    clientEmail: input.clientEmail,
+    language: normalizeAiLanguage(input.language),
+    source: normalizeAiSource(input.source),
+  });
+  if (input.pageContext) {
+    await applyPageContextToSession(
+      session,
+      input.pageContext,
+      input.clientId,
+      typeof input.pageContext === "object" &&
+        input.pageContext &&
+        "path" in input.pageContext
+        ? String((input.pageContext as AiPageContext).path ?? "")
+        : undefined,
+    );
+  }
   if (!session.cart.length) {
     await hydrateBotCartFromStore(session);
   }
   const text = input.message.trim();
 
+  if (text === INACTIVITY_CHECK) {
+    session.lifecyclePhase = "closing";
+    touchBotSession(session);
+    return finalizeBotResponse(
+      session,
+      text,
+      buildClosingPromptResponse(session),
+    );
+  }
+
+  if (session.lifecyclePhase === "closing") {
+    if (isClosingDecline(text, session.language)) {
+      session.lifecyclePhase = "awaiting_rating";
+      touchBotSession(session);
+      return finalizeBotResponse(
+        session,
+        text,
+        buildRatingPromptResponse(session),
+      );
+    }
+    if (isClosingAccept(text)) {
+      session.lifecyclePhase = "active";
+      touchBotSession(session);
+      return finalizeBotResponse(session, text, {
+        sessionId: session.id,
+        reply: "Sure — what would you like to do next?",
+        cart: session.cart,
+        quickReplies: DEFAULT_QUICK_REPLIES,
+        sessionPhase: "active",
+      });
+    }
+  }
+
   const preLlm = await tryPreLlmOrderBotHandlers(session, text);
-  if (preLlm) return preLlm;
+  if (preLlm) {
+    preLlm.language = session.language;
+    return preLlm;
+  }
+
+  const contextualReply = tryAnswerFromPageContext(session.pageContext, text);
+  if (contextualReply) {
+    touchBotSession(session);
+    return finalizeBotResponse(session, text, {
+      sessionId: session.id,
+      reply: contextualReply,
+      cart: session.cart,
+      products:
+        session.pageContext?.kind === "product" && session.lastProducts.length
+          ? session.lastProducts
+          : undefined,
+      quickReplies: DEFAULT_QUICK_REPLIES,
+      language: session.language,
+    });
+  }
 
   const llmReply = await tryHandleOrderBotWithLlm({
     ...input,
     sessionId: session.id,
+    clientName: input.clientName,
   });
-  if (llmReply) return llmReply;
+  if (llmReply) {
+    llmReply.language = session.language;
+    return llmReply;
+  }
 
   const lower = text.toLowerCase();
   const quickReplies = DEFAULT_QUICK_REPLIES;
@@ -534,32 +733,7 @@ export async function handleOrderBotMessage(input: {
     /^place order$|^submit order$|^confirm order$/i.test(lower) ||
     /order place/i.test(lower)
   ) {
-    try {
-      const order = await placeBotOrder(session);
-      const placedOrder = await buildOrderPreview(session.clientId, order);
-      touchBotSession(session);
-      return {
-        sessionId: session.id,
-        reply: `Order **${order.id}** submitted (${money(order.subtotal)}). Status: **${order.status}**. Tap **View order details** below for the full breakdown.`,
-        orderPlaced: true,
-        orderId: order.id,
-        placedOrder,
-        orders: [placedOrder],
-        navActions: orderPlacedNavActions(order.id),
-        cart: [],
-        cartTotal: 0,
-        quickReplies: ["My orders", "Categories"],
-      };
-    } catch (error) {
-      touchBotSession(session);
-      return {
-        sessionId: session.id,
-        reply:
-          error instanceof Error ? error.message : "Could not place order.",
-        cart: session.cart,
-        quickReplies,
-      };
-    }
+    return buildPlaceOrderResponse(session, quickReplies);
   }
 
   const searchMatch = text.match(/^search\s+(.+)$/i);
@@ -573,10 +747,10 @@ export async function handleOrderBotMessage(input: {
     touchBotSession(session);
     return {
       sessionId: session.id,
-      reply: productsCardsIntro(products, { didYouMean: true }),
+      reply: productsCardsIntro(session, products, { didYouMean: true }),
       products,
       cart: session.cart,
-      quickReplies: ["Yes", "Add 1 1 sets", "Cart", "Place order"],
+      quickReplies: ["Cart", "Categories", "Place order"],
     };
   }
 
@@ -596,7 +770,7 @@ export async function handleOrderBotMessage(input: {
     const empty = !browse.products.length;
     return {
       sessionId: session.id,
-      reply: productsCardsIntro(browse.products, {
+      reply: productsCardsIntro(session, browse.products, {
         label: browse.label,
         collectionHref: browse.collectionHref,
       }),
@@ -604,7 +778,7 @@ export async function handleOrderBotMessage(input: {
       cart: session.cart,
       quickReplies: empty
         ? ["Categories", "Show Ajrakh", "Show Kurtas"]
-        : browse.products.slice(0, 3).map((item) => `Add ${item.index} 1 sets`),
+        : ["Browse Products", "Cart", "Place order"],
       navActions: empty
         ? [
             ...BROWSE_NAV_ACTIONS,
@@ -645,10 +819,10 @@ export async function handleOrderBotMessage(input: {
       touchBotSession(session);
       return {
         sessionId: session.id,
-        reply: productsCardsIntro(retry, { didYouMean: true }),
+        reply: productsCardsIntro(session, retry, { didYouMean: true }),
         products: retry,
         cart: session.cart,
-        quickReplies: ["Yes", "Add 1 1 sets", ...quickReplies.slice(0, 2)],
+        quickReplies: ["Cart", "Categories", "Place order"],
       };
     }
   }
@@ -658,22 +832,124 @@ export async function handleOrderBotMessage(input: {
     touchBotSession(session);
     return {
       sessionId: session.id,
-      reply: productsCardsIntro(fuzzyProducts, {
+      reply: productsCardsIntro(session, fuzzyProducts, {
         label: fuzzyProducts.length === 1 ? fuzzyProducts[0].name : undefined,
         didYouMean: fuzzyProducts.length > 1,
       }),
       products: fuzzyProducts,
       cart: session.cart,
-      quickReplies: ["Yes", "Add 1 1 sets", ...quickReplies.slice(0, 2)],
+      quickReplies: ["Cart", "Categories", "Place order"],
     };
   }
 
   touchBotSession(session);
-  return {
+  const fallback = {
     sessionId: session.id,
     reply: contextualFallback(session, text),
     cart: session.cart,
     quickReplies,
     navActions: BROWSE_NAV_ACTIONS,
+    language: session.language,
+  };
+  return fallback;
+}
+
+export async function handleOrderBotAction(input: {
+  sessionId: string;
+  clientId: string;
+  clientEmail: string;
+  language?: AiLanguage;
+  source?: "web" | "app";
+  pageContext?: AiPageContext | unknown;
+  action: "add_to_cart" | "view_product";
+  productIndex: number;
+  productSlug?: string;
+  sets?: number;
+}): Promise<BotChatResponse> {
+  const session = await getBotSession({
+    sessionId: input.sessionId,
+    clientId: input.clientId,
+    clientEmail: input.clientEmail,
+    language: normalizeAiLanguage(input.language),
+    source: normalizeAiSource(input.source),
+    createIfMissing: false,
+  });
+
+  await reloadBotSessionFromStore(session);
+
+  if (input.pageContext) {
+    await applyPageContextToSession(session, input.pageContext, input.clientId);
+  }
+
+  let product = resolveBotSessionProduct(
+    session.lastProducts,
+    input.productIndex,
+    input.productSlug,
+  );
+
+  if (!product && input.productSlug) {
+    const fetched = await fetchBotProductPreviewBySlug(
+      input.clientId,
+      input.productSlug,
+      input.productIndex,
+    );
+    if (fetched) {
+      product = fetched;
+      const existing = session.lastProducts.filter(
+        (item) => item.slug !== fetched.slug,
+      );
+      session.lastProducts = [...existing, fetched];
+    }
+  }
+
+  if (!product) {
+    await flushBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: "Product not found in this session. Browse products again.",
+      language: session.language,
+      quickReplies: DEFAULT_QUICK_REPLIES,
+    };
+  }
+
+  if (input.action === "view_product") {
+    await trackBotEvent(session, "product_viewed", {
+      productSlug: product.slug,
+    });
+    session.focusProductIndex = product.index;
+    touchBotSession(session);
+    await flushBotSession(session);
+    return {
+      sessionId: session.id,
+      reply: `Opening **${product.name}**. You can also add sets from the card buttons.`,
+      products: [product],
+      language: session.language,
+      navActions: [
+        { label: "View Details", href: `/products/${product.slug}` },
+      ],
+      quickReplies: DEFAULT_QUICK_REPLIES,
+    };
+  }
+
+  const sets = Math.max(1, Math.floor(input.sets ?? 25));
+  const result = await addProductToCart(
+    session,
+    product,
+    sets,
+    undefined,
+    DEFAULT_QUICK_REPLIES,
+    "add",
+  );
+  await trackBotEvent(session, "add_to_cart", {
+    productSlug: product.slug,
+    metadata: { sets, productIndex: product.index },
+  });
+  const optimization = await enrichCartResponse(session, session.cart);
+  await flushBotSession(session);
+  return {
+    ...result,
+    products: session.lastProducts.length ? session.lastProducts : [product],
+    language: session.language,
+    cartOptimization: optimization ?? undefined,
   };
 }

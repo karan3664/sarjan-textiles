@@ -33,6 +33,14 @@ import type { BotCartLine, BotProductPreview } from "@/lib/order-bot/types";
 import { requestAdminNotificationRefresh } from "@/lib/admin-notification-live";
 import { notifyEInvoiceOrderCreated } from "@/lib/compliance-webhooks";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
+import { sendMetaConversionEvent } from "@/lib/meta-conversions-capi";
+import {
+  captureSalesLead,
+  convertSalesLeadFromOrder,
+  enrichCartResponse,
+  runSalesRecommendations,
+} from "@/lib/ai-sales/engine";
+import type { SalesRecommendationKind } from "@/lib/ai-sales/types";
 
 function money(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -94,6 +102,20 @@ async function placeBotOrder(session: BotSession, note?: string) {
   );
   void notifyEInvoiceOrderCreated(order);
   requestAdminNotificationRefresh();
+  void sendMetaConversionEvent({
+    eventName: "Purchase",
+    eventId: `ai-order-${order.id}`,
+    customData: {
+      value: order.subtotal,
+      currency: "INR",
+      order_id: order.id,
+      content_name: "AI Order",
+    },
+    userData: {
+      email: session.clientEmail,
+      externalId: session.clientId,
+    },
+  }).catch((error) => console.error("Meta AI order CAPI failed", error));
   return order;
 }
 
@@ -107,7 +129,10 @@ export type BotToolName =
   | "clear_cart"
   | "place_order"
   | "track_orders"
-  | "website_info";
+  | "website_info"
+  | "recommend_products"
+  | "optimize_cart"
+  | "capture_lead";
 
 export async function executeBotTool(
   session: BotSession,
@@ -147,7 +172,7 @@ export async function executeBotTool(
       const note = browse.collectionHref
         ? ` Site: ${browse.collectionHref}`
         : "";
-      return `${browse.products.length} product(s) indexed for **${browse.label}**. UI shows photo cards; user picks by number (e.g. add 1 50 sets).${note}`;
+      return `${browse.products.length} product(s) indexed for **${browse.label}**. UI shows photo cards with Add 25/50/100 buttons.${note}`;
     }
 
     case "search_products": {
@@ -193,8 +218,12 @@ export async function executeBotTool(
     case "view_cart": {
       const { cart, total } = await hydrateBotCartFromStore(session);
       session.attachCartCards = true;
+      const optimization = await enrichCartResponse(session, cart);
+      const optNote = optimization
+        ? ` Shipping tip: ${optimization.message}`
+        : "";
       return cart.length
-        ? `Cart has ${cart.length} line(s), total ${money(total)}. UI shows cart cards — keep reply to one short sentence.`
+        ? `Cart has ${cart.length} line(s), total ${money(total)}. UI shows cart cards — keep reply to one short sentence.${optNote}`
         : "Cart is empty.";
     }
 
@@ -212,6 +241,11 @@ export async function executeBotTool(
         session.lastOrderPreviews = await buildOrderPreviews(session.clientId, [
           order,
         ]);
+        await convertSalesLeadFromOrder(
+          session,
+          order.id,
+          Number(order.total ?? order.subtotal ?? 0),
+        );
         return `Order placed successfully.\nOrder ID: ${order.id}\nStatus: ${order.status}\nTotal: ${money(order.subtotal)}\nTrack at /account or /order-tracking`;
       } catch (error) {
         return error instanceof Error
@@ -269,6 +303,68 @@ export async function executeBotTool(
       return buildWebsiteInfoReply(topic);
     }
 
+    case "recommend_products": {
+      const kind = String(
+        args.kind ?? "similar",
+      ).toLowerCase() as SalesRecommendationKind;
+      const allowed: SalesRecommendationKind[] = [
+        "similar",
+        "bought_together",
+        "budget",
+        "quantity",
+        "upsell",
+        "cross_sell",
+      ];
+      const resolved = allowed.includes(kind) ? kind : "similar";
+      const budgetInr = Number(args.budget_inr) || undefined;
+      const targetSets = Number(args.target_sets) || undefined;
+      const refSlug =
+        typeof args.product_slug === "string"
+          ? args.product_slug.trim()
+          : undefined;
+      const result = await runSalesRecommendations(session, {
+        kind: resolved,
+        refSlug,
+        budgetInr,
+        targetSets,
+      });
+      if (!result.products.length) {
+        return `No ${resolved.replace("_", " ")} recommendations found. Try browse or search.`;
+      }
+      return `${result.products.length} ${resolved.replace("_", " ")} recommendation(s) loaded. UI shows product cards — one short intro only.`;
+    }
+
+    case "optimize_cart": {
+      const { cart } = await hydrateBotCartFromStore(session);
+      const optimization = await enrichCartResponse(session, cart);
+      if (!optimization)
+        return "Cart is empty or shipping optimization is unavailable.";
+      session.attachCartCards = true;
+      return optimization.message;
+    }
+
+    case "capture_lead": {
+      const lead = await captureSalesLead(session, {
+        productInterest:
+          typeof args.product_interest === "string"
+            ? args.product_interest
+            : undefined,
+        productSlugs: Array.isArray(args.product_slugs)
+          ? args.product_slugs.map(String)
+          : undefined,
+        quantityInterest: Number(args.quantity_interest) || undefined,
+        budgetInr: Number(args.budget_inr) || undefined,
+        notes: typeof args.notes === "string" ? args.notes : undefined,
+        status:
+          args.status === "qualified"
+            ? "qualified"
+            : args.status === "lost"
+              ? "lost"
+              : "new",
+      });
+      return `Lead captured (${lead.id.slice(0, 8)}). Interest: ${lead.productInterest ?? "general"}. Our team can follow up on wholesale requirements.`;
+    }
+
     default:
       return `Unknown tool: ${tool}`;
   }
@@ -277,10 +373,10 @@ export async function executeBotTool(
 export function defaultQuickReplies(session: BotSession) {
   const replies: string[] = [];
   if (session.lastProducts.length) {
-    replies.push(`Add ${session.lastProducts[0]?.index ?? 1} 50 sets`);
+    replies.push("Recommend similar", "View cart");
   }
   if (session.cart.length) {
-    replies.push("Place order", "My cart");
+    replies.push("Optimize cart", "Place order", "My cart");
   }
   replies.push("Track my orders", "Categories");
   return [...new Set(replies)].slice(0, 4);

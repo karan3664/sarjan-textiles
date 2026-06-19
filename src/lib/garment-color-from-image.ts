@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
-import { isProductPlaceholderImage } from "./product-placeholder-image.ts";
+import { isProductPlaceholderImage } from "./product-placeholder-image";
 
 export const GARMENT_COLOR_LABELS = [
   "Black",

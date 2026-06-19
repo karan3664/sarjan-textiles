@@ -19,7 +19,7 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  return new Response(file.buffer, {
+  return new Response(new Uint8Array(file.buffer), {
     headers: {
       "Content-Type": file.mime,
       "Cache-Control": "public, max-age=86400",

@@ -39,12 +39,10 @@ export function mergeCatalogFilters(
   base: CatalogFilters | undefined,
   overrides: CatalogFilters,
 ): CatalogFilters {
-  const merged: CatalogFilters = { ...base };
-  for (const [key, value] of Object.entries(overrides) as Array<
-    [keyof CatalogFilters, CatalogFilters[keyof CatalogFilters]]
-  >) {
+  const merged: CatalogFilters = { ...(base ?? {}) };
+  for (const [key, value] of Object.entries(overrides)) {
     if (value !== undefined && value !== "") {
-      merged[key] = value;
+      (merged as Record<string, string | number>)[key] = value;
     }
   }
   return merged;
