@@ -102,6 +102,17 @@ while IFS= read -r f; do
     skipped=$((skipped + 1))
     continue
   fi
+  if [[ "$base" == "20260509203100_seed_core.sql" ]]; then
+    client_count="$(docker exec "$PG_CONTAINER" psql -tAc \
+      "select count(*)::text from clients;" -U "$DB_USER" -d "$DB_NAME" | tr -d '[:space:]')"
+    if [[ "${client_count:-0}" != "0" ]]; then
+      log "skip seed (clients already populated: ${client_count} rows)"
+      docker exec "$PG_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" \
+        -c "insert into schema_migrations (filename) values ('$base') on conflict do nothing;"
+      skipped=$((skipped + 1))
+      continue
+    fi
+  fi
   log "apply: $base"
   docker exec -i "$PG_CONTAINER" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" <"$f"
   docker exec "$PG_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" \
@@ -110,8 +121,12 @@ while IFS= read -r f; do
 done < <(find "$MIGRATIONS_DIR" -maxdepth 1 -name '*.sql' | sort)
 
 log "Done. applied=$applied skipped=$skipped"
-log "Verify product_reviews:"
+log "Verify AI + review tables:"
 docker exec "$PG_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -c \
   "select to_regclass('public.product_reviews') as product_reviews,
           to_regclass('public.client_notifications') as client_notifications,
-          to_regclass('public.client_saved_lists') as client_saved_lists;"
+          to_regclass('public.client_saved_lists') as client_saved_lists,
+          to_regclass('public.ai_chat_sessions') as ai_chat_sessions,
+          to_regclass('public.ai_leads') as ai_leads,
+          to_regclass('public.ai_user_interests') as ai_user_interests,
+          to_regclass('public.ai_user_recommendations') as ai_user_recommendations;"
