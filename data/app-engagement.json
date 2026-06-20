@@ -1,3 +1,409 @@
 {
-  "events": []
+  "events": [
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.103",
+      "versionCode": 104,
+      "at": "2026-06-19T16:39:29.487Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:50:27.118Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:30:20.318Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:15:44.872Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:14:57.504Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:12:21.677Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:07:15.705Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T12:02:50.033Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T11:57:06.185Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T11:50:17.444Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T11:46:42.398Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T11:46:09.978Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:40:24.510Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:37:47.100Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:36:58.339Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:08:22.516Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:08:10.686Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:07:38.280Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:04:47.256Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T10:04:23.124Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:57:26.181Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:57:14.815Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:55:53.423Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:51:55.569Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:51:43.439Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:50:08.953Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:49:57.758Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:47:07.123Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:46:54.686Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:41:04.619Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:40:55.122Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:38:11.038Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:33:41.428Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:33:06.649Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:32:15.274Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:30:17.222Z"
+    },
+    {
+      "event": "install",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:30:17.197Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:30:17.012Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:25:24.132Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:24:52.259Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:24:26.156Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:21:17.890Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:19:02.923Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:13:21.185Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:09:59.186Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:09:08.310Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T09:02:11.622Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T08:45:48.901Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781699286858-grr52wbx",
+      "appVersion": "1.0.102",
+      "versionCode": 103,
+      "at": "2026-06-19T08:40:54.777Z"
+    }
+  ]
 }

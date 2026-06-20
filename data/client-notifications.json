@@ -1,5 +1,35 @@
 [
   {
+    "id": "9beaaf7c-e25c-46f1-9032-0baed71370b5",
+    "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+    "title": "Order placed 🎉",
+    "body": "Order ST-1781696931888 placed for ₹1,650. We'll review it shortly.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781696931888",
+      "orderId": "ST-1781696931888",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-17T11:48:51.908Z"
+  },
+  {
+    "id": "761cced1-efc9-4751-ba17-db5f5ffc3730",
+    "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+    "title": "Order placed 🎉",
+    "body": "Order ST-1781696360957 placed for ₹2,240. We'll review it shortly.",
+    "type": "order",
+    "data": {
+      "type": "order",
+      "id": "ST-1781696360957",
+      "orderId": "ST-1781696360957",
+      "screen": "OrderDetail"
+    },
+    "read": false,
+    "createdAt": "2026-06-17T11:39:20.975Z"
+  },
+  {
     "id": "ae7d5e9d-848c-4b84-9a00-0342f84d82f9",
     "clientId": "7c5cec2b-ec60-4916-a2b0-86ce150563b9",
     "title": "Order delivered 🎉",

@@ -1,4 +1,55 @@
 {
-  "ads": {},
-  "recentEvents": []
+  "ads": {
+    "promo-1781878674381": {
+      "views": 5,
+      "clicks": 2,
+      "lastEventAt": "2026-06-19T16:15:41.977Z",
+      "title": "2nd Anniversary",
+      "placement": "web_home"
+    }
+  },
+  "recentEvents": [
+    {
+      "adId": "promo-1781878674381",
+      "event": "view",
+      "at": "2026-06-19T16:15:41.977Z",
+      "platform": "web"
+    },
+    {
+      "adId": "promo-1781878674381",
+      "event": "view",
+      "at": "2026-06-19T16:13:42.588Z",
+      "platform": "web"
+    },
+    {
+      "adId": "promo-1781878674381",
+      "event": "click",
+      "at": "2026-06-19T15:15:52.409Z",
+      "platform": "web"
+    },
+    {
+      "adId": "promo-1781878674381",
+      "event": "view",
+      "at": "2026-06-19T14:59:49.168Z",
+      "platform": "web"
+    },
+    {
+      "adId": "promo-1781878674381",
+      "event": "view",
+      "at": "2026-06-19T14:59:47.839Z",
+      "platform": "web"
+    },
+    {
+      "adId": "promo-1781878674381",
+      "event": "click",
+      "at": "2026-06-19T14:19:26.792Z",
+      "platform": "web"
+    },
+    {
+      "adId": "promo-1781878674381",
+      "event": "view",
+      "at": "2026-06-19T14:19:23.202Z",
+      "platform": "web"
+    }
+  ]
 }

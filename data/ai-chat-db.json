@@ -1,0 +1,1546 @@
+{
+  "preferences": {
+    "18c6f421-87e7-4cee-81c7-be9c0960c139": {
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "language": "en",
+      "updatedAt": "2026-06-19T08:01:04.752Z"
+    },
+    "83823a31-cbf8-429f-a592-22ca0e0c6d36": {
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "updatedAt": "2026-06-19T12:03:09.796Z"
+    }
+  },
+  "sessions": [
+    {
+      "id": "1081e5f1-d43e-426d-84ca-7e5af2240636",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "source": "web",
+      "status": "active",
+      "state": {},
+      "startedAt": "2026-06-19T11:56:25.406Z",
+      "lastActivityAt": "2026-06-19T11:56:25.406Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
+      "id": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "source": "web",
+      "status": "active",
+      "state": {
+        "cart": [],
+        "lastProducts": [],
+        "pageContext": {
+          "kind": "orders",
+          "path": "/order-tracking"
+        }
+      },
+      "startedAt": "2026-06-19T11:56:05.888Z",
+      "lastActivityAt": "2026-06-19T11:56:11.398Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
+      "id": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "source": "app",
+      "status": "active",
+      "state": {
+        "cart": [],
+        "lastProducts": [],
+        "focusProductIndex": 1,
+        "pageContext": {
+          "kind": "home",
+          "route": "HomeFeed"
+        }
+      },
+      "startedAt": "2026-06-19T10:27:09.530Z",
+      "lastActivityAt": "2026-06-19T12:30:05.868Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
+      "id": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "language": "en",
+      "source": "web",
+      "status": "active",
+      "state": {
+        "cart": [
+          {
+            "slug": "ladies-embroidered-clutch-assorted-designs-delivered",
+            "name": "Ladies Embroidered Clutch — Assorted Designs Delivered",
+            "color": "Assorted",
+            "sizes": [
+              "Free Size"
+            ],
+            "setQuantity": 100,
+            "imageUrl": "/uploads/cms/1781677482436-2e52a90e-b4b7-4100-879f-d28398a8aa43.webp",
+            "lineTotal": 7000
+          }
+        ],
+        "lastProducts": [
+          {
+            "index": 1,
+            "slug": "ajrakh-chowkdi-cotton-printed-kurta",
+            "name": "Ajrakh Chowkdi Cotton Printed Kurta",
+            "category": "Men's Cotton Kurta",
+            "color": "Indigo",
+            "sizes": [
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 1440,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 24,
+            "imageUrl": "/uploads/cms/1781662030424-c91d55c4-d77d-4534-a94e-652f1ca743e3.webp"
+          },
+          {
+            "index": 2,
+            "slug": "ajrakh-stars-cotton-printed-kurta",
+            "name": "Ajrakh Stars Cotton Printed Kurta",
+            "category": "Men's Cotton Kurta",
+            "color": "Maroon",
+            "sizes": [
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 1440,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 24,
+            "imageUrl": "/uploads/cms/1781662032512-d838761c-b3c1-4f01-a018-55f5481e9c7c.webp"
+          },
+          {
+            "index": 3,
+            "slug": "rasiya-cotton-printed-kurta",
+            "name": "Rasiya Cotton Printed Kurta",
+            "category": "Men's Cotton Kurta",
+            "color": "Indigo",
+            "sizes": [
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 1440,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 32,
+            "imageUrl": "/uploads/cms/1781662025177-002fbc5c-5f19-48dc-a925-acfc131a3d27.webp"
+          },
+          {
+            "index": 4,
+            "slug": "traditional-ajrakh-cotton-printed-kurta",
+            "name": "Traditional Ajrakh Cotton Printed Kurta",
+            "category": "Men's Cotton Kurta",
+            "color": "Cream",
+            "sizes": [
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 1440,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 24,
+            "imageUrl": "/uploads/cms/1781662034211-ed0ebb51-2b5b-4d7f-8bd1-5b958810de3c.webp"
+          },
+          {
+            "index": 5,
+            "slug": "flower-boota-cotton-printed-kurta",
+            "name": "Flower Boota Cotton Printed Kurta",
+            "category": "Men's Cotton Kurta",
+            "color": "Black",
+            "sizes": [
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 1440,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 8,
+            "imageUrl": "/uploads/cms/1781662037785-9bd1a72b-0753-420c-958f-1fe06aa64b58.webp"
+          },
+          {
+            "index": 6,
+            "slug": "intricate-cotton-printed-kurta",
+            "name": "Intricate Cotton Printed Kurta",
+            "category": "Men's Cotton Kurta",
+            "color": "Maroon",
+            "sizes": [
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 1440,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 24,
+            "imageUrl": "/uploads/cms/1781662028585-fee45ded-06a4-4f0a-bf58-69882c6d8d0c.webp"
+          }
+        ],
+        "pageContext": {
+          "kind": "other",
+          "path": "/my-account-orders-details"
+        }
+      },
+      "startedAt": "2026-06-19T08:03:40.672Z",
+      "lastActivityAt": "2026-06-19T08:11:36.518Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
+      "id": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "language": "en",
+      "source": "web",
+      "status": "active",
+      "state": {
+        "cart": [
+          {
+            "slug": "ladies-embroidered-clutch-assorted-designs-delivered",
+            "name": "Ladies Embroidered Clutch — Assorted Designs Delivered",
+            "color": "Assorted",
+            "sizes": [
+              "Free Size"
+            ],
+            "setQuantity": 100,
+            "imageUrl": "/uploads/cms/1781677482436-2e52a90e-b4b7-4100-879f-d28398a8aa43.webp",
+            "lineTotal": 7000
+          }
+        ],
+        "lastProducts": [
+          {
+            "index": 1,
+            "slug": "tattva-ajrakh-block-print-shirt-cotton",
+            "name": "Tattva Ajrakh Block Print Shirt Cotton",
+            "category": "Ajrakh Block Print Shirt",
+            "color": "Black",
+            "sizes": [
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 2250,
+            "moq": 5,
+            "inStock": true,
+            "setsInStock": 25,
+            "imageUrl": "/uploads/cms/1781677875571-baf26647-2d88-4818-87e6-84a8ae14ecc0.webp"
+          },
+          {
+            "index": 2,
+            "slug": "bahaar-ajrakh-block-print-shirt-cotton",
+            "name": "Bahaar Ajrakh Block Print Shirt Cotton",
+            "category": "Ajrakh Block Print Shirt",
+            "color": "Indigo",
+            "sizes": [
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 2250,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 75,
+            "imageUrl": "/uploads/cms/1781677870167-a7be3634-0671-4bf8-9a0f-3f4bb597718c.webp"
+          },
+          {
+            "index": 3,
+            "slug": "aakaar-ajrakh-block-print-shirt-cotton",
+            "name": "Aakaar Ajrakh Block Print Shirt Cotton",
+            "category": "Ajrakh Block Print Shirt",
+            "color": "Yellow",
+            "sizes": [
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 2250,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 5,
+            "imageUrl": "/uploads/cms/1781677867965-42caec0a-c86a-436d-8bd6-e2233e41740a.webp"
+          },
+          {
+            "index": 4,
+            "slug": "gagan-ajrakh-block-print-shirt-cotton",
+            "name": "Gagan Ajrakh Block Print Shirt Cotton",
+            "category": "Ajrakh Block Print Shirt",
+            "color": "Indigo",
+            "sizes": [
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 2250,
+            "moq": 5,
+            "inStock": true,
+            "setsInStock": 15,
+            "imageUrl": "/uploads/cms/1781677873011-2acee8c7-ceae-40ba-b120-e3cf3dcb0f63.webp"
+          },
+          {
+            "index": 5,
+            "slug": "meridian-ajrakh-block-print-shirt-cotton",
+            "name": "Meridian Ajrakh Block Print Shirt Cotton",
+            "category": "Ajrakh Block Print Shirt",
+            "color": "Mustard",
+            "sizes": [
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ],
+            "setPrice": 2250,
+            "moq": 5,
+            "inStock": true,
+            "setsInStock": 15,
+            "imageUrl": "/uploads/cms/1781677873394-2a1bfa8e-6653-4366-a1e2-e8af45e4e7ec.webp"
+          },
+          {
+            "index": 6,
+            "slug": "beach-ajrakh-block-print-shirt-cotton",
+            "name": "Beach Ajrakh Block Print Shirt Cotton",
+            "category": "Men's Shirt",
+            "color": "Black",
+            "sizes": [
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL",
+              "3XL",
+              "4XL",
+              "5XL"
+            ],
+            "setPrice": 3600,
+            "moq": 1,
+            "inStock": true,
+            "setsInStock": 75,
+            "imageUrl": "/uploads/cms/1781626072787-1fc1e9e4-207d-44a8-b1b3-477fbfd6be11.webp"
+          }
+        ],
+        "focusProductIndex": 1,
+        "pageContext": {
+          "kind": "other",
+          "path": "/my-account-orders-details"
+        }
+      },
+      "startedAt": "2026-06-19T08:01:04.984Z",
+      "lastActivityAt": "2026-06-19T08:03:36.009Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    }
+  ],
+  "messages": [
+    {
+      "id": "7672fa30-d654-43e3-8dfd-5a37e073ab8e",
+      "sessionId": "a3855b77-b310-46f0-aa0f-22d62d272ec0",
+      "role": "user",
+      "content": "__SARJAN_INACTIVITY__",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:00:47.106Z"
+    },
+    {
+      "id": "669a9bfb-e669-4c3e-9299-3044fa195fec",
+      "sessionId": "a3855b77-b310-46f0-aa0f-22d62d272ec0",
+      "role": "assistant",
+      "content": "क्या मैं और कुछ मदद कर सकता हूँ?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T08:00:47.109Z"
+    },
+    {
+      "id": "2b073c02-df20-4c95-88e6-cf664f602c40",
+      "sessionId": "a3855b77-b310-46f0-aa0f-22d62d272ec0",
+      "role": "user",
+      "content": "__SARJAN_INACTIVITY__",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:00:47.112Z"
+    },
+    {
+      "id": "c913b40d-ed28-4a9c-8787-64f9af1e3437",
+      "sessionId": "a3855b77-b310-46f0-aa0f-22d62d272ec0",
+      "role": "assistant",
+      "content": "क्या मैं और कुछ मदद कर सकता हूँ?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T08:00:47.113Z"
+    },
+    {
+      "id": "c514eba6-b459-48b9-a22f-500cd38d8e64",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:01:13.022Z"
+    },
+    {
+      "id": "ff667796-1bc8-4439-bfee-b72a68d314f9",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "assistant",
+      "content": "From your photo I detected: **floral, beige, clutch**.\n\n**1** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 1,
+        "visualSearch": {
+          "pattern": "floral",
+          "colors": [
+            "beige",
+            "blue",
+            "yellow"
+          ],
+          "category": "accessories",
+          "garmentType": "",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:01:13.033Z"
+    },
+    {
+      "id": "6e723c76-2f26-4a55-bfc2-8b39a3215221",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "user",
+      "content": "Add 100 sets to product #1",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:01:21.288Z"
+    },
+    {
+      "id": "fd2f1626-78c8-4e71-8738-e67edeb7279f",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "assistant",
+      "content": "Added **Ladies Embroidered Clutch — Assorted Designs Delivered** — **100** set(s), Assorted.\n\nCart total **₹7,000** — see lines below.",
+      "metadata": {
+        "action": "add_to_cart",
+        "productIndex": 1,
+        "sets": 100
+      },
+      "createdAt": "2026-06-19T08:01:21.290Z"
+    },
+    {
+      "id": "4a0e8bf9-df83-4e4e-bfa2-d3df5f75326f",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:01:31.262Z"
+    },
+    {
+      "id": "183ced1c-5212-43d3-9609-027ff04245ea",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "assistant",
+      "content": "From your photo I detected: **striped, green, shirt**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "striped",
+          "colors": [
+            "green",
+            "blue",
+            "yellow",
+            "white"
+          ],
+          "category": "apparel",
+          "garmentType": "top",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:01:31.265Z"
+    },
+    {
+      "id": "cefb924b-9080-464d-a578-d6fc5feb3669",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:03:36.004Z"
+    },
+    {
+      "id": "feb9a13d-8287-47e6-9f0f-81f31e099d6c",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "role": "assistant",
+      "content": "From your photo I detected: **striped, green, shirt**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "striped",
+          "colors": [
+            "green",
+            "blue",
+            "yellow",
+            "black"
+          ],
+          "category": "apparel",
+          "garmentType": "top",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:03:36.006Z"
+    },
+    {
+      "id": "6998b4f2-d0fd-46b4-939b-0af8a3ad8711",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:03:52.028Z"
+    },
+    {
+      "id": "0ef296bd-7ed3-4e1d-b028-8176fc2692ba",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "assistant",
+      "content": "From your photo I detected: **striped, green, shirt**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "striped",
+          "colors": [
+            "green",
+            "blue",
+            "yellow",
+            "white"
+          ],
+          "category": "apparel",
+          "garmentType": "top",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:03:52.031Z"
+    },
+    {
+      "id": "cb572442-e4c9-4395-a59b-1ec0b77a8126",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "user",
+      "content": "__SARJAN_INACTIVITY__",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:08:49.585Z"
+    },
+    {
+      "id": "9c2753ab-e7bd-4858-85db-9f6d89558871",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "assistant",
+      "content": "Is there anything else I can help you with?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T08:08:49.589Z"
+    },
+    {
+      "id": "d79ab969-7b36-46b5-b180-266e5afa7a67",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "user",
+      "content": "__SARJAN_INACTIVITY__",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:08:49.594Z"
+    },
+    {
+      "id": "84100cc2-d7df-4dd7-ac7e-bb02c7f60963",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "assistant",
+      "content": "Is there anything else I can help you with?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T08:08:49.596Z"
+    },
+    {
+      "id": "eea63b8c-3c0c-45c9-b1f3-976ec53c4862",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:10:57.802Z"
+    },
+    {
+      "id": "bea6e404-f5af-415e-9fce-aac8c7668590",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "assistant",
+      "content": "From your photo I detected: **striped and printed, green, shirt**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "striped and printed",
+          "colors": [
+            "green",
+            "blue",
+            "white",
+            "black"
+          ],
+          "category": "apparel",
+          "garmentType": "shirt",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:10:57.806Z"
+    },
+    {
+      "id": "8ac7c52d-d956-497b-8db8-6a5371b83618",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:11:25.200Z"
+    },
+    {
+      "id": "54172aac-b30e-4cc0-b366-53d4db935732",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "assistant",
+      "content": "From your photo I detected: **printed, blue, shirt**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "printed",
+          "colors": [
+            "blue",
+            "green",
+            "white"
+          ],
+          "category": "apparel",
+          "garmentType": "shirt",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:11:25.204Z"
+    },
+    {
+      "id": "424c99cd-7622-42bf-ac5c-7c75347a4e51",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T08:11:36.509Z"
+    },
+    {
+      "id": "3c3551fc-d3fc-4adc-9617-f24ef1c36d29",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "role": "assistant",
+      "content": "From your photo I detected: **floral, red, kurta**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "floral",
+          "colors": [
+            "red",
+            "black",
+            "cream"
+          ],
+          "category": "apparel",
+          "garmentType": "kurta",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T08:11:36.513Z"
+    },
+    {
+      "id": "6b283978-60d0-460e-84df-a81140b7f967",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Browse Products",
+      "metadata": {},
+      "createdAt": "2026-06-19T10:27:18.168Z"
+    },
+    {
+      "id": "e69f6b3c-6c95-4d25-a48e-268d1932d341",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Here are the product categories available for browsing:\n\n1. **Ajrakh Collection**\n2. **Mashru Collection**\n3. **Block Print Collection**\n4. **Kaftan Shirt Collection**\n5. **Cotton Kurta Collection**\n6. **Printed Shirt Collection**\n7. **Short Kurta Collection**\n8. **Mirror Work Kurta Collection**\n9. **Women's Clutch Collection**\n10. **Ajrakh Block Print Shirt**\n11. **Mashru Printed Kurta**\n12. **Men's Cotton Kurta**\n13. **Men's Kurta**\n14. **Men's Mirror Work Kurta**\n15. **Men's Shirt**\n16. **Men's Short Kurta**\n17. **Women's Clutch**\n18. **Women's Wear**\n\nLet me know which category you’d like to explore further!",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T10:27:18.172Z"
+    },
+    {
+      "id": "74906c44-a9da-4178-9c5f-0078945a8359",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "__SARJAN_INACTIVITY__",
+      "metadata": {},
+      "createdAt": "2026-06-19T10:32:11.958Z"
+    },
+    {
+      "id": "cc16fe1f-a77d-4f76-abd2-f93cf948c981",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Is there anything else I can help you with?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T10:32:11.986Z"
+    },
+    {
+      "id": "3d40e427-4d22-4a0d-bdd9-d9394e8a8502",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "__SARJAN_INACTIVITY__",
+      "metadata": {},
+      "createdAt": "2026-06-19T10:32:11.989Z"
+    },
+    {
+      "id": "281090fe-b062-4bca-affc-76229fba2659",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Is there anything else I can help you with?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T10:32:11.990Z"
+    },
+    {
+      "id": "c7490ee7-276f-41ae-ad0e-f165ae5d3ea4",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Yes",
+      "metadata": {},
+      "createdAt": "2026-06-19T10:33:39.274Z"
+    },
+    {
+      "id": "2e5bc4ca-0d61-4098-a10d-13d86254bf66",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Sure — what would you like to do next?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T10:33:39.275Z"
+    },
+    {
+      "id": "c6d74055-9d69-4565-9022-9cf192205235",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Yes",
+      "metadata": {},
+      "createdAt": "2026-06-19T10:33:39.278Z"
+    },
+    {
+      "id": "72373440-c798-4759-b7e7-2f1f411105ad",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Sure — what would you like to do next?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T10:33:39.279Z"
+    },
+    {
+      "id": "f8c707f6-74b2-408f-b54f-be53f81ae1c1",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "__SARJAN_AUTH_REGISTER__",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:49:48.406Z"
+    },
+    {
+      "id": "034616f6-b76c-4c56-b9ca-d822d63d3653",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "**New wholesale account**\n• Register at **/register** with GST verification.\n• Admin approves your profile before you can place orders.\n• After approval, order here in Sarjan AI or on the storefront.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T11:49:48.407Z"
+    },
+    {
+      "id": "679ed818-3fbf-4c8a-92a2-faa016fbbef8",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:54:18.495Z"
+    },
+    {
+      "id": "cf86465c-1086-432b-b7e6-ac48b70f55ee",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "From your photo I detected: **geometric, blue, shirt**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "pattern": "geometric",
+          "colors": [
+            "blue"
+          ],
+          "category": "shirts",
+          "garmentType": "shirt",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T11:54:18.521Z"
+    },
+    {
+      "id": "6ee28c09-625f-450d-9f73-f0bc588c6883",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "50",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:55:08.716Z"
+    },
+    {
+      "id": "e97e66b4-947c-4250-8c8d-eb3d5fc4a635",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Could you please specify which product you would like to add 50 sets of to your cart?",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T11:55:08.718Z"
+    },
+    {
+      "id": "67b6b693-a0bb-46a5-b963-b38675ba7354",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Ajrakh",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:55:20.874Z"
+    },
+    {
+      "id": "ef9efb3d-7fce-4c78-b5f9-20524c4935bf",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "**Curated collections** on the site:\n• **Ajrakh Collection** — Indigo resist and Ajrakh-inspired prints for shirts and kurtas. → **/collections/ajrakh**\n• **Mashru Collection** — Silk-cotton mashru blends with a soft sheen for premium retail. → **/collections/mashru**\n• **Block Print Collection** — Hand-block and studio block prints across shirts and kurtas. → **/collections/block-print**\n• **Kaftan Shirt Collection** — Modal Ajrakh kaftan shirts — relaxed free-size silhouettes for women's wholesale. → **/collections/kaftan-shirts**\n• **Cotton Kurta Collection** — Everyday cotton kurtas with dependable MOQs for retail repeat orders. → **/collections/cotton-kurtas**\n• **Printed Shirt Collection** — Cotton printed shirts for smart-casual and festive men's assortments. → **/collections/printed-shirts**\n• **Short Kurta Collection** — Shorter-length cotton kurtas for contemporary men's edits. → **/collections/short-kurtas**\n• **Mirror Work Kurta Collection** — Embellished mashru kurtas with mirror-work detail for occasion-led buying. → **/collections/mirror-work-kurtas**\n• **Women's Clutch Collection** — Embroidered clutch bags — assorted designs for boutique add-on sales. → **/collections/womens-clutch**\n• All collections hub: **/collections**\n• Browse products: **/products** · Categories: **/categories**\n• Say **show Ajrakh** or **categories** here to shop in chat.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T11:55:20.876Z"
+    },
+    {
+      "id": "db29e7ef-3236-4276-abe7-b0a646c367f6",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "role": "user",
+      "content": "Place order",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:56:08.299Z"
+    },
+    {
+      "id": "38c7ce15-8b93-4b04-9789-ffba8ec215d8",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "role": "assistant",
+      "content": "Cart is empty. Add products before placing an order.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T11:56:08.301Z"
+    },
+    {
+      "id": "0fc4fc4f-82fc-4f2a-b205-9717cc00b404",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "role": "user",
+      "content": "My cart",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:56:09.778Z"
+    },
+    {
+      "id": "fc2575d6-d3fa-4a01-aeda-22a30bb1e3fc",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "role": "assistant",
+      "content": "Your cart is empty. Browse products and use the **Add 25 / 50 / 100** buttons on product cards.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T11:56:09.780Z"
+    },
+    {
+      "id": "dc919b56-3cb9-4993-8c73-a7ad5fe0c446",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "role": "user",
+      "content": "My orders",
+      "metadata": {},
+      "createdAt": "2026-06-19T11:56:11.400Z"
+    },
+    {
+      "id": "9bc4690a-6639-4acd-a621-6c592c91fbee",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "role": "assistant",
+      "content": "Your **2** recent orders (newest first):",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T11:56:11.402Z"
+    },
+    {
+      "id": "c32d26b2-dd64-4f9f-8f81-d9dbc7d4c4b7",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:07:40.709Z"
+    },
+    {
+      "id": "ac867586-fad6-4c62-b986-70122828580d",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "From your photo I detected: **brown**.\n\n**6** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 6,
+        "visualSearch": {
+          "colors": [
+            "brown"
+          ],
+          "source": "color-fallback"
+        }
+      },
+      "createdAt": "2026-06-19T12:07:40.718Z"
+    },
+    {
+      "id": "33a3ecea-45b5-4eca-840c-d550a0a20741",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:15:56.471Z"
+    },
+    {
+      "id": "7807d71d-b54d-4386-ba9a-29202c8c3d9a",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "From your photo I detected: **floral, pink, clutch**.\n\n**1** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 1,
+        "visualSearch": {
+          "pattern": "floral",
+          "colors": [
+            "pink",
+            "purple",
+            "yellow"
+          ],
+          "category": "accessories",
+          "garmentType": "",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T12:15:56.476Z"
+    },
+    {
+      "id": "46710d43-c802-4e16-9c9e-aadc52053c1c",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Add 100 sets to product #1",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:16:02.415Z"
+    },
+    {
+      "id": "d462807e-4900-4836-afac-2523d190e301",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Added **Ladies Embroidered Clutch — Assorted Designs Delivered** — **100** set(s), Assorted.\n\nCart total **₹7,000** — see lines below.",
+      "metadata": {
+        "action": "add_to_cart",
+        "productIndex": 1,
+        "sets": 100
+      },
+      "createdAt": "2026-06-19T12:16:02.417Z"
+    },
+    {
+      "id": "1e6955b6-a3c7-48cb-8066-55c4194151fe",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Place order",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:16:04.710Z"
+    },
+    {
+      "id": "570231ce-045b-4955-bf8b-1acf6ede682b",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Order **ST-1781871364660** submitted (₹7,000). Status: **Pending approval**. Tap **View order details** below for the full breakdown.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": true
+      },
+      "createdAt": "2026-06-19T12:16:04.712Z"
+    },
+    {
+      "id": "0cb74973-d337-4923-af41-d8cc4a3c1418",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "My orders",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:16:08.622Z"
+    },
+    {
+      "id": "2c46cd9b-ccbb-4341-8f9c-f1169e5dc756",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Your **3** recent orders (newest first):",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T12:16:08.624Z"
+    },
+    {
+      "id": "05099787-7987-4ab2-ace6-219fcdb00383",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "[Photo search]",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:23:54.959Z"
+    },
+    {
+      "id": "75bb8f37-556d-49f1-8716-e934842d05b9",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "From your photo I detected: **floral, pink, clutch**.\n\n**1** product(s) below. Use **View Details** or the quantity buttons to add to cart.",
+      "metadata": {
+        "products": 1,
+        "visualSearch": {
+          "pattern": "floral",
+          "colors": [
+            "pink",
+            "purple",
+            "yellow"
+          ],
+          "category": "accessories",
+          "garmentType": "",
+          "source": "vision"
+        }
+      },
+      "createdAt": "2026-06-19T12:23:54.962Z"
+    },
+    {
+      "id": "67c448eb-59ec-4aec-8322-c4fa865df2e1",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Add 100 sets to product #1",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:24:00.213Z"
+    },
+    {
+      "id": "27ece77b-044c-4a11-ba11-31f838ef6ae2",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Added **Ladies Embroidered Clutch — Assorted Designs Delivered** — **100** set(s), Assorted.\n\nCart total **₹7,000** — see lines below.",
+      "metadata": {
+        "action": "add_to_cart",
+        "productIndex": 1,
+        "sets": 100
+      },
+      "createdAt": "2026-06-19T12:24:00.214Z"
+    },
+    {
+      "id": "496cfa4e-703e-4d38-8a9c-727ef73ae4bb",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Place order",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:24:03.003Z"
+    },
+    {
+      "id": "42ec3771-96d2-483f-a974-21fcecf01d97",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Order **ST-1781871842945** submitted (₹7,000). Status: **Pending approval**. Tap **View order details** below for the full breakdown.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": true
+      },
+      "createdAt": "2026-06-19T12:24:03.005Z"
+    },
+    {
+      "id": "f3025a5f-faf4-4338-9878-9dc41a6cc662",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Clear",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:29:59.466Z"
+    },
+    {
+      "id": "c6f49713-2777-42b0-86c4-bc8cbe266526",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "Your cart — **₹0** estimated total. Lines below.",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T12:29:59.471Z"
+    },
+    {
+      "id": "5d6071a2-1e26-45db-b0ef-fce2aa505d44",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "user",
+      "content": "Restart",
+      "metadata": {},
+      "createdAt": "2026-06-19T12:30:05.873Z"
+    },
+    {
+      "id": "9f7ce4d2-9683-4d88-89a0-479bd0f09e2d",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "role": "assistant",
+      "content": "I’ve cleared your cart. If you’d like to browse or search for products again, just let me know what you’re interested in!",
+      "metadata": {
+        "products": 0,
+        "orderPlaced": false
+      },
+      "createdAt": "2026-06-19T12:30:05.877Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "809ebaaf-fdb3-4d29-9592-04bccc7ded90",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "web",
+        "language": "en"
+      },
+      "createdAt": "2026-06-19T08:01:04.985Z"
+    },
+    {
+      "id": "97a437cf-88b1-4dfb-b474-4e8abb7ad3b0",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 1,
+        "via": "visual_search",
+        "pattern": "floral",
+        "category": "accessories",
+        "terms": [
+          "clutch",
+          "cotton",
+          "floral",
+          "beige",
+          "blue",
+          "yellow",
+          "accessories"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:01:13.034Z"
+    },
+    {
+      "id": "a409873f-7932-4d65-b266-28b95869a6ea",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "add_to_cart",
+      "productSlug": "ladies-embroidered-clutch-assorted-designs-delivered",
+      "metadata": {
+        "sets": 100,
+        "productIndex": 1
+      },
+      "createdAt": "2026-06-19T08:01:21.285Z"
+    },
+    {
+      "id": "7db4a67d-34fb-465b-ad43-9b78c9c88c3a",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "upsell_shown",
+      "metadata": {
+        "type": "cart_optimization",
+        "piecesToAdd": 100,
+        "shippingSavingsInr": 0
+      },
+      "createdAt": "2026-06-19T08:01:21.287Z"
+    },
+    {
+      "id": "08da4e7b-b7a8-41d2-9769-fb08eded376b",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "striped",
+        "category": "apparel",
+        "terms": [
+          "shirt",
+          "cotton",
+          "striped",
+          "green",
+          "blue",
+          "printed",
+          "apparel",
+          "top",
+          "yellow",
+          "white"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:01:31.267Z"
+    },
+    {
+      "id": "966759ee-e2e4-4c50-9a93-9ce8acc69f7a",
+      "sessionId": "d419b77c-b7df-4e9d-8407-92ba6a2194f0",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "striped",
+        "category": "apparel",
+        "terms": [
+          "shirt",
+          "cotton",
+          "striped",
+          "green",
+          "blue",
+          "casual",
+          "apparel",
+          "top",
+          "yellow",
+          "black"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:03:36.008Z"
+    },
+    {
+      "id": "01b9419b-9a9b-47e3-8397-ed168a5e824c",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "web",
+        "language": "en"
+      },
+      "createdAt": "2026-06-19T08:03:40.673Z"
+    },
+    {
+      "id": "b1c1bee7-4a79-4cc5-b865-a2231643e65c",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "striped",
+        "category": "apparel",
+        "terms": [
+          "shirt",
+          "cotton",
+          "green",
+          "striped",
+          "printed",
+          "apparel",
+          "top",
+          "blue",
+          "yellow",
+          "white"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:03:52.033Z"
+    },
+    {
+      "id": "79a3d75e-78a9-49ee-b284-22629bac4050",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "striped and printed",
+        "category": "apparel",
+        "terms": [
+          "shirt",
+          "cotton",
+          "green",
+          "striped",
+          "printed",
+          "casual",
+          "button-up",
+          "apparel",
+          "striped and printed",
+          "blue",
+          "white",
+          "black"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:10:57.808Z"
+    },
+    {
+      "id": "54e0eb11-0e60-4999-89d0-b599c8c01792",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "printed",
+        "category": "apparel",
+        "terms": [
+          "shirt",
+          "cotton",
+          "blue",
+          "printed",
+          "short sleeve",
+          "apparel",
+          "green",
+          "white"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:11:25.206Z"
+    },
+    {
+      "id": "7301841d-9bb0-435f-bc61-ca33b03f5553",
+      "sessionId": "95c0ec3c-60d0-4e8d-a428-2f7cf3eaeb72",
+      "clientId": "18c6f421-87e7-4cee-81c7-be9c0960c139",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "floral",
+        "category": "apparel",
+        "terms": [
+          "kurta",
+          "cotton",
+          "red",
+          "floral",
+          "printed",
+          "apparel",
+          "black",
+          "cream"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T08:11:36.516Z"
+    },
+    {
+      "id": "2bb355be-9e3c-4ff4-80d1-669b40f30c79",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "app",
+        "language": "en"
+      },
+      "createdAt": "2026-06-19T10:27:09.531Z"
+    },
+    {
+      "id": "8add081e-965d-4a5b-b5e5-3f830db6c189",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "pattern": "geometric",
+        "category": "shirts",
+        "terms": [
+          "shirt",
+          "printed",
+          "blue",
+          "cotton",
+          "geometric",
+          "shirts"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T11:54:18.523Z"
+    },
+    {
+      "id": "f2fdec77-54ea-44a1-acdb-bf896a0d80c6",
+      "sessionId": "928b76c4-74aa-4b2c-9597-e1f37add9b55",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "web",
+        "language": "en"
+      },
+      "createdAt": "2026-06-19T11:56:05.890Z"
+    },
+    {
+      "id": "c97ce5c5-a644-47b6-9e0d-b6db26fa7e50",
+      "sessionId": "1081e5f1-d43e-426d-84ca-7e5af2240636",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "web",
+        "language": "en"
+      },
+      "createdAt": "2026-06-19T11:56:25.408Z"
+    },
+    {
+      "id": "1c7bb405-e0ab-456c-bdff-f00e09e27871",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 6,
+        "via": "visual_search",
+        "terms": [
+          "brown",
+          "textile",
+          "fabric"
+        ],
+        "source": "color-fallback"
+      },
+      "createdAt": "2026-06-19T12:07:40.720Z"
+    },
+    {
+      "id": "42ce598f-c0de-4c91-9ce5-7dd1db50dca4",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 1,
+        "via": "visual_search",
+        "pattern": "floral",
+        "category": "accessories",
+        "terms": [
+          "floral clutch",
+          "pink fabric",
+          "yellow accents",
+          "purple print",
+          "vibrant colors",
+          "clutch",
+          "fabric",
+          "accessories",
+          "floral",
+          "pink",
+          "purple",
+          "yellow"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T12:15:56.478Z"
+    },
+    {
+      "id": "907c7063-7379-4ee9-8607-96dc58f22e59",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "add_to_cart",
+      "productSlug": "ladies-embroidered-clutch-assorted-designs-delivered",
+      "metadata": {
+        "sets": 100,
+        "productIndex": 1
+      },
+      "createdAt": "2026-06-19T12:16:02.411Z"
+    },
+    {
+      "id": "03fc88da-d4c1-439d-87e2-1483e92f8528",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "upsell_shown",
+      "metadata": {
+        "type": "cart_optimization",
+        "piecesToAdd": 100,
+        "shippingSavingsInr": 0
+      },
+      "createdAt": "2026-06-19T12:16:02.413Z"
+    },
+    {
+      "id": "a15951fe-1acc-4e8d-b852-436526bfc6e7",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "order_placed",
+      "metadata": {
+        "orderId": "ST-1781871364660"
+      },
+      "createdAt": "2026-06-19T12:16:04.714Z"
+    },
+    {
+      "id": "2e9348ec-23eb-4864-a5bd-8b8fe5b2007f",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "product_recommended",
+      "metadata": {
+        "count": 1,
+        "via": "visual_search",
+        "pattern": "floral",
+        "category": "accessories",
+        "terms": [
+          "floral clutch",
+          "pink fabric",
+          "purple print",
+          "yellow accents",
+          "vibrant colors",
+          "clutch",
+          "cotton",
+          "accessories",
+          "floral",
+          "pink",
+          "purple",
+          "yellow"
+        ],
+        "source": "vision"
+      },
+      "createdAt": "2026-06-19T12:23:54.964Z"
+    },
+    {
+      "id": "8062098c-7ce7-42d5-b069-c3a2245b74d7",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "add_to_cart",
+      "productSlug": "ladies-embroidered-clutch-assorted-designs-delivered",
+      "metadata": {
+        "sets": 100,
+        "productIndex": 1
+      },
+      "createdAt": "2026-06-19T12:24:00.208Z"
+    },
+    {
+      "id": "f965446d-9c4d-440e-916c-95c96c97a5d6",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "upsell_shown",
+      "metadata": {
+        "type": "cart_optimization",
+        "piecesToAdd": 100,
+        "shippingSavingsInr": 0
+      },
+      "createdAt": "2026-06-19T12:24:00.211Z"
+    },
+    {
+      "id": "98262dad-b6ac-4186-a2ec-d85da1d648e1",
+      "sessionId": "dc5cb86d-3bc2-43d2-96cc-3fa9b5bcb290",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "order_placed",
+      "metadata": {
+        "orderId": "ST-1781871842945"
+      },
+      "createdAt": "2026-06-19T12:24:03.006Z"
+    }
+  ]
+}

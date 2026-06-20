@@ -1,11 +1,23 @@
 {
-  "ordersExceedingStock": 2,
+  "ordersExceedingStock": 3,
   "productRequestCounts": {
     "bahaar-ajrakh-block-print-shirt-cotton": {
       "name": "Bahaar Ajrakh Block Print Shirt Cotton",
       "count": 2
+    },
+    "bandhani-mashru-printed-kurta": {
+      "name": "Bandhani Mashru Printed Kurta",
+      "count": 1
+    },
+    "ajrakh-inspired-cotton-printed-shirt": {
+      "name": "Ajrakh Inspired Cotton Printed Shirt",
+      "count": 1
+    },
+    "ladies-embroidered-clutch-assorted-designs-delivered": {
+      "name": "Ladies Embroidered Clutch — Assorted Designs Delivered",
+      "count": 3
     }
   },
-  "productionRequirementCount": 2,
-  "updatedAt": "2026-06-13T02:26:32.320Z"
+  "productionRequirementCount": 3,
+  "updatedAt": "2026-06-19T12:24:02.952Z"
 }

@@ -1,0 +1,37 @@
+{
+  "interests": [
+    {
+      "id": "5c69a00c-6818-4022-b268-4d3f271b5ea4",
+      "clientId": "00000000-0000-4000-8000-000000000099",
+      "interestKey": "search:bandhani kurta",
+      "interestType": "search",
+      "searchQuery": "bandhani kurta",
+      "quantityTotal": 0,
+      "orderCount": 0,
+      "score": 9,
+      "sources": [
+        "web"
+      ],
+      "lastSeenAt": "2026-06-19T14:48:04.335Z",
+      "createdAt": "2026-06-19T14:46:47.558Z"
+    },
+    {
+      "id": "90f0c798-bd3b-4cda-a959-203630b0426b",
+      "clientId": "00000000-0000-4000-8000-000000000099",
+      "interestKey": "product:test-kurta",
+      "interestType": "add_to_cart",
+      "productSlug": "test-kurta",
+      "category": "Kurtas",
+      "quantityTotal": 100,
+      "orderCount": 0,
+      "score": 64,
+      "sources": [
+        "web",
+        "app"
+      ],
+      "lastSeenAt": "2026-06-19T14:48:04.337Z",
+      "createdAt": "2026-06-19T14:46:01.560Z"
+    }
+  ],
+  "recommendations": []
+}
