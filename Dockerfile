@@ -22,7 +22,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline --no-audit --no-fund
 
 COPY . .
-ENV NODE_OPTIONS=--max-old-space-size=1280
+# 2GB VPS: 1280MB heap + Docker overhead often triggers OOM kill (exit 255) mid-build.
+ENV NODE_OPTIONS=--max-old-space-size=896
+ENV GENERATE_SOURCEMAP=false
 RUN npm run build:docker
 RUN npm prune --omit=dev
 
