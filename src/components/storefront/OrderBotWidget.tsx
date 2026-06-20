@@ -53,6 +53,7 @@ import type {
 import type { AiLanguage } from "@/lib/ai-chat/types";
 import { AI_INACTIVITY_MS } from "@/lib/ai-chat/types";
 import {
+  clearWebAiSessionId,
   readWebAiSessionId,
   writeWebAiSessionId,
 } from "@/lib/ai-memory/web-session";
@@ -425,11 +426,22 @@ export function OrderBotWidget() {
         setLanguageReady(true);
 
         if (prefs.hasPreference) {
-          const started = await startOrderBotSession({
-            language: lang,
-            source: "web",
-            resumeSessionId: sessionId || readWebAiSessionId() || undefined,
-          });
+          const resumeId = sessionId || readWebAiSessionId() || undefined;
+          let started;
+          try {
+            started = await startOrderBotSession({
+              language: lang,
+              source: "web",
+              resumeSessionId: resumeId,
+            });
+          } catch {
+            clearWebAiSessionId();
+            setSessionId("");
+            started = await startOrderBotSession({
+              language: lang,
+              source: "web",
+            });
+          }
           persistSessionId(started.sessionId);
           setLanguage(started.language ?? lang);
           setSessionReady(true);
