@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.103",
-  "versionCode": 104,
-  "releaseNotes": "Home shows all catalog categories from backend hubs. PDP gallery supports swipe and auto-slide. Bottom sheet crash fix on device rotation.",
+  "latestVersion": "1.0.104",
+  "versionCode": 105,
+  "releaseNotes": "Sarjan AI session reconnect fix for logged-in users. Dark mode chat input hint visible. Browse Products and Track Orders work after backend AI tables deploy.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-19T16:15:44.000Z"
+  "updatedAt": "2026-06-20T07:34:42.000Z"
 }
