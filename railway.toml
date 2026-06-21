@@ -1,5 +1,5 @@
 # Railway: deploy this repo as a Node web service.
-# Set the same environment variables as in docs/DEPLOY.md (Supabase, secrets, SMTP, etc.).
+# Set the same environment variables as in docs/DEPLOY.md (DATABASE_URL, secrets, SMTP, etc.).
 
 [build]
 builder = "nixpacks"

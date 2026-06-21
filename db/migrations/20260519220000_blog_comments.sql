@@ -1,4 +1,4 @@
--- Public blog comments (moderated); used when SUPABASE_ENABLED on serverless hosts.
+-- Public blog comments (moderated); stored in Postgres on VPS.
 create table if not exists public.blog_comments (
   id uuid primary key default gen_random_uuid(),
   blog_slug text not null,

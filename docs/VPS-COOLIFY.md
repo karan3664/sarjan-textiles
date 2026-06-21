@@ -25,7 +25,7 @@ Hostinger firewall must allow: 22, 80, 443, 8000, 8443.
 ### 1. Copy migrations from Mac (once)
 
 ```bash
-scp -r /Users/kbrahmaxatr/Desktop/Karan/sarjan-textiles/supabase/migrations root@69.62.77.149:/root/migrations/
+scp -r /Users/kbrahmaxatr/Desktop/Karan/sarjan-textiles/db/migrations root@69.62.77.149:/root/migrations/
 scp /Users/kbrahmaxatr/Desktop/Karan/sarjan-textiles/scripts/vps/bootstrap-postgres.sh root@69.62.77.149:/root/
 ```
 

@@ -81,11 +81,11 @@ resolve_migrations() {
     log "Cloning $REPO_URL (branch ${REPO_BRANCH:-development}) ..."
     rm -rf "$clone_dir"
     git clone --depth 1 -b "${REPO_BRANCH:-development}" "$REPO_URL" "$clone_dir"
-    MIGRATIONS_DIR="$clone_dir/supabase/migrations"
-    [[ -d "$MIGRATIONS_DIR" ]] || die "No supabase/migrations in cloned repo"
+    MIGRATIONS_DIR="$clone_dir/db/migrations"
+    [[ -d "$MIGRATIONS_DIR" ]] || die "No db/migrations in cloned repo"
     return 0
   fi
-  die "No migrations found. Either:\n  scp -r supabase/migrations root@VPS:/root/migrations/\n  or: REPO_URL=https://github.com/you/sarjan-textiles.git bash bootstrap-postgres.sh"
+  die "No migrations found. Either:\n  scp -r db/migrations root@VPS:/root/migrations/\n  or: REPO_URL=https://github.com/you/sarjan-textiles.git bash bootstrap-postgres.sh"
 }
 
 resolve_migrations

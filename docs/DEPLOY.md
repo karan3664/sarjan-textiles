@@ -8,7 +8,7 @@ Production runs on **Hostinger VPS** with **Coolify**, **PostgreSQL** on the sam
 
 ## Quick summary
 
-1. Bootstrap Postgres on the VPS (`scripts/vps/bootstrap-postgres.sh` + SQL in `supabase/migrations/`).
+1. Bootstrap Postgres on the VPS (`scripts/vps/bootstrap-postgres.sh` + SQL in `db/migrations/`).
 2. Deploy the Next.js app in Coolify using the repo **Dockerfile**.
 3. Set **`DATABASE_URL`** and mount persistent volumes:
    - `/app/public/uploads` — CMS media
@@ -59,4 +59,4 @@ Open `http://localhost:3001`. Without `DATABASE_URL`, data uses JSON files under
 
 ## Legacy note
 
-Older docs referenced Supabase cloud + Vercel. That stack is **removed** — use VPS Postgres + Coolify only.
+Older docs referenced a hosted Postgres SaaS + Vercel. That stack is **removed** — use VPS Postgres + Coolify only.

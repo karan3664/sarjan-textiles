@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       raw.includes("EROFS") ||
       raw.includes("admin_notification_state") ||
       raw.includes("does not exist")
-        ? "Notifications could not be saved. Apply the latest Supabase migration and redeploy."
+        ? "Notifications could not be saved. Apply the latest database migration and redeploy."
         : raw || "Could not update notifications.";
     return Response.json({ error: message }, { status: 500 });
   }

@@ -34,10 +34,7 @@ const INTEGRATION_PATHS = [
   ["AI revenue admin API", "src/app/api/admin/ai-revenue/route.ts"],
   ["AI leads admin API", "src/app/api/admin/ai-leads/route.ts"],
   ["Meta CAPI route", "src/app/api/meta/conversions/route.ts"],
-  [
-    "Memory migration",
-    "supabase/migrations/20260619200000_ai_memory_engine.sql",
-  ],
+  ["Memory migration", "db/migrations/20260619200000_ai_memory_engine.sql"],
   ["AI revenue admin page", "src/app/admin/ai-revenue/page.tsx"],
   ["AI leads admin page", "src/app/admin/ai-leads/page.tsx"],
   ["Meta Pixel component", "src/components/storefront/MetaPixel.tsx"],

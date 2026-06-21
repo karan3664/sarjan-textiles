@@ -8,5 +8,4 @@ out
 Archive.zip
 data/local-db.json
 data/cms-db.json
-supabase/.temp/
-supabase-migration-core.generated.sql
+db-migration-core.generated.sql

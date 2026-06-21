@@ -160,7 +160,7 @@ export function AdminAccountClient() {
           <h5 className="mb-3">Change password</h5>
           <p className="text-caption-1 text-muted mb-3">
             After changing password, your session stays signed in on this
-            browser. On production, overrides are stored in Supabase (
+            browser. On production, overrides are stored in Postgres (
             <code>admin_profile_overrides</code>).
           </p>
           <form onSubmit={savePassword} className="d-grid gap-3">

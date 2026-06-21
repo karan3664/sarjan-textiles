@@ -10,8 +10,7 @@ data/cms-db.json
 data/admin-profile-overrides.json
 data/admin-notifications-state.json
 Archive.zip
-supabase-migration-core.generated.sql
-supabase/.temp/
+db-migration-core.generated.sql
 .vercel
 tsconfig.tsbuildinfo
 /test-results/
