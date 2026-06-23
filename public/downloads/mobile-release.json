@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.104",
-  "versionCode": 105,
-  "releaseNotes": "Sarjan AI session reconnect fix for logged-in users. Dark mode chat input hint visible. Browse Products and Track Orders work after backend AI tables deploy.",
+  "latestVersion": "1.0.105",
+  "versionCode": 106,
+  "releaseNotes": "Tax invoice from order details. Mandatory valid mobile on wholesale registration. Checkout address and notification routing fixes. Order screen spacing improvements.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-20T07:34:42.000Z"
+  "updatedAt": "2026-06-23T07:19:35.000Z"
 }
