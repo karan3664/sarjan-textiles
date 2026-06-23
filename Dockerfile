@@ -1,6 +1,5 @@
 # Sarjan Textiles — production image for Coolify / Docker.
-# Tuned for 2GB VPS: no parallel runner apt during builder npm/next (BuildKit runs
-# independent stage RUN steps concurrently unless they COPY --from=builder first).
+# Tuned for 2GB VPS: standalone runner (no full node_modules COPY), single build worker.
 
 FROM node:22.13-bookworm-slim AS builder
 WORKDIR /app
@@ -25,8 +24,7 @@ COPY . .
 # 2GB VPS: 1280MB heap + Docker overhead often triggers OOM kill (exit 255) mid-build.
 ENV NODE_OPTIONS=--max-old-space-size=896
 ENV GENERATE_SOURCEMAP=false
-RUN npm run build:docker
-RUN npm prune --omit=dev
+RUN npm run build:docker && rm -rf .next/cache
 
 FROM node:22.13-bookworm-slim AS runner
 WORKDIR /app
@@ -35,11 +33,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# COPY first — forces this stage to wait for builder (avoids apt + npm ci in parallel).
+# Standalone trace — much smaller than copying full .next + node_modules (export OOM fix).
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+# Runtime fs read in buildTaxInvoiceHtml (belt-and-suspenders if trace misses the CSS).
+COPY --from=builder /app/src/lib/invoice-styles.css ./src/lib/invoice-styles.css
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -47,7 +46,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p data data/downloads public/downloads public/uploads/cms \
     public/uploads/client-avatars public/uploads/review-media \
-    public/sarjan-assets/client-avatars \
+    public/sarjan-assets/client-avatars
 
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

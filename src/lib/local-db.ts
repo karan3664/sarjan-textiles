@@ -505,6 +505,7 @@ export async function createClient(input: {
   await ensureClientFieldsUnique({
     email: input.email,
     gst: input.gst,
+    phone: input.phone,
   });
 
   if (isPostgresEnabled()) {

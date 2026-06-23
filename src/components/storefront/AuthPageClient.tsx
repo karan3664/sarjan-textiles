@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
+import {
+  isValidClientPhone,
+  normalizeClientPhone,
+} from "@/lib/client-duplicate-check";
 import { persistClientSession } from "@/lib/client-auth-browser";
 import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
 import type { AuthBanners } from "@/lib/auth-banner-types";
@@ -26,6 +30,20 @@ function isErrorMessage(value: string) {
 
 function safeAuthRedirect(next: string | null) {
   return clientPostLoginPath(next?.trim() || null);
+}
+
+function loginMethodHref(
+  method: "password" | "otp",
+  searchParams: ReadonlyURLSearchParams,
+) {
+  const params = new URLSearchParams(searchParams.toString());
+  if (method === "password") {
+    params.set("method", "password");
+  } else {
+    params.delete("method");
+  }
+  const qs = params.toString();
+  return qs ? `/login?${qs}` : "/login";
 }
 
 const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -95,9 +113,11 @@ function AuthPageFallback({ mode }: { mode: AuthMode }) {
 function AuthPageClientInner({
   mode,
   banners,
+  initialLoginMethod = "otp",
 }: {
   mode: AuthMode;
   banners: AuthBanners;
+  initialLoginMethod?: "password" | "otp";
 }) {
   const searchParams = useSearchParams();
   const [message, setMessage] = useState("");
@@ -124,7 +144,10 @@ function AuthPageClientInner({
   const [emailOtpLoading, setEmailOtpLoading] = useState(false);
   const [registerState, setRegisterState] = useState("");
   const [registerCity, setRegisterCity] = useState("");
-  const [usePasswordLogin, setUsePasswordLogin] = useState(false);
+  const [mobile, setMobile] = useState("");
+  const [usePasswordLogin, setUsePasswordLogin] = useState(
+    initialLoginMethod === "password",
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginOtp, setLoginOtp] = useState("");
@@ -148,6 +171,11 @@ function AuthPageClientInner({
       /* ignore */
     }
   }, [mode]);
+
+  useEffect(() => {
+    if (!isLogin) return;
+    setUsePasswordLogin(searchParams.get("method") === "password");
+  }, [isLogin, searchParams]);
 
   const loadGstCaptcha = useCallback(async () => {
     if (!isRegister || !isValidGstin(normalizeGstin(gst))) return;
@@ -279,6 +307,19 @@ function AuthPageClientInner({
       setMessage("Trade / business name is required.");
       return;
     }
+    const mobileRaw = String(payload.mobile ?? mobile).trim();
+    if (isRegister && !mobileRaw) {
+      setLoading(false);
+      setMessage("Mobile number is required.");
+      return;
+    }
+    if (isRegister && !isValidClientPhone(mobileRaw)) {
+      setLoading(false);
+      setMessage(
+        "Enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9).",
+      );
+      return;
+    }
     if (
       isRegister &&
       hasGst &&
@@ -299,6 +340,7 @@ function AuthPageClientInner({
     if (isRegister) {
       const unique = await checkClientFieldsUnique({
         email: String(payload.email ?? "").trim(),
+        phone: normalizeClientPhone(mobileRaw),
         ...(hasGst ? { gst: normalizedGstInput } : {}),
       });
       if (!unique.ok) {
@@ -321,6 +363,7 @@ function AuthPageClientInner({
       }
       payload.state = registerState;
       payload.city = registerCity;
+      payload.mobile = normalizeClientPhone(mobileRaw);
       if (!hasGst) {
         delete payload.gst;
       } else {
@@ -754,6 +797,31 @@ function AuthPageClientInner({
                         stateRequired
                         cityRequired
                       />
+                      <fieldset>
+                        <div className="sarjan-mobile-field d-flex align-items-center gap-2">
+                          <span className="text-caption-1 text-nowrap">
+                            +91
+                          </span>
+                          <input
+                            type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel-national"
+                            placeholder="Mobile number*"
+                            name="mobile"
+                            value={mobile}
+                            onChange={(event) =>
+                              setMobile(
+                                event.target.value
+                                  .replace(/\D/g, "")
+                                  .slice(0, 10),
+                              )
+                            }
+                            required
+                            maxLength={10}
+                            style={{ flex: 1 }}
+                          />
+                        </div>
+                      </fieldset>
                     </>
                   ) : null}
                   <fieldset>
@@ -981,9 +1049,9 @@ function AuthPageClientInner({
                           </a>
                         </>
                       ) : (
-                        <button
-                          type="button"
-                          className="font-2 text-button link border-0 bg-transparent p-0"
+                        <Link
+                          href={loginMethodHref("password", searchParams)}
+                          className="font-2 text-button link"
                           onClick={() => {
                             setUsePasswordLogin(true);
                             setShowPassword(false);
@@ -993,15 +1061,15 @@ function AuthPageClientInner({
                           }}
                         >
                           Use password instead
-                        </button>
+                        </Link>
                       )}
                     </div>
                   ) : null}
                   {isLogin && usePasswordLogin ? (
                     <p className="sarjan-auth-switch mt_8 mb_0">
-                      <button
-                        type="button"
-                        className="font-2 text-button link border-0 bg-transparent p-0"
+                      <Link
+                        href={loginMethodHref("otp", searchParams)}
+                        className="font-2 text-button link"
                         onClick={() => {
                           setUsePasswordLogin(false);
                           setShowPassword(false);
@@ -1009,7 +1077,7 @@ function AuthPageClientInner({
                         }}
                       >
                         Use email OTP instead
-                      </button>
+                      </Link>
                     </p>
                   ) : null}
                   {isRegister ? (
@@ -1114,6 +1182,7 @@ function AuthPageClientInner({
 export function AuthPageClient(props: {
   mode: AuthMode;
   banners: AuthBanners;
+  initialLoginMethod?: "password" | "otp";
 }) {
   return (
     <Suspense fallback={<AuthPageFallback mode={props.mode} />}>

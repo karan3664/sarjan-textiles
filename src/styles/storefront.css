@@ -6488,6 +6488,53 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   word-break: normal;
 }
 
+.sarjan-account-orders .sarjan-account-orders__action-btns {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  max-width: 108px;
+}
+
+.sarjan-account-orders .sarjan-account-order-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  min-height: 36px !important;
+  height: auto !important;
+  padding: 7px 12px !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  line-height: 1.2 !important;
+  gap: 6px !important;
+  white-space: nowrap;
+}
+
+.sarjan-account-orders .sarjan-account-order-action-btn .sarjan-tf-btn-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.sarjan-account-orders
+  .sarjan-account-order-action-btn.sarjan-account-order-action-btn--secondary {
+  background: rgba(200, 155, 60, 0.1) !important;
+  border-color: rgba(200, 155, 60, 0.35) !important;
+}
+
+.sarjan-account-orders
+  .sarjan-account-order-action-btn.sarjan-account-order-action-btn--secondary:not(
+    :hover
+  ):not(:focus-visible)
+  .sarjan-tf-btn-icon {
+  color: var(--sarjan-btn-color, #181818) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color, #181818) !important;
+}
+
 @media (max-width: 991px) {
   .sarjan-account-orders .wrap-account-order.sarjan-account-orders-table-wrap {
     overflow-x: visible;
@@ -6593,19 +6640,26 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   }
 
   .sarjan-account-orders .sarjan-account-orders__actions {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end !important;
   }
 
   .sarjan-account-orders .sarjan-account-orders__actions::before {
     align-self: flex-start;
   }
 
-  .sarjan-account-orders .sarjan-account-orders__actions .tf-btn {
-    width: 100%;
-    min-height: 44px;
-    justify-content: center;
+  .sarjan-account-orders .sarjan-account-orders__action-btns {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: none;
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .sarjan-account-orders .sarjan-account-order-action-btn {
+    width: auto;
+    min-width: 96px;
   }
 
   .sarjan-account-orders .sarjan-order-status-pill {
@@ -6749,8 +6803,8 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
 
   .sarjan-account-orders .sarjan-account-orders-table th:nth-child(6),
   .sarjan-account-orders .sarjan-account-orders-table td:nth-child(6) {
-    width: 120px;
-    min-width: 120px;
+    width: 136px;
+    min-width: 136px;
   }
 
   .sarjan-account-orders .sarjan-account-orders__id {
@@ -6799,9 +6853,13 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
     letter-spacing: 0.04em;
   }
 
-  .sarjan-account-orders .sarjan-account-orders__actions .tf-btn {
-    min-width: 96px;
-    white-space: nowrap;
+  .sarjan-account-orders .sarjan-account-orders__actions {
+    vertical-align: middle;
+  }
+
+  .sarjan-account-orders .sarjan-account-orders__action-btns {
+    max-width: 108px;
+    margin-left: auto;
   }
 }
 
@@ -11534,6 +11592,33 @@ a.sarjan-order-bot-card:focus-visible {
   width: fit-content;
 }
 
+/* Modave .btn-line uses gradient text clip — reset for order review CTA */
+body.sarjan-storefront .sarjan-order-review-cta.tf-btn.btn-line {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+  padding: 8px 16px !important;
+  border: 1px solid var(--sarjan-btn-border, #181818) !important;
+  border-radius: var(--sarjan-btn-radius, 999px) !important;
+  background-color: var(--sarjan-btn-bg, #ffffff) !important;
+  background-image: none !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+  color: var(--sarjan-btn-color, #181818) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color, #181818) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  line-height: 1.2 !important;
+}
+
+body.sarjan-storefront .sarjan-order-review-cta.tf-btn.btn-line::before,
+body.sarjan-storefront .sarjan-order-review-cta.tf-btn.btn-line::after {
+  display: none !important;
+  content: none !important;
+}
+
 .sarjan-review-submitted-note {
   font-size: 13px;
   line-height: 1.45;
@@ -12132,9 +12217,11 @@ html[data-theme="dark"] .sarjan-review-submitted-note {
   text-decoration: underline;
 }
 
-/* Modave global button styles hide link-style auth toggles until hover */
+/* Modave global button/link styles hide auth toggles until hover */
 .sarjan-auth-page .sarjan-auth-form-meta button.link,
-.sarjan-auth-page .sarjan-auth-switch button.link {
+.sarjan-auth-page .sarjan-auth-form-meta a.link,
+.sarjan-auth-page .sarjan-auth-switch button.link,
+.sarjan-auth-page .sarjan-auth-switch a.link {
   display: inline !important;
   width: auto !important;
   min-height: unset !important;
@@ -12154,8 +12241,12 @@ html[data-theme="dark"] .sarjan-review-submitted-note {
 
 .sarjan-auth-page .sarjan-auth-form-meta button.link:hover,
 .sarjan-auth-page .sarjan-auth-form-meta button.link:focus-visible,
+.sarjan-auth-page .sarjan-auth-form-meta a.link:hover,
+.sarjan-auth-page .sarjan-auth-form-meta a.link:focus-visible,
 .sarjan-auth-page .sarjan-auth-switch button.link:hover,
-.sarjan-auth-page .sarjan-auth-switch button.link:focus-visible {
+.sarjan-auth-page .sarjan-auth-switch button.link:focus-visible,
+.sarjan-auth-page .sarjan-auth-switch a.link:hover,
+.sarjan-auth-page .sarjan-auth-switch a.link:focus-visible {
   background: transparent !important;
   color: var(--sarjan-accent) !important;
   -webkit-text-fill-color: var(--sarjan-accent) !important;
@@ -14539,17 +14630,28 @@ html[data-theme="dark"] .sarjan-review-notice {
   background: #111;
 }
 
-html[data-theme="dark"] .sarjan-order-review-cta.tf-btn.btn-line {
+html[data-theme="dark"]
+  body.sarjan-storefront
+  .sarjan-order-review-cta.tf-btn.btn-line {
+  background-color: var(--sarjan-btn-bg, #242220) !important;
+  background-image: none !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
   color: var(--sarjan-text, #f4efe8) !important;
-  border-color: rgba(232, 180, 180, 0.45) !important;
   -webkit-text-fill-color: var(--sarjan-text, #f4efe8) !important;
+  border-color: rgba(232, 180, 180, 0.45) !important;
 }
 
-html[data-theme="dark"] .sarjan-order-review-cta.tf-btn.btn-line:hover,
-html[data-theme="dark"] .sarjan-order-review-cta.tf-btn.btn-line:focus-visible {
+html[data-theme="dark"]
+  body.sarjan-storefront
+  .sarjan-order-review-cta.tf-btn.btn-line:hover,
+html[data-theme="dark"]
+  body.sarjan-storefront
+  .sarjan-order-review-cta.tf-btn.btn-line:focus-visible {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   background-color: var(--sarjan-accent, #8b1e2d) !important;
+  background-image: none !important;
   border-color: var(--sarjan-accent, #8b1e2d) !important;
 }
 

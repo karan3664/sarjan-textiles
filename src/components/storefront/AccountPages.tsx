@@ -1178,12 +1178,24 @@ function AccountOrdersContent() {
                       data-label="Actions"
                       className="sarjan-account-orders__actions"
                     >
-                      <a
-                        href={`/my-account-orders-details?orderId=${encodeURIComponent(order.id)}`}
-                        className={withBtnIcon("tf-btn btn-fill radius-4")}
-                      >
-                        <TfButtonIcon icon="icon-eye">View</TfButtonIcon>
-                      </a>
+                      <div className="sarjan-account-orders__action-btns">
+                        <a
+                          href={`/my-account-orders-details?orderId=${encodeURIComponent(order.id)}`}
+                          className="tf-btn btn-fill btn-sm radius-4 sarjan-has-btn-icon sarjan-account-order-action-btn"
+                        >
+                          <TfButtonIcon icon="icon-eye">View</TfButtonIcon>
+                        </a>
+                        <a
+                          href={`/api/orders/${encodeURIComponent(order.id)}/invoice`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tf-btn btn-line btn-sm radius-4 sarjan-has-btn-icon sarjan-account-order-action-btn sarjan-account-order-action-btn--secondary"
+                        >
+                          <TfButtonIcon icon="icon-arrowUpRight">
+                            Invoice
+                          </TfButtonIcon>
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -1262,6 +1274,16 @@ function OrderView({
             <h6 className="sarjan-order-details-lead mb_0">
               Thank you. Your B2B order request has been received.
             </h6>
+            <p className="mt_12 mb_0">
+              <a
+                className="tf-btn btn-fill btn-sm"
+                href={`/api/orders/${encodeURIComponent(order.id)}/invoice`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View tax invoice
+              </a>
+            </p>
           </div>
           <div className="text-end sarjan-order-pricing-summary">
             <p className="text-secondary mb_4">Order total (incl. GST)</p>

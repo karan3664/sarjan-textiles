@@ -451,6 +451,79 @@
         margin: 4px 0;
       }
 
+      .bank-pay-row {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+
+      .bank-text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .upi-box {
+        flex-shrink: 0;
+        width: 148px;
+        text-align: center;
+        border: 1.5px solid var(--brand);
+        border-radius: 10px;
+        padding: 8px 8px 10px;
+        background: linear-gradient(180deg, #fff 0%, var(--brand-soft) 100%);
+      }
+
+      .upi-box h5 {
+        margin: 0 0 6px;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--brand);
+      }
+
+      .upi-box .qr-wrap {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        padding: 4px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .upi-box .qr-wrap img,
+      .upi-box .qr-wrap canvas,
+      .upi-box .qr-wrap svg {
+        display: block;
+        width: 112px !important;
+        height: 112px !important;
+      }
+
+      .upi-id {
+        margin: 6px 0 2px;
+        font-size: 8px;
+        line-height: 1.35;
+        word-break: break-all;
+        color: var(--ink);
+      }
+
+      .upi-apps {
+        margin: 0;
+        font-size: 7px;
+        color: var(--muted);
+        line-height: 1.3;
+      }
+
+      .upi-bank {
+        margin: 4px 0 0;
+        font-size: 7px;
+        color: var(--brand-dark);
+        font-weight: 700;
+      }
+
       .signatures {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -472,6 +545,13 @@
         padding-top: 6px;
         font-size: 10px;
         color: var(--muted);
+      }
+
+      .sign .sign-note {
+        margin: 0;
+        font-size: 8.5px;
+        color: var(--muted);
+        line-height: 1.35;
       }
 
       .footnote {
@@ -516,6 +596,27 @@
         table.items thead th {
           font-size: 7px;
           padding: 4px 2px;
+        }
+
+        .bank-pay-row {
+          gap: 10px;
+        }
+
+        .upi-box {
+          width: 132px;
+          padding: 6px;
+        }
+
+        .upi-box .qr-wrap {
+          width: 108px;
+          height: 108px;
+        }
+
+        .upi-box .qr-wrap img,
+        .upi-box .qr-wrap canvas,
+        .upi-box .qr-wrap svg {
+          width: 100px !important;
+          height: 100px !important;
         }
 
         table.items tbody td {
@@ -622,7 +723,7 @@
         </div>
         <div>
           <label>Transport / LR No.</label>
-          <strong>VRL Logistics · VRL7849201</strong>
+          <strong>—</strong>
         </div>
         <div>
           <label>Reverse Charge</label>
@@ -893,17 +994,48 @@
 
       <div class="footer-grid">
         <div class="footer-block bank">
-          <h4>Bank Details (Sample — To Be Confirmed by Owner)</h4>
-          <p><strong>Account Name:</strong> Sarjan Textiles</p>
-          <p><strong>Bank:</strong> HDFC Bank Ltd., Bhuj Branch</p>
-          <p><strong>Account Number:</strong> 50200098765432</p>
-          <p><strong>IFSC Code:</strong> HDFC0002847</p>
-          <p><strong>Account Type:</strong> Current Account</p>
-          <p><strong>UPI:</strong> sarjantextiles@hdfcbank</p>
-          <p style="margin-top: 8px; color: var(--muted); font-size: 10px">
-            Please mention invoice number
-            <strong>ST/INV/FY26-27/00482</strong> in payment reference.
-          </p>
+          <div class="bank-pay-row">
+            <div class="bank-text">
+              <h4>Bank Details</h4>
+              <p><strong>Account Name:</strong> SARJAN TEXTILES</p>
+              <p><strong>Bank:</strong> Bank of India, Madhapar Branch</p>
+              <p><strong>Account Number:</strong> 381630150000003</p>
+              <p><strong>IFSC Code:</strong> BKID0003816</p>
+              <p><strong>Account Type:</strong> Current Account</p>
+              <p><strong>UPI ID:</strong> boim-381681000003@boi</p>
+              <p style="margin-top: 8px; color: var(--muted); font-size: 10px">
+                Please mention invoice number
+                <strong>ST/INV/FY26-27/00482</strong> in payment reference / UPI
+                note.
+              </p>
+            </div>
+            <div class="upi-box">
+              <h5>Scan &amp; Pay</h5>
+              <div class="qr-wrap" aria-label="UPI payment QR code">
+                <svg
+                  class="upi-qr-svg"
+                  role="img"
+                  aria-label="UPI QR for boim-381681000003@boi"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="112"
+                  height="112"
+                  viewBox="0 0 43 43"
+                  shape-rendering="crispEdges"
+                >
+                  <path fill="#ffffff" d="M0 0h43v43H0z" />
+                  <path
+                    stroke="#1a1a1a"
+                    d="M1 1.5h7m6 0h1m3 0h2m2 0h1m1 0h1m1 0h3m6 0h7M1 2.5h1m5 0h1m3 0h2m2 0h2m1 0h1m2 0h2m2 0h4m2 0h1m1 0h1m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h1m4 0h3m1 0h3m1 0h2m1 0h2m1 0h1m3 0h1m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h3m2 0h3m4 0h1m1 0h1m1 0h2m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m1 0h2m1 0h2m1 0h4m2 0h5m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h7m3 0h1m1 0h2m1 0h3m2 0h1m1 0h1m3 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m1 0h1m1 0h1m3 0h1m1 0h2m1 0h1m1 0h2m2 0h1M1 9.5h1m1 0h5m2 0h1m3 0h4m1 0h1m6 0h2m2 0h4m1 0h5M1 10.5h2m2 0h2m7 0h3m2 0h1m2 0h2m1 0h1m3 0h1m2 0h2m1 0h1m2 0h1m2 0h1M1 11.5h1m2 0h2m1 0h1m2 0h4m1 0h1m1 0h1m1 0h1m3 0h1m2 0h6m1 0h2m2 0h2m1 0h2M4 12.5h3m1 0h2m1 0h4m1 0h1m1 0h1m3 0h2m4 0h2m4 0h1m2 0h2m1 0h2M4 13.5h1m2 0h7m1 0h1m1 0h3m1 0h1m1 0h3m3 0h3m3 0h6M3 14.5h1m1 0h2m2 0h1m1 0h4m1 0h3m4 0h1m4 0h1m1 0h1m3 0h2m3 0h3M7 15.5h1m1 0h1m1 0h1m1 0h1m2 0h4m1 0h1m2 0h3m1 0h4m3 0h3m2 0h2M2 16.5h3m1 0h1m2 0h7m1 0h3m4 0h1m2 0h2m3 0h2m1 0h1m3 0h2M4 17.5h6m2 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m3 0h1M4 18.5h1m5 0h1m1 0h1m1 0h2m4 0h2m3 0h1m1 0h2m1 0h1m3 0h2m1 0h2M2 19.5h2m3 0h1m1 0h3m1 0h1m2 0h2m1 0h1m1 0h1m1 0h3m2 0h1m1 0h4m1 0h1m2 0h3M1 20.5h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h3m1 0h2m3 0h1m2 0h1m2 0h2m3 0h1m1 0h1m5 0h1M1 21.5h2m2 0h5m1 0h3m2 0h1m2 0h1m1 0h4m4 0h1m2 0h1m1 0h1m1 0h1m2 0h2M4 22.5h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h2m1 0h1m3 0h1m3 0h5m2 0h1m3 0h3m1 0h1M2 23.5h1m1 0h6m1 0h7m3 0h2m1 0h1m1 0h2m1 0h2m2 0h1m3 0h3M3 24.5h4m1 0h1m2 0h1m1 0h2m1 0h1m3 0h1m1 0h4m1 0h2m3 0h5m2 0h3M2 25.5h2m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m1 0h2m2 0h8m1 0h1m1 0h3m3 0h1M1 26.5h2m1 0h1m1 0h1m1 0h3m1 0h5m1 0h2m1 0h1m1 0h3m4 0h1m1 0h2m3 0h1m3 0h1M1 27.5h2m2 0h1m1 0h5m1 0h3m2 0h2m3 0h1m4 0h2m4 0h3m3 0h2M1 28.5h1m2 0h3m2 0h1m1 0h1m3 0h1m2 0h3m7 0h1m1 0h1m4 0h1m1 0h2m1 0h2M6 29.5h3m2 0h2m3 0h2m1 0h2m2 0h2m1 0h3m1 0h2m2 0h1m2 0h1m1 0h2M1 30.5h2m1 0h2m4 0h1m1 0h1m1 0h1m1 0h1m4 0h2m2 0h7m1 0h2m1 0h2m1 0h3M1 31.5h1m1 0h5m2 0h2m1 0h1m1 0h2m3 0h1m1 0h2m2 0h1m6 0h1m1 0h1m2 0h4M1 32.5h1m1 0h1m1 0h1m4 0h1m1 0h5m1 0h1m1 0h2m3 0h1m3 0h1m1 0h1m1 0h1m1 0h1m2 0h4M1 33.5h1m1 0h3m1 0h1m3 0h4m1 0h1m2 0h2m2 0h1m2 0h1m2 0h1m1 0h1m1 0h6m2 0h1M9 34.5h1m2 0h1m2 0h2m1 0h2m2 0h1m2 0h4m3 0h2m3 0h1m1 0h1M1 35.5h7m3 0h2m1 0h3m1 0h1m2 0h2m3 0h4m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1M1 36.5h1m5 0h1m1 0h2m2 0h1m1 0h6m1 0h3m1 0h1m2 0h1m1 0h1m1 0h1m3 0h1m2 0h2M1 37.5h1m1 0h3m1 0h1m1 0h2m3 0h3m3 0h1m1 0h1m2 0h1m1 0h3m1 0h8m1 0h1M1 38.5h1m1 0h3m1 0h1m1 0h3m1 0h2m4 0h1m3 0h1m2 0h1m1 0h1m2 0h1m1 0h1m2 0h1m1 0h1M1 39.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h5m3 0h2m7 0h3m1 0h1m1 0h1m2 0h1M1 40.5h1m5 0h1m2 0h1m1 0h1m3 0h2m2 0h1m2 0h1m3 0h1m1 0h1m1 0h1m2 0h7M1 41.5h7m1 0h1m1 0h4m1 0h2m7 0h4m1 0h1m2 0h1m1 0h1m2 0h1"
+                  />
+                </svg>
+              </div>
+              <p class="upi-id"><strong>UPI:</strong> boim-381681000003@boi</p>
+              <p class="upi-bank">Bank of India</p>
+              <p class="upi-apps">
+                GPay · PhonePe · Paytm · BHIM · Any UPI App
+              </p>
+            </div>
+          </div>
         </div>
         <div class="footer-block">
           <h4>Terms &amp; Conditions</h4>
@@ -943,12 +1075,14 @@
 
       <div class="signatures">
         <div class="sign">
+          <p class="sign-note">
+            This is a computer-generated invoice. Physical signature is not
+            required.
+          </p>
           <div class="line">Authorised Signatory — For Sarjan Textiles</div>
         </div>
         <div class="sign">
-          <div class="line">
-            Customer Acknowledgement — Name, Date &amp; Stamp
-          </div>
+          <div class="line">Customer Acknowledgement — Aaradhya Textiles</div>
         </div>
       </div>
 

@@ -2,6 +2,10 @@ import { createClient } from "@/lib/local-db";
 import { verifyEmailOtpGuarded } from "@/lib/email-otp";
 import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
+import {
+  isValidClientPhone,
+  normalizeClientPhone,
+} from "@/lib/client-duplicate-check";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import {
   assertMinClientPassword,
@@ -56,6 +60,24 @@ export async function POST(request: Request) {
     const ownerLegalName = String(body.ownerLegalName ?? "").trim();
     const gstRaw = String(body.gst ?? "").trim();
     const hasGst = gstRaw.length > 0;
+    const mobileRaw = String(body.mobile ?? body.phone ?? "").trim();
+
+    if (!mobileRaw) {
+      return Response.json(
+        { error: "Mobile number is required." },
+        { status: 400 },
+      );
+    }
+    if (!isValidClientPhone(mobileRaw)) {
+      return Response.json(
+        {
+          error:
+            "Enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9).",
+        },
+        { status: 400 },
+      );
+    }
+    const phone = normalizeClientPhone(mobileRaw);
 
     if (!companyName) {
       return Response.json(
@@ -118,12 +140,7 @@ export async function POST(request: Request) {
       gst,
       city: body.city != null ? String(body.city).trim() : undefined,
       state: body.state != null ? String(body.state).trim() : undefined,
-      phone:
-        body.mobile != null
-          ? String(body.mobile).replace(/[\s+]/g, "").replace(/^91/, "")
-          : body.phone != null
-            ? String(body.phone).trim()
-            : undefined,
+      phone,
       line1: body.address != null ? String(body.address).trim() : undefined,
       pincode: body.pincode != null ? String(body.pincode).trim() : undefined,
       contactName:

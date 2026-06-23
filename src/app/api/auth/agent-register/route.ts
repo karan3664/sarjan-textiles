@@ -5,6 +5,7 @@ import { isValidGstin, normalizeGstin } from "@/lib/gstin-form";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
 import {
   assertUniqueAmongClients,
+  isValidClientPhone,
   normalizeClientEmail,
   normalizeClientPhone,
 } from "@/lib/client-duplicate-check";
@@ -54,9 +55,12 @@ export async function POST(request: Request) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return Response.json({ error: "Valid email required" }, { status: 400 });
     }
-    if (phone.length !== 10) {
+    if (!isValidClientPhone(phone)) {
       return Response.json(
-        { error: "Valid 10-digit mobile required" },
+        {
+          error:
+            "Enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9).",
+        },
         { status: 400 },
       );
     }

@@ -21,7 +21,8 @@ function imageRemotePatterns() {
 const nextConfig: NextConfig = {
   // SITE_LAUNCH_AT must stay a runtime env var (Coolify). Do not add to `env` here —
   // that inlines an empty value at Docker build time and disables the launch gate.
-  // Avoid standalone output — trace collection OOMs on small VPS Docker builds.
+  // Standalone keeps the runner image small (avoids export OOM after `next build` on 2GB VPS).
+  ...(isDockerBuild ? { output: "standalone" as const } : {}),
   eslint: {
     // Lint in CI/dev (`npm run lint`); skip during `next build` to save VPS RAM.
     ignoreDuringBuilds: true,
@@ -58,6 +59,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "recharts"],
     // Coolify / 2GB VPS: one CPU during `next build` avoids OOM from worker pools.
     ...(isDockerBuild ? { cpus: 1 } : {}),
+    outputFileTracingIncludes: {
+      "/api/orders/[orderId]/invoice": ["./src/lib/invoice-styles.css"],
+    },
     serverActions: {
       bodySizeLimit: "80mb",
     },

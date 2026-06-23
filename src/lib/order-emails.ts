@@ -1,6 +1,7 @@
 import { siteSettings } from "@/data/mock";
 import { buildSarjanEmailHtml, escapeHtml } from "@/lib/email-template";
 import { enrichOrderPricing, formatInrPricingLine } from "@/lib/gst-display";
+import { orderInvoiceUrl } from "@/lib/invoice-html";
 import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
 import type { LocalOrder } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
@@ -136,6 +137,8 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     "Order Items:",
     items,
     "",
+    `View / download tax invoice: ${orderInvoiceUrl(order.id)}`,
+    "",
     copy.next,
     "",
     `${siteSettings.brandName}`,
@@ -208,6 +211,14 @@ function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
       <tbody>${orderRows(order)}</tbody>
     </table>
     <p style="margin:20px 0 0;color:#4d4843;line-height:1.6;">${escapeHtml(copy.next)}</p>
+    <p style="margin:18px 0 0;">
+      <a href="${escapeHtml(orderInvoiceUrl(order.id))}" style="display:inline-block;background:#7a1e2c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;font-size:14px;">
+        View tax invoice
+      </a>
+    </p>
+    <p style="margin:10px 0 0;color:#6f6a64;font-size:12px;line-height:1.5;">
+      Sign in with your Sarjan account to open the invoice. You can print or save it as PDF from your browser.
+    </p>
   `;
 
   return buildSarjanEmailHtml({

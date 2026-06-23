@@ -31,6 +31,12 @@ export function normalizeClientPhone(phone: string) {
   return digits;
 }
 
+const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/;
+
+export function isValidClientPhone(phone: string) {
+  return INDIAN_MOBILE_PATTERN.test(normalizeClientPhone(phone));
+}
+
 function clientGstValues(client: ClientLike): string[] {
   const values = new Set<string>();
   for (const raw of [client.gst, client.address?.gst]) {
