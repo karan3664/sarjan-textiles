@@ -13,6 +13,34 @@
   },
   "sessions": [
     {
+      "id": "5c7d451c-1d69-4395-a51d-f29689b49ab4",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "source": "app",
+      "status": "active",
+      "state": {},
+      "startedAt": "2026-06-23T08:32:48.586Z",
+      "lastActivityAt": "2026-06-23T08:32:48.586Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
+      "id": "fdb0fa54-72e9-4b7b-9257-c81fa96ab634",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "source": "web",
+      "status": "active",
+      "state": {},
+      "startedAt": "2026-06-21T16:14:47.157Z",
+      "lastActivityAt": "2026-06-21T16:14:47.157Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
       "id": "1081e5f1-d43e-426d-84ca-7e5af2240636",
       "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
       "language": "en",
@@ -1541,6 +1569,28 @@
         "orderId": "ST-1781871842945"
       },
       "createdAt": "2026-06-19T12:24:03.006Z"
+    },
+    {
+      "id": "0ae3085f-f26e-4fb4-bb7d-4f5ca336ad87",
+      "sessionId": "fdb0fa54-72e9-4b7b-9257-c81fa96ab634",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "web",
+        "language": "en"
+      },
+      "createdAt": "2026-06-21T16:14:47.158Z"
+    },
+    {
+      "id": "63662b79-3486-4c9c-b3b5-b88806fd70a4",
+      "sessionId": "5c7d451c-1d69-4395-a51d-f29689b49ab4",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "app",
+        "language": "en"
+      },
+      "createdAt": "2026-06-23T08:32:48.591Z"
     }
   ]
 }

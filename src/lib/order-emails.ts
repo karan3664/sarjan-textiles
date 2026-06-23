@@ -1,9 +1,12 @@
 import { siteSettings } from "@/data/mock";
 import { buildSarjanEmailHtml, escapeHtml } from "@/lib/email-template";
 import { enrichOrderPricing, formatInrPricingLine } from "@/lib/gst-display";
-import { orderInvoiceUrl } from "@/lib/invoice-html";
+import { issueInvoiceAccessToken } from "@/lib/invoice-access-token";
+import { buildTaxInvoiceHtml, orderInvoiceUrl } from "@/lib/invoice-html";
+import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
 import type { LocalOrder } from "@/lib/local-db";
+import { getClient } from "@/lib/local-db";
 import { sendDomainMail } from "@/lib/mailer";
 
 type EmailKind =
@@ -104,6 +107,7 @@ function textBody(
   order: LocalOrder,
   copy: (typeof emailCopy)[EmailKind],
   includeInvoice: boolean,
+  invoiceViewUrl?: string,
 ) {
   const priced = enrichOrderPricing(order, {
     platformFee: siteSettings.platformFee,
@@ -142,7 +146,11 @@ function textBody(
     items,
     "",
     ...(includeInvoice
-      ? [`View / download tax invoice: ${orderInvoiceUrl(order.id)}`, ""]
+      ? [
+          "Your tax invoice PDF is attached to this email.",
+          invoiceViewUrl ? `View online: ${invoiceViewUrl}` : "",
+          "",
+        ]
       : []),
     copy.next,
     "",
@@ -157,6 +165,7 @@ function htmlBody(
   order: LocalOrder,
   copy: (typeof emailCopy)[EmailKind],
   includeInvoice: boolean,
+  invoiceViewUrl?: string,
 ) {
   const priced = enrichOrderPricing(order, {
     platformFee: siteSettings.platformFee,
@@ -222,14 +231,21 @@ function htmlBody(
     <p style="margin:20px 0 0;color:#4d4843;line-height:1.6;">${escapeHtml(copy.next)}</p>
     ${
       includeInvoice
-        ? `<p style="margin:18px 0 0;">
-      <a href="${escapeHtml(orderInvoiceUrl(order.id))}" style="display:inline-block;background:#7a1e2c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;font-size:14px;">
-        View tax invoice
+        ? `<p style="margin:18px 0 0;color:#4d4843;line-height:1.6;">
+      <strong>Your tax invoice PDF is attached</strong> to this email. Save it for your records and GST filing.
+    </p>
+    ${
+      invoiceViewUrl
+        ? `<p style="margin:14px 0 0;">
+      <a href="${escapeHtml(invoiceViewUrl)}" style="display:inline-block;background:#7a1e2c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;font-size:14px;">
+        View tax invoice online
       </a>
     </p>
     <p style="margin:10px 0 0;color:#6f6a64;font-size:12px;line-height:1.5;">
-      Sign in with your Sarjan account to open the invoice. You can print or save it as PDF from your browser.
+      This link opens without signing in. You can also print or save as PDF from your browser.
     </p>`
+        : ""
+    }`
         : ""
     }
   `;
@@ -245,11 +261,62 @@ function htmlBody(
 async function sendOrderEmail(order: LocalOrder, kind: EmailKind) {
   const copy = emailCopy[kind];
   const includeInvoice = kind === "delivered";
+  let attachments:
+    | Array<{
+        filename: string;
+        content: Buffer | string;
+        contentType?: string;
+      }>
+    | undefined;
+  let invoiceViewUrl: string | undefined;
+
+  if (includeInvoice) {
+    const client = await getClient(order.clientId);
+    if (client) {
+      const token = issueInvoiceAccessToken(order.id, order.clientId);
+      invoiceViewUrl = orderInvoiceUrl(order.id, { token });
+      try {
+        const html = await buildTaxInvoiceHtml({
+          order,
+          client,
+          showToolbar: false,
+        });
+        const pdf = await renderInvoicePdf(html);
+        attachments = [
+          {
+            filename: `Sarjan-Tax-Invoice-${order.id}.pdf`,
+            content: pdf,
+            contentType: "application/pdf",
+          },
+        ];
+      } catch (err) {
+        console.error("[order-email] invoice PDF failed", order.id, err);
+        try {
+          const html = await buildTaxInvoiceHtml({
+            order,
+            client,
+            showToolbar: false,
+          });
+          attachments = [
+            {
+              filename: `Sarjan-Tax-Invoice-${order.id}.html`,
+              content: html,
+              contentType: "text/html; charset=utf-8",
+            },
+          ];
+        } catch (htmlErr) {
+          console.error("[order-email] invoice HTML failed", order.id, htmlErr);
+        }
+      }
+    }
+  }
+
   await sendDomainMail({
     to: order.clientEmail,
     subject: `${copy.subject} - ${order.id}`,
-    text: textBody(order, copy, includeInvoice),
-    html: htmlBody(order, copy, includeInvoice),
+    text: textBody(order, copy, includeInvoice, invoiceViewUrl),
+    html: htmlBody(order, copy, includeInvoice, invoiceViewUrl),
+    attachments,
   });
 }
 

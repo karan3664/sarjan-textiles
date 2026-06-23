@@ -8,6 +8,11 @@ type SendDomainMailInput = {
   text: string;
   html?: string;
   replyTo?: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer | string;
+    contentType?: string;
+  }>;
 };
 
 function requiredEnv(name: string) {
@@ -40,5 +45,6 @@ export async function sendDomainMail(input: SendDomainMailInput) {
     subject: input.subject,
     text: input.text,
     html: input.html,
+    attachments: input.attachments,
   });
 }

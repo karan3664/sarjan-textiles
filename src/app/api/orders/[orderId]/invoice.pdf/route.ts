@@ -1,5 +1,6 @@
 import { buildTaxInvoiceHtml } from "@/lib/invoice-html";
 import { isOrderInvoiceAvailable } from "@/lib/invoice-order-access";
+import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { resolveInvoiceContext } from "@/lib/invoice-route-auth";
 
 type RouteContext = { params: Promise<{ orderId: string }> };
@@ -25,23 +26,25 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
-  const isNativeApp = request.headers.get("x-sarjan-native-client") === "1";
   try {
     const html = await buildTaxInvoiceHtml({
       order,
       client,
-      showToolbar: !isNativeApp,
+      showToolbar: false,
     });
-    return new Response(html, {
+    const pdf = await renderInvoicePdf(html);
+    const filename = `Sarjan-Tax-Invoice-${order.id}.pdf`;
+    return new Response(new Uint8Array(pdf), {
       headers: {
-        "Content-Type": "text/html; charset=utf-8",
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "private, no-store",
       },
     });
   } catch (err) {
-    console.error("[invoice] build failed", order.id, err);
+    console.error("[invoice.pdf] build failed", order.id, err);
     return Response.json(
-      { error: "Could not generate tax invoice. Please try again later." },
+      { error: "Could not generate tax invoice PDF. Please try again later." },
       { status: 500 },
     );
   }

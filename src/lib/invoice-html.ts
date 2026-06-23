@@ -217,13 +217,22 @@ export function orderInvoicePath(orderId: string) {
   return `/api/orders/${encodeURIComponent(orderId)}/invoice`;
 }
 
-export function orderInvoiceUrl(orderId: string, baseUrl?: string) {
+export function orderInvoicePdfPath(orderId: string) {
+  return `/api/orders/${encodeURIComponent(orderId)}/invoice.pdf`;
+}
+
+export function orderInvoiceUrl(
+  orderId: string,
+  options?: { baseUrl?: string; token?: string },
+) {
   const base = (
-    baseUrl ??
+    options?.baseUrl ??
     process.env.NEXT_PUBLIC_SITE_URL ??
     "https://sarjantextiles.com"
   ).replace(/\/$/, "");
-  return `${base}${orderInvoicePath(orderId)}`;
+  const path = orderInvoicePath(orderId);
+  if (!options?.token) return `${base}${path}`;
+  return `${base}${path}?token=${encodeURIComponent(options.token)}`;
 }
 
 export async function buildTaxInvoiceHtml(input: {
@@ -359,25 +368,50 @@ export async function buildTaxInvoiceHtml(input: {
   </div>
   <script>
   (function(){
+    function invoiceFilename() {
+      var match = window.location.pathname.match(/\\/orders\\/([^/]+)\\/invoice/i);
+      var id = match ? match[1] : "invoice";
+      return "Sarjan-Tax-Invoice-" + id + ".pdf";
+    }
+    function pdfUrl() {
+      return window.location.pathname.replace(/\\/invoice\\/?$/, "/invoice.pdf") + window.location.search;
+    }
+    async function downloadPdfBlob(blob, filename) {
+      if (navigator.share && window.File) {
+        var file = new File([blob], filename, { type: "application/pdf" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: document.title || "Tax Invoice" });
+            return true;
+          } catch (shareErr) {
+            if (shareErr && shareErr.name === "AbortError") return true;
+          }
+        }
+      }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
+      return true;
+    }
     async function sarjanSaveInvoice(){
       try {
         if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage("invoice:save");
+          window.ReactNativeWebView.postMessage("invoice:print");
           return;
         }
-        var doc = "<!DOCTYPE html>" + document.documentElement.outerHTML;
-        if (navigator.share && window.File) {
-          var blob = new Blob([doc], { type: "text/html;charset=utf-8" });
-          var file = new File([blob], "sarjan-tax-invoice.html", { type: "text/html" });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: document.title || "Tax Invoice" });
-            return;
-          }
+        var res = await fetch(pdfUrl(), { credentials: "include" });
+        if (res.ok) {
+          var blob = await res.blob();
+          if (await downloadPdfBlob(blob, invoiceFilename())) return;
         }
-        window.print();
-      } catch (e) {
-        try { window.print(); } catch (_) {}
-      }
+      } catch (_) {}
+      try { window.print(); } catch (_) {}
     }
     window.sarjanSaveInvoice = sarjanSaveInvoice;
     var btn = document.getElementById("sarjan-invoice-save");

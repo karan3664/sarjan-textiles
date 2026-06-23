@@ -37,6 +37,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     "sharp",
     "pg",
+    "playwright-core",
     "@tensorflow/tfjs",
     "@tensorflow/tfjs-backend-cpu",
     "nsfwjs",
@@ -61,6 +62,7 @@ const nextConfig: NextConfig = {
     ...(isDockerBuild ? { cpus: 1 } : {}),
     outputFileTracingIncludes: {
       "/api/orders/[orderId]/invoice": ["./src/lib/invoice-styles.css"],
+      "/api/orders/[orderId]/invoice.pdf": ["./src/lib/invoice-styles.css"],
     },
     serverActions: {
       bodySizeLimit: "80mb",

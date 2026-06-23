@@ -32,6 +32,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV CHROMIUM_PATH=/usr/bin/chromium
 
 # Standalone trace — much smaller than copying full .next + node_modules (export OOM fix).
 COPY --from=builder /app/public ./public
@@ -43,6 +44,7 @@ COPY --from=builder /app/src/lib/invoice-styles.css ./src/lib/invoice-styles.css
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    chromium \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p data data/downloads public/downloads public/uploads/cms \
     public/uploads/client-avatars public/uploads/review-media \
