@@ -100,7 +100,11 @@ function pricingSummaryLines(order: LocalOrder) {
   );
 }
 
-function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
+function textBody(
+  order: LocalOrder,
+  copy: (typeof emailCopy)[EmailKind],
+  includeInvoice: boolean,
+) {
   const priced = enrichOrderPricing(order, {
     platformFee: siteSettings.platformFee,
     shipping: siteSettings.shipping,
@@ -137,8 +141,9 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     "Order Items:",
     items,
     "",
-    `View / download tax invoice: ${orderInvoiceUrl(order.id)}`,
-    "",
+    ...(includeInvoice
+      ? [`View / download tax invoice: ${orderInvoiceUrl(order.id)}`, ""]
+      : []),
     copy.next,
     "",
     `${siteSettings.brandName}`,
@@ -148,7 +153,11 @@ function textBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
     .join("\n");
 }
 
-function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
+function htmlBody(
+  order: LocalOrder,
+  copy: (typeof emailCopy)[EmailKind],
+  includeInvoice: boolean,
+) {
   const priced = enrichOrderPricing(order, {
     platformFee: siteSettings.platformFee,
     shipping: siteSettings.shipping,
@@ -211,14 +220,18 @@ function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
       <tbody>${orderRows(order)}</tbody>
     </table>
     <p style="margin:20px 0 0;color:#4d4843;line-height:1.6;">${escapeHtml(copy.next)}</p>
-    <p style="margin:18px 0 0;">
+    ${
+      includeInvoice
+        ? `<p style="margin:18px 0 0;">
       <a href="${escapeHtml(orderInvoiceUrl(order.id))}" style="display:inline-block;background:#7a1e2c;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:700;font-size:14px;">
         View tax invoice
       </a>
     </p>
     <p style="margin:10px 0 0;color:#6f6a64;font-size:12px;line-height:1.5;">
       Sign in with your Sarjan account to open the invoice. You can print or save it as PDF from your browser.
-    </p>
+    </p>`
+        : ""
+    }
   `;
 
   return buildSarjanEmailHtml({
@@ -231,11 +244,12 @@ function htmlBody(order: LocalOrder, copy: (typeof emailCopy)[EmailKind]) {
 
 async function sendOrderEmail(order: LocalOrder, kind: EmailKind) {
   const copy = emailCopy[kind];
+  const includeInvoice = kind === "delivered";
   await sendDomainMail({
     to: order.clientEmail,
     subject: `${copy.subject} - ${order.id}`,
-    text: textBody(order, copy),
-    html: htmlBody(order, copy),
+    text: textBody(order, copy, includeInvoice),
+    html: htmlBody(order, copy, includeInvoice),
   });
 }
 

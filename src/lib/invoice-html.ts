@@ -340,21 +340,50 @@ export async function buildTaxInvoiceHtml(input: {
     ? siteSettings.logo
     : `${(process.env.NEXT_PUBLIC_SITE_URL ?? "https://sarjantextiles.com").replace(/\/$/, "")}${siteSettings.logo.startsWith("/") ? "" : "/"}${siteSettings.logo}`;
 
+  const bodyClass = showToolbar ? "" : "native-invoice";
+
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, viewport-fit=cover" />
   <title>Sarjan Textiles — Tax Invoice | ${escapeHtml(invNo)}</title>
   <style>${invoiceStyles()}</style>
 </head>
-<body>
+<body class="${bodyClass}">
   ${
     showToolbar
       ? `<div class="toolbar">
-    <p>Open in Chrome → <strong>Print</strong> → <strong>Save as PDF</strong></p>
-    <button type="button" onclick="window.print()">Save / Print PDF</button>
-  </div>`
+    <p class="toolbar-hint">Tap <strong>Save / Print PDF</strong>, then choose <strong>Print</strong> or <strong>Save to Files</strong>.</p>
+    <button type="button" class="toolbar-save" id="sarjan-invoice-save">Save / Print PDF</button>
+  </div>
+  <script>
+  (function(){
+    async function sarjanSaveInvoice(){
+      try {
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage("invoice:save");
+          return;
+        }
+        var doc = "<!DOCTYPE html>" + document.documentElement.outerHTML;
+        if (navigator.share && window.File) {
+          var blob = new Blob([doc], { type: "text/html;charset=utf-8" });
+          var file = new File([blob], "sarjan-tax-invoice.html", { type: "text/html" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: document.title || "Tax Invoice" });
+            return;
+          }
+        }
+        window.print();
+      } catch (e) {
+        try { window.print(); } catch (_) {}
+      }
+    }
+    window.sarjanSaveInvoice = sarjanSaveInvoice;
+    var btn = document.getElementById("sarjan-invoice-save");
+    if (btn) btn.addEventListener("click", sarjanSaveInvoice);
+  })();
+  </script>`
       : ""
   }
   <article class="invoice">

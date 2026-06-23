@@ -55,6 +55,7 @@ import {
   minClientPasswordMessage,
 } from "@/lib/password-policy";
 import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
+import { isOrderInvoiceAvailable } from "@/lib/invoice-order-access";
 import { AccountAddressManager } from "@/components/storefront/AccountAddressManager";
 import { OrderLineReviewCta } from "@/components/storefront/OrderLineReviewCta";
 import { ReviewRequestBanner } from "@/components/storefront/ReviewRequestBanner";
@@ -1185,16 +1186,18 @@ function AccountOrdersContent() {
                         >
                           <TfButtonIcon icon="icon-eye">View</TfButtonIcon>
                         </a>
-                        <a
-                          href={`/api/orders/${encodeURIComponent(order.id)}/invoice`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="tf-btn btn-line btn-sm radius-4 sarjan-has-btn-icon sarjan-account-order-action-btn sarjan-account-order-action-btn--secondary"
-                        >
-                          <TfButtonIcon icon="icon-arrowUpRight">
-                            Invoice
-                          </TfButtonIcon>
-                        </a>
+                        {isOrderInvoiceAvailable(order.status) ? (
+                          <a
+                            href={`/api/orders/${encodeURIComponent(order.id)}/invoice`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="tf-btn btn-line btn-sm radius-4 sarjan-has-btn-icon sarjan-account-order-action-btn sarjan-account-order-action-btn--secondary"
+                          >
+                            <TfButtonIcon icon="icon-arrowUpRight">
+                              Invoice
+                            </TfButtonIcon>
+                          </a>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -1275,14 +1278,16 @@ function OrderView({
               Thank you. Your B2B order request has been received.
             </h6>
             <p className="mt_12 mb_0">
-              <a
-                className="tf-btn btn-fill btn-sm"
-                href={`/api/orders/${encodeURIComponent(order.id)}/invoice`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View tax invoice
-              </a>
+              {isOrderInvoiceAvailable(order.status) ? (
+                <a
+                  className="tf-btn btn-fill btn-sm"
+                  href={`/api/orders/${encodeURIComponent(order.id)}/invoice`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View tax invoice
+                </a>
+              ) : null}
             </p>
           </div>
           <div className="text-end sarjan-order-pricing-summary">
