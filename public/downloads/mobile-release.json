@@ -1,8 +1,8 @@
 {
-  "latestVersion": "1.0.105",
-  "versionCode": 106,
+  "latestVersion": "1.0.106",
+  "versionCode": 107,
   "releaseNotes": "Tax invoice from order details. Mandatory valid mobile on wholesale registration. Checkout address and notification routing fixes. Order screen spacing improvements.",
   "apkFile": "sarjan-textiles.apk",
   "apkSourceUrl": "https://raw.githubusercontent.com/karan3664/sarjan-textiles/prod/public/downloads/sarjan-textiles.apk",
-  "updatedAt": "2026-06-23T07:19:35.000Z"
+  "updatedAt": "2026-06-23T09:21:28.000Z"
 }
