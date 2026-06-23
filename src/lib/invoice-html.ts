@@ -19,6 +19,15 @@ import {
   invoicePaymentStatusUrl,
   invoicePaymentSummary,
 } from "@/lib/invoice-payment";
+import {
+  absoluteInvoiceImageUrl,
+  invoiceImageToDataUrl,
+} from "@/lib/invoice-image-embed";
+import { getCmsSnapshot } from "@/lib/cms-store";
+import {
+  buildProductImageBySlug,
+  resolveOrderItemImage,
+} from "@/lib/product-image-resolve";
 
 let cachedStyles: string | null = null;
 
@@ -239,8 +248,10 @@ export async function buildTaxInvoiceHtml(input: {
   order: LocalOrder;
   client: LocalClient;
   showToolbar?: boolean;
+  /** Inline product photos as data URLs — required for email PDF / headless Chromium. */
+  embedImages?: boolean;
 }) {
-  const { order, client, showToolbar = true } = input;
+  const { order, client, showToolbar = true, embedImages = false } = input;
   const invNo = invoiceNumber(order);
   const dispatchText = resolveDispatchAddress(order.dispatchAddress, client);
   const customerName = customerDisplayName(client, dispatchText);
@@ -303,25 +314,46 @@ export async function buildTaxInvoiceHtml(input: {
     ...new Set(order.items.map(() => DEFAULT_TEXTILE_HSN).filter(Boolean)),
   ];
 
+  const needsCatalogImages = order.items.some(
+    (item) => !item.image?.trim() && Boolean(item.slug?.trim()),
+  );
+  let imageBySlug: Record<string, string> = {};
+  if (embedImages || needsCatalogImages) {
+    const cms = await getCmsSnapshot();
+    imageBySlug = buildProductImageBySlug(cms.products);
+  }
+
+  async function resolveItemImageSrc(
+    item: LocalOrder["items"][number],
+  ): Promise<string> {
+    const raw = resolveOrderItemImage(imageBySlug, item);
+    if (!raw) return "";
+    if (embedImages) {
+      return (await invoiceImageToDataUrl(raw)) || "";
+    }
+    return absoluteInvoiceImageUrl(raw);
+  }
+
   const itemRows = order.items.length
-    ? order.items
-        .map((item, index) => {
-          const pcs = (item.piecesPerSet ?? 1) * Number(item.setQuantity ?? 0);
-          const taxable = Number(item.lineTotal ?? 0);
-          const taxAmt = priced.taxApplies
-            ? Math.round(taxable * priced.taxRate * 100) / 100
-            : 0;
-          const lineTotal = taxable + taxAmt;
-          const sizeLabel = item.sizes?.join(", ") || "—";
-          return `
+    ? (
+        await Promise.all(
+          order.items.map(async (item, index) => {
+            const pcs =
+              (item.piecesPerSet ?? 1) * Number(item.setQuantity ?? 0);
+            const taxable = Number(item.lineTotal ?? 0);
+            const taxAmt = priced.taxApplies
+              ? Math.round(taxable * priced.taxRate * 100) / 100
+              : 0;
+            const lineTotal = taxable + taxAmt;
+            const sizeLabel = item.sizes?.join(", ") || "—";
+            const imageSrc = await resolveItemImageSrc(item);
+            return `
           <tr>
             <td class="center">${index + 1}</td>
             <td>
               <div class="product-cell">
                 ${
-                  item.image
-                    ? `<img src="${escapeHtml(item.image)}" alt="" />`
-                    : ""
+                  imageSrc ? `<img src="${escapeHtml(imageSrc)}" alt="" />` : ""
                 }
                 <div>
                   <div class="name">${escapeHtml(item.name)}</div>
@@ -341,8 +373,9 @@ export async function buildTaxInvoiceHtml(input: {
             <td class="num">${taxAmt ? formatInr(taxAmt) : "—"}</td>
             <td class="num">${formatInr(lineTotal)}</td>
           </tr>`;
-        })
-        .join("")
+          }),
+        )
+      ).join("")
     : `<tr><td colspan="13" class="center">Item details pending.</td></tr>`;
 
   const logoUrl = siteSettings.logo.startsWith("http")

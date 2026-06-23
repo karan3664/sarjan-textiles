@@ -55,15 +55,15 @@ const nextConfig: NextConfig = {
       skipDefaultConversion: true,
     },
   },
+  outputFileTracingIncludes: {
+    "/api/orders/[orderId]/invoice": ["./src/lib/invoice-styles.css"],
+    "/api/orders/[orderId]/invoice.pdf": ["./src/lib/invoice-styles.css"],
+  },
   experimental: {
     webpackMemoryOptimizations: true,
     optimizePackageImports: ["lucide-react", "recharts"],
     // Coolify / 2GB VPS: one CPU during `next build` avoids OOM from worker pools.
     ...(isDockerBuild ? { cpus: 1 } : {}),
-    outputFileTracingIncludes: {
-      "/api/orders/[orderId]/invoice": ["./src/lib/invoice-styles.css"],
-      "/api/orders/[orderId]/invoice.pdf": ["./src/lib/invoice-styles.css"],
-    },
     serverActions: {
       bodySizeLimit: "80mb",
     },

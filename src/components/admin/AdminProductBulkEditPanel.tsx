@@ -154,7 +154,15 @@ export function AdminProductBulkEditPanel({
           <ul className="sarjan-bulk-edit-selected-list">
             {selectedProducts.map((product) => (
               <li className="sarjan-bulk-edit-selected-item" key={product.slug}>
-                {product.name}
+                <span className="sarjan-bulk-edit-selected-item__id">
+                  {product.id}
+                </span>
+                <span className="sarjan-bulk-edit-selected-item__name">
+                  {product.name}
+                </span>
+                <span className="sarjan-bulk-edit-selected-item__sku">
+                  {product.sku}
+                </span>
               </li>
             ))}
           </ul>

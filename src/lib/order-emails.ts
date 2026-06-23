@@ -280,6 +280,7 @@ async function sendOrderEmail(order: LocalOrder, kind: EmailKind) {
           order,
           client,
           showToolbar: false,
+          embedImages: true,
         });
         const pdf = await renderInvoicePdf(html);
         attachments = [
@@ -296,6 +297,7 @@ async function sendOrderEmail(order: LocalOrder, kind: EmailKind) {
             order,
             client,
             showToolbar: false,
+            embedImages: true,
           });
           attachments = [
             {

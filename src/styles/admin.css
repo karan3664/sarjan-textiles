@@ -6311,12 +6311,44 @@ body[data-theme-background="theme-background-1B2627"]
 }
 
 .sarjan-bulk-edit-close {
+  flex-shrink: 0;
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  margin: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--On-surface, #181818);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.sarjan-bulk-edit-close .icon-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-family: icomoon, sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  line-height: 1;
+}
+
+.sarjan-bulk-edit-close .icon-close::before {
+  display: block;
+  line-height: 1;
+}
+
+.sarjan-bulk-edit-close:hover {
+  background: rgba(16, 12, 10, 0.04);
 }
 
 .sarjan-bulk-edit-selected {
@@ -6365,7 +6397,61 @@ body[data-theme-background="theme-background-1B2627"]
   font-size: 12px;
   font-weight: 600;
   line-height: 1.45;
-  word-break: break-word;
+  display: grid;
+  gap: 2px;
+}
+
+.sarjan-bulk-edit-selected-item__id {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--Primary);
+}
+
+.sarjan-bulk-edit-selected-item__name {
+  color: var(--On-surface);
+  font-weight: 600;
+}
+
+.sarjan-bulk-edit-selected-item__sku {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--Secondary);
+}
+
+.sarjan-sheet-update-preview-list,
+.sarjan-sheet-update-skipped-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.sarjan-sheet-update-preview-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.sarjan-sheet-update-preview-item__head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.sarjan-sheet-update-preview-item ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--Secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.sarjan-sheet-update-skipped-list li {
+  font-size: 12px;
+  color: var(--Secondary);
 }
 
 .sarjan-bulk-edit-chip {

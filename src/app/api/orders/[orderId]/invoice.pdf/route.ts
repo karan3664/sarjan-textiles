@@ -31,6 +31,7 @@ export async function GET(request: Request, context: RouteContext) {
       order,
       client,
       showToolbar: false,
+      embedImages: true,
     });
     const pdf = await renderInvoicePdf(html);
     const filename = `Sarjan-Tax-Invoice-${order.id}.pdf`;

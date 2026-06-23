@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/data/mock";
 import { isProductPlaceholderImage } from "@/lib/product-placeholder-image";
 import { AdminProductBulkEditPanel } from "@/components/admin/AdminProductBulkEditPanel";
+import { AdminProductSheetUpdatePanel } from "@/components/admin/AdminProductSheetUpdatePanel";
+import { downloadExcelJsonSheet } from "@/lib/excel-export-client";
+import { productsToOrderedSheetRows } from "@/lib/product-bulk-sheet-export";
 
 type StatusFilter = "all" | "published" | "low" | "out";
 type SortOption = "default" | "name" | "price" | "stock";
@@ -48,7 +51,9 @@ export function AdminProductListClient({
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [sheetUpdateOpen, setSheetUpdateOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [exportingSheet, setExportingSheet] = useState(false);
 
   const categories = useMemo(
     () =>
@@ -155,6 +160,21 @@ export function AdminProductListClient({
       current.map((product) => bySlug.get(product.slug) ?? product),
     );
     clearSelection();
+  };
+
+  const exportSelectedToExcel = async () => {
+    if (!selectedProducts.length) return;
+    setExportingSheet(true);
+    try {
+      const stamp = new Date().toISOString().slice(0, 10);
+      await downloadExcelJsonSheet(
+        `sarjan-products-update-${stamp}.xlsx`,
+        "Products",
+        productsToOrderedSheetRows(selectedProducts),
+      );
+    } finally {
+      setExportingSheet(false);
+    }
   };
 
   const bulkDeleteProducts = async () => {
@@ -323,6 +343,21 @@ export function AdminProductListClient({
               <strong>{selectedProducts.length}</strong> selected
             </div>
             <div className="sarjan-products-bulk-bar__actions">
+              <button
+                type="button"
+                className="tf-button style-2 text-btn-uppercase"
+                disabled={exportingSheet}
+                onClick={() => void exportSelectedToExcel()}
+              >
+                {exportingSheet ? "Exporting..." : "Export Excel"}
+              </button>
+              <button
+                type="button"
+                className="tf-button style-2 text-btn-uppercase"
+                onClick={() => setSheetUpdateOpen(true)}
+              >
+                Import Excel
+              </button>
               <button
                 type="button"
                 className="tf-button text-btn-uppercase"
@@ -577,6 +612,12 @@ export function AdminProductListClient({
         categories={categories}
         fabrics={fabrics}
         onClose={() => setBulkEditOpen(false)}
+        onApplied={mergeUpdatedProducts}
+      />
+      <AdminProductSheetUpdatePanel
+        open={sheetUpdateOpen}
+        selectedProducts={selectedProducts}
+        onClose={() => setSheetUpdateOpen(false)}
         onApplied={mergeUpdatedProducts}
       />
     </>

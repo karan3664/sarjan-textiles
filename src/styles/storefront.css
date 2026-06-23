@@ -6535,6 +6535,70 @@ body.sarjan-storefront:has(#mobileMenu.sarjan-mobile-menu.show)
   -webkit-text-fill-color: var(--sarjan-btn-color, #181818) !important;
 }
 
+/* Kill Modave btn-line underline/wipe — keeps View/Invoice labels visible on hover */
+.sarjan-account-orders .sarjan-account-order-action-btn.tf-btn.btn-line::before,
+.sarjan-account-orders .sarjan-account-order-action-btn.tf-btn.btn-line::after {
+  display: none !important;
+  content: none !important;
+}
+
+.sarjan-account-orders .sarjan-account-order-action-btn.tf-btn.btn-line {
+  background-image: none !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+  -webkit-text-fill-color: var(--sarjan-btn-color, #181818) !important;
+}
+
+.sarjan-account-orders
+  .sarjan-account-order-action-btn.tf-btn:is(.btn-fill, .btn-line):is(
+    :hover,
+    :focus-visible
+  ) {
+  background-color: var(--sarjan-btn-hover-bg, #8b1e2d) !important;
+  background-image: none !important;
+  border-color: var(--sarjan-btn-hover-border, #8b1e2d) !important;
+  color: var(--sarjan-btn-hover-color, #ffffff) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color, #ffffff) !important;
+}
+
+.sarjan-account-orders
+  .sarjan-account-order-action-btn.tf-btn:is(.btn-fill, .btn-line):is(
+    :hover,
+    :focus-visible
+  )
+  :is(.text, .sarjan-tf-btn-icon, i.icon) {
+  color: var(--sarjan-btn-hover-color, #ffffff) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color, #ffffff) !important;
+}
+
+.sarjan-account-orders
+  .sarjan-account-order-action-btn.sarjan-account-order-action-btn--secondary:is(
+    :hover,
+    :focus-visible
+  ) {
+  background-color: var(--sarjan-btn-hover-bg, #8b1e2d) !important;
+  border-color: var(--sarjan-btn-hover-border, #8b1e2d) !important;
+}
+
+/* Order details — View tax invoice */
+.sarjan-order-details
+  .wd-form-order
+  .tf-btn.btn-fill:is(:hover, :focus-visible) {
+  background-color: var(--sarjan-btn-hover-bg, #8b1e2d) !important;
+  background-image: none !important;
+  border-color: var(--sarjan-btn-hover-border, #8b1e2d) !important;
+  color: var(--sarjan-btn-hover-color, #ffffff) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color, #ffffff) !important;
+}
+
+.sarjan-order-details
+  .wd-form-order
+  .tf-btn.btn-fill:is(:hover, :focus-visible)
+  :is(.text, span) {
+  color: var(--sarjan-btn-hover-color, #ffffff) !important;
+  -webkit-text-fill-color: var(--sarjan-btn-hover-color, #ffffff) !important;
+}
+
 @media (max-width: 991px) {
   .sarjan-account-orders .wrap-account-order.sarjan-account-orders-table-wrap {
     overflow-x: visible;
