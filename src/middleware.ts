@@ -32,8 +32,9 @@ import {
 import {
   hostnameFromRequest,
   isAdminHostEnforcementEnabled,
-  isAdminHostname,
   isStorefrontHostname,
+  resolveMiddlewareRoutePath,
+  shouldRewriteAdminHostRoot,
 } from "@/lib/admin-host";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
@@ -110,15 +111,11 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const hostname = hostnameFromRequest(request);
+  const routePath = resolveMiddlewareRoutePath(pathname, hostname);
 
   if (isAdminHostEnforcementEnabled()) {
     if (isStorefrontHostname(hostname) && isAdminRoutePath(pathname)) {
       return new NextResponse("Not Found", { status: 404 });
-    }
-    if (isAdminHostname(hostname) && pathname === "/") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin";
-      return NextResponse.rewrite(url);
     }
   }
 
@@ -151,7 +148,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  if (shouldGateToLaunchPage(pathname)) {
+  if (shouldGateToLaunchPage(routePath)) {
     const adminPreviewSession = await verifyAdminFromRequestEdge(
       request,
       request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
@@ -188,9 +185,9 @@ export async function middleware(request: NextRequest) {
     return redirect;
   }
 
-  const returnPath = requestReturnPath(pathname, request.nextUrl.search);
+  const returnPath = requestReturnPath(routePath, request.nextUrl.search);
 
-  const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isAdminPage = routePath === "/admin" || routePath.startsWith("/admin/");
   const isAdminApi = pathname.startsWith("/api/admin/");
   const isAdminAuth =
     pathname.startsWith("/api/admin/auth/") || isAdminLoginPath(pathname);
@@ -212,7 +209,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (!roleCanAccess(session.role, pathname)) {
+    if (!roleCanAccess(session.role, routePath)) {
       if (isAdminApi) {
         return NextResponse.json(
           { error: "Permission denied" },
@@ -258,12 +255,20 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(
     SARJAN_ADMIN_ROUTE_HEADER,
-    isAdminRoutePath(pathname) ? "1" : "0",
+    isAdminRoutePath(routePath) ? "1" : "0",
   );
 
-  const response = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  const response = shouldRewriteAdminHostRoot(pathname, hostname)
+    ? (() => {
+        const rewriteUrl = request.nextUrl.clone();
+        rewriteUrl.pathname = "/admin";
+        return NextResponse.rewrite(rewriteUrl, {
+          request: { headers: requestHeaders },
+        });
+      })()
+    : NextResponse.next({
+        request: { headers: requestHeaders },
+      });
   const queryLang = request.nextUrl.searchParams
     .get("lang")
     ?.trim()

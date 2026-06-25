@@ -104,3 +104,29 @@ export function isStorefrontHostname(hostname: string): boolean {
   if (!isAdminHostEnforcementEnabled()) return false;
   return storefrontHostnames().has(hostname.toLowerCase());
 }
+
+/** Admin subdomain `/` is rewritten to `/admin` — use this for guards and layout headers. */
+export function resolveMiddlewareRoutePath(
+  pathname: string,
+  hostname: string,
+): string {
+  if (
+    isAdminHostEnforcementEnabled() &&
+    isAdminHostname(hostname) &&
+    pathname === "/"
+  ) {
+    return "/admin";
+  }
+  return pathname;
+}
+
+export function shouldRewriteAdminHostRoot(
+  pathname: string,
+  hostname: string,
+): boolean {
+  return (
+    isAdminHostEnforcementEnabled() &&
+    isAdminHostname(hostname) &&
+    pathname === "/"
+  );
+}
