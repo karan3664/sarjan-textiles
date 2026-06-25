@@ -1011,6 +1011,14 @@ async function readCmsSnapshot(): Promise<CmsSnapshot> {
         );
         return local;
       }
+      // Docker image excludes data/ (.dockerignore); build must not fail on bad/missing DB.
+      if (process.env.DOCKER_BUILD === "1") {
+        console.warn(
+          "[cms-store] Postgres unavailable during Docker build; using default CMS snapshot:",
+          error instanceof Error ? error.message : error,
+        );
+        return defaultCmsSnapshot;
+      }
       throw new Error(
         error instanceof Error
           ? `CMS database read failed: ${error.message}`

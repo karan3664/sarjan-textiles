@@ -29,6 +29,12 @@ import {
   LAUNCH_GATE_CACHE_HEADERS,
   shouldGateToLaunchPage,
 } from "@/lib/site-launch";
+import {
+  hostnameFromRequest,
+  isAdminHostEnforcementEnabled,
+  isAdminHostname,
+  isStorefrontHostname,
+} from "@/lib/admin-host";
 
 const ADMIN_SESSION_COOKIE = "sarjan-admin-session";
 const CLIENT_SESSION_COOKIE = "sarjan-client-token";
@@ -103,6 +109,18 @@ export async function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
+  const hostname = hostnameFromRequest(request);
+
+  if (isAdminHostEnforcementEnabled()) {
+    if (isStorefrontHostname(hostname) && isAdminRoutePath(pathname)) {
+      return new NextResponse("Not Found", { status: 404 });
+    }
+    if (isAdminHostname(hostname) && pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.rewrite(url);
+    }
+  }
 
   if (isLegacyAdminLoginPath(pathname)) {
     return NextResponse.redirect(redirectAbsoluteUrl(request, "/"), 307);

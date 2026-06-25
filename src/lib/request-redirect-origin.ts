@@ -1,4 +1,9 @@
 import type { NextRequest } from "next/server";
+import {
+  adminPublicOrigin,
+  hostnameFromRequest,
+  isAdminHostname,
+} from "@/lib/admin-host";
 
 const UNREACHABLE_HOSTS = new Set(["0.0.0.0", "[::]", "::"]);
 const PRODUCTION_APEX_ORIGIN = "https://sarjantextiles.com";
@@ -32,22 +37,8 @@ function configuredSiteOrigin(): string | undefined {
 }
 
 /** Public hostname — prefer proxy headers over internal container host. */
-function publicRequestHostname(request: NextRequest | Request): string {
-  const forwardedHost = headerValue(request, "x-forwarded-host");
-  if (forwardedHost) {
-    return forwardedHost.split(":")[0].toLowerCase();
-  }
-
-  const host = headerValue(request, "host");
-  if (host && !isUnreachableHost(host)) {
-    return host.split(":")[0].toLowerCase();
-  }
-
-  const incoming = new URL(request.url);
-  if (isUnreachableHost(incoming.hostname)) {
-    return "localhost";
-  }
-  return incoming.hostname.toLowerCase();
+export function publicRequestHostname(request: NextRequest | Request): string {
+  return hostnameFromRequest(request);
 }
 
 function publicRequestProtocol(request: NextRequest | Request): string {
@@ -60,6 +51,12 @@ function publicRequestProtocol(request: NextRequest | Request): string {
 
 /** Origin for redirects — browsers cannot open http://0.0.0.0. */
 export function requestRedirectOrigin(request: NextRequest | Request): string {
+  const hostname = publicRequestHostname(request);
+  if (isAdminHostname(hostname)) {
+    const adminOrigin = adminPublicOrigin();
+    if (adminOrigin) return adminOrigin;
+  }
+
   if (process.env.NODE_ENV === "production") {
     const configured = configuredSiteOrigin();
     if (configured) return configured;
