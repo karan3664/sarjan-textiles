@@ -55,12 +55,24 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
   if (input.orderId) data.orderId = input.orderId;
   if (input.clientId) data.clientId = input.clientId;
 
-  // Data-only on Android so the RN background handler runs when the app is killed.
+  // Data payload drives the in-app bottom sheet. Android also gets a system
+  // notification so MIUI / killed apps still show the tray alert (data-only
+  // FCM often never wakes the JS background handler on Xiaomi).
   const response = await fcm.sendEachForMulticast({
     tokens,
     data,
     android: {
       priority: "high",
+      ttl: 3600 * 1000,
+      notification: {
+        title: input.title,
+        body: input.body,
+        channelId: "sarjan_admin_alerts",
+        sound: "zomato_ring_3",
+        priority: "high" as const,
+        defaultVibrateTimings: true,
+        visibility: "public" as const,
+      },
     },
     apns: {
       headers: {
@@ -73,6 +85,7 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
             body: input.body,
           },
           sound: "zomato_ring_3.mp3",
+          "content-available": 1,
           interruptionLevel: "timeSensitive",
         },
       },
