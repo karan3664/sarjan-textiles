@@ -55,12 +55,14 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
   if (input.orderId) data.orderId = input.orderId;
   if (input.clientId) data.clientId = input.clientId;
 
-  // Data payload drives the in-app bottom sheet. Android also gets a system
-  // notification so MIUI / killed apps still show the tray alert (data-only
-  // FCM often never wakes the JS background handler on Xiaomi).
+  // Play Services shows the tray when the app is killed (RN HeadlessJS fails on MIUI).
   const response = await fcm.sendEachForMulticast({
     tokens,
     data,
+    notification: {
+      title: input.title,
+      body: input.body,
+    },
     android: {
       priority: "high",
       ttl: 3600 * 1000,
@@ -68,9 +70,9 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
         title: input.title,
         body: input.body,
         channelId: "sarjan_admin_alerts",
-        sound: "zomato_ring_3",
         priority: "high" as const,
         defaultVibrateTimings: true,
+        defaultSound: true,
         visibility: "public" as const,
       },
     },
@@ -91,6 +93,18 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
       },
     },
   });
+
+  if (response.failureCount > 0) {
+    console.warn(
+      "[admin-push] FCM failures:",
+      response.responses
+        .filter((item) => !item.success)
+        .map((item) => item.error?.code ?? item.error?.message ?? "unknown"),
+    );
+  }
+  console.info(
+    `[admin-push] ${input.kind} → ${response.successCount}/${tokens.length} delivered`,
+  );
 
   const stale = response.responses
     .map((item, index) =>
