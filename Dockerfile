@@ -16,6 +16,10 @@ ARG SITE_LAUNCH_AT
 ENV SITE_LAUNCH_AT=${SITE_LAUNCH_AT}
 ARG NEXT_PUBLIC_SITE_URL=https://sarjantextiles.com
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+ARG NEXT_PUBLIC_APP_URL=
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+ARG APP_ENV=production
+ENV APP_ENV=${APP_ENV}
 
 COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline --no-audit --no-fund

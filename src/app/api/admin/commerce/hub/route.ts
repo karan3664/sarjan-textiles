@@ -1,18 +1,16 @@
-import { verifyAdminToken, type AdminRole } from "@/lib/admin-token";
+import type { AdminRole } from "@/lib/admin-token";
 import {
   contentPublishTwoStep,
   creditOutstandingAlertInr,
 } from "@/lib/commerce-config";
 import { buildCommerceHubSnapshot } from "@/lib/commerce-hub-signals";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 import { readLocalDb } from "@/lib/local-db";
-import { cookies } from "next/headers";
 
 const hubRoles: AdminRole[] = ["super_admin", "admin"];
 
-export async function GET() {
-  const session = await verifyAdminToken(
-    (await cookies()).get("sarjan-admin-session")?.value,
-  );
+export async function GET(request: Request) {
+  const session = await getAdminRouteSession(request);
   if (!session)
     return Response.json({ error: "Admin login required" }, { status: 401 });
   if (!hubRoles.includes(session.role))

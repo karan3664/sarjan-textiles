@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { verifyAdminToken } from "@/lib/admin-token";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 import {
   clearAdminNotificationList,
   getAdminNotificationsPayload,
@@ -8,19 +7,15 @@ import {
 
 export const runtime = "nodejs";
 
-async function session() {
-  return verifyAdminToken((await cookies()).get("sarjan-admin-session")?.value);
-}
-
-export async function GET() {
-  const s = await session();
+export async function GET(request: Request) {
+  const s = await getAdminRouteSession(request);
   if (!s)
     return Response.json({ error: "Admin login required" }, { status: 401 });
   return Response.json(await getAdminNotificationsPayload(s.role));
 }
 
 export async function POST(request: Request) {
-  const s = await session();
+  const s = await getAdminRouteSession(request);
   if (!s)
     return Response.json({ error: "Admin login required" }, { status: 401 });
   let body: unknown;

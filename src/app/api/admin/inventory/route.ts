@@ -5,6 +5,7 @@ import {
   type InventoryMovement,
 } from "@/lib/cms-store";
 import { roleCanAccess, verifyAdminToken } from "@/lib/admin-token";
+import { getAdminRouteSession } from "@/lib/admin-route-session";
 import type { Product } from "@/data/mock";
 import { readEnglish } from "@/lib/cms-localize";
 import { flattenProductsForAdmin } from "@/lib/product-localize";
@@ -77,10 +78,8 @@ function applyStock(
 
 const INVENTORY_API_PATH = "/api/admin/inventory";
 
-export async function GET() {
-  const session = await verifyAdminToken(
-    (await cookies()).get("sarjan-admin-session")?.value,
-  );
+export async function GET(request: Request) {
+  const session = await getAdminRouteSession(request);
   if (!session)
     return Response.json({ error: "Admin login required" }, { status: 401 });
   if (!roleCanAccess(session.role, INVENTORY_API_PATH))
@@ -95,9 +94,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await verifyAdminToken(
-      (await cookies()).get("sarjan-admin-session")?.value,
-    );
+    const session = await getAdminRouteSession(request);
     if (!session)
       return Response.json({ error: "Admin login required" }, { status: 401 });
     if (!roleCanAccess(session.role, INVENTORY_API_PATH))

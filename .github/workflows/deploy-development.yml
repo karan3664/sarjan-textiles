@@ -1,0 +1,65 @@
+# Deploy development → dev.sarjantextiles.com (Coolify "dev" app)
+# Branch: development (maps to "develop" in release workflow docs)
+name: Deploy Development
+
+on:
+  push:
+    branches: [development]
+  workflow_dispatch:
+
+concurrency:
+  group: coolify-development
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev.sarjantextiles.com
+    steps:
+      - name: Trigger Coolify dev deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            curl -fsS \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
+              "${{ secrets.COOLIFY_DEPLOY_WEBHOOK_DEV }}"
+            echo "Dev deploy triggered."
+
+      - name: Apply dev migrations
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            curl -fsSL \
+              "https://raw.githubusercontent.com/${{ github.repository }}/development/scripts/vps/apply-migrations-env.sh" \
+              -o /tmp/apply-migrations-env.sh
+            chmod +x /tmp/apply-migrations-env.sh
+            APP_ENV=development REPO_BRANCH=development bash /tmp/apply-migrations-env.sh
+
+      - name: Health check
+        run: |
+          sleep 30
+          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/development/scripts/vps/health-check.sh -o /tmp/health-check.sh
+          chmod +x /tmp/health-check.sh
+          BASE_URL=https://dev.sarjantextiles.com bash /tmp/health-check.sh

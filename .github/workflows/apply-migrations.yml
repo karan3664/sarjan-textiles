@@ -1,8 +1,18 @@
+# Apply VPS migrations (environment-aware).
+# Manual only — never auto-migrate production from feature branches.
 name: Apply VPS migrations
 
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
       branch:
         description: Git branch to pull migrations from
         required: false
@@ -11,8 +21,9 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
-      - name: Apply pending SQL migrations on VPS Postgres
+      - name: Apply SQL migrations on VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -24,10 +35,14 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
+            BRANCH="${{ inputs.branch }}"
+            case "${{ inputs.environment }}" in
+              development) BRANCH="${BRANCH:-development}" ;;
+              staging) BRANCH="${BRANCH:-staging}" ;;
+              production) BRANCH="${BRANCH:-prod}"; export ALLOW_PROD_MIGRATE=1 ;;
+            esac
             curl -fsSL \
-              "https://raw.githubusercontent.com/karan3664/sarjan-textiles/${{ inputs.branch }}/scripts/vps/apply-pending-migrations.sh" \
-              -o /tmp/apply-pending-migrations.sh
-            chmod +x /tmp/apply-pending-migrations.sh
-            REPO_URL=https://github.com/karan3664/sarjan-textiles.git \
-            REPO_BRANCH=${{ inputs.branch }} \
-            bash /tmp/apply-pending-migrations.sh
+              "https://raw.githubusercontent.com/karan3664/sarjan-textiles/${BRANCH}/scripts/vps/apply-migrations-env.sh" \
+              -o /tmp/apply-migrations-env.sh
+            chmod +x /tmp/apply-migrations-env.sh
+            APP_ENV=${{ inputs.environment }} REPO_BRANCH="$BRANCH" bash /tmp/apply-migrations-env.sh

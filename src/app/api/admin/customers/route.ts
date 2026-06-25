@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
         after: afterRow,
         note: body.status,
       }).catch(() => null);
-      return Response.json({ customers });
+      return Response.json({ ok: true });
     }
 
     if (body.type === "order") {
@@ -168,7 +168,7 @@ export async function PATCH(request: Request) {
           after: updatedOrder,
           note: "Partially Approved",
         }).catch(() => null);
-        return Response.json({ customers });
+        return Response.json({ ok: true });
       }
 
       if (!body.status || !orderStatuses.includes(body.status))
@@ -197,7 +197,7 @@ export async function PATCH(request: Request) {
         after: updatedOrder,
         note: body.note || body.status,
       }).catch(() => null);
-      return Response.json({ customers });
+      return Response.json({ ok: true });
     }
 
     return Response.json({ error: "Unsupported update type" }, { status: 400 });

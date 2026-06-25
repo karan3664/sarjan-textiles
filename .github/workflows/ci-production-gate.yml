@@ -1,0 +1,41 @@
+# Production quality gate — does NOT replace deploy-coolify.yml (prod branch).
+# Run manually before merging staging → prod, or on push to prod after CI passes.
+name: Production CI Gate
+
+on:
+  pull_request:
+    branches: [prod]
+  workflow_dispatch:
+
+concurrency:
+  group: production-ci-gate
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  security-scan:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: npm audit (high+)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  production-health:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify live production health
+        run: |
+          chmod +x scripts/vps/health-check.sh
+          BASE_URL=https://sarjantextiles.com bash scripts/vps/health-check.sh

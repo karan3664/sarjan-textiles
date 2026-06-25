@@ -1,0 +1,70 @@
+# Deploy staging → staging.sarjantextiles.com (Coolify "staging" app)
+# Branch: staging
+name: Deploy Staging
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+concurrency:
+  group: coolify-staging
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.sarjantextiles.com
+    steps:
+      - name: Trigger Coolify staging deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            curl -fsS \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}" \
+              "${{ secrets.COOLIFY_DEPLOY_WEBHOOK_STAGING }}"
+            echo "Staging deploy triggered."
+
+      - name: Apply staging migrations
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            curl -fsSL \
+              "https://raw.githubusercontent.com/${{ github.repository }}/staging/scripts/vps/apply-migrations-env.sh" \
+              -o /tmp/apply-migrations-env.sh
+            chmod +x /tmp/apply-migrations-env.sh
+            APP_ENV=staging REPO_BRANCH=staging bash /tmp/apply-migrations-env.sh
+
+      - name: Health check
+        run: |
+          sleep 45
+          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/staging/scripts/vps/health-check.sh -o /tmp/health-check.sh
+          chmod +x /tmp/health-check.sh
+          BASE_URL=https://staging.sarjantextiles.com bash /tmp/health-check.sh
+
+      - name: E2E smoke (optional)
+        continue-on-error: true
+        run: |
+          echo "Run full E2E against staging in a follow-up job when PLAYWRIGHT secrets are configured."

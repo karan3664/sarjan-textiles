@@ -1,4 +1,5 @@
 import { isPostgresEnabled } from "@/lib/postgres";
+import { isProductionEnv, resolveAppEnv } from "@/lib/app-env";
 
 export function databaseMode() {
   if (isPostgresEnabled()) return "postgres";
@@ -7,10 +8,12 @@ export function databaseMode() {
 
 export function assertProductionDatabase() {
   const mode = databaseMode();
-  if (process.env.NODE_ENV === "production" && mode === "json-fallback") {
+  if (isProductionEnv() && mode === "json-fallback") {
     throw new Error(
       "Production database is not configured. Set DATABASE_URL to your Hostinger VPS PostgreSQL connection string.",
     );
   }
   return mode;
 }
+
+export { resolveAppEnv };

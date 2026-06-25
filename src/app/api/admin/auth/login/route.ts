@@ -2,7 +2,6 @@ import { authenticateAdmin } from "@/lib/admin-auth";
 import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
 import { NextResponse } from "next/server";
 import { createAdminToken } from "@/lib/admin-token";
-import { isNativeAdminRequest } from "@/lib/native-client-detect";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -31,15 +30,10 @@ export async function POST(request: Request) {
       role: admin.role,
       iat: Date.now(),
     });
-    const payload: {
-      admin: { email: string; name: string; role: string };
-      token?: string;
-    } = {
+    const payload = {
       admin: { email: admin.email, name: admin.name, role: admin.role },
+      token,
     };
-    if (isNativeAdminRequest(request)) {
-      payload.token = token;
-    }
     const response = NextResponse.json(payload);
     setAdminSessionCookie(response, token);
     return response;
