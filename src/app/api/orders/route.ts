@@ -5,6 +5,7 @@ import { buildValidatedOrderPayload } from "@/lib/order-pricing";
 import { createOrder, readLocalDb } from "@/lib/local-db";
 import { sendOrderPlacedEmail } from "@/lib/order-emails";
 import { sendOrderPlacedPush } from "@/lib/push-notifications";
+import { sendNewOrderAdminPush } from "@/lib/admin-push-notifications";
 import { after } from "next/server";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -15,7 +16,11 @@ function orderIdMatches(orderId: string, requested: string) {
 }
 
 export async function GET(request: Request) {
-  const limit = await rateLimit(rateLimitKey(request, "orders-lookup"), 20, 60_000);
+  const limit = await rateLimit(
+    rateLimitKey(request, "orders-lookup"),
+    20,
+    60_000,
+  );
   if (!limit.allowed) return rateLimitResponse(limit.resetAt);
 
   const { searchParams } = new URL(request.url);
@@ -56,7 +61,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const limit = await rateLimit(rateLimitKey(request, "orders-create"), 12, 60_000);
+  const limit = await rateLimit(
+    rateLimitKey(request, "orders-create"),
+    12,
+    60_000,
+  );
   if (!limit.allowed) {
     return rateLimitResponse(limit.resetAt);
   }
@@ -99,6 +108,21 @@ export async function POST(request: Request) {
         console.error("Order placed push failed", error),
       ),
     );
+    after(() => {
+      const dbPromise = readLocalDb();
+      return dbPromise
+        .then((db) => {
+          const client = db.clients.find((item) => item.id === order.clientId);
+          return sendNewOrderAdminPush({
+            id: order.id,
+            clientId: order.clientId,
+            status: order.status,
+            subtotal: order.subtotal,
+            clientName: client?.companyName,
+          });
+        })
+        .catch((error) => console.error("Admin order push failed", error));
+    });
     after(() => notifyEInvoiceOrderCreated(order));
     return Response.json({ order });
   } catch (error) {

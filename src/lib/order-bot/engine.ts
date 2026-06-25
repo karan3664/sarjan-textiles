@@ -1,5 +1,5 @@
 import { buildValidatedOrderPayload } from "@/lib/order-pricing";
-import { createOrder } from "@/lib/local-db";
+import { sendNewOrderAdminPush } from "@/lib/admin-push-notifications";
 import {
   browseBotCatalog,
   fetchBotProductPreviewBySlug,
@@ -212,6 +212,13 @@ async function placeBotOrder(session: BotSession, note?: string) {
   void sendOrderPlacedEmail(order).catch((error) =>
     console.error("Bot order email failed", error),
   );
+  void sendNewOrderAdminPush({
+    id: order.id,
+    clientId: order.clientId,
+    status: order.status,
+    subtotal: order.subtotal,
+    clientName: order.clientEmail,
+  }).catch((error) => console.error("Admin order push failed", error));
   void notifyEInvoiceOrderCreated(order);
   requestAdminNotificationRefresh();
   return order;

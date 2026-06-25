@@ -5,6 +5,33 @@
       "platform": "ios",
       "deviceId": "1781861416953-jid9d1tj",
       "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.106",
+      "versionCode": 107,
+      "at": "2026-06-23T17:07:34.238Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.106",
+      "versionCode": 107,
+      "at": "2026-06-23T16:46:06.755Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "appVersion": "1.0.106",
+      "versionCode": 107,
+      "at": "2026-06-23T16:45:46.988Z"
+    },
+    {
+      "event": "app_open",
+      "platform": "ios",
+      "deviceId": "1781861416953-jid9d1tj",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
       "appVersion": "1.0.105",
       "versionCode": 106,
       "at": "2026-06-23T10:56:09.732Z"

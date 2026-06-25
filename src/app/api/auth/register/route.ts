@@ -2,6 +2,7 @@ import { createClient } from "@/lib/local-db";
 import { verifyEmailOtpGuarded } from "@/lib/email-otp";
 import { isValidGstin, normalizeGstin, verifyGstinFromPortal } from "@/lib/gst";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
+import { sendNewClientAdminPush } from "@/lib/admin-push-notifications";
 import {
   isValidClientPhone,
   normalizeClientPhone,
@@ -133,7 +134,7 @@ export async function POST(request: Request) {
         undefined;
     }
 
-    await createClient({
+    const client = await createClient({
       email: String(body.email),
       password: String(body.password),
       companyName: String(body.companyName ?? "").trim(),
@@ -152,6 +153,11 @@ export async function POST(request: Request) {
       ownerLegalName: String(body.ownerLegalName ?? "").trim() || undefined,
     });
     await addLaunchNewsletterSubscriber(String(body.email), "register");
+    void sendNewClientAdminPush({
+      id: client.id,
+      companyName: client.companyName,
+      email: client.email,
+    }).catch((error) => console.error("Admin client push failed", error));
     return Response.json({
       ok: true,
       pendingApproval: true,

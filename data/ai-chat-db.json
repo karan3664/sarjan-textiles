@@ -13,6 +13,20 @@
   },
   "sessions": [
     {
+      "id": "4abc99a3-4917-4983-8e18-909fa7628844",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "language": "en",
+      "source": "web",
+      "status": "active",
+      "state": {},
+      "startedAt": "2026-06-23T16:47:11.032Z",
+      "lastActivityAt": "2026-06-23T16:47:11.032Z",
+      "productsViewed": 0,
+      "productsRecommended": 0,
+      "addToCartCount": 0,
+      "ordersPlaced": 0
+    },
+    {
       "id": "5c7d451c-1d69-4395-a51d-f29689b49ab4",
       "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
       "language": "en",
@@ -1591,6 +1605,17 @@
         "language": "en"
       },
       "createdAt": "2026-06-23T08:32:48.591Z"
+    },
+    {
+      "id": "df9ad835-9b8d-4398-a928-61fcf51dfe80",
+      "sessionId": "4abc99a3-4917-4983-8e18-909fa7628844",
+      "clientId": "83823a31-cbf8-429f-a592-22ca0e0c6d36",
+      "eventType": "session_started",
+      "metadata": {
+        "source": "web",
+        "language": "en"
+      },
+      "createdAt": "2026-06-23T16:47:11.036Z"
     }
   ]
 }

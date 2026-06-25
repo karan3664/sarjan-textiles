@@ -19,6 +19,7 @@ const ALLOWED_PG_TABLES = new Set([
   "clients",
   "cms_snapshots",
   "device_tokens",
+  "admin_device_tokens",
   "feedbacks",
   "newsletter_campaigns",
   "newsletter_subscribers",
