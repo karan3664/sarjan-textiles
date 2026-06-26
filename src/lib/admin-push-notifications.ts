@@ -111,14 +111,27 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
   const data = buildData(input);
   const stale: string[] = [];
 
-  // Android: data-only high priority → native SarjanAdminMessagingService shows tray.
-  // Notification payload is skipped so onMessageReceived still runs when MIUI allows.
+  // Android: notification + data so MIUI shows tray when app is killed.
+  // Data still drives the in-app bottom sheet on open.
   if (android.length) {
     const result = await sendMulticast("android", android, {
       data,
+      notification: {
+        title: input.title,
+        body: input.body,
+      },
       android: {
         priority: "high",
         ttl: 3600 * 1000,
+        notification: {
+          title: input.title,
+          body: input.body,
+          channelId: "sarjan_admin_alerts",
+          priority: "high" as const,
+          defaultVibrateTimings: true,
+          defaultSound: true,
+          visibility: "public" as const,
+        },
       },
     });
     stale.push(...result.stale);
@@ -180,7 +193,23 @@ export async function sendAdminTestPush(email: string) {
   if (android.length) {
     const result = await sendMulticast("android-test", android, {
       data,
-      android: { priority: "high", ttl: 3600 * 1000 },
+      notification: {
+        title: "Test admin alert",
+        body: "If you see this, push notifications are working.",
+      },
+      android: {
+        priority: "high",
+        ttl: 3600 * 1000,
+        notification: {
+          title: "Test admin alert",
+          body: "If you see this, push notifications are working.",
+          channelId: "sarjan_admin_alerts",
+          priority: "high" as const,
+          defaultVibrateTimings: true,
+          defaultSound: true,
+          visibility: "public" as const,
+        },
+      },
     });
     stale.push(...result.stale);
   }
