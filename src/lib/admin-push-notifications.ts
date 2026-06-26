@@ -1,7 +1,8 @@
 import type { AdminRole } from "@/lib/admin-token";
 import type { AdminNotificationKind } from "@/lib/admin-notifications";
 import {
-  getAdminDeviceTokensForRoles,
+  getAdminDeviceTokensForEmail,
+  getAdminDeviceTokensForRolesByPlatform,
   removeAdminDeviceTokens,
 } from "@/lib/admin-device-tokens";
 import { getFcm } from "@/lib/firebase-admin";
@@ -35,14 +36,7 @@ export type AdminStaffPushInput = {
   actionable?: boolean;
 };
 
-export async function sendAdminStaffPush(input: AdminStaffPushInput) {
-  const fcm = getFcm();
-  if (!fcm) return;
-
-  const roles = rolesForKind(input.kind);
-  const tokens = await getAdminDeviceTokensForRoles(roles);
-  if (!tokens.length) return;
-
+function buildData(input: AdminStaffPushInput): Record<string, string> {
   const data: Record<string, string> = {
     type: "admin_alert",
     kind: input.kind,
@@ -54,56 +48,32 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
   };
   if (input.orderId) data.orderId = input.orderId;
   if (input.clientId) data.clientId = input.clientId;
+  return data;
+}
 
-  // Play Services shows the tray when the app is killed (RN HeadlessJS fails on MIUI).
-  const response = await fcm.sendEachForMulticast({
-    tokens,
-    data,
-    notification: {
-      title: input.title,
-      body: input.body,
-    },
-    android: {
-      priority: "high",
-      ttl: 3600 * 1000,
-      notification: {
-        title: input.title,
-        body: input.body,
-        channelId: "sarjan_admin_alerts",
-        priority: "high" as const,
-        defaultVibrateTimings: true,
-        defaultSound: true,
-        visibility: "public" as const,
-      },
-    },
-    apns: {
-      headers: {
-        "apns-priority": "10",
-      },
-      payload: {
-        aps: {
-          alert: {
-            title: input.title,
-            body: input.body,
-          },
-          sound: "zomato_ring_3.mp3",
-          "content-available": 1,
-          interruptionLevel: "timeSensitive",
-        },
-      },
-    },
-  });
+async function sendMulticast(
+  label: string,
+  tokens: string[],
+  message: Parameters<
+    NonNullable<ReturnType<typeof getFcm>>["sendEachForMulticast"]
+  >[0],
+) {
+  const fcm = getFcm();
+  if (!fcm || !tokens.length)
+    return { successCount: 0, failureCount: 0, stale: [] as string[] };
+
+  const response = await fcm.sendEachForMulticast({ ...message, tokens });
 
   if (response.failureCount > 0) {
     console.warn(
-      "[admin-push] FCM failures:",
+      `[admin-push] ${label} FCM failures:`,
       response.responses
         .filter((item) => !item.success)
         .map((item) => item.error?.code ?? item.error?.message ?? "unknown"),
     );
   }
   console.info(
-    `[admin-push] ${input.kind} → ${response.successCount}/${tokens.length} delivered`,
+    `[admin-push] ${label} → ${response.successCount}/${tokens.length} delivered`,
   );
 
   const stale = response.responses
@@ -114,6 +84,129 @@ export async function sendAdminStaffPush(input: AdminStaffPushInput) {
         : tokens[index],
     )
     .filter((token): token is string => Boolean(token));
+
+  return {
+    successCount: response.successCount,
+    failureCount: response.failureCount,
+    stale,
+  };
+}
+
+export async function sendAdminStaffPush(input: AdminStaffPushInput) {
+  const fcm = getFcm();
+  if (!fcm) {
+    console.warn("[admin-push] FCM not configured on server");
+    return;
+  }
+
+  const roles = rolesForKind(input.kind);
+  const { android, ios } = await getAdminDeviceTokensForRolesByPlatform(roles);
+  if (!android.length && !ios.length) {
+    console.warn(`[admin-push] No device tokens for kind=${input.kind}`, {
+      roles,
+    });
+    return;
+  }
+
+  const data = buildData(input);
+  const stale: string[] = [];
+
+  // Android: data-only high priority → native SarjanAdminMessagingService shows tray.
+  // Notification payload is skipped so onMessageReceived still runs when MIUI allows.
+  if (android.length) {
+    const result = await sendMulticast("android", android, {
+      data,
+      android: {
+        priority: "high",
+        ttl: 3600 * 1000,
+      },
+    });
+    stale.push(...result.stale);
+  }
+
+  if (ios.length) {
+    const result = await sendMulticast("ios", ios, {
+      data,
+      notification: {
+        title: input.title,
+        body: input.body,
+      },
+      apns: {
+        headers: {
+          "apns-priority": "10",
+        },
+        payload: {
+          aps: {
+            alert: {
+              title: input.title,
+              body: input.body,
+            },
+            sound: "zomato_ring_3.mp3",
+            "content-available": 1,
+            interruptionLevel: "timeSensitive",
+          },
+        },
+      },
+    });
+    stale.push(...result.stale);
+  }
+
+  if (stale.length) {
+    await removeAdminDeviceTokens(stale).catch(() => undefined);
+  }
+}
+
+/** Sends a test alert only to the signed-in admin's registered devices. */
+export async function sendAdminTestPush(email: string) {
+  const fcm = getFcm();
+  if (!fcm) {
+    throw new Error("FCM not configured on server");
+  }
+
+  const { android, ios } = await getAdminDeviceTokensForEmail(email);
+  if (!android.length && !ios.length) {
+    throw new Error("No device token registered for your account");
+  }
+
+  const data = buildData({
+    kind: "order",
+    title: "Test admin alert",
+    body: "If you see this, push notifications are working.",
+    entityId: `test-${Date.now()}`,
+    actionable: false,
+  });
+  const stale: string[] = [];
+
+  if (android.length) {
+    const result = await sendMulticast("android-test", android, {
+      data,
+      android: { priority: "high", ttl: 3600 * 1000 },
+    });
+    stale.push(...result.stale);
+  }
+  if (ios.length) {
+    const result = await sendMulticast("ios-test", ios, {
+      data,
+      notification: {
+        title: "Test admin alert",
+        body: "If you see this, push notifications are working.",
+      },
+      apns: {
+        headers: { "apns-priority": "10" },
+        payload: {
+          aps: {
+            alert: {
+              title: "Test admin alert",
+              body: "If you see this, push notifications are working.",
+            },
+            sound: "zomato_ring_3.mp3",
+          },
+        },
+      },
+    });
+    stale.push(...result.stale);
+  }
+
   if (stale.length) {
     await removeAdminDeviceTokens(stale).catch(() => undefined);
   }
