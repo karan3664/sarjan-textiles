@@ -1,4 +1,5 @@
 import { createFeedback } from "@/lib/local-db";
+import { sendInquiryAdminPush } from "@/lib/admin-push-notifications";
 import { addLaunchNewsletterSubscriber } from "@/lib/launch-newsletter";
 import { sendInquiryAdminNotification } from "@/lib/newsletter-admin-notify";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
@@ -59,6 +60,12 @@ export async function POST(request: Request) {
     } catch {
       // Inquiry saved — admin mail is best-effort (SMTP may be unset in dev).
     }
+    sendInquiryAdminPush({
+      id: feedback.id,
+      companyName: feedback.companyName,
+      email: feedback.email,
+      message: feedback.message,
+    });
     await addLaunchNewsletterSubscriber(email, "inquiry", {
       adminAlert: false,
     });

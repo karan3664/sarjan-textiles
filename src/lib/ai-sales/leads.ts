@@ -13,6 +13,7 @@ import type {
   AiSalesAnalyticsSummary,
   CaptureAiLeadInput,
 } from "@/lib/ai-sales/types";
+import { sendAiLeadAdminPush } from "@/lib/admin-push-notifications";
 
 type AiSalesDbFile = {
   leads: AiLeadRow[];
@@ -155,13 +156,28 @@ export async function captureAiLead(
 
   if (isPostgresEnabled()) {
     const saved = await pgInsertReturning("ai_leads", row);
-    return mapLead(saved ?? row);
+    const lead = mapLead(saved ?? row);
+    sendAiLeadAdminPush({
+      id: lead.id,
+      clientId: lead.clientId,
+      productInterest: lead.productInterest,
+      budgetInr: lead.budgetInr,
+      intentType: lead.intentType,
+    });
+    return lead;
   }
 
   const db = await readAiSalesDb();
   const lead = mapLead(row);
   db.leads.unshift(lead);
   await writeAiSalesDb(db);
+  sendAiLeadAdminPush({
+    id: lead.id,
+    clientId: lead.clientId,
+    productInterest: lead.productInterest,
+    budgetInr: lead.budgetInr,
+    intentType: lead.intentType,
+  });
   return lead;
 }
 

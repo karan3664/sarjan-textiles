@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminPasswordField } from "@/components/admin/AdminPasswordField";
+import { preparePasswordFields } from "@/lib/password-transport-client";
 
 async function readJsonResponse(res: Response) {
   try {
@@ -77,15 +78,15 @@ export function AdminAccountClient() {
     }
     setBusy(true);
     try {
+      const passwordBody = await preparePasswordFields(
+        { action: "password", currentPassword, newPassword },
+        ["currentPassword", "newPassword"],
+      );
       const res = await fetch("/api/admin/account", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "password",
-          currentPassword,
-          newPassword,
-        }),
+        body: JSON.stringify(passwordBody),
       });
       const data = await readJsonResponse(res);
       if (!res.ok) {

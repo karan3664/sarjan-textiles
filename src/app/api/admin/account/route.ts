@@ -17,6 +17,7 @@ import {
 } from "@/lib/local-db";
 import {
   assertAdminPassword,
+  assertAdminPasswordFromClient,
   minAdminPasswordMessage,
 } from "@/lib/password-policy";
 
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
     const currentPassword = String(rec.currentPassword ?? "");
     const newPassword = String(rec.newPassword ?? "").trim();
     try {
-      assertAdminPassword(newPassword, "New password");
+      assertAdminPasswordFromClient(newPassword, "New password");
     } catch (error) {
       return Response.json(
         {

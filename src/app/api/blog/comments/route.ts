@@ -4,6 +4,7 @@ import {
   createBlogComment,
   getApprovedBlogComments,
 } from "@/lib/blog-comments-store";
+import { sendBlogCommentAdminPush } from "@/lib/admin-push-notifications";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import {
   sanitizeUserText,
@@ -100,6 +101,12 @@ export async function POST(request: Request) {
       } catch {
         /* revalidate is best-effort */
       }
+      sendBlogCommentAdminPush({
+        id: created.id,
+        authorName: nameCheck.value,
+        blogSlug,
+        body: commentBody,
+      });
       return NextResponse.json({
         ok: true,
         message:

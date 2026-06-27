@@ -11,6 +11,7 @@ import {
   type ClientOrdersPdfInput,
 } from "@/lib/admin-report-export";
 import { checkClientFieldsUnique } from "@/lib/check-client-unique";
+import { preparePasswordFields } from "@/lib/password-transport-client";
 import { resolveOrderItemImage } from "@/lib/product-image-resolve";
 import { resolveDispatchAddress } from "@/lib/dispatch-address";
 import { isValidGstin, normalizeGstin } from "@/lib/gstin-form";
@@ -276,17 +277,21 @@ export function AdminCustomerManagementClient({
         setNotice(unique.error);
         return;
       }
-      const res = await fetch("/api/admin/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-        body: JSON.stringify({
+      const createBody = await preparePasswordFields(
+        {
           ...newClient,
           companyName,
           email,
           phone,
           gst: gst || undefined,
-        }),
+        },
+        ["password"],
+      );
+      const res = await fetch("/api/admin/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify(createBody),
       });
       const data = (await res.json().catch(() => ({}))) as {
         customers?: AdminCustomer[];

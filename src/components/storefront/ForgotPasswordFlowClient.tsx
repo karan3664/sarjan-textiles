@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { AuthSideVisual } from "@/components/storefront/AuthSideVisual";
 import { OtpCodeInput } from "@/components/storefront/OtpCodeInput";
 import type { AuthBanners } from "@/lib/auth-banner-types";
-import { persistClientSession } from "@/lib/client-auth-browser";
+import { preparePasswordFields } from "@/lib/password-transport-client";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
 import {
   MIN_CLIENT_PASSWORD_LENGTH,
@@ -124,10 +124,14 @@ export function ForgotPasswordFlowClient({
     }
     setLoading(true);
     setMessage("");
+    const hashed = await preparePasswordFields(
+      { resetToken, newPassword, confirmPassword },
+      ["newPassword", "confirmPassword"],
+    );
     const res = await fetch("/api/auth/forgot/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resetToken, newPassword, confirmPassword }),
+      body: JSON.stringify(hashed),
     });
     const data = await res.json();
     setLoading(false);

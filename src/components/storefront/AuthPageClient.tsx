@@ -14,6 +14,7 @@ import type { AuthBanners } from "@/lib/auth-banner-types";
 import { IndiaStateCitySelect } from "@/components/shared/IndiaStateCitySelect";
 import { clientPostLoginPath } from "@/lib/auth-route-guards";
 import { sarjanButtonClass } from "@/lib/sarjan-button";
+import { preparePasswordFields } from "@/lib/password-transport-client";
 import {
   MIN_CLIENT_PASSWORD_LENGTH,
   minClientPasswordMessage,
@@ -371,11 +372,13 @@ function AuthPageClientInner({
       }
     }
 
+    const body = await preparePasswordFields(payload, ["password"]);
+
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     setLoading(false);

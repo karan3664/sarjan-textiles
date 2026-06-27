@@ -31,7 +31,17 @@ import {
   normalizeOrderPlacedVia,
   type OrderPlacedVia,
 } from "@/lib/order-placed-via";
-import { assertMinClientPassword } from "@/lib/password-policy";
+import {
+  assertMinClientPassword,
+  assertMinClientPasswordFromClient,
+} from "@/lib/password-policy";
+import {
+  hashPasswordForTransport,
+  isPasswordTransportHashEnabled,
+  isTransportHashedPassword,
+  normalizePasswordFromClient,
+  preparePasswordForStorage,
+} from "@/lib/password-transport";
 import {
   abandonedCartFirstReminderHours,
   abandonedCartSecondReminderHours,
@@ -377,7 +387,11 @@ function orderRow(order: Partial<LocalOrder>) {
 }
 
 export function hashPassword(password: string) {
-  return bcrypt.hashSync(password, 12);
+  let value = preparePasswordForStorage(password);
+  if (isPasswordTransportHashEnabled() && !isTransportHashedPassword(value)) {
+    value = hashPasswordForTransport(value);
+  }
+  return bcrypt.hashSync(value, 12);
 }
 
 function legacyShaPassword(password: string) {
@@ -392,10 +406,16 @@ export function isPlausiblePasswordHash(hash: string): boolean {
   return /^[a-f0-9]{64}$/i.test(h);
 }
 
-export function verifyPassword(password: string, hash: string) {
+export function verifyPassword(passwordFromClient: string, hash: string) {
   if (!hash) return false;
-  if (hash.startsWith("$2")) return bcrypt.compareSync(password, hash);
-  return hash === legacyShaPassword(password);
+  const received = normalizePasswordFromClient(passwordFromClient);
+  if (hash.startsWith("$2")) {
+    return bcrypt.compareSync(received, hash);
+  }
+  if (/^[a-f0-9]{64}$/i.test(hash)) {
+    return received.toLowerCase() === hash.toLowerCase();
+  }
+  return hash === legacyShaPassword(received);
 }
 
 export function publicClient(client: LocalClient) {
@@ -501,7 +521,7 @@ export async function createClient(input: {
   /** GST legal / proprietor name (lgnm); stored in address JSON. */
   ownerLegalName?: string;
 }) {
-  assertMinClientPassword(input.password);
+  assertMinClientPasswordFromClient(input.password);
   await ensureClientFieldsUnique({
     email: input.email,
     gst: input.gst,
@@ -941,7 +961,7 @@ export async function updateClientPassword(
   if (!client) throw new Error("Client not found");
   if (!verifyPassword(currentPassword, client.passwordHash))
     throw new Error("Current password is incorrect");
-  assertMinClientPassword(newPassword);
+  assertMinClientPasswordFromClient(newPassword);
 
   if (isPostgresEnabled()) {
     const data = await pgUpdateReturning("clients", "id", id, {
@@ -961,7 +981,7 @@ export async function updateClientPassword(
 
 /** Self-service forgot password after email + mobile verification. */
 export async function resetClientPasswordById(id: string, newPassword: string) {
-  assertMinClientPassword(newPassword);
+  assertMinClientPasswordFromClient(newPassword);
 
   if (isPostgresEnabled()) {
     const data = await pgUpdateReturning("clients", "id", id, {

@@ -1,3 +1,5 @@
+import type { NextResponse } from "next/server";
+
 /** Shared security headers for middleware and next.config. */
 export const SECURITY_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
@@ -18,3 +20,23 @@ export const SECURITY_HEADERS: Record<string, string> = {
     "form-action 'self'",
   ].join("; "),
 };
+
+/** Apply shared security headers; dev adds `unsafe-eval` for Next.js HMR. */
+export function applySecurityHeadersToResponse(response: NextResponse): void {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (
+      key === "Content-Security-Policy" &&
+      process.env.NODE_ENV === "development"
+    ) {
+      response.headers.set(
+        key,
+        value.replace(
+          "script-src 'self' 'unsafe-inline'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        ),
+      );
+      continue;
+    }
+    response.headers.set(key, value);
+  }
+}

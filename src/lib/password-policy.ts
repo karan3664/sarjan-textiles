@@ -1,4 +1,6 @@
 /** Minimum length for client (B2B) account passwords — register, reset, and profile change. */
+import { isTransportHashedPassword } from "@/lib/password-transport";
+
 export const MIN_CLIENT_PASSWORD_LENGTH = 10;
 
 export function minClientPasswordMessage(context = "Password") {
@@ -41,4 +43,21 @@ export function assertAdminPassword(password: string, context = "Password") {
   if (!/[0-9]/.test(password)) {
     throw new Error(`${context} must include a number`);
   }
+}
+
+/** Skip length/complexity when client already sent SHA-256 transport hash (dev). */
+export function assertMinClientPasswordFromClient(
+  password: string,
+  context = "Password",
+) {
+  if (isTransportHashedPassword(password)) return;
+  assertMinClientPassword(password, context);
+}
+
+export function assertAdminPasswordFromClient(
+  password: string,
+  context = "Password",
+) {
+  if (isTransportHashedPassword(password)) return;
+  assertAdminPassword(password, context);
 }

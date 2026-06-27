@@ -8,7 +8,7 @@ import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import { consumeSingleUseToken } from "@/lib/single-use-token";
 import { bumpClientSessionVersion } from "@/lib/session-version";
 import {
-  assertMinClientPassword,
+  assertMinClientPasswordFromClient,
   minClientPasswordMessage,
 } from "@/lib/password-policy";
 
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const confirmPassword = String(body.confirmPassword ?? newPassword);
 
     try {
-      assertMinClientPassword(newPassword);
+      assertMinClientPasswordFromClient(newPassword);
     } catch (error) {
       return Response.json(
         {

@@ -14,6 +14,7 @@
     "test:sarjan-ai-31": "npx tsx scripts/test-sarjan-ai-31-suite.ts",
     "test:sarjan-ai:screenshots": "RUN_SCREENSHOTS=1 npx tsx --env-file=.env.local scripts/test-sarjan-ai-suite.ts",
     "test:admin-send": "tsx --env-file=.env.local scripts/test-admin-send-notification.ts",
+    "password:storage-hash": "node scripts/print-password-storage-hash.mjs",
     "test:e2e": "node --env-file=.env.local node_modules/@playwright/test/cli.js test",
     "test:e2e:audit": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=chromium-desktop && node scripts/generate-e2e-audit-report.mjs",
     "test:e2e:qa": "node --env-file=.env.local node_modules/@playwright/test/cli.js test --project=chromium-desktop e2e/07-senior-qa-ui.spec.ts e2e/05-audit.spec.ts && node scripts/generate-e2e-audit-report.mjs",

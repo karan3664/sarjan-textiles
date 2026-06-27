@@ -5563,10 +5563,15 @@ body.sarjan-admin:has(.sarjan-admin-login)[data-theme-background] {
   padding: 12px;
   background: #f6f5f2;
   position: relative;
-  z-index: 1;
+  z-index: 100000;
+  isolation: isolate;
+  pointer-events: auto;
   color: #181818;
 }
 .sarjan-admin-login-card {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
   display: grid;
   gap: 12px;
   width: min(100%, 420px);
@@ -5671,7 +5676,7 @@ body.sarjan-admin:has(.sarjan-admin-login)[data-theme-background] {
   pointer-events: none;
 }
 .sarjan-admin-login-password-toggle svg[hidden] {
-  display: none;
+  display: none !important;
 }
 .sarjan-admin-login-card button[type="submit"] {
   height: 48px;
@@ -5695,6 +5700,28 @@ body.sarjan-admin:has(.sarjan-admin-login)[data-theme-background] {
   border: 1px solid rgba(160, 31, 50, 0.25);
   font-size: 14px;
   line-height: 1.45;
+}
+.sarjan-admin-login-info {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #2d5a3d;
+  background: rgba(45, 90, 61, 0.08);
+  border: 1px solid rgba(45, 90, 61, 0.2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.sarjan-admin-login-link {
+  background: none;
+  border: none;
+  color: #8b1e2d;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: center;
+  width: 100%;
+}
+.sarjan-admin-login-link:hover {
+  text-decoration: underline;
 }
 .sarjan-admin-summary {
   margin-top: 24px;

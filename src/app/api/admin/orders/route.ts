@@ -5,10 +5,19 @@ import {
   notifyEInvoiceOrderCreated,
   notifyEWayDispatchUpdate,
 } from "@/lib/compliance-webhooks";
-import { createAdminOrder, updateOrderAdmin } from "@/lib/local-db";
+import {
+  createAdminOrder,
+  readLocalDb,
+  updateOrderAdmin,
+} from "@/lib/local-db";
 import { sendOrderStatusEmail } from "@/lib/order-emails";
 import { after } from "next/server";
 import { getAdminRouteSession } from "@/lib/admin-route-session";
+import {
+  sendDispatchPendingAdminPush,
+  sendPaymentApprovedAdminPush,
+  sendPaymentUploadedAdminPush,
+} from "@/lib/admin-push-notifications";
 import { getCmsSnapshot } from "@/lib/cms-store";
 import { readEnglish } from "@/lib/cms-localize";
 import { listPendingReviewItems } from "@/lib/review-eligibility";
@@ -303,6 +312,44 @@ export async function PATCH(request: Request) {
     const updatedOrder = (await getAdminOrders()).find(
       (order) => order.id === String(body.id),
     );
+
+    if (updatedOrder && before) {
+      const db = await readLocalDb();
+      const clientName =
+        db.clients.find((c) => c.id === updatedOrder.clientId)?.companyName ??
+        updatedOrder.clientEmail;
+      if (
+        body.depositStatus === "Deposited" &&
+        before.depositStatus !== "Deposited"
+      ) {
+        sendPaymentUploadedAdminPush({
+          id: updatedOrder.id,
+          clientName,
+          paidAmount: updatedOrder.paidAmount,
+        });
+      }
+      if (
+        updatedOrder.paymentStatus === "Paid" &&
+        before.paymentStatus !== "Paid"
+      ) {
+        sendPaymentApprovedAdminPush({
+          id: updatedOrder.id,
+          clientName,
+          paidAmount: updatedOrder.paidAmount,
+        });
+      }
+      if (
+        updatedOrder.status === "Ready for Dispatch" &&
+        before.status !== "Ready for Dispatch"
+      ) {
+        sendDispatchPendingAdminPush({
+          id: updatedOrder.id,
+          clientName,
+          subtotal: updatedOrder.subtotal,
+        });
+      }
+    }
+
     await appendAuditLog({
       actor: session.email,
       role: session.role,

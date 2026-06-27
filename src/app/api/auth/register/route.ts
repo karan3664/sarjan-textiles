@@ -9,7 +9,7 @@ import {
 } from "@/lib/client-duplicate-check";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 import {
-  assertMinClientPassword,
+  assertMinClientPasswordFromClient,
   minClientPasswordMessage,
 } from "@/lib/password-policy";
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     }
     const password = String(body.password);
     try {
-      assertMinClientPassword(password);
+      assertMinClientPasswordFromClient(password);
     } catch (error) {
       return Response.json(
         {

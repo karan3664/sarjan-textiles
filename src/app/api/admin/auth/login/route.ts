@@ -1,7 +1,9 @@
 import { authenticateAdmin } from "@/lib/admin-auth";
-import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
-import { NextResponse } from "next/server";
-import { createAdminToken } from "@/lib/admin-token";
+import {
+  createAdminLoginChallenge,
+  maskAdminEmail,
+} from "@/lib/admin-login-challenge";
+import { sendAdminLoginOtp } from "@/lib/admin-login-otp";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -11,33 +13,44 @@ export async function POST(request: Request) {
       .trim()
       .toLowerCase();
     const password = String(body.password ?? "").trim();
+    if (!email || !password) {
+      return Response.json(
+        { error: "Email and password required" },
+        { status: 400 },
+      );
+    }
+
     const limit = await rateLimit(
       rateLimitKey(request, "admin-login", email),
       6,
       60_000,
     );
     if (!limit.allowed) return rateLimitResponse(limit.resetAt);
+
     const admin = await authenticateAdmin(email, password);
-    if (!admin)
+    if (!admin) {
       return Response.json(
         { error: "Invalid admin credentials" },
         { status: 401 },
       );
+    }
 
-    const token = await createAdminToken({
+    const otp = await sendAdminLoginOtp(admin.email);
+    const challengeToken = createAdminLoginChallenge(admin);
+
+    return Response.json({
+      requiresOtp: true,
+      challengeToken,
+      otpToken: otp.otpToken,
       email: admin.email,
-      name: admin.name,
-      role: admin.role,
-      iat: Date.now(),
+      maskedEmail: maskAdminEmail(admin.email),
+      message: otp.message,
+      ...(otp.devOtp ? { devOtp: otp.devOtp } : {}),
     });
-    const payload = {
-      admin: { email: admin.email, name: admin.name, role: admin.role },
-      token,
-    };
-    const response = NextResponse.json(payload);
-    setAdminSessionCookie(response, token);
-    return response;
-  } catch {
-    return Response.json({ error: "Admin login failed" }, { status: 400 });
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Admin login failed" },
+      { status: 400 },
+    );
   }
 }

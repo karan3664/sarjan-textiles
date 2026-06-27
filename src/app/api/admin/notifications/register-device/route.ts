@@ -31,12 +31,22 @@ export async function POST(request: Request) {
       : "android";
   const platform: DevicePlatform = platformRaw === "ios" ? "ios" : "android";
 
-  await registerAdminDeviceToken({
-    adminEmail: session.email,
-    adminRole: session.role,
-    token,
-    platform,
-  });
+  try {
+    await registerAdminDeviceToken({
+      adminEmail: session.email,
+      adminRole: session.role,
+      token,
+      platform,
+    });
+  } catch (error) {
+    console.error("Admin device token registration failed", error);
+    const raw = error instanceof Error ? error.message : "";
+    const message =
+      raw.includes("admin_device_tokens") || raw.includes("does not exist")
+        ? "Push token storage is not ready. Apply the admin_device_tokens database migration on dev."
+        : raw || "Could not save device token";
+    return Response.json({ error: message }, { status: 500 });
+  }
 
   return Response.json({ ok: true, email: session.email, role: session.role });
 }

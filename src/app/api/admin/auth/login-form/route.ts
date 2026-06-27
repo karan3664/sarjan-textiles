@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/admin-auth";
-import { setAdminSessionCookie } from "@/lib/admin-session-cookie";
+import {
+  createAdminLoginChallenge,
+  maskAdminEmail,
+} from "@/lib/admin-login-challenge";
+import { sendAdminLoginOtp } from "@/lib/admin-login-otp";
 import {
   getAdminLoginPath,
   isAdminLoginReturnPath,
 } from "@/lib/admin-login-path";
-import { createAdminToken } from "@/lib/admin-token";
 import { redirectAbsoluteUrl } from "@/lib/request-redirect-origin";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -32,6 +35,7 @@ function loginRedirect(request: Request, query: Record<string, string>) {
   return NextResponse.redirect(url, 303);
 }
 
+/** Legacy HTML form — redirects to OTP step with challenge in cookie. */
 export async function POST(request: Request) {
   try {
     const form = await request.formData();
@@ -63,19 +67,17 @@ export async function POST(request: Request) {
       });
     }
 
-    const token = await createAdminToken({
-      email: admin.email,
-      name: admin.name,
-      role: admin.role,
-      iat: Date.now(),
-    });
+    const otp = await sendAdminLoginOtp(admin.email);
+    const challengeToken = createAdminLoginChallenge(admin);
 
-    const response = NextResponse.redirect(
-      redirectAbsoluteUrl(request, next),
-      303,
-    );
-    setAdminSessionCookie(response, token);
-    return response;
+    const verifyUrl = redirectAbsoluteUrl(request, getAdminLoginPath());
+    verifyUrl.searchParams.set("step", "otp");
+    verifyUrl.searchParams.set("challenge", challengeToken);
+    verifyUrl.searchParams.set("otpToken", otp.otpToken);
+    verifyUrl.searchParams.set("masked", maskAdminEmail(admin.email));
+    if (next !== "/admin") verifyUrl.searchParams.set("next", next);
+
+    return NextResponse.redirect(verifyUrl, 303);
   } catch {
     return loginRedirect(request, { error: "invalid" });
   }

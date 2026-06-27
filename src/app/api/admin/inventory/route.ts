@@ -10,6 +10,10 @@ import type { Product } from "@/data/mock";
 import { readEnglish } from "@/lib/cms-localize";
 import { flattenProductsForAdmin } from "@/lib/product-localize";
 import { productInventoryOnHand } from "@/lib/product-availability";
+import {
+  sendStockLowAdminPush,
+  sendStockOutAdminPush,
+} from "@/lib/admin-push-notifications";
 import { cookies } from "next/headers";
 
 const operations = [
@@ -167,6 +171,18 @@ export async function PATCH(request: Request) {
         ...(cms.auditLogs ?? []),
       ].slice(0, 1000),
     });
+
+    const afterStock = movement.afterStock;
+    const productName = readEnglish(product.name);
+    if (afterStock === 0 && beforeStock > 0) {
+      sendStockOutAdminPush({ slug: product.slug, name: productName });
+    } else if (afterStock > 0 && afterStock <= 10 && beforeStock > 10) {
+      sendStockLowAdminPush({
+        slug: product.slug,
+        name: productName,
+        stock: afterStock,
+      });
+    }
 
     return Response.json({
       products: flattenProductsForAdmin(next.products),

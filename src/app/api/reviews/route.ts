@@ -6,6 +6,7 @@ import {
 } from "@/lib/review-eligibility";
 import { normalizeReviewProductSlug } from "@/lib/review-lookup";
 import { trackReviewEvent } from "@/lib/review-analytics";
+import { sendReviewSubmittedAdminPush } from "@/lib/admin-push-notifications";
 import {
   createProductReview,
   formatReviewSaveError,
@@ -112,6 +113,13 @@ export async function POST(request: Request) {
       },
       client.email,
     );
+
+    sendReviewSubmittedAdminPush({
+      id: created.id,
+      clientName: client.companyName,
+      productSlug,
+      rating,
+    });
 
     try {
       revalidatePath(`/products/${productSlug}`);

@@ -9,6 +9,7 @@ import {
 import { sendDomainMail } from "@/lib/mailer";
 import { isSilentNewsletterSource } from "@/lib/launch-newsletter-constants";
 import { sendNewsletterAdminSignupAlert } from "@/lib/newsletter-admin-notify";
+import { sendNewsletterAdminPush } from "@/lib/admin-push-notifications";
 import { subscribeNewsletterEmail } from "@/lib/newsletter-store";
 import { rateLimit, rateLimitKey, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -123,6 +124,10 @@ export async function POST(request: Request) {
     await sendNewsletterAdminSignupAlert(email, source);
   } catch {
     // Saved to admin panel even if inbox alert fails (e.g. local dev without SMTP).
+  }
+
+  if (created) {
+    sendNewsletterAdminPush({ email, source });
   }
 
   return NextResponse.json({

@@ -16,14 +16,18 @@ import {
   redirectAbsoluteUrl,
   redirectFromNextUrl,
 } from "@/lib/request-redirect-origin";
-import { isAdminRoutePath, SARJAN_ADMIN_ROUTE_HEADER } from "@/lib/admin-route";
+import {
+  isAdminRoutePath,
+  SARJAN_ADMIN_LOGIN_PAGE_HEADER,
+  SARJAN_ADMIN_ROUTE_HEADER,
+} from "@/lib/admin-route";
 import {
   getAdminLoginPath,
   isAdminLoginPath,
   isLegacyAdminLoginPath,
   LEGACY_ADMIN_LOGIN_PATH,
 } from "@/lib/admin-login-path";
-import { SECURITY_HEADERS as securityHeaders } from "@/lib/security-headers";
+import { applySecurityHeadersToResponse } from "@/lib/security-headers";
 import {
   isSiteLaunchPending,
   LAUNCH_GATE_CACHE_HEADERS,
@@ -143,9 +147,23 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectAbsoluteUrl(request, dest));
     }
 
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(SARJAN_ADMIN_ROUTE_HEADER, "1");
+    requestHeaders.set(SARJAN_ADMIN_LOGIN_PAGE_HEADER, "1");
+
     const url = request.nextUrl.clone();
     url.pathname = LEGACY_ADMIN_LOGIN_PATH;
-    return NextResponse.rewrite(url);
+    const response = NextResponse.rewrite(url, {
+      request: { headers: requestHeaders },
+    });
+    applySecurityHeadersToResponse(response);
+    if (request.nextUrl.protocol === "https:") {
+      response.headers.set(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains; preload",
+      );
+    }
+    return response;
   }
 
   if (shouldGateToLaunchPage(routePath)) {
@@ -276,23 +294,7 @@ export async function middleware(request: NextRequest) {
   if (multiLanguageEnabled() && queryLang && isAppLocale(queryLang)) {
     response.cookies.set(localeCookieOptions(queryLang));
   }
-  for (const [key, value] of Object.entries(securityHeaders)) {
-    if (
-      key === "Content-Security-Policy" &&
-      process.env.NODE_ENV === "development"
-    ) {
-      // Next.js dev/HMR requires unsafe-eval; production CSP stays strict (nosniff + no eval).
-      response.headers.set(
-        key,
-        value.replace(
-          "script-src 'self' 'unsafe-inline'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        ),
-      );
-      continue;
-    }
-    response.headers.set(key, value);
-  }
+  applySecurityHeadersToResponse(response);
   if (request.nextUrl.protocol === "https:") {
     response.headers.set(
       "Strict-Transport-Security",

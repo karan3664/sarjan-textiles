@@ -38,8 +38,7 @@ export function configuredAdmins(): ConfiguredAdmin[] {
     }
   }
 
-  const email =
-    process.env["ADMIN_EMAIL"]?.trim() || "admin@sarjantextiles.com";
+  const email = process.env["ADMIN_EMAIL"]?.trim() || "info@sarjantextiles.com";
   const rawHash = adminPasswordHashFromEnv();
 
   return [

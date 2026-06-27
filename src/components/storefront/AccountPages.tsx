@@ -54,6 +54,7 @@ import {
   MIN_CLIENT_PASSWORD_LENGTH,
   minClientPasswordMessage,
 } from "@/lib/password-policy";
+import { preparePasswordFields } from "@/lib/password-transport-client";
 import { buildPricingDisplayLines } from "@/lib/order-pricing-breakdown";
 import { isOrderInvoiceAvailable } from "@/lib/invoice-order-access";
 import { AccountAddressManager } from "@/components/storefront/AccountAddressManager";
@@ -436,15 +437,20 @@ function AccountDashboardContent() {
       return;
     }
 
+    const passwordBody = await preparePasswordFields(
+      {
+        currentPassword: password.currentPassword,
+        newPassword: password.newPassword,
+      },
+      ["currentPassword", "newPassword"],
+    );
+
     const passwordRes = await fetch(
       `/api/clients/${encodeURIComponent(client.id)}`,
       {
         method: "PATCH",
         headers: clientAuthJsonHeaders(),
-        body: JSON.stringify({
-          currentPassword: password.currentPassword,
-          newPassword: password.newPassword,
-        }),
+        body: JSON.stringify(passwordBody),
       },
     );
     const passwordData = await passwordRes.json();

@@ -1,4 +1,4 @@
-/** Browser-only helpers — HttpOnly cookie auth; JWT never stored in localStorage. */
+import { preparePasswordField } from "@/lib/password-transport-client";
 
 import type { StoredClient } from "@/lib/client-session";
 import { resetSavedListsSession } from "@/lib/saved-lists-sync";
@@ -204,7 +204,10 @@ export async function loginClientSession(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ email: email.trim(), password }),
+    body: JSON.stringify({
+      email: email.trim(),
+      password: await preparePasswordField(password),
+    }),
   });
   let data: { error?: string; client?: StoredClient } = {};
   try {
