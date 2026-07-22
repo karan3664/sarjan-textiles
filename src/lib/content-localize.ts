@@ -12,6 +12,7 @@ import {
   type AppLocale,
   type LocalizedText,
 } from "@/lib/localized-text";
+import { sanitizeUserText } from "@/lib/user-text";
 
 type LocalizedHome = CmsHome & {
   hero?: CmsHome["hero"] & {
@@ -412,7 +413,9 @@ export function resolveBlog(
   return {
     ...blog,
     title: pick(record.title, locale),
-    excerpt: record.excerpt ? pick(record.excerpt, locale) : "",
+    excerpt: record.excerpt
+      ? sanitizeUserText(pick(record.excerpt, locale))
+      : "",
     content: record.content ? pick(record.content, locale) : "",
   };
 }
