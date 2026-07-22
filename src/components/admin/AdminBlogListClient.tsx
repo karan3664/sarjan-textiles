@@ -5,11 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { CmsBlog } from "@/lib/cms-store";
 import { readEnglish } from "@/lib/cms-localize";
 import type { LocalizedText } from "@/lib/localized-text";
+import { sanitizeUserText } from "@/lib/user-text";
 
 type SortOption = "newest" | "oldest" | "title";
 
 function blogFieldText(value: string | LocalizedText | undefined): string {
-  return readEnglish(value);
+  return sanitizeUserText(readEnglish(value));
 }
 
 function normalizeBlogForAdmin(blog: CmsBlog): CmsBlog {

@@ -6,7 +6,10 @@ import type { FormEvent } from "react";
 import { AdminCustomSectionsEditor } from "@/components/admin/AdminCustomSectionsEditor";
 import { AdminHtmlEditor } from "@/components/admin/AdminHtmlEditor";
 import type { Product } from "@/data/mock";
+import { readEnglish } from "@/lib/cms-localize";
 import type { CmsBlog } from "@/lib/cms-store";
+import type { LocalizedText } from "@/lib/localized-text";
+import { sanitizeUserText } from "@/lib/user-text";
 import type { CmsCustomSection } from "@/types/cms-custom";
 
 type BlogForm = {
@@ -62,16 +65,20 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+function blogFieldText(value: string | LocalizedText | undefined | null): string {
+  return sanitizeUserText(readEnglish(value));
+}
+
 function formFromBlog(blog?: CmsBlog): BlogForm {
   if (!blog) return emptyForm;
   return {
-    title: blog.title,
+    title: blogFieldText(blog.title as string | LocalizedText),
     slug: blog.slug,
-    excerpt: blog.excerpt,
+    excerpt: blogFieldText(blog.excerpt as string | LocalizedText),
     image: blog.image,
     imageAlt: (blog as CmsBlogWithSeo).imageAlt ?? "",
     date: blog.date,
-    content: blog.content,
+    content: blogFieldText(blog.content as string | LocalizedText),
     metaTitle: (blog as CmsBlogWithSeo).metaTitle ?? "",
     metaDescription: (blog as CmsBlogWithSeo).metaDescription ?? "",
     keywords: (blog as CmsBlogWithSeo).keywords ?? "",
@@ -86,11 +93,14 @@ function createBlock(type: BlogBlock["type"], value = ""): BlogBlock {
   };
 }
 
-function blocksFromContent(content: string): BlogBlock[] {
-  if (content.startsWith(blockPrefix)) {
+function blocksFromContent(
+  content: string | LocalizedText | undefined | null,
+): BlogBlock[] {
+  const text = blogFieldText(content);
+  if (text.startsWith(blockPrefix)) {
     try {
       const blocks = JSON.parse(
-        content.slice(blockPrefix.length),
+        text.slice(blockPrefix.length),
       ) as BlogBlock[];
       if (Array.isArray(blocks) && blocks.length)
         return blocks.map((block) => ({
@@ -98,10 +108,10 @@ function blocksFromContent(content: string): BlogBlock[] {
           id: block.id || createBlock(block.type).id,
         }));
     } catch {
-      return [createBlock("text", content)];
+      return [createBlock("text", text)];
     }
   }
-  return [createBlock("text", content)];
+  return [createBlock("text", text)];
 }
 
 function contentFromBlocks(blocks: BlogBlock[]) {
@@ -116,7 +126,7 @@ function blogFromForm(
   return {
     title: form.title.trim(),
     slug: form.slug.trim() || slugify(form.title),
-    excerpt: form.excerpt.trim(),
+    excerpt: sanitizeUserText(form.excerpt),
     image: form.image || "/sarjan-assets/banner-textiles-studio.webp",
     imageAlt: form.imageAlt.trim() || `${form.title.trim()} blog image`,
     date: form.date,
@@ -410,12 +420,12 @@ export function AdminBlogCreateClient({
                 <div className="text-title mb-8">
                   Short Excerpt<span className="text-primary">*</span>
                 </div>
-                <AdminHtmlEditor
-                  compact
+                <textarea
                   rows={3}
                   value={form.excerpt}
-                  onChange={(value) => update("excerpt", value)}
+                  onChange={(event) => update("excerpt", event.target.value)}
                   placeholder="Short summary for blog list and SEO"
+                  required
                 />
               </fieldset>
               <div className="sarjan-seo-panel">
